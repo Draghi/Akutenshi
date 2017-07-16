@@ -1,0 +1,3 @@
+[submodule "cmake/sugar"]
+	path = cmake/sugar
+	url = https://github.com/ruslo/sugar.git

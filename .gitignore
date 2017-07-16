@@ -1,0 +1,11 @@
+/build/
+
+.settings/
+
+.cproject
+.project
+
+*.kate_swp
+/Debug/
+
+dist/bin/
