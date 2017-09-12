@@ -82,4 +82,8 @@ namespace ak {
 	}
 }
 
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_THREAD_ALIAS_DISABLE))
+namespace akt = ak::thread;
+#endif
+
 #endif

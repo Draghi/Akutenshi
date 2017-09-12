@@ -60,4 +60,9 @@ using uint64 = unsigned long long; /// Unsigned 64-bit integer
 using fpSingle = float;  /// 32-bit floating point number
 using fpDouble = double; /// 64-bit floating point number
 
+#if defined(_MSC_VER)
+#include <type_traits>
+using ssize_t = typename std::make_signed<size_t>::type;
+#endif
+
 #endif

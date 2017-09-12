@@ -32,6 +32,7 @@ namespace ak {
 				static constexpr auto LOCK_MEMORY_ORDER = std::memory_order_acq_rel;
 
 				std::atomic<bool> m_lock;
+				std::thread::id m_lastAcquiredThread;
 
 			protected:
 				void unlock() {
@@ -39,12 +40,12 @@ namespace ak {
 				}
 
 			public:
-				Spinlock() : m_lock(false) {}
+				Spinlock() : m_lock(false), m_lastAcquiredThread(std::this_thread::get_id()) {}
 
 				ak::ScopeGuard tryLock() {
-					return m_lock.exchange(true, LOCK_MEMORY_ORDER)
-						? ak::ScopeGuard()
-					    : [&](){unlock();};
+					if (m_lock.exchange(true, LOCK_MEMORY_ORDER)) return ak::ScopeGuard();
+					m_lastAcquiredThread = std::this_thread::get_id();
+					return [&](){unlock();};
 				}
 
 				ak::ScopeGuard lock() {
@@ -52,12 +53,22 @@ namespace ak {
 					while((result = tryLock()).empty()) std::this_thread::yield();
 					return result;
 				}
+
+				std::thread::id lastAcquiredThread() {
+					return m_lastAcquiredThread;
+				}
+
+				bool wasLastAcquiredByThisThread() {
+					return m_lastAcquiredThread == std::this_thread::get_id();
+				}
 		};
 
 
 	}
 }
 
-
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_THREAD_ALIAS_DISABLE))
+namespace akt = ak::thread;
+#endif
 
 #endif

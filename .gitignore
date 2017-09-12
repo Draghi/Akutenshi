@@ -9,3 +9,4 @@
 /Debug/
 
 dist/bin/
+dist/log_*

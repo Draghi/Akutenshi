@@ -17,13 +17,15 @@
 #ifndef AK_THREAD_THREAD_HPP_
 #define AK_THREAD_THREAD_HPP_
 
+#include <ak/container/DoubleBuffer.hpp>
+#include <ak/PrimitiveTypes.hpp>
+#include <ak/ScopeGuard.hpp>
+#include <ak/thread/Spinlock.hpp>
+#include <algorithm>
 #include <atomic>
-#include <thread>
+#include <functional>
 #include <string>
-
-#include "ak/ScopeGuard.hpp"
-#include "ak/thread/Spinlock.hpp"
-#include "ak/thread/CurrentThread.hpp"
+#include <thread>
 
 namespace ak {
 
@@ -41,6 +43,9 @@ namespace ak {
 				std::thread m_thread;
 				std::atomic<bool> m_closeRequested;
 				ak::ScopeGuard m_runLock;
+
+				ak::container::DoubleBuffer<std::function<void()>> m_scheduledCallbacks;
+				ak::thread::Spinlock m_updateLock;
 
 				ak::ScopeGuard performThreadStartup();
 
@@ -64,6 +69,15 @@ namespace ak {
 					return true;
 				}
 
+				template<typename func_t> void schedule(const func_t& func) {
+					schedule(std::function<void(Thread&)>(func));
+				}
+
+				void schedule(const std::function<void()>& func);
+				bool update();
+
+				void setName(const std::string& name);
+
 				Thread& requestClose();
 				Thread& cancelClose();
 
@@ -82,4 +96,9 @@ namespace ak {
 		CurrentThread& current();
 	}
 }
+
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_THREAD_ALIAS_DISABLE))
+namespace akt = ak::thread;
+#endif
+
 #endif

@@ -1,29 +1,52 @@
-#include <functional>
-#include <iostream>
+#include <ak/data/JsonParser.hpp>
+#include <ak/data/PValue.hpp>
+#include <ak/engine/Config.hpp>
+#include <ak/engine/Startup.hpp>
+#include <ak/filesystem/CFile.hpp>
+#include <ak/filesystem/Filesystem.hpp>
+#include <ak/log/Logger.hpp>
+#include <ak/ScopeGuard.hpp>
+#include <string_view>
 
-#include "ak/math/Vector.hpp"
-#include "ak/thread/RecursiveSpinlock.hpp"
-#include "ak/thread/Thread.hpp"
+#if defined(__linux)
+#define BACKWARD_HAS_BFD 1
+#include "backward.hpp"
+namespace backward { static backward::SignalHandling sh; }
+#endif
 
-
-static volatile int counter = 0;
-static ak::thread::Spinlock lock;
-
-static void threadTask() {
-	for (int i = 0; i < 2000; i++) {
-		ak::thread::current().yield();
-		auto guard = lock.lock();
-		counter++;
-		std::cout << ak::thread::current().name() << " " << ak::thread::current().id() << ": " << counter << std::endl;
-	}
-}
+static void engineShutdown();
 
 int main() {
-	ak::math::Vec2 fVec = ak::math::Vec2{1.0, 2.0};
-	ak::math::Vec2 fVec2 = fVec;
+	ak::engine::startup(ak::data::PValue());
+	auto scopeGuard = ak::ScopeGuard(engineShutdown);
 
-	constexpr int THREAD_COUNT = 4;
-	ak::thread::Thread thread[THREAD_COUNT];
-	for (uint i = 0; i < THREAD_COUNT; i++) thread[i].execute(threadTask);
-	for (uint i = 0; i < THREAD_COUNT; i++) thread[i].waitFor();
+	constexpr ak::log::Logger log(std::string_view("PValueTest", 10));
+
+	ak::data::PValue pTree;
+
+	ak::filesystem::serializeFolders(pTree);
+	log.info([&]{return ak::data::serializeJson(pTree);});
+
+	pTree["appData"].setString("./modi");
+	log.info([&]{return ak::data::serializeJson(pTree);});
+	ak::filesystem::deserializeFolders(pTree);
+
+	ak::filesystem::serializeFolders(pTree);
+	log.info([&]{return ak::data::serializeJson(pTree);});
+
+	ak::filesystem::overrideFolder(ak::filesystem::SystemFolder::appConfig, "./config/override");
+	ak::filesystem::resetFolder(ak::filesystem::SystemFolder::appData);
+	ak::filesystem::serializeFolders(pTree);
+	log.info([&]{return ak::data::serializeJson(pTree);});
+
+	//auto configFile = ak::filesystem::CFile("./startup.config", ak::filesystem::OpenFlags::Out | ak::filesystem::OpenFlags::Truncate);
+	//if (!configFile) return -1;
+	//ak::engine::saveConfig(configFile);
+}
+
+static void engineShutdown() {
+	constexpr ak::log::Logger log(std::string_view("Shutdown", 8));
+
+	log.info("Engine shutdown sequence started");
+	ak::log::shutdown();
 }

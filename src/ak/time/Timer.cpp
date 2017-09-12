@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-#include "ak/Timer.hpp"
+#include <ak/time/Timer.hpp>
 
 #ifdef __linux__
 
@@ -23,7 +23,7 @@
 #include <ctime>
 #include <iostream>
 
-using namespace ak;
+using namespace ak::time;
 
 Timer::duration_t Timer::currentTime() {
 	using nanoseconds_dur = std::chrono::duration<uint64, nano_t>;
@@ -56,7 +56,7 @@ static uint64 getFrequency() {
 
 static uint64 getCount() {
 	LARGE_INTEGER counter;
-	QueryPerformanceCounter(&counter);
+	QueryPerformanceCountthreader(&counter);
 	return counter.QuadPart;
 }
 
@@ -65,7 +65,7 @@ uint64 getTimeInNanoseconds() {
 }
 
 Timer::duration_t Timer::currentTime() {
-	using nanoseconds_t = std::chrono::duration<uint64, ak::units::nsec>;
+	using nanoseconds_t = std::chrono::duration<uint64, nano_t>;
 	return std::chrono::duration_cast<duration_t>(nanoseconds_t(getTimeInNanoseconds()));
 }
 

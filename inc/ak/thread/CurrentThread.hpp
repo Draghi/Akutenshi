@@ -17,8 +17,11 @@
 #ifndef AK_THREAD_CURRENTTHREAD_HPP_
 #define AK_THREAD_CURRENTTHREAD_HPP_
 
+#include <ak/PrimitiveTypes.hpp>
+#include <ak/thread/Thread.hpp>
+#include <functional>
+#include <string>
 #include <thread>
-#include "ak/PrimitiveTypes.hpp"
 
 namespace ak {
 	namespace thread { 
@@ -26,13 +29,22 @@ namespace ak {
 
 		class CurrentThread {
 			private:
-				Thread* m_instance;
+				Thread& m_instance;
+				std::thread::id m_id;
 
 			public:
-				CurrentThread(Thread* instance);
+				CurrentThread(Thread& instance);
 
-				void yield() const;
-				void sleep(int64 microseconds) const;
+				template<typename func_t> void schedule(const func_t& func) {
+					schedule(std::function<void()>(func));
+				}
+
+				void schedule(const std::function<void()>& func);
+				bool update();
+				void setName(const std::string& name);
+
+				bool yield() const;
+				bool sleep(int64 microseconds) const;
 
 				bool isCloseRequested() const;
 
@@ -42,5 +54,9 @@ namespace ak {
 		};
 	}
 }
+
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_THREAD_ALIAS_DISABLE))
+namespace akt = ak::thread;
+#endif
 
 #endif

@@ -14,39 +14,53 @@
 * limitations under the License.
 **/
 
-#include "ak/thread/Thread.hpp"
+
+#include <ak/thread/CurrentThread.hpp>
+#include <chrono>
 
 using namespace ak;
 using namespace ak::thread;
 
-CurrentThread::CurrentThread(Thread* instance) : m_instance(instance) {}
+CurrentThread::CurrentThread(Thread& instance) : m_instance(instance) {}
 
-void CurrentThread::yield() const { 
-	std::this_thread::yield(); 
+void CurrentThread::schedule(const std::function<void()>& func) {
+	m_instance.schedule(func);
 }
 
-void CurrentThread::sleep(int64 microseconds) const {
-	if (microseconds <= 0) return yield();
-	std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
+bool CurrentThread::update() {
+	return m_instance.update();
+}
+
+void CurrentThread::setName(const std::string& name) {
+	m_instance.setName(name);
+}
+
+bool CurrentThread::yield() const {
+	if (std::this_thread::get_id() != threadID()) return false;
+	std::this_thread::yield(); 
+	return true;
+}
+
+bool CurrentThread::sleep(int64 microseconds) const {
+	if (std::this_thread::get_id() != threadID()) return false;
+	if (microseconds <= 0) std::this_thread::yield();
+	else std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
+	return true;
 }
 
 bool CurrentThread::isCloseRequested() const {
-	if (m_instance != nullptr) return false;
-	return m_instance->isCloseRequested();
+	return m_instance.isCloseRequested();
 }
 
 std::string CurrentThread::name() const {
-	constexpr const char* defaultName = "Thread";
-	if (m_instance != nullptr) return m_instance->name();
-	return defaultName;
+	return m_instance.name();
 }
  
 uint64 CurrentThread::id() const {
-	if (m_instance != nullptr) return m_instance->id();
-	return 0;
+	return m_instance.id();
 }
 
 std::thread::id CurrentThread::threadID() const {
-	return std::this_thread::get_id();
+	return m_instance.threadID();
 }
 

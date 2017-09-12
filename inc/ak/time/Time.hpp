@@ -14,8 +14,31 @@
  * limitations under the License.
  **/
 
-#ifndef AK_MATH_INTERNAL_VECTORSWIZZLE_HPP_
-#define AK_MATH_INTERNAL_VECTORSWIZZLE_HPP_
+#ifndef AK_TIME_TIME_HPP_
+#define AK_TIME_TIME_HPP_
 
+#include <ak/PrimitiveTypes.hpp>
+#include <ctime>
+
+namespace ak {
+	namespace time {
+		struct Timestamp {
+			std::tm ctime;
+			uint32 milliseconds;
+		};
+
+		/**
+		 * Returns the current UTC timestamp
+		 * @return The current UTC timestamp
+		 */
+		Timestamp utcTimestamp();
+
+		/**
+		 * Returns the current local timestamp
+		 * @return The current local timestamp
+		 */
+		Timestamp localTimestamp();
+	}
+}
 
 #endif

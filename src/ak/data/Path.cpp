@@ -31,18 +31,18 @@ Path ak::data::parseObjectDotNotation(const std::string& path) {
 	ak::split(path, {".", "["}, [&](const std::string& delimStr, const std::string& str) {
 
 		if (parsingIndex) {
-			if (delimStr.empty()) {
-				throw std::invalid_argument("ak::data::parsePath: Incomplete array index");;
+			if (str.empty()) {
+				throw std::invalid_argument("ak::data::parseObjectDotNotation: Incomplete array index");;
 			}
 
 			auto pos = str.find_first_of(']');
 			if (pos == std::string::npos) {
-				throw std::invalid_argument("ak::data::parsePath: Invalid array index");
+				throw std::invalid_argument("ak::data::parseObjectDotNotation: Invalid array index");
 			}
 
 			std::string indexStr = str.substr(0, pos);
 			if (!std::all_of(indexStr.begin(), indexStr.end(), ::isdigit)) {
-				throw std::invalid_argument("ak::data::parsePath: Invalid array index");
+				throw std::invalid_argument("ak::data::parseObjectDotNotation: Invalid array index");
 			}
 
 			result.append(std::stoull(indexStr));
@@ -56,4 +56,22 @@ Path ak::data::parseObjectDotNotation(const std::string& path) {
 	});
 
 	return result;
+}
+
+std::string ak::data::pathToObjectDotNotation(const Path& path) {
+	std::stringstream sstream;
+
+	for(size_t i = 0; i < path.size(); i++) {
+
+		if (path[i].isIndex) {
+			sstream << "[" << path[i].index << "]";
+		} else {
+			if (path[i].path.find_first_of('.') != std::string::npos) throw std::invalid_argument("ak::data::pathToObjectDotNotation: Path contains '.' in entry name");
+			sstream << path[i].path;
+		}
+
+		if ((i + 1 < path.size()) && (!path[i+1].isIndex)) sstream << ".";
+	}
+
+	return sstream.str();
 }

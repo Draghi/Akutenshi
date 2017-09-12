@@ -14,7 +14,9 @@
 * limitations under the License.
 **/
 
-#include "ak/thread/Thread.hpp"
+#include <ak/thread/CurrentThread.hpp>
+#include <ak/thread/Thread.hpp>
+#include <stddef.h>
 
 using namespace ak::thread;
 
@@ -37,7 +39,7 @@ Thread::Thread(const std::string& name)
 	  m_closeRequested(false), 
 	  m_runLock() {}
 
-Thread::~Thread() {}
+Thread::~Thread() { requestClose(); waitFor(); }
 
 ak::ScopeGuard Thread::performThreadStartup() {
 	currentThreadPtr() = this;
@@ -46,6 +48,27 @@ ak::ScopeGuard Thread::performThreadStartup() {
 		m_closeRequested = false;
 		delete &current();
 	});
+}
+
+void Thread::schedule(const std::function<void()>& func) {
+	m_scheduledCallbacks.push_back(func);
+}
+
+bool Thread::update() {
+	if (currentThreadPtr() != this) return false;
+
+	auto lock = m_updateLock.tryLock();
+	if (lock.empty()) return false;
+
+	m_scheduledCallbacks.swap();
+	m_scheduledCallbacks.iterate([](size_t /*i*/, auto& callback){callback();});
+	m_scheduledCallbacks.clear();
+
+	return true;
+}
+
+void Thread::setName(const std::string& name) {
+	m_name = name;
 }
 
 Thread& Thread::requestClose() {
@@ -113,7 +136,8 @@ static Thread*& currentThreadPtr() {
 }
 
 ak::thread::CurrentThread& ak::thread::current() {
-	thread_local CurrentThread* currentThread = new CurrentThread(::currentThreadPtr());
+	if (::currentThreadPtr() == nullptr) ::currentThreadPtr() = new Thread();
+	thread_local CurrentThread* currentThread = new CurrentThread(*::currentThreadPtr());
 	return *currentThread;
 }
 

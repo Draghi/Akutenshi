@@ -57,6 +57,13 @@ namespace ak {
 					return *this;
 				}
 
+				Path& append(const Path& entry) {
+					for(auto iter = entry.m_path.begin(); iter != entry.m_path.end(); iter++) {
+						m_path.push_back(*iter);
+					}
+					return *this;
+				}
+
 				Path& pop(uint64 count = 1) {
 					for(uint64 i = 0; i < count; i++) m_path.pop_back();
 					return *this;
@@ -64,6 +71,11 @@ namespace ak {
 
 				Path& remove(diff_t index) {
 					m_path.erase(m_path.begin() + index);
+					return *this;
+				}
+
+				Path& clear() {
+					m_path.clear();
 					return *this;
 				}
 
@@ -99,8 +111,13 @@ namespace ak {
 		};
 
 		Path parseObjectDotNotation(const std::string& path);
+		std::string pathToObjectDotNotation(const Path& path);
 
 	}
 }
+
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_DATA_ALIAS_DISABLE))
+namespace akd = ak::data;
+#endif
 
 #endif

@@ -17,7 +17,11 @@ if ("${CMAKE_CXX_COMPILER}" MATCHES ".*clang")
 		"-Weverything"
 		"-Wno-c++11-compat" "-Wno-c++98-c++11-compat" "-Wno-c++11-compat-pedantic"
 		"-Wno-c++98-compat-pedantic" "-Wno-c99-compat" "-Wno-c++98-compat"
-		"-Wno-padded" "-Wno-disabled-macro-expansion" "-Wno-covered-switch-default" "-Wno-weak-vtables")
+		"-Wno-padded" "-Wno-disabled-macro-expansion" "-Wno-covered-switch-default"
+		"-Wno-weak-vtables" "-Wno-exit-time-destructors" "-Wno-global-constructors")
+    
+    SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
+		
 elseif(CMAKE_COMPILER_IS_GNUCXX)
 	list(APPEND AK_BUILD_CXX_WARNING_FLAGS 
 		"-Wall" "-Wextra" "-Wpedantic"
@@ -28,12 +32,17 @@ else()
 	message(WARNING "Unsupported compiler" ${CMAKE_CXX_COMPILER})
 endif()
 
+set(GLM_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/glm")
+set(ORDERED_MAP_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/ordered-map/src")
+set(RAPIDJSON_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/rapidjson/include")
+set(BACKWARD_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/backward-cpp")
+
 ###############
-# CMake Setup # 
+# CMake Setup #
 ###############
 
 # Setup CMake variables
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${AK_OUTPUT_BIN}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${AK_OUTPUT_LIB}")
 
