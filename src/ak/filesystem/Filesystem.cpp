@@ -129,6 +129,10 @@ static std::array<std::optional<stx::filesystem::path>, SYSTEM_FOLDER_ENUM_COUNT
 	return *systemFolders;
 }
 
+static std::optional<stx::filesystem::path>& systemFolder(SystemFolder folder) {
+	return systemFolders()[static_cast<size_t>(folder)];
+}
+
 
 void ak::filesystem::overrideFolder(SystemFolder folder, const stx::filesystem::path& path) {
 	auto index = static_cast<uint8>(folder);
@@ -231,48 +235,45 @@ ak::filesystem::CFile ak::filesystem::open(SystemFolder folder, const stx::files
 }
 
 void ak::filesystem::serializeFolders(ak::data::PValue& root) {
-	root["appData"].setOptionalString(systemFolders()[static_cast<size_t>(SystemFolder::appData)]);
-	root["appConfig"].setOptionalString(systemFolders()[static_cast<size_t>(SystemFolder::appConfig)]);
-	root["appCache"].setOptionalString(systemFolders()[static_cast<size_t>(SystemFolder::appCache)]);
+	root["appData"].setOptStr(systemFolder(SystemFolder::appData));
+	root["appConfig"].setOptStr(systemFolder(SystemFolder::appConfig));
+	root["appCache"].setOptStr(systemFolder(SystemFolder::appCache));
 
-	root["userDesktop"].setOptionalString(systemFolders()[static_cast<size_t>(SystemFolder::userDesktop)]);
-	root["userDocuments"].setOptionalString(systemFolders()[static_cast<size_t>(SystemFolder::userDocuments)]);
-	root["userDownloads"].setOptionalString(systemFolders()[static_cast<size_t>(SystemFolder::userDownloads)]);
-	root["userPictures"].setOptionalString(systemFolders()[static_cast<size_t>(SystemFolder::userPictures)]);
-	root["userVideos"].setOptionalString(systemFolders()[static_cast<size_t>(SystemFolder::userVideos)]);
-	root["userMusic"].setOptionalString(systemFolders()[static_cast<size_t>(SystemFolder::userMusic)]);
+	root["userDesktop"].setOptStr(systemFolder(SystemFolder::userDesktop));
+	root["userDocuments"].setOptStr(systemFolder(SystemFolder::userDocuments));
+	root["userDownloads"].setOptStr(systemFolder(SystemFolder::userDownloads));
+	root["userPictures"].setOptStr(systemFolder(SystemFolder::userPictures));
+	root["userVideos"].setOptStr(systemFolder(SystemFolder::userVideos));
+	root["userMusic"].setOptStr(systemFolder(SystemFolder::userMusic));
 
-	root["userData"].setOptionalString(systemFolders()[static_cast<size_t>(SystemFolder::userData)]);
-	root["userConfig"].setOptionalString(systemFolders()[static_cast<size_t>(SystemFolder::userConfig)]);
-	root["userSaveGames"].setOptionalString(systemFolders()[static_cast<size_t>(SystemFolder::userSaveGames)]);
+	root["userData"].setOptStr(systemFolder(SystemFolder::userData));
+	root["userConfig"].setOptStr(systemFolder(SystemFolder::userConfig));
+	root["userSaveGames"].setOptStr(systemFolder(SystemFolder::userSaveGames));
 
-	root["localData"].setOptionalString(systemFolders()[static_cast<size_t>(SystemFolder::localData)]);
-	root["localConfig"].setOptionalString(systemFolders()[static_cast<size_t>(SystemFolder::localConfig)]);
-	root["localCache"].setOptionalString(systemFolders()[static_cast<size_t>(SystemFolder::localCache)]);
+	root["localData"].setOptStr(systemFolder(SystemFolder::localData));
+	root["localConfig"].setOptStr(systemFolder(SystemFolder::localConfig));
+	root["localCache"].setOptStr(systemFolder(SystemFolder::localCache));
 }
 
 void ak::filesystem::deserializeFolders(const ak::data::PValue& root) {
+	root.getOrNull("appData").assignAsStr(systemFolder(SystemFolder::appData));
+	root.getOrNull("appConfig").assignAsStr(systemFolder(SystemFolder::appConfig));
+	root.getOrNull("appCache").assignAsStr(systemFolder(SystemFolder::appCache));
 
-	const ak::data::PValue* valueNode = nullptr;
+	root.getOrNull("userDesktop").assignAsStr(systemFolder(SystemFolder::userDesktop));
+	root.getOrNull("userDocuments").assignAsStr(systemFolder(SystemFolder::userDocuments));
+	root.getOrNull("userDownloads").assignAsStr(systemFolder(SystemFolder::userDownloads));
+	root.getOrNull("userPictures").assignAsStr(systemFolder(SystemFolder::userPictures));
+	root.getOrNull("userVideos").assignAsStr(systemFolder(SystemFolder::userVideos));
+	root.getOrNull("userMusic").assignAsStr(systemFolder(SystemFolder::userMusic));
 
-	if (((valueNode = root.tryNavigate("appData")) != nullptr)   && valueNode->isString()) systemFolders()[static_cast<size_t>(SystemFolder::appData)]   = root["appData"].stringValue();
-	if (((valueNode = root.tryNavigate("appConfig")) != nullptr) && valueNode->isString()) systemFolders()[static_cast<size_t>(SystemFolder::appConfig)] = root["appConfig"].stringValue();
-	if (((valueNode = root.tryNavigate("appCache")) != nullptr)  && valueNode->isString()) systemFolders()[static_cast<size_t>(SystemFolder::appCache)]  = root["appCache"].stringValue();
+	root.getOrNull("userData").assignAsStr(systemFolder(SystemFolder::userData));
+	root.getOrNull("userConfig").assignAsStr(systemFolder(SystemFolder::userConfig));
+	root.getOrNull("userSaveGames").assignAsStr(systemFolder(SystemFolder::userSaveGames));
 
-	if (((valueNode = root.tryNavigate("userDesktop")) != nullptr)   && valueNode->isString()) systemFolders()[static_cast<size_t>(SystemFolder::userDesktop)]   = root["userDesktop"].stringValue();
-	if (((valueNode = root.tryNavigate("userDocuments")) != nullptr) && valueNode->isString()) systemFolders()[static_cast<size_t>(SystemFolder::userDocuments)] = root["userDocuments"].stringValue();
-	if (((valueNode = root.tryNavigate("userDownloads")) != nullptr) && valueNode->isString()) systemFolders()[static_cast<size_t>(SystemFolder::userDownloads)] = root["userDownloads"].stringValue();
-	if (((valueNode = root.tryNavigate("userPictures")) != nullptr)  && valueNode->isString()) systemFolders()[static_cast<size_t>(SystemFolder::userPictures)]  = root["userPictures"].stringValue();
-	if (((valueNode = root.tryNavigate("userVideos")) != nullptr)    && valueNode->isString()) systemFolders()[static_cast<size_t>(SystemFolder::userVideos)]    = root["userVideos"].stringValue();
-	if (((valueNode = root.tryNavigate("userMusic")) != nullptr)     && valueNode->isString()) systemFolders()[static_cast<size_t>(SystemFolder::userMusic)]     = root["userMusic"].stringValue();
-
-	if (((valueNode = root.tryNavigate("userData")) != nullptr)      && valueNode->isString()) systemFolders()[static_cast<size_t>(SystemFolder::userData)]      = root["userData"].stringValue();
-	if (((valueNode = root.tryNavigate("userConfig")) != nullptr)    && valueNode->isString()) systemFolders()[static_cast<size_t>(SystemFolder::userConfig)]    = root["userConfig"].stringValue();
-	if (((valueNode = root.tryNavigate("userSaveGames")) != nullptr) && valueNode->isString()) systemFolders()[static_cast<size_t>(SystemFolder::userSaveGames)] = root["userSaveGames"].stringValue();
-
-	if (((valueNode = root.tryNavigate("localData")) != nullptr)   && valueNode->isString()) systemFolders()[static_cast<size_t>(SystemFolder::localData)]   = root["localData"].stringValue();
-	if (((valueNode = root.tryNavigate("localConfig")) != nullptr) && valueNode->isString()) systemFolders()[static_cast<size_t>(SystemFolder::localConfig)] = root["localConfig"].stringValue();
-	if (((valueNode = root.tryNavigate("localCache")) != nullptr)  && valueNode->isString()) systemFolders()[static_cast<size_t>(SystemFolder::localCache)]  = root["localCache"].stringValue();
+	root.getOrNull("localData").assignAsStr(systemFolder(SystemFolder::localData));
+	root.getOrNull("localConfig").assignAsStr(systemFolder(SystemFolder::localData));
+	root.getOrNull("localCache").assignAsStr(systemFolder(SystemFolder::localData));
 }
 
 

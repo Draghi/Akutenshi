@@ -56,15 +56,15 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 			if (valueStack.size() > 0) {
 				auto& tValue = *valueStack.back();
 
-				if (tValue.isObject()) nValue = &tValue[cKey];
-				else if (tValue.isArray()) nValue = &tValue[tValue.arrayValue().size()];
+				if (tValue.isObj()) nValue = &tValue[cKey];
+				else if (tValue.isArr()) nValue = &tValue[tValue.asArr().size()];
 				else throw std::logic_error("JSONParser: Invalid parse state");
 			} else {
 				nValue = &root;
 			}
 
 			*nValue = std::move(value);
-			if (nValue->isObject() || nValue->isArray()) valueStack.push_back(nValue);
+			if (nValue->isObj() || nValue->isArr()) valueStack.push_back(nValue);
 		}
 
 	    bool Null() {
@@ -83,7 +83,7 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 	    }
 
 	    bool Uint(unsigned u) {
-	    	addPValue(ak::data::PValue(static_cast<uint64>(u)));
+	    	addPValue(ak::data::PValue(static_cast<int64>(u)));
 	    	return true;
 	    }
 
@@ -93,7 +93,7 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 	    }
 
 	    bool Uint64(uint64_t u) {
-	    	addPValue(ak::data::PValue(static_cast<uint64>(u)));
+	    	addPValue(ak::data::PValue(static_cast<int64>(u)));
 	    	return true;
 	    }
 
@@ -163,8 +163,8 @@ std::string ak::data::serializeJson(const ak::data::PValue& src, bool pretty) {
 			}
 
 			case ak::data::TraverseAction::ArrayEnd: {
-				if (pretty) pWriter.EndArray(static_cast<rj::SizeType>(value.arrayValue().size()));
-				else nWriter.EndArray(static_cast<rj::SizeType>(value.arrayValue().size()));
+				if (pretty) pWriter.EndArray(static_cast<rj::SizeType>(value.asArr().size()));
+				else nWriter.EndArray(static_cast<rj::SizeType>(value.asArr().size()));
 				break;
 			}
 
@@ -175,8 +175,8 @@ std::string ak::data::serializeJson(const ak::data::PValue& src, bool pretty) {
 			}
 
 			case ak::data::TraverseAction::ObjectEnd: {
-				if (pretty) pWriter.EndObject(static_cast<rj::SizeType>(value.objectValue().size()));
-				else nWriter.EndObject(static_cast<rj::SizeType>(value.objectValue().size()));
+				if (pretty) pWriter.EndObject(static_cast<rj::SizeType>(value.asObj().size()));
+				else nWriter.EndObject(static_cast<rj::SizeType>(value.asObj().size()));
 				break;
 			}
 
@@ -189,39 +189,29 @@ std::string ak::data::serializeJson(const ak::data::PValue& src, bool pretty) {
 						else nWriter.Null();
 						break;
 
-					case ak::data::PType::Bool:
-						if (pretty) pWriter.Bool(value.boolValue());
-						else nWriter.Bool(value.boolValue());
-						break;
-
-					case ak::data::PType::Unsigned:
-						if (value.unsignedValue() <= std::numeric_limits<uint>::max()) {
-							if (pretty) pWriter.Uint(static_cast<uint>(value.unsignedValue()));
-							else nWriter.Uint(static_cast<uint>(value.unsignedValue()));
-						} else {
-							if (pretty) pWriter.Uint64(value.unsignedValue());
-							else nWriter.Uint64(value.unsignedValue());
-						}
+					case ak::data::PType::Boolean:
+						if (pretty) pWriter.Bool(value.asBool());
+						else nWriter.Bool(value.asBool());
 						break;
 
 					case ak::data::PType::Integer:
-						if ((value.integerValue() >= std::numeric_limits<int>::min()) && (value.integerValue() <= std::numeric_limits<int>::max())) {
-							if (pretty) pWriter.Int(static_cast<int>(value.integerValue()));
-							else nWriter.Int(static_cast<int>(value.integerValue()));
+						if ((value.asInt() >= std::numeric_limits<int>::min()) && (value.asInt() <= std::numeric_limits<int>::max())) {
+							if (pretty) pWriter.Int(static_cast<int>(value.asInt()));
+							else nWriter.Int(static_cast<int>(value.asInt()));
 						} else {
-							if (pretty) pWriter.Int64(value.integerValue());
-							else nWriter.Int64(value.integerValue());
+							if (pretty) pWriter.Int64(value.asInt());
+							else nWriter.Int64(value.asInt());
 						}
 						break;
 
-					case ak::data::PType::Float:
-						if (pretty) pWriter.Double(value.floatValue());
-						else nWriter.Double(value.floatValue());
+					case ak::data::PType::Decimal:
+						if (pretty) pWriter.Double(value.asDec());
+						else nWriter.Double(value.asDec());
 						break;
 
 					case ak::data::PType::String:
-						if (pretty) pWriter.String(value.stringValue().c_str(), static_cast<rj::SizeType>(value.stringValue().size()));
-						else nWriter.String(value.stringValue().c_str(), static_cast<rj::SizeType>(value.stringValue().size()));
+						if (pretty) pWriter.String(value.asStr().c_str(), static_cast<rj::SizeType>(value.asStr().size()));
+						else nWriter.String(value.asStr().c_str(), static_cast<rj::SizeType>(value.asStr().size()));
 						break;
 				}
 				#pragma clang diagnostic pop

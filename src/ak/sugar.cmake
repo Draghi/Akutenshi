@@ -9,6 +9,7 @@ sugar_include(engine)
 sugar_include(filesystem)
 sugar_include(thread)
 sugar_include(time)
+sugar_include(window)
 sugar_include(log)
 
 endif()

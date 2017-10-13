@@ -31,18 +31,21 @@ namespace ak {
 
 	namespace thread {
 		class CurrentThread;
+		CurrentThread& current();
 
 		class Thread final {
+			friend CurrentThread& current();
 			private:
 				Thread(const Thread&) = delete;
 				Thread& operator=(const Thread&) = delete;
 
 				std::string m_name;
 				uint64 m_id;
+				std::thread::id m_threadId;
 				ak::thread::Spinlock m_lock;
 				std::thread m_thread;
 				std::atomic<bool> m_closeRequested;
-				ak::ScopeGuard m_runLock;
+				std::atomic<bool> m_runLock;
 
 				ak::container::DoubleBuffer<std::function<void()>> m_scheduledCallbacks;
 				ak::thread::Spinlock m_updateLock;
@@ -54,16 +57,13 @@ namespace ak {
 				Thread(const std::string& name);
 				~Thread();
 
-				template<typename func_t> bool execute(const func_t& func) {
-					auto runningLock = m_lock.tryLock();
-					if (runningLock.empty()) return false;
+				template<typename func_t> bool execute(const func_t& callback) {
+					if (m_runLock.exchange(true)) return false;
 
 					m_closeRequested = false;
-					m_runLock = std::move(runningLock);
-
-					m_thread = std::thread([this, func]() {
+					m_thread = std::thread([this, callback]() {
 						auto threadCleanup = performThreadStartup();
-						func();
+						callback();
 					});
 
 					return true;
@@ -81,7 +81,9 @@ namespace ak {
 				Thread& requestClose();
 				Thread& cancelClose();
 
-				bool waitFor();
+				bool detach();
+				bool join();
+
 				bool waitFor() const;
 
 				bool isCloseRequested() const;
@@ -93,7 +95,6 @@ namespace ak {
 				std::thread::id threadID() const;
 		};
 
-		CurrentThread& current();
 	}
 }
 

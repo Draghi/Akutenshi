@@ -21,46 +21,54 @@
 using namespace ak;
 using namespace ak::thread;
 
-CurrentThread::CurrentThread(Thread& instance) : m_instance(instance) {}
+CurrentThread::CurrentThread(ak::thread::Thread* thread, std::thread::id id) : m_thread(thread), m_id(id) {}
 
-void CurrentThread::schedule(const std::function<void()>& func) {
-	m_instance.schedule(func);
+bool CurrentThread::schedule(const std::function<void()>& func) {
+	if (!m_thread) return false;
+	m_thread->schedule(func);
+	return true;
 }
 
 bool CurrentThread::update() {
-	return m_instance.update();
+	if (!m_thread) return false;
+	return m_thread->update();
 }
 
-void CurrentThread::setName(const std::string& name) {
-	m_instance.setName(name);
+bool CurrentThread::setName(const std::string& name) {
+	if (!m_thread) return false;
+	m_thread->setName(name);
+	return true;
 }
 
 bool CurrentThread::yield() const {
-	if (std::this_thread::get_id() != threadID()) return false;
+	if (m_id != std::this_thread::get_id()) return false;
 	std::this_thread::yield(); 
 	return true;
 }
 
 bool CurrentThread::sleep(int64 microseconds) const {
-	if (std::this_thread::get_id() != threadID()) return false;
+	if (m_id != std::this_thread::get_id()) return false;
 	if (microseconds <= 0) std::this_thread::yield();
 	else std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
 	return true;
 }
 
 bool CurrentThread::isCloseRequested() const {
-	return m_instance.isCloseRequested();
+	if (!m_thread) return true;
+	return m_thread->isCloseRequested();
 }
 
 std::string CurrentThread::name() const {
-	return m_instance.name();
+	if (!m_thread) return "Unknown";
+	return m_thread->name();
 }
  
 uint64 CurrentThread::id() const {
-	return m_instance.id();
+	if (!m_thread) return 0;
+	return m_thread->id();
 }
 
 std::thread::id CurrentThread::threadID() const {
-	return m_instance.threadID();
+	return m_id;
 }
 

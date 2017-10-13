@@ -23,20 +23,22 @@
 
 using namespace ak::data;
 
+static const PValue dataPValueNull;
+
 PValue& PValue::navigate_internal(PValue& cNode, const Path& path) {
 
 	PValue* currentNode = &cNode;
 	for(size_t i = 0; i < path.size(); i++) {
 		auto entry = path.entry(i);
 		if (entry.isIndex) {
-			if (currentNode->m_type != PType::Array) currentNode->setArray(arr_t());
+			if (currentNode->m_type != PType::Array) currentNode->setArr();
 			if (entry.index >= currentNode->m_value.aVal.size()) currentNode->m_value.aVal.resize(entry.index + 1);
 
 			currentNode = &currentNode->m_value.aVal[entry.index];
 			continue;
 
 		} else {
-			if (currentNode->m_type != PType::Object) currentNode->setObject(obj_t());
+			if (currentNode->m_type != PType::Object) currentNode->setObj();
 
 			auto iter = currentNode->m_value.oVal.find(entry.path);
 			if (iter == currentNode->m_value.oVal.end()) iter = currentNode->m_value.oVal.insert(std::make_pair(entry.path, PValue())).first;
@@ -85,14 +87,13 @@ void PValue::setPValue(const PValue& val) {
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wswitch"
 	switch(val.m_type) {
-		case PType::Object: setObject(val.m_value.oVal); break;
-		case PType::Array: setArray(val.m_value.aVal); break;
-		case PType::String: setString(val.m_value.sVal); break;
+		case PType::Object: setObj(val.m_value.oVal); break;
+		case PType::Array: setArr(val.m_value.aVal); break;
+		case PType::String: setStr(val.m_value.sVal); break;
 
-		case PType::Unsigned: setUnsigned(val.m_value.uVal); break;
-		case PType::Integer: setInteger(val.m_value.iVal); break;
-		case PType::Float: setFloat(val.m_value.fVal); break;
-		case PType::Bool: setBool(val.m_value.bVal); break;
+		case PType::Integer: setInt(val.m_value.iVal); break;
+		case PType::Decimal: setDec(val.m_value.dVal); break;
+		case PType::Boolean: setBool(val.m_value.bVal); break;
 	}
 	#pragma clang diagnostic pop
 }
@@ -101,14 +102,13 @@ void PValue::setPValue(PValue&& val) {
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wswitch"
 	switch(val.m_type) {
-		case PType::Object: setObject(std::move(val.m_value.oVal)); break;
-		case PType::Array: setArray(std::move(val.m_value.aVal)); break;
-		case PType::String: setString(std::move(val.m_value.sVal)); break;
+		case PType::Object: setObj(std::move(val.m_value.oVal)); break;
+		case PType::Array: setArr(std::move(val.m_value.aVal)); break;
+		case PType::String: setStr(std::move(val.m_value.sVal)); break;
 
-		case PType::Unsigned: setUnsigned(std::move(val.m_value.uVal)); break;
-		case PType::Integer: setInteger(std::move(val.m_value.iVal)); break;
-		case PType::Float: setFloat(std::move(val.m_value.fVal)); break;
-		case PType::Bool: setBool(std::move(val.m_value.bVal)); break;
+		case PType::Integer: setInt(std::move(val.m_value.iVal)); break;
+		case PType::Decimal: setDec(std::move(val.m_value.dVal)); break;
+		case PType::Boolean: setBool(std::move(val.m_value.bVal)); break;
 	}
 	val.setNull();
 	#pragma clang diagnostic pop
@@ -131,27 +131,23 @@ PValue::PValue(const null_t&) : m_type(PType::Null) {
 }
 
 PValue::PValue(const obj_t& val) : m_type(PType::Null) {
-	setObject(val);
+	setObj(val);
 }
 
 PValue::PValue(const arr_t& val) : m_type(PType::Null) {
-	setArray(val);
+	setArr(val);
 }
 
 PValue::PValue(const str_t& val) : m_type(PType::Null) {
-	setString(val);
-}
-
-PValue::PValue(const uint_t& val) : m_type(PType::Null) {
-	setUnsigned(val);
+	setStr(val);
 }
 
 PValue::PValue(const int_t& val) : m_type(PType::Null) {
-	setInteger(val);
+	setInt(val);
 }
 
-PValue::PValue(const float_t& val) : m_type(PType::Null) {
-	setFloat(val);
+PValue::PValue(const dec_t& val) : m_type(PType::Null) {
+	setDec(val);
 }
 
 PValue::PValue(const bool_t& val) : m_type(PType::Null) {
@@ -163,27 +159,23 @@ PValue::PValue(null_t&&) : m_type(PType::Null) {
 }
 
 PValue::PValue(obj_t&& val) : m_type(PType::Null) {
-	setObject(std::move(val));
+	setObj(std::move(val));
 }
 
 PValue::PValue(arr_t&& val) : m_type(PType::Null) {
-	setArray(std::move(val));
+	setArr(std::move(val));
 }
 
 PValue::PValue(str_t&& val) : m_type(PType::Null) {
-	setString(std::move(val));
-}
-
-PValue::PValue(uint_t&& val) : m_type(PType::Null) {
-	setUnsigned(std::move(val));
+	setStr(std::move(val));
 }
 
 PValue::PValue(int_t&& val) : m_type(PType::Null) {
-	setInteger(std::move(val));
+	setInt(std::move(val));
 }
 
-PValue::PValue(float_t&& val) : m_type(PType::Null) {
-	setFloat(std::move(val));
+PValue::PValue(dec_t&& val) : m_type(PType::Null) {
+	setDec(std::move(val));
 }
 
 PValue::PValue(bool_t&& val) : m_type(PType::Null) {
@@ -194,16 +186,38 @@ PValue::~PValue() {
 	setNull();
 }
 
-PValue& PValue::navigate(const Path& path){
+PValue& PValue::get(const Path& path){
 	return navigate_internal(*this, path);
 }
 
-const PValue* PValue::tryNavigate(const Path& path) const {
+PValue* PValue::tryGet(const Path& path) {
+	return const_cast<PValue*>(navigate_internal(const_cast<const PValue*>(this), path));
+}
+
+const PValue* PValue::tryGet(const Path& path) const {
 	return navigate_internal(this, path);
 }
 
+const PValue& PValue::getOrNull(const Path& path) const {
+	auto result = navigate_internal(this, path);
+	if (result) return *result;
+	return dataPValueNull;
+}
+
 bool PValue::exists(const Path& path) const {
-	return tryNavigate(path) != nullptr;
+	return tryGet(path) != nullptr;
+}
+
+void PValue::merge(const PValue& other, bool override) {
+	if (isObj() && other.isObj()) {
+		for(auto iter = other.asObj().begin(); iter != other.asObj().end(); iter++) {
+			auto existingVal = asObj().find(iter->first);
+			if (existingVal == asObj().end()) asObj().insert(*iter);
+			else existingVal->second.merge(iter->second, override);
+		}
+	} else if (override) {
+		*this = other;
+	}
 }
 
 void PValue::setNull() {
@@ -218,458 +232,248 @@ void PValue::setNull() {
 	#pragma clang diagnostic pop
 }
 
-void PValue::setObject() {
-	setObject(obj_t());
+void PValue::setObj() {
+	setObj(obj_t());
 }
 
-void PValue::setArray() {
-	setArray(arr_t());
+void PValue::setArr() {
+	setArr(arr_t());
 }
 
-void PValue::setNull(const null_t&) {
-	setNull();
-}
-
-void PValue::setObject(const obj_t& val) {
+void PValue::setObj(const obj_t& val) {
 	setNull();
 	new(&m_value.oVal) obj_t(val);
 	m_type = PType::Object;
 }
 
-void PValue::setArray(const arr_t& val) {
+void PValue::setArr(const arr_t& val) {
 	setNull();
 	new(&m_value.aVal) arr_t(val);
 	m_type = PType::Array;
 }
 
-void PValue::setString(const str_t& val) {
+void PValue::setStr(const str_t& val) {
 	setNull();
 	new(&m_value.sVal) std::string(val);
 	m_type = PType::String;
 }
 
-void PValue::setUnsigned(const uint_t& val) {
-	setNull();
-	m_value.uVal = val;
-	m_type = PType::Unsigned;
-}
-
-void PValue::setInteger(const int_t& val) {
+void PValue::setInt(const int_t& val) {
 	setNull();
 	m_value.iVal = val;
 	m_type = PType::Integer;
 }
 
-void PValue::setFloat(const float_t& val) {
+void PValue::setDec(const dec_t& val) {
 	setNull();
-	m_value.fVal = val;
-	m_type = PType::Float;
+	m_value.dVal = val;
+	m_type = PType::Decimal;
 }
 
 void PValue::setBool(const bool_t& val) {
 	setNull();
 	m_value.bVal = val;
-	m_type = PType::Bool;
-}
-
-void PValue::setOptionalNull(const std::optional<null_t>&) {
-	setNull();
-}
-
-void PValue::setOptionalObject(const std::optional<obj_t>& val) {
-	if (val) setObject(*val);
-	else setNull();
-}
-
-void PValue::setOptionalArray(const std::optional<arr_t>& val) {
-	if (val) setArray(*val);
-	else setNull();
-}
-
-void PValue::setOptionalString(const std::optional<str_t>& val) {
-	if (val) setString(*val);
-	else setNull();
-}
-
-void PValue::setOptionalUnsigned(const std::optional<uint_t>& val) {
-	if (val) setUnsigned(*val);
-	else setNull();
-}
-
-void PValue::setOptionalInteger(const std::optional<int_t>& val) {
-	if (val) setInteger(*val);
-	else setNull();
-}
-
-void PValue::setOptionalFloat(const std::optional<float_t>& val) {
-	if (val) setFloat(*val);
-	else setNull();
-}
-
-void PValue::setOptionalBool(const std::optional<bool_t>& val) {
-	if (val) setBool(*val);
-	else setNull();
-}
-
-void PValue::setNull(null_t&&) {
-	setNull();
+	m_type = PType::Boolean;
 }
 
 void traversePValue(const PValue& rootNode, const std::function<void(const Path& path, TraverseAction action, const PValue& value)>& callback);
-void PValue::setObject(obj_t&& val) {
-	setNull();
-	new(&m_value.oVal) obj_t(std::move(val));
-	m_type = PType::Object;
-}
 
-void PValue::setArray(arr_t&& val) {
-	setNull();
-	new(&m_value.aVal) arr_t(std::move(val));
-	m_type = PType::Array;
-}
-
-void PValue::setString(str_t&& val) {
-	setNull();
-	new(&m_value.sVal)
-	std::string(std::move(val));
-	m_type = PType::String;
-}
-
-void PValue::setUnsigned(uint_t&& val) {
-	setNull();
-	m_value.uVal = std::move(val);
-	m_type = PType::Unsigned;
-}
-
-void PValue::setInteger(int_t&& val) {
-	setNull();
-	m_value.iVal = std::move(val);
-	m_type = PType::Integer;
-}
-
-void PValue::setFloat(float_t&& val) {
-	setNull();
-	m_value.fVal = std::move(val);
-	m_type = PType::Float;
-}
-
-void PValue::setBool(bool_t&& val) {
-	setNull();
-	m_value.bVal = std::move(val);
-	m_type = PType::Bool;
-}
-
-PValue::obj_t* PValue::objectPtr() {
-	return (m_type == PType::Object) ? &m_value.oVal : nullptr;
-}
-
-PValue::arr_t* PValue::arrayPtr() {
-	return (m_type == PType::Array) ? &m_value.aVal : nullptr;
-}
-
-PValue::str_t* PValue::stringPtr() {
-	return (m_type == PType::String) ? &m_value.sVal : nullptr;
-}
-
-PValue::uint_t* PValue::unsignedPtr() {
-	return (m_type == PType::Unsigned) ? &m_value.uVal : nullptr;
-}
-
-PValue::int_t* PValue::integerPtr() {
-	return (m_type == PType::Integer) ? &m_value.iVal : nullptr;
-}
-
-PValue::float_t* PValue::floatPtr() {
-	return (m_type == PType::Float) ? &m_value.fVal : nullptr;
-}
-
-PValue::bool_t* PValue::boolPtr() {
-	return (m_type == PType::Bool) ? &m_value.bVal : nullptr;
-}
-
-const PValue::obj_t* PValue::objectPtr() const {
-	return (m_type == PType::Object) ? &m_value.oVal : nullptr;
-}
-
-const PValue::arr_t* PValue::arrayPtr() const {
-	return (m_type == PType::Array) ? &m_value.aVal : nullptr;
-}
-
-const PValue::str_t* PValue::stringPtr() const {
-	return (m_type == PType::String) ? &m_value.sVal : nullptr;
-}
-
-const PValue::uint_t* PValue::unsignedPtr() const {
-	return (m_type == PType::Unsigned) ? &m_value.uVal : nullptr;
-}
-
-const PValue::int_t* PValue::integerPtr() const {
-	return (m_type == PType::Integer) ? &m_value.iVal : nullptr;
-}
-
-const PValue::float_t* PValue::floatPtr() const {
-	return (m_type == PType::Float) ? &m_value.fVal : nullptr;
-}
-
-const PValue::bool_t* PValue::boolPtr() const {
-	return (m_type == PType::Bool) ? &m_value.bVal : nullptr;
-}
-
-PValue::obj_t& PValue::objectValue() {
-	auto* ptr = objectPtr();
-	if (ptr) return *ptr;
+PValue::obj_t& PValue::asObj() {
+	if (isObj()) return m_value.oVal;
 	throw std::logic_error("PValue::value: Doesn't contain object value");
 }
 
-PValue::arr_t& PValue::arrayValue() {
-	auto* ptr = arrayPtr();
-	if (ptr) return *ptr;
+PValue::arr_t& PValue::asArr() {
+	if (isArr()) return m_value.aVal;
 	throw std::logic_error("PValue::value: Doesn't contain array value");
 }
 
-PValue::str_t& PValue::stringValue() {
-	auto* ptr = stringPtr();
-	if (ptr) return *ptr;
+PValue::str_t& PValue::asStr() {
+	if (isStr()) return m_value.sVal;
 	throw std::logic_error("PValue::value: Doesn't contain string value");
 }
 
-PValue::uint_t& PValue::unsignedValue() {
-	auto* ptr = unsignedPtr();
-	if (ptr) return *ptr;
-	throw std::logic_error("PValue::value: Doesn't contain unsigned value");
-}
-
-PValue::int_t& PValue::integerValue() {
-	auto* ptr = integerPtr();
-	if (ptr) return *ptr;
+PValue::int_t& PValue::asInt() {
+	if (isInt()) return m_value.iVal;
 	throw std::logic_error("PValue::value: Doesn't contain integer value");
 }
 
-PValue::float_t& PValue::floatValue() {
-	auto* ptr = floatPtr();
-	if (ptr) return *ptr;
-	throw std::logic_error("PValue::value: Doesn't contain float value");
+PValue::dec_t& PValue::asDec() {
+	if (isDec()) return m_value.dVal;
+	throw std::logic_error("PValue::value: Doesn't contain decimal value");
 }
 
-PValue::bool_t& PValue::boolValue() {
-	auto* ptr = boolPtr();
-	if (ptr) return *ptr;
-	throw std::logic_error("PValue::value: Doesn't contain float value");
+PValue::bool_t& PValue::asBool() {
+	if (isBool()) return m_value.bVal;
+	throw std::logic_error("PValue::value: Doesn't contain decimal value");
 }
 
-const PValue::obj_t& PValue::objectValue() const {
-	auto* ptr = objectPtr();
-	if (ptr) return *ptr;
+PValue::obj_t& PValue::asObj(const obj_t& def) {
+	if (isObj()) return m_value.oVal;
+	setObj(def);
+	return asObj();
+}
+
+PValue::arr_t& PValue::asArr(const arr_t& def) {
+	if (isArr()) return m_value.aVal;
+	setArr(def);
+	return asArr();
+}
+
+PValue::str_t& PValue::asStr(const str_t& def) {
+	if (isStr()) return m_value.sVal;
+	setStr(def);
+	return asStr();
+}
+
+PValue::int_t& PValue::asInt(int_t def) {
+	if (isInt()) return m_value.iVal;
+	setInt(def);
+	return asInt();
+}
+
+PValue::dec_t& PValue::asDec(dec_t def) {
+	if (isDec()) return m_value.dVal;
+	setDec(def);
+	return asDec();
+}
+
+PValue::bool_t& PValue::asBool(bool_t def) {
+	if (isBool()) return m_value.bVal;
+	setBool(def);
+	return asBool();
+}
+
+const PValue::obj_t& PValue::asObj() const {
+	if (isObj()) return m_value.oVal;
 	throw std::logic_error("PValue::value: Doesn't contain object value");
 }
 
-const PValue::arr_t& PValue::arrayValue() const {
-	auto* ptr = arrayPtr();
-	if (ptr) return *ptr;
+const PValue::arr_t& PValue::asArr() const {
+	if (isArr()) return m_value.aVal;
 	throw std::logic_error("PValue::value: Doesn't contain array value");
 }
 
-const PValue::str_t& PValue::stringValue() const {
-	auto* ptr = stringPtr();
-	if (ptr) return *ptr;
+const PValue::str_t& PValue::asStr() const {
+	if (isStr()) return m_value.sVal;
 	throw std::logic_error("PValue::value: Doesn't contain string value");
 }
 
-const PValue::uint_t& PValue::unsignedValue() const {
-	auto* ptr = unsignedPtr();
-	if (ptr) return *ptr;
-	throw std::logic_error("PValue::value: Doesn't contain unsigned value");
-}
-
-const PValue::int_t& PValue::integerValue() const {
-	auto* ptr = integerPtr();
-	if (ptr) return *ptr;
+PValue::int_t PValue::asInt() const {
+	if (isInt()) return m_value.iVal;
 	throw std::logic_error("PValue::value: Doesn't contain integer value");
 }
 
-const PValue::float_t& PValue::floatValue() const {
-	auto* ptr = floatPtr();
-	if (ptr) return *ptr;
-	throw std::logic_error("PValue::value: Doesn't contain float value");
-}
-
-const PValue::bool_t& PValue::boolValue() const {
-	auto* ptr = boolPtr();
-	if (ptr) return *ptr;
-	throw std::logic_error("PValue::value: Doesn't contain bool value");
-}
-
-std::optional<PValue::uint_t> PValue::tryAsUnsigned() const {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wswitch"
-	switch(m_type) {
-		case PType::Null: return {0};
-		case PType::Unsigned: return {m_value.uVal};
-		case PType::Integer: return {static_cast<uint_t>(m_value.iVal)};
-		case PType::Float: return {static_cast<uint_t>(m_value.fVal)};
-		case PType::Bool: return {static_cast<uint_t>(m_value.bVal)};
-
-		case PType::String: {
-			try {
-				return {std::stoull(m_value.sVal)};
-			} catch(...) {
-				return {};
-			}
-		}
-	}
-	#pragma clang diagnostic pop
-	return {};
-}
-
-std::optional<PValue::int_t> PValue::tryAsInteger() const {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wswitch"
-	switch(m_type) {
-		case PType::Null: return {0};
-		case PType::Unsigned: return {static_cast<int_t>(m_value.uVal)};
-		case PType::Integer: return {m_value.iVal};
-		case PType::Float: return {static_cast<int_t>(m_value.fVal)};
-		case PType::Bool: return {static_cast<int_t>(m_value.bVal)};
-
-		case PType::String: {
-			try {
-				return {std::stoll(m_value.sVal)};
-			} catch(...) {
-				return {};
-			}
-		}
-	}
-	#pragma clang diagnostic pop
-	return {};
-}
-
-std::optional<PValue::float_t> PValue::tryAsFloat() const {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wswitch"
-	switch(m_type) {
-		case PType::Null: return {0};
-		case PType::Unsigned: return {static_cast<float_t>(m_value.uVal)};
-		case PType::Integer: return {static_cast<float_t>(m_value.uVal)};
-		case PType::Float: return {m_value.fVal};
-		case PType::Bool: return {static_cast<float_t>(m_value.bVal)};
-
-		case PType::String: {
-			try {
-				return {std::stold(m_value.sVal)};
-			} catch(...) {
-				return {};
-			}
-		}
-	}
-	#pragma clang diagnostic pop
-	return {};
-}
-
-std::optional<PValue::str_t> PValue::tryAsString() const {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wswitch"
-	switch(m_type) {
-		case PType::Null: return {""};
-		case PType::Unsigned: return {std::to_string(m_value.uVal)};
-		case PType::Integer: return {std::to_string(m_value.uVal)};
-		case PType::Float: return {std::to_string(m_value.fVal)};
-		case PType::Bool: return {m_value.bVal ? "true" : "false"};
-
-		case PType::String: return {m_value.sVal};
-	}
-	#pragma clang diagnostic pop
-	return {};
-}
-
-std::optional<PValue::bool_t> PValue::tryAsBool() const {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wswitch"
-	switch(m_type) {
-		case PType::Null: return {""};
-		case PType::Unsigned: return {static_cast<bool_t>(m_value.uVal)};
-		case PType::Integer: return {static_cast<bool_t>(m_value.uVal)};
-		case PType::Float: return {static_cast<bool_t>(m_value.fVal)};
-		case PType::Bool: return {m_value.bVal};
-
-		case PType::String: {
-			try {
-				bool result;
-				std::stringstream sstream(m_value.sVal);
-				sstream >> std::boolalpha >> result;
-				return {result};
-			} catch(...) {
-				return {};
-			}
-		}
-	}
-	#pragma clang diagnostic pop
-	return {};
-}
-
-PValue::uint_t PValue::asUnsigned() const {
-	return tryAsUnsigned().value();
-}
-
-PValue::int_t PValue::asInteger() const {
-	return tryAsInteger().value();
-}
-
-PValue::float_t PValue::asFloat() const {
-	return tryAsFloat().value();
-}
-
-PValue::str_t PValue::asString() const {
-	return tryAsString().value();
+PValue::dec_t PValue::asDec() const {
+	if (isDec()) return m_value.dVal;
+	throw std::logic_error("PValue::value: Doesn't contain decimal value");
 }
 
 PValue::bool_t PValue::asBool() const {
-	return tryAsBool().value();
+	if (isBool()) return m_value.bVal;
+	throw std::logic_error("PValue::value: Doesn't contain bool value");
+}
+
+const PValue::obj_t& PValue::asObjOr(const obj_t& def) const {
+	if (isObj()) return m_value.oVal;
+	return def;
+}
+
+const PValue::arr_t& PValue::asArrOr(const arr_t& def) const {
+	if (isArr()) return m_value.aVal;
+	return def;
+}
+
+const PValue::str_t& PValue::asStrOr(const str_t& def) const {
+	if (isStr()) return m_value.sVal;
+	return def;
+}
+
+PValue::int_t PValue::asIntOr(int_t def) const {
+	if (isInt()) return m_value.iVal;
+	return def;
+}
+
+PValue::dec_t PValue::asDecOr(dec_t def) const {
+	if (isDec()) return m_value.dVal;
+	return def;
+}
+
+PValue::bool_t PValue::asBoolOr(bool_t def) const {
+	if (isBool()) return m_value.bVal;
+	return def;
+}
+
+const PValue::obj_t* PValue::asObjPtr() const {
+	if (isObj()) return &m_value.oVal;
+	return nullptr;
+}
+
+const PValue::arr_t* PValue::asArrPtr() const {
+	if (isArr()) return &m_value.aVal;
+	return nullptr;
+}
+
+const PValue::str_t* PValue::asStrPtr() const {
+	if (isStr()) return &m_value.sVal;
+	return nullptr;
+}
+
+const PValue::int_t* PValue::asIntPtr() const {
+	if (isInt()) return &m_value.iVal;
+	return nullptr;
+}
+
+const PValue::dec_t* PValue::asDecPtr() const {
+	if (isDec()) return &m_value.dVal;
+	return nullptr;
+}
+
+const PValue::bool_t* PValue::asBoolPtr() const {
+	if (isBool()) return &m_value.bVal;
+	return nullptr;
 }
 
 PType PValue::type() const {
 	return m_type;
 }
 
-bool PValue::isObject() const {
+bool PValue::isNull() const {
+	return m_type == PType::Null;
+}
+
+bool PValue::isObj() const {
 	return m_type == PType::Object;
 }
 
-bool PValue::isArray() const {
+bool PValue::isArr() const {
 	return m_type == PType::Array;
 }
 
-bool PValue::isUnsigned() const {
-	return m_type == PType::Unsigned;
-}
-
-bool PValue::isInteger() const {
-	return m_type == PType::Integer;
-}
-
-bool PValue::isString() const {
+bool PValue::isStr() const {
 	return m_type == PType::String;
 }
 
+bool PValue::isInt() const {
+	return m_type == PType::Integer;
+}
+
+bool PValue::isDec() const {
+	return m_type == PType::Decimal;
+}
+
 bool PValue::isBool() const {
-	return m_type == PType::Bool;
+	return m_type == PType::Boolean;
 }
 
 PValue& PValue::operator[](const Path& path) {
-	return navigate(path);
-}
-
-PValue& PValue::operator[](size_t id) {
-	return (*this)[Path() << id];
-}
-
-PValue& PValue::operator[](const std::string& name) {
-	return (*this)[Path() << name];
+	return get(path);
 }
 
 const PValue& PValue::operator[](const Path& path) const {
-	const PValue* result = tryNavigate(path);
+	auto result = tryGet(path);
 	if (result) return *result;
-	throw std::out_of_range("PValue::operator[]: Path out of range");
+	throw std::out_of_range("PValue::operator[]: Attempt to access path that's out of range");
 }
 
 PValue& PValue::operator=(const PValue& val) {
@@ -683,7 +487,6 @@ PValue& PValue::operator=(PValue&& val) {
 }
 
 static void traversePValue_internal(Path& path, const PValue& cNode, const std::function<void(const Path& path, TraverseAction action, const PValue& value)>& callback) {
-
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wswitch-enum"
 	switch(cNode.type()) {
@@ -691,7 +494,7 @@ static void traversePValue_internal(Path& path, const PValue& cNode, const std::
 
 			callback(path, TraverseAction::ObjectStart, cNode);
 
-			auto& object = cNode.objectValue();
+			auto& object = cNode.asObj();
 			for(auto iter = object.begin(); iter != object.end(); iter++) {
 				traversePValue_internal(path.append(iter->first), iter->second, callback);
 				path.pop();
@@ -706,7 +509,7 @@ static void traversePValue_internal(Path& path, const PValue& cNode, const std::
 
 			callback(path, TraverseAction::ArrayStart, cNode);
 
-			auto& array = cNode.arrayValue();
+			auto& array = cNode.asArr();
 			for(size_t i = 0; i < array.size(); i++) {
 				traversePValue_internal(path.append(i), array[i], callback);
 				path.pop();

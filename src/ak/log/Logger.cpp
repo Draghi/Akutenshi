@@ -22,71 +22,68 @@
 
 using namespace ak::log;
 
-static ak::thread::Thread logThread("Log");
+static ak::thread::Thread logProcessingThread("Log");
+static ak::filesystem::CFile logFileOutput;
+static ak::container::DoubleBuffer<std::string> logMessageBuffer;
+static Level logVerboseLevel = Level::DEBUG;
 
-struct LoggerData {
-	ak::filesystem::CFile file;
-	ak::container::DoubleBuffer<std::string> messages;
-};
-static std::shared_ptr<LoggerData> logData = std::make_shared<LoggerData>();
+static void proccessMessageQueue() {
+	logMessageBuffer.swap();
 
-static Level minLogLevel = Level::DEBUG;
-
-static void proccessMessageQueue(LoggerData& data) {
-	data.messages.swap();
-	data.messages.iterate([&](size_t, const std::string& message){
-		std::cout << message << std::flush;
-		if (data.file) {
-			data.file.write(message.c_str(), message.size());
-			data.file.flush();
-		}
+	logMessageBuffer.iterate([&](size_t, const std::string& message){
+		std::cout << message;
+		if (logFileOutput) logFileOutput.write(message.c_str(), message.size());
 	});
+
+	std::cout.flush();
+	if (logFileOutput) logFileOutput.flush();
 }
 
 bool Logger::isLevelEnabled(Level logLevel) {
-	return static_cast<uint8>(logLevel) <= static_cast<uint8>(minLogLevel);
+	return static_cast<uint8>(logLevel) <= static_cast<uint8>(logVerboseLevel);
 }
 
 bool Logger::isLoggingEnabled() {
-	return logThread.isRunning();
+	return logProcessingThread.isRunning();
 }
 
 void Logger::printMessage(const std::string& str) {
-	logData->messages.push_back(str);
+	logMessageBuffer.push_back(str);
 }
 
-bool ak::log::startup(ak::filesystem::CFile file, Level logLevel) {
-	if (logThread.isRunning()) return false;
+bool ak::log::startup(ak::filesystem::CFile nFile, Level logLevel) {
+	if (logProcessingThread.isRunning()) return false;
 
-	logData->file = std::move(file);
-	minLogLevel = logLevel;
+	logFileOutput = std::move(nFile);
+	logVerboseLevel = logLevel;
 
-	logThread.execute([]{
-		auto dataLock = logData;
-		while(!logThread.isCloseRequested()) {
+	logProcessingThread.execute([]{
+		while(!logProcessingThread.isCloseRequested()) {
 			ak::thread::current().sleep(1e5);
-			proccessMessageQueue(*dataLock);
+			proccessMessageQueue();
 		}
 	});
+
+	logProcessingThread.detach();
 
 	return true;
 }
 
 void ak::log::setLogLevel(Level logLevel) {
-	minLogLevel = logLevel;
+	logVerboseLevel = logLevel;
 }
 
 Level ak::log::getLogLevel() {
-	return minLogLevel;
+	return logVerboseLevel;
 }
 
 void ak::log::shutdown() {
-	logThread.requestClose();
-	logThread.waitFor();
+	logProcessingThread.requestClose();
+	logProcessingThread.join();
 
-	proccessMessageQueue(*logData);
-	proccessMessageQueue(*logData);
+	proccessMessageQueue();
+	proccessMessageQueue();
 
-	if (logData && logData->file) logData->file.flush();
+	if (logFileOutput) logFileOutput.flush();
 }
 

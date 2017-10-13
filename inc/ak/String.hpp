@@ -23,6 +23,10 @@
 #include <vector>
 
 namespace ak {
+
+	template<size_t literalLength> constexpr size_t clen(const char(&)[literalLength]) { return literalLength - 1; }
+
+
 	void split(const std::string& src, const std::vector<std::string>& delims, std::function<void(const std::string&, const std::string&)> out);
 
 	template<typename func_t> void split(const std::string& src, const std::vector<std::string>& delims, const func_t& out) {

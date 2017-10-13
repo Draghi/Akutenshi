@@ -14,6 +14,7 @@ target_include_directories(akutenshi SYSTEM PUBLIC ${GLM_INCLUDE_DIR})
 target_include_directories(akutenshi SYSTEM PUBLIC ${ORDERED_MAP_INCLUDE_DIR})
 target_include_directories(akutenshi SYSTEM PUBLIC ${RAPIDJSON_INCLUDE_DIR})
 target_include_directories(akutenshi SYSTEM PUBLIC ${BACKWARD_INCLUDE_DIR})
+target_include_directories(akutenshi SYSTEM PUBLIC ${GLFW_INCLUDE_DIR})
 
 target_compile_options(akutenshi PUBLIC ${AK_BUILD_CXX_WARNING_FLAGS})
 target_compile_options(akutenshi PUBLIC ${AK_BUILD_CXX_COMPILER_FLAGS})
@@ -24,6 +25,8 @@ set_target_properties(akutenshi PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUI
 
 find_package(Threads REQUIRED)
 target_link_libraries(akutenshi Threads::Threads)
+
+target_link_libraries(akutenshi glfw)
 
 if(WIN32)
 

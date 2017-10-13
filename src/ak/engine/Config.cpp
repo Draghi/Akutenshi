@@ -24,22 +24,30 @@
 using namespace ak::engine;
 
 static ak::event::Dispatcher<ConfigReloadEvent> configReloadDispatcher;
-static ak::event::Dispatcher<ConfigSaveEvent> configSaveDispatcher;
+static ak::data::PValue currentConfig;
 
 static ak::log::Logger configLog("Config");
+static ak::filesystem::CFile configFile;
 
-bool ak::engine::reloadConfig(ak::filesystem::CFile& configFile) {
+void ak::engine::setConfigFile(ak::filesystem::CFile&& newConfigFile) {
+	configFile = std::move(newConfigFile);
+}
 
+bool ak::engine::reloadConfig() {
 	configLog.info("Attempting to load global config");
 
-	std::string configContents;
-	if (configFile.readLine(configContents, false, {}) <= 0) { configLog.warn("Failed to read global config contents"); return false; }
+	{
+		std::string configContents;
+		if (configFile.readLine(configContents, false, {}) <= 0) { configLog.warn("Failed to read global config contents"); return false; }
 
-	ak::data::PValue gConfig;
-	std::stringstream sstream(configContents);
-	if (!ak::data::deserializeJson(gConfig, sstream)) { configLog.warn("Failed to read global config contents"); return false; }
+		ak::data::PValue gConfig;
+		std::stringstream sstream(configContents);
+		if (!ak::data::deserializeJson(gConfig, sstream)) { configLog.warn("Failed to read global config contents"); return false; }
 
-	ConfigReloadEvent reloadEvent(gConfig);
+		currentConfig = gConfig;
+	}
+
+	ConfigReloadEvent reloadEvent(currentConfig);
 	configReloadDispatcher.send(reloadEvent);
 
 	configLog.info("Successfully reloaded global config");
@@ -47,14 +55,12 @@ bool ak::engine::reloadConfig(ak::filesystem::CFile& configFile) {
 	return true;
 }
 
-bool ak::engine::saveConfig(ak::filesystem::CFile& configFile) {
+bool ak::engine::saveConfig() {
+	return configFile.writeLine(ak::data::serializeJson(config(), true)) > 0;
+}
 
-	ak::data::PValue gConfig;
-
-	ConfigSaveEvent saveEvent(gConfig);
-	configSaveDispatcher.send(saveEvent);
-
-	return configFile.writeLine(ak::data::serializeJson(gConfig, true)) > 0;
+ak::data::PValue& ak::engine::config() {
+	return currentConfig;
 }
 
 void ak::engine::subscribeConfigReload(ak::event::Subscription& subscriber, const std::function<void(ConfigReloadEvent&)>& callback) {
@@ -67,17 +73,5 @@ ak::event::SubscriberID ak::engine::subscribeConfigReload(const std::function<vo
 
 void ak::engine::unsubscribeConfigReload(ak::event::Subscription& subscriber) {
 	configReloadDispatcher.unsubscribe(subscriber);
-}
-
-void ak::engine::subscribeConfigSave(ak::event::Subscription& subscriber, const std::function<void(ConfigSaveEvent&)>& callback) {
-	configSaveDispatcher.subscribe(subscriber, callback);
-}
-
-ak::event::SubscriberID ak::engine::subscribeConfigSave(const std::function<void(ConfigSaveEvent&)>& callback) {
-	return configSaveDispatcher.subscribe(callback);
-}
-
-void ak::engine::unsubscribeConfigSave(ak::event::Subscription& subscriber) {
-	configSaveDispatcher.unsubscribe(subscriber);
 }
 

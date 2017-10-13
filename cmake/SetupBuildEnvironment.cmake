@@ -32,10 +32,28 @@ else()
 	message(WARNING "Unsupported compiler" ${CMAKE_CXX_COMPILER})
 endif()
 
+###############
+# Build GLFW  # 
+###############
+
+set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE INTERNAL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE INTERNAL "" FORCE)
+set(GLFW_DOCUMENT_INTERNALS OFF CACHE INTERNAL "" FORCE)
+set(GLFW_INSTALL OFF CACHE INTERNAL "" FORCE)
+set(LIB_SUFFIX "" CACHE INTERNAL "" FORCE)
+
+add_subdirectory("${CMAKE_SOURCE_DIR}/cmake/glfw")
+
+#################
+# Library Paths # 
+#################
+
 set(GLM_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/glm")
 set(ORDERED_MAP_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/ordered-map/src")
 set(RAPIDJSON_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/rapidjson/include")
 set(BACKWARD_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/backward-cpp")
+set(GLFW_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/glfw/include")
 
 ###############
 # CMake Setup #

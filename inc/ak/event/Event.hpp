@@ -18,12 +18,13 @@
 #define AK_EVENT_EVENT_HPP_
 
 #include <ak/event/Util.hpp>
+#include <ak/String.hpp>
 #include <string>
 #include <string_view>
 
 #define AK_IMPLEMENT_EVENT(eventName, isCancelableVal) \
-	public: static constexpr const char EVENT_NAME[] = eventName; \
-	public: static constexpr ak::event::EventID EVENT_ID = ak::event::calculateEventID(std::string_view(EVENT_NAME, sizeof(EVENT_NAME) - 1)); \
+	public: static constexpr const std::string_view EVENT_NAME = std::string_view(eventName, ak::clen(eventName)); \
+	public: static constexpr ak::event::EventID EVENT_ID = ak::event::calculateEventID(EVENT_NAME); \
 	public: virtual ak::event::EventID id() const { return EVENT_ID; } \
 	public: virtual std::string name() const { return std::string(EVENT_NAME); } \
 	public: virtual bool isCancelable() const { return isCancelableVal; }
@@ -33,6 +34,10 @@ namespace ak {
 
 		class Event {
 			template<typename> friend class Dispatcher;
+
+			Event(const Event&) = delete;
+			Event& operator=(const Event&) = delete;
+
 			private:
 				bool m_canceled;
 			public:

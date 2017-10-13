@@ -93,7 +93,6 @@ namespace ak {
 					auto readLock = m_readLock.lock();
 					return (m_buffers[0].size() <= 0) || (m_buffers[1].size() <= 0);
  				}
-
 		};
 
 	}

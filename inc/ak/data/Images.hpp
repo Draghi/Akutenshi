@@ -14,16 +14,23 @@
  * limitations under the License.
  **/
 
-#ifndef AK_ENGINE_STARTUP_HPP_
-#define AK_ENGINE_STARTUP_HPP_
+#ifndef AK_DATA_IMAGES_HPP_
+#define AK_DATA_IMAGES_HPP_
 
-#include <ak/data/PValue.hpp>
-#include <ak/ScopeGuard.hpp>
+#include <ak/data/Vector2D.hpp>
+#include <ak/PrimitiveTypes.hpp>
 
 namespace ak {
-	namespace engine {
+	namespace data {
 
-		ak::ScopeGuard startup(const ak::data::PValue& arguments);
+		struct RGBA {
+			uint8 red;
+			uint8 green;
+			uint8 blue;
+			uint8 alpha;
+		};
+
+		using Image = Vector2D<RGBA>;
 
 	}
 }

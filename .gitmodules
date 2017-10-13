@@ -13,3 +13,6 @@
 [submodule "cmake/backward-cpp"]
 	path = cmake/backward-cpp
 	url = https://github.com/bombela/backward-cpp.git
+[submodule "cmake/glfw"]
+	path = cmake/glfw
+	url = https://github.com/glfw/glfw.git

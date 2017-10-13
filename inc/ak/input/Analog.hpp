@@ -14,16 +14,20 @@
  * limitations under the License.
  **/
 
-#ifndef AK_ENGINE_STARTUP_HPP_
-#define AK_ENGINE_STARTUP_HPP_
+#ifndef AK_INPUT_ANALOG_HPP_
+#define AK_INPUT_ANALOG_HPP_
 
-#include <ak/data/PValue.hpp>
-#include <ak/ScopeGuard.hpp>
+#include <ak/PrimitiveTypes.hpp>
 
 namespace ak {
-	namespace engine {
+	namespace input {
 
-		ak::ScopeGuard startup(const ak::data::PValue& arguments);
+		enum class Analog : uint8 {
+			LTrigger,
+			RTrigger,
+			LStick,
+			RStick
+		};
 
 	}
 }

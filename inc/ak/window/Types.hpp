@@ -14,16 +14,32 @@
  * limitations under the License.
  **/
 
-#ifndef AK_ENGINE_STARTUP_HPP_
-#define AK_ENGINE_STARTUP_HPP_
-
-#include <ak/data/PValue.hpp>
-#include <ak/ScopeGuard.hpp>
+#ifndef AK_WINDOW_TYPES_HPP_
+#define AK_WINDOW_TYPES_HPP_
 
 namespace ak {
-	namespace engine {
+	namespace window {
 
-		ak::ScopeGuard startup(const ak::data::PValue& arguments);
+		struct RealCoord {
+			int x;
+			int y;
+
+			bool operator==(const RealCoord& other) const { return x == other.x && y == other.y; }
+		};
+
+		struct WindowCoord {
+			int x;
+			int y;
+
+			bool operator==(const WindowCoord& other) const { return x == other.x && y == other.y; }
+		};
+
+		struct FrameCoord {
+			int x;
+			int y;
+
+			bool operator==(const FrameCoord& other) const { return x == other.x && y == other.y; }
+		};
 
 	}
 }

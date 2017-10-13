@@ -2,51 +2,57 @@
 #include <ak/data/PValue.hpp>
 #include <ak/engine/Config.hpp>
 #include <ak/engine/Startup.hpp>
-#include <ak/filesystem/CFile.hpp>
-#include <ak/filesystem/Filesystem.hpp>
 #include <ak/log/Logger.hpp>
 #include <ak/ScopeGuard.hpp>
-#include <string_view>
+#include <ak/time/FPSCounter.hpp>
+#include <ak/window/Monitor.hpp>
+#include <ak/window/Types.hpp>
+#include <ak/window/Window.hpp>
+#include <ak/window/WindowOptions.hpp>
+#include <iterator>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #if defined(__linux)
 #define BACKWARD_HAS_BFD 1
+#include <signal.h>
+#ifndef SIGUNUSED
+#define SIGUNUSED 31
+#endif
 #include "backward.hpp"
 namespace backward { static backward::SignalHandling sh; }
 #endif
 
-static void engineShutdown();
-
 int main() {
-	ak::engine::startup(ak::data::PValue());
-	auto scopeGuard = ak::ScopeGuard(engineShutdown);
+	ak::log::Logger log("PValueTest");
 
-	constexpr ak::log::Logger log(std::string_view("PValueTest", 10));
+	auto engineShutdownGuard = ak::engine::startup(ak::data::PValue());
+	ak::thread::current().sleep(100000);
 
-	ak::data::PValue pTree;
+	if (ak::engine::config().exists("window")) {
+		ak::window::open(ak::window::WindowOptions::deserialize(ak::engine::config()["window"]));
+	} else {
+		auto defaultWindowOptions = ak::window::WindowOptions();
+		defaultWindowOptions.serialize(ak::engine::config()["window"]);
+		ak::window::open(defaultWindowOptions);
+	}
 
-	ak::filesystem::serializeFolders(pTree);
-	log.info([&]{return ak::data::serializeJson(pTree);});
 
-	pTree["appData"].setString("./modi");
-	log.info([&]{return ak::data::serializeJson(pTree);});
-	ak::filesystem::deserializeFolders(pTree);
+	ak::time::FPSCounter fpsCounter;
+	while(!ak::window::isCloseRequested()) {
 
-	ak::filesystem::serializeFolders(pTree);
-	log.info([&]{return ak::data::serializeJson(pTree);});
+		std::stringstream sstream;
+		{
+			auto monitors = ak::window::getAllWindowMonitors();
+			sstream << (ak::window::isFocused() ? "*" : "?") << " <" << fpsCounter.fps() << "> "<< ak::window::pos().x << "," << ak::window::pos().y << " {" << ak::window::winSize().x << "x" << ak::window::winSize().y << "}@" << ak::window::refreshRate() << " | ";
+			for(auto iter = monitors.begin(); iter != monitors.end(); iter++) sstream << iter->name << " {" << iter->prefVideoMode.resolution.x << "x" << iter->prefVideoMode.resolution.y << "}, ";
+		}
+		ak::window::setTitle(sstream.str());
 
-	ak::filesystem::overrideFolder(ak::filesystem::SystemFolder::appConfig, "./config/override");
-	ak::filesystem::resetFolder(ak::filesystem::SystemFolder::appData);
-	ak::filesystem::serializeFolders(pTree);
-	log.info([&]{return ak::data::serializeJson(pTree);});
+		ak::window::swapBuffer();
+		ak::window::pollEvents();
 
-	//auto configFile = ak::filesystem::CFile("./startup.config", ak::filesystem::OpenFlags::Out | ak::filesystem::OpenFlags::Truncate);
-	//if (!configFile) return -1;
-	//ak::engine::saveConfig(configFile);
-}
-
-static void engineShutdown() {
-	constexpr ak::log::Logger log(std::string_view("Shutdown", 8));
-
-	log.info("Engine shutdown sequence started");
-	ak::log::shutdown();
+		fpsCounter.update();
+	}
 }

@@ -26,25 +26,30 @@ static Thread*& currentThreadPtr();
 Thread::Thread()
 	: m_name("Thread"),
 	m_id(getNextID()),
+	m_threadId(),
 	m_lock(),
 	m_thread(),
 	m_closeRequested(false),
-	m_runLock() {}
+	m_runLock(false) {}
 
 Thread::Thread(const std::string& name)
 	: m_name(name),
 	  m_id(getNextID()),
+	  m_threadId(),
 	  m_lock(),
 	  m_thread(), 
 	  m_closeRequested(false), 
-	  m_runLock() {}
+	  m_runLock(false) {}
 
-Thread::~Thread() { requestClose(); waitFor(); }
+Thread::~Thread() {
+	requestClose();
+	if (!join()) waitFor();
+}
 
 ak::ScopeGuard Thread::performThreadStartup() {
 	currentThreadPtr() = this;
 	return ak::ScopeGuard([this] {
-		m_runLock.execute();
+		m_runLock = false;
 		m_closeRequested = false;
 		delete &current();
 	});
@@ -81,19 +86,19 @@ Thread& Thread::cancelClose() {
 	return *this;
 }
 
-bool Thread::waitFor() {
-	if (!m_thread.joinable()) {
-		return const_cast<const Thread*>(this)->waitFor();
-	}
+bool Thread::detach() {
+	if (m_thread.joinable()) m_thread.detach();
+	return true;
+}
 
+bool Thread::join() {
+	if (!m_thread.joinable()) return false;
 	m_thread.join();
 	return true;
 }
 
 bool Thread::waitFor() const {
-	while (isRunning()) {
-		std::this_thread::yield();
-	}
+	while (isRunning()) { std::this_thread::yield(); }
 	return true;
 }
 
@@ -102,7 +107,7 @@ bool Thread::isCloseRequested() const {
 }
 
 bool Thread::isRunning() const {
-	return !m_runLock.empty();
+	return m_runLock;
 }
 
 bool Thread::isCurrent() const {
@@ -118,6 +123,7 @@ uint64 Thread::id() const {
 }
 
 std::thread::id Thread::threadID() const {
+	if (m_threadId != std::thread::id()) return m_threadId;
 	return m_thread.get_id();
 }
 
@@ -137,7 +143,7 @@ static Thread*& currentThreadPtr() {
 
 ak::thread::CurrentThread& ak::thread::current() {
 	if (::currentThreadPtr() == nullptr) ::currentThreadPtr() = new Thread();
-	thread_local CurrentThread* currentThread = new CurrentThread(*::currentThreadPtr());
+	thread_local CurrentThread* currentThread = new CurrentThread(::currentThreadPtr(), std::this_thread::get_id());
 	return *currentThread;
 }
 

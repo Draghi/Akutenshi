@@ -14,16 +14,28 @@
  * limitations under the License.
  **/
 
-#ifndef AK_ENGINE_STARTUP_HPP_
-#define AK_ENGINE_STARTUP_HPP_
+#ifndef AK_INPUT_BUTTONS_HPP_
+#define AK_INPUT_BUTTONS_HPP_
 
-#include <ak/data/PValue.hpp>
-#include <ak/ScopeGuard.hpp>
+#include <ak/event/Event.hpp>
+#include <ak/PrimitiveTypes.hpp>
+#include <limits>
 
 namespace ak {
-	namespace engine {
+	namespace input {
 
-		ak::ScopeGuard startup(const ak::data::PValue& arguments);
+		enum class Button : uint8 {
+			/* Normal Keys */
+			Left = 0,
+			Right = 1,
+			Middle = 2,
+
+			/* Special Keys */
+			Scroll_Up = std::numeric_limits<uint8>::max(),
+			Scroll_Down  = Scroll_Up - 1,
+			Scroll_Left  = Scroll_Up - 2,
+			Scroll_Right = Scroll_Up - 3,
+		};
 
 	}
 }

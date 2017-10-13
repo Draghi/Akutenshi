@@ -28,20 +28,22 @@ namespace ak {
 		class Thread;
 
 		class CurrentThread {
+			friend CurrentThread& ak::thread::current();
 			private:
-				Thread& m_instance;
+				ak::thread::Thread* m_thread;
 				std::thread::id m_id;
 
-			public:
-				CurrentThread(Thread& instance);
+				CurrentThread(ak::thread::Thread* thread, std::thread::id id);
 
-				template<typename func_t> void schedule(const func_t& func) {
-					schedule(std::function<void()>(func));
+			public:
+
+				template<typename func_t> bool schedule(const func_t& func) {
+					return schedule(std::function<void()>(func));
 				}
 
-				void schedule(const std::function<void()>& func);
+				bool schedule(const std::function<void()>& func);
 				bool update();
-				void setName(const std::string& name);
+				bool setName(const std::string& name);
 
 				bool yield() const;
 				bool sleep(int64 microseconds) const;

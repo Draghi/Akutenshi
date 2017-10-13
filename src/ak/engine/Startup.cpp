@@ -18,13 +18,15 @@
 #include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Filesystem.hpp>
 #include <ak/log/Logger.hpp>
+#include <ak/PrimitiveTypes.hpp>
 #include <ak/thread/CurrentThread.hpp>
 #include <ak/thread/Thread.hpp>
 #include <ak/time/Time.hpp>
-#include <bits/types/struct_tm.h>
+#include <ak/window/Window.hpp>
 #include "ak/engine/Startup.hpp"
 #include <atomic>
 #include <iomanip>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -32,34 +34,58 @@
 using namespace ak::engine;
 
 static ak::log::Logger startupLog("Startup");
+static ak::log::Logger shutdownLog("Shutdown");
 static std::atomic<bool> hasStarted = false;
 
-static bool startLogger();
+using StartupFunc = void(const ak::data::PValue&);
+using ShutdownFunc = void();
+
+struct StartupRecord {
+	std::string startupName;
+	StartupFunc* startupFunc;
+	ShutdownFunc* shutdownFunc;
+};
+
 static void printBanner();
-static bool bootstrapConfig(const std::string& configLocation);
 
-void ak::engine::startup(const ak::data::PValue& arguments) {
+static void startLogger(const ak::data::PValue& args);
+static void startConfig(const ak::data::PValue& args);
+static void stopConfig();
+static void startWindow(const ak::data::PValue& args);
+
+static std::vector<StartupRecord> startupFunctions({
+	StartupRecord{"Config", startConfig, stopConfig},
+	StartupRecord{"Log",    startLogger, []{}},
+	StartupRecord{"Window", startWindow, ak::window::shutdown},
+});
+
+ak::ScopeGuard ak::engine::startup(const ak::data::PValue& arguments) {
 	if (hasStarted.exchange(true)) throw std::runtime_error("Engine is already running");
-
 	ak::thread::current().setName("Main");
 
-	if (!startLogger()) throw std::runtime_error("Could not start logging service");
+	startupLog.info("Starting Engine...");
+		for(auto iter = startupFunctions.begin(); iter != startupFunctions.end(); iter++) {
+			if (!iter->startupFunc) continue;
+			startupLog.info("Starting ", iter->startupName, " System...");
+				iter->startupFunc(arguments);
+			startupLog.info("Started ", iter->startupName, " System.");
+		}
+	startupLog.info("Started Engine.");
 
 	printBanner();
 
-	startupLog.info("Engine initialization sequence started");
+	return [&]{
+		startupLog.info("Stopping Engine...");
+			for(auto iter = startupFunctions.rbegin(); iter != startupFunctions.rend(); iter++) {
+				if (!iter->shutdownFunc) continue;
+				startupLog.info("Stopping ", iter->startupName, " System...");
+					iter->shutdownFunc();
+				startupLog.info("Stopped ", iter->startupName, " System.");
+			}
+		startupLog.info("Stopped Engine.");
 
-	auto configLocation = arguments.exists("configLocation") ? arguments["configLocation"].stringValue() : "./startup.config";
-	if (!bootstrapConfig(configLocation)) throw std::runtime_error("Could not start load configuration data");
-
-	startupLog.info("Engine initialization sequence finished");
-}
-
-static bool startLogger() {
-	auto utc = ak::time::utcTimestamp();
-	std::stringstream filename;
-	filename << "./log_" << std::put_time(&utc.ctime, "%Y%m%d_%H%M%S") << ".txt";
-	return ak::log::startup(ak::filesystem::CFile(filename.str(), ak::filesystem::OpenFlags::Out | ak::filesystem::OpenFlags::Truncate));
+		ak::log::shutdown();
+	};
 }
 
 static void printBanner() {
@@ -85,13 +111,38 @@ static void printBanner() {
 	               R"(+-----------------------------------------------------------------------------+)", '\n');
 }
 
-static bool bootstrapConfig(const std::string& configLocation) {
-	ak::engine::subscribeConfigReload([](ak::engine::ConfigReloadEvent& event){ if(event.config().exists("systemFolders")) ak::filesystem::deserializeFolders(event.config()["systemFolders"]); });
-	ak::engine::subscribeConfigReload([](ak::engine::ConfigReloadEvent& event){ if(event.config().exists("logLevel")) ak::log::setLogLevel(static_cast<ak::log::Level>(event.config()["logLevel"].asUnsigned()));});
-
-	auto configFile = ak::filesystem::CFile(configLocation, ak::filesystem::OpenFlags::In);
-	if (!configFile) return false;
-
-	return ak::engine::reloadConfig(configFile);
+static void startLogger(const ak::data::PValue& /*args*/) {
+	auto utc = ak::time::utcTimestamp();
+	std::stringstream filename;
+	filename << "logs/log_" << std::put_time(&utc.ctime, "%Y%m%d_%H%M%S") << ".txt";
+	auto logFile = ak::filesystem::open(ak::filesystem::SystemFolder::appData, filename.str(), ak::filesystem::OpenFlags::Out | ak::filesystem::OpenFlags::Truncate);
+	ak::log::startup(std::move(logFile));
 }
 
+static void startConfig(const ak::data::PValue& args) {
+
+	auto configLocation = args.getOrNull("configLocation").asStrOr("./startup.config");
+
+	ak::engine::subscribeConfigReload([](ak::engine::ConfigReloadEvent& event){
+		auto systemFolders = event.config().getOrNull("systemFolders");
+		ak::filesystem::deserializeFolders(systemFolders);
+	});
+
+	ak::engine::subscribeConfigReload([](ak::engine::ConfigReloadEvent& event){
+		auto logLevel = event.config().getOrNull("logLevel").asIntOr(static_cast<int64>(ak::log::Level::INFO));
+		ak::log::setLogLevel(static_cast<ak::log::Level>(logLevel));
+	});
+
+	auto configFile = ak::filesystem::CFile(configLocation, ak::filesystem::OpenFlags::In);
+	if (!configFile) return;
+	ak::engine::setConfigFile(std::move(configFile));
+	ak::engine::reloadConfig();
+}
+
+static void stopConfig() {
+	ak::engine::saveConfig();
+}
+
+static void startWindow(const ak::data::PValue& /*args*/) {
+	ak::window::init();
+}

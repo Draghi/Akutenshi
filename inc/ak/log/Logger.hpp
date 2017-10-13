@@ -72,8 +72,6 @@ namespace ak {
 				}
 
 				template<typename... vargs_t> void build(uint8 tag, const vargs_t&... vargs) const {
-					if (!isLoggingEnabled()) return;
-
 					auto utc = ak::time::utcTimestamp();
 
 					std::stringstream sstream;
@@ -96,7 +94,7 @@ namespace ak {
 				template<typename... vargs_t> void info(const vargs_t&... vargs) const { if (isLevelEnabled(Level::INFO)) build(static_cast<uint8>(Level::INFO), vargs...); }
 				template<typename... vargs_t> void debug(const vargs_t&... vargs) const { if (isLevelEnabled(Level::DEBUG)) build(static_cast<uint8>(Level::DEBUG), vargs...); }
 
-				template<typename... vargs_t> void raw(const vargs_t&... vargs) const { if (!isLoggingEnabled()) return; std::stringstream sstream; constructMessage(sstream, vargs...); printMessage(sstream.str()); }
+				template<typename... vargs_t> void raw(const vargs_t&... vargs) const { std::stringstream sstream; constructMessage(sstream, vargs...); printMessage(sstream.str()); }
 		};
 	}
 }

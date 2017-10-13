@@ -43,8 +43,10 @@ namespace ak {
 namespace ak {
 	namespace engine {
 
-		bool reloadConfig(ak::filesystem::CFile& configFile);
-		bool saveConfig(ak::filesystem::CFile& configFile);
+		void setConfigFile(ak::filesystem::CFile&& configFile);
+		bool reloadConfig();
+		bool saveConfig();
+		ak::data::PValue& config();
 
 
 		class ConfigReloadEvent : public ak::event::Event {
@@ -63,24 +65,6 @@ namespace ak {
 		template<typename func_t> inline ak::event::SubscriberID subscribeConfigReload(const func_t& callback) { return subscribeConfigReload(std::function<void(ConfigReloadEvent&)>(callback)); }
 
 		void unsubscribeConfigReload(ak::event::Subscription& subscriber);
-
-
-		class ConfigSaveEvent : public ak::event::Event {
-			AK_IMPLEMENT_EVENT("ConfigSaveEvent", false)
-			private:
-				ak::data::PValue& m_config;
-			public:
-				ConfigSaveEvent(ak::data::PValue& config) : m_config(config) {}
-				ak::data::PValue& config() const { return m_config; }
-		};
-
-		void subscribeConfigSave(ak::event::Subscription& subscriber, const std::function<void(ConfigSaveEvent&)>& callback);
-		template<typename func_t> inline void subscribeConfigSave(ak::event::Subscription& subscriber, const func_t& callback) { subscribeConfigSave(subscriber, std::function<void(ConfigSaveEvent&)>(callback)); }
-
-		ak::event::SubscriberID subscribeConfigSave(const std::function<void(ConfigSaveEvent&)>& callback);
-		template<typename func_t> inline ak::event::SubscriberID subscribeConfigSave(const func_t& callback) { return subscribeConfigSave(std::function<void(ConfigSaveEvent&)>(callback)); }
-
-		void unsubscribeConfigSave(ak::event::Subscription& subscriber);
 
 	}
 }

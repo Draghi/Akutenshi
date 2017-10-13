@@ -14,16 +14,50 @@
  * limitations under the License.
  **/
 
-#ifndef AK_ENGINE_STARTUP_HPP_
-#define AK_ENGINE_STARTUP_HPP_
+#ifndef AK_INPUT_GPBUTTON_HPP_
+#define AK_INPUT_GPBUTTON_HPP_
 
-#include <ak/data/PValue.hpp>
-#include <ak/ScopeGuard.hpp>
+#include <ak/PrimitiveTypes.hpp>
 
 namespace ak {
-	namespace engine {
+	namespace input {
 
-		ak::ScopeGuard startup(const ak::data::PValue& arguments);
+		enum class GPButton : uint8 {
+			A,
+			B,
+			X,
+			Y,
+
+			Cross = A,
+			Circle = B,
+			Square = X,
+			Triangle = Y,
+
+			Start,
+			Select,
+			Menu,
+
+			Up,
+			Down,
+			Left,
+			Right,
+
+			LBumper,
+			LTrigger,
+			LStick,
+
+			L1 = LBumper,
+			L2 = LTrigger,
+			L3 = LStick,
+
+			RBumper,
+			RTrigger,
+			RStick,
+
+			R1 = RBumper,
+			R2 = RTrigger,
+			R3 = RStick,
+		};
 
 	}
 }

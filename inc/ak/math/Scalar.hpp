@@ -19,6 +19,7 @@
 
 #include <ak/PrimitiveTypes.hpp>
 
+#include <cmath>
 #include <glm/glm.hpp>
 
 namespace ak {
@@ -66,6 +67,7 @@ namespace ak {
 		using glm::acos;
 		using glm::atan;
 
+		using std::sqrt;
 
 	}
 }
