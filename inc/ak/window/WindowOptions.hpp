@@ -130,11 +130,11 @@ namespace ak {
 				int glMSAA() const { return m_glMSSA; }
 
 				static WindowOptions deserialize(const ak::data::PValue& root) {
-					WindowCoord pos = {root["pos"][0].asInt(), root["pos"][1].asInt()};
-					WindowCoord winSize = {root["videoMode"]["size"][0].asInt(), root["videoMode"]["size"][1].asInt()};
-					VideoMode videoMode = {winSize, root["videoMode"]["refreshRate"].asInt()};
+					WindowCoord pos = {root["pos"][0].as<int>(), root["pos"][1].as<int>()};
+					WindowCoord winSize = {root["videoMode"]["size"][0].as<int>(), root["videoMode"]["size"][1].as<int>()};
+					VideoMode videoMode = {winSize, root["videoMode"]["refreshRate"].as<int>()};
 
-					auto targetMonitor = findTargetMonitor(root["monitor"]["name"].asStr(), {root["monitor"]["pos"][0].asInt(), root["monitor"]["pos"][1].asInt()});
+					auto targetMonitor = findTargetMonitor(root["monitor"]["name"].asStr(), {root["monitor"]["pos"][0].as<int>(), root["monitor"]["pos"][1].as<int>()});
 
 					VSync vsyncType = vsyncType = VSync::NONE;
 					auto vsyncStr = root["glVSync"].asStr();
@@ -147,28 +147,28 @@ namespace ak {
 						.position(pos)
 						.title(root["title"].asStr())
 
-						.fullscreen(root["isFullscreen"].asBool())
-						.centerOnMonitor(root["centerOnMonitor"].asBool())
+						.fullscreen(root["isFullscreen"].as<bool>())
+						.centerOnMonitor(root["centerOnMonitor"].as<bool>())
 
 						.targetMonitor(targetMonitor)
 						.videoMode(videoMode)
 
-						.resizable(root["isResizable"].asBool())
-						.visible(root["isVisible"].asBool())
-						.decorated(root["isDecorated"].asBool())
-						.alwaysOnTop(root["isAlwaysOnTop"].asBool())
-						.maximised(root["isMinimised"].asBool())
+						.resizable(root["isResizable"].as<bool>())
+						.visible(root["isVisible"].as<bool>())
+						.decorated(root["isDecorated"].as<bool>())
+						.alwaysOnTop(root["isAlwaysOnTop"].as<bool>())
+						.maximised(root["isMinimised"].as<bool>())
 
 						.glVSync(vsyncType)
 
-						.glVersion(root["glVersion"][0].asInt(), root["glVersion"][1].asInt())
-						.glCore(root["glCore"].asBool())
-						.glForwardCompat(root["glForward"].asBool())
-						.glDebugContext(root["glDebug"].asBool())
-						.glStereo(root["glStereo"].asBool())
-						.glsRGB(root["glSRGB"].asBool())
-						.glDoubleBuffer(root["glDoubleBuffer"].asBool())
-						.glMSAA(root["glMSAA"].asInt());
+						.glVersion(root["glVersion"][0].as<int>(), root["glVersion"][1].as<int>())
+						.glCore(root["glCore"].as<bool>())
+						.glForwardCompat(root["glForward"].as<bool>())
+						.glDebugContext(root["glDebug"].as<bool>())
+						.glStereo(root["glStereo"].as<bool>())
+						.glsRGB(root["glSRGB"].as<bool>())
+						.glDoubleBuffer(root["glDoubleBuffer"].as<bool>())
+						.glMSAA(root["glMSAA"].as<uint8>());
 				}
 
 				void serialize(ak::data::PValue& root) {

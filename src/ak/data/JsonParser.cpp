@@ -78,22 +78,22 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 	    }
 
 	    bool Int(int i) {
-	    	addPValue(ak::data::PValue(static_cast<int64>(i)));
+	    	addPValue(ak::data::PValue(static_cast<ak::data::PValue::int_t>(i)));
 	    	return true;
 	    }
 
 	    bool Uint(unsigned u) {
-	    	addPValue(ak::data::PValue(static_cast<int64>(u)));
+	    	addPValue(ak::data::PValue(static_cast<ak::data::PValue::uint_t>(u)));
 	    	return true;
 	    }
 
 	    bool Int64(int64_t i) {
-	    	addPValue(ak::data::PValue(static_cast<int64>(i)));
+	    	addPValue(ak::data::PValue(static_cast<ak::data::PValue::int_t>(i)));
 	    	return true;
 	    }
 
 	    bool Uint64(uint64_t u) {
-	    	addPValue(ak::data::PValue(static_cast<int64>(u)));
+	    	addPValue(ak::data::PValue(static_cast<ak::data::PValue::uint_t>(u)));
 	    	return true;
 	    }
 
@@ -181,9 +181,10 @@ std::string ak::data::serializeJson(const ak::data::PValue& src, bool pretty) {
 			}
 
 			case ak::data::TraverseAction::Value: {
-				#pragma clang diagnostic push
-				#pragma clang diagnostic ignored "-Wswitch"
 				switch(value.type()) {
+					case ak::data::PType::Object: throw std::logic_error("Cannot serialize object directly.");
+					case ak::data::PType::Array:  throw std::logic_error("Cannot serialize array directly.");
+
 					case ak::data::PType::Null:
 						if (pretty) pWriter.Null();
 						else nWriter.Null();
@@ -204,6 +205,16 @@ std::string ak::data::serializeJson(const ak::data::PValue& src, bool pretty) {
 						}
 						break;
 
+					case ak::data::PType::Unsigned:
+						if ((value.asUInt() <= std::numeric_limits<unsigned>::max())) {
+							if (pretty) pWriter.Uint(static_cast<unsigned>(value.asUInt()));
+							else nWriter.Uint(static_cast<unsigned>(value.asUInt()));
+						} else {
+							if (pretty) pWriter.Uint64(value.asUInt());
+							else nWriter.Uint64(value.asUInt());
+						}
+						break;
+
 					case ak::data::PType::Decimal:
 						if (pretty) pWriter.Double(value.asDec());
 						else nWriter.Double(value.asDec());
@@ -214,7 +225,6 @@ std::string ak::data::serializeJson(const ak::data::PValue& src, bool pretty) {
 						else nWriter.String(value.asStr().c_str(), static_cast<rj::SizeType>(value.asStr().size()));
 						break;
 				}
-				#pragma clang diagnostic pop
 				break;
 			}
 		}

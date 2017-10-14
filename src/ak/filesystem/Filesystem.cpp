@@ -235,45 +235,45 @@ ak::filesystem::CFile ak::filesystem::open(SystemFolder folder, const stx::files
 }
 
 void ak::filesystem::serializeFolders(ak::data::PValue& root) {
-	root["appData"].setOptStr(systemFolder(SystemFolder::appData));
-	root["appConfig"].setOptStr(systemFolder(SystemFolder::appConfig));
-	root["appCache"].setOptStr(systemFolder(SystemFolder::appCache));
+	root["appData"].trySet<std::string>(systemFolder(SystemFolder::appData));
+	root["appConfig"].trySet<std::string>(systemFolder(SystemFolder::appConfig));
+	root["appCache"].trySet<std::string>(systemFolder(SystemFolder::appCache));
 
-	root["userDesktop"].setOptStr(systemFolder(SystemFolder::userDesktop));
-	root["userDocuments"].setOptStr(systemFolder(SystemFolder::userDocuments));
-	root["userDownloads"].setOptStr(systemFolder(SystemFolder::userDownloads));
-	root["userPictures"].setOptStr(systemFolder(SystemFolder::userPictures));
-	root["userVideos"].setOptStr(systemFolder(SystemFolder::userVideos));
-	root["userMusic"].setOptStr(systemFolder(SystemFolder::userMusic));
+	root["userDesktop"].trySet<std::string>(systemFolder(SystemFolder::userDesktop));
+	root["userDocuments"].trySet<std::string>(systemFolder(SystemFolder::userDocuments));
+	root["userDownloads"].trySet<std::string>(systemFolder(SystemFolder::userDownloads));
+	root["userPictures"].trySet<std::string>(systemFolder(SystemFolder::userPictures));
+	root["userVideos"].trySet<std::string>(systemFolder(SystemFolder::userVideos));
+	root["userMusic"].trySet<std::string>(systemFolder(SystemFolder::userMusic));
 
-	root["userData"].setOptStr(systemFolder(SystemFolder::userData));
-	root["userConfig"].setOptStr(systemFolder(SystemFolder::userConfig));
-	root["userSaveGames"].setOptStr(systemFolder(SystemFolder::userSaveGames));
+	root["userData"].trySet<std::string>(systemFolder(SystemFolder::userData));
+	root["userConfig"].trySet<std::string>(systemFolder(SystemFolder::userConfig));
+	root["userSaveGames"].trySet<std::string>(systemFolder(SystemFolder::userSaveGames));
 
-	root["localData"].setOptStr(systemFolder(SystemFolder::localData));
-	root["localConfig"].setOptStr(systemFolder(SystemFolder::localConfig));
-	root["localCache"].setOptStr(systemFolder(SystemFolder::localCache));
+	root["localData"].trySet<std::string>(systemFolder(SystemFolder::localData));
+	root["localConfig"].trySet<std::string>(systemFolder(SystemFolder::localConfig));
+	root["localCache"].trySet<std::string>(systemFolder(SystemFolder::localCache));
 }
 
 void ak::filesystem::deserializeFolders(const ak::data::PValue& root) {
-	root.getOrNull("appData").assignAsStr(systemFolder(SystemFolder::appData));
-	root.getOrNull("appConfig").assignAsStr(systemFolder(SystemFolder::appConfig));
-	root.getOrNull("appCache").assignAsStr(systemFolder(SystemFolder::appCache));
+	root.atOrDef("appData").tryAssign<std::string>(systemFolder(SystemFolder::appData));
+	root.atOrDef("appConfig").tryAssign<std::string>(systemFolder(SystemFolder::appConfig));
+	root.atOrDef("appCache").tryAssign<std::string>(systemFolder(SystemFolder::appCache));
 
-	root.getOrNull("userDesktop").assignAsStr(systemFolder(SystemFolder::userDesktop));
-	root.getOrNull("userDocuments").assignAsStr(systemFolder(SystemFolder::userDocuments));
-	root.getOrNull("userDownloads").assignAsStr(systemFolder(SystemFolder::userDownloads));
-	root.getOrNull("userPictures").assignAsStr(systemFolder(SystemFolder::userPictures));
-	root.getOrNull("userVideos").assignAsStr(systemFolder(SystemFolder::userVideos));
-	root.getOrNull("userMusic").assignAsStr(systemFolder(SystemFolder::userMusic));
+	root.atOrDef("userDesktop").tryAssign<std::string>(systemFolder(SystemFolder::userDesktop));
+	root.atOrDef("userDocuments").tryAssign<std::string>(systemFolder(SystemFolder::userDocuments));
+	root.atOrDef("userDownloads").tryAssign<std::string>(systemFolder(SystemFolder::userDownloads));
+	root.atOrDef("userPictures").tryAssign<std::string>(systemFolder(SystemFolder::userPictures));
+	root.atOrDef("userVideos").tryAssign<std::string>(systemFolder(SystemFolder::userVideos));
+	root.atOrDef("userMusic").tryAssign<std::string>(systemFolder(SystemFolder::userMusic));
 
-	root.getOrNull("userData").assignAsStr(systemFolder(SystemFolder::userData));
-	root.getOrNull("userConfig").assignAsStr(systemFolder(SystemFolder::userConfig));
-	root.getOrNull("userSaveGames").assignAsStr(systemFolder(SystemFolder::userSaveGames));
+	root.atOrDef("userData").tryAssign<std::string>(systemFolder(SystemFolder::userData));
+	root.atOrDef("userConfig").tryAssign<std::string>(systemFolder(SystemFolder::userConfig));
+	root.atOrDef("userSaveGames").tryAssign<std::string>(systemFolder(SystemFolder::userSaveGames));
 
-	root.getOrNull("localData").assignAsStr(systemFolder(SystemFolder::localData));
-	root.getOrNull("localConfig").assignAsStr(systemFolder(SystemFolder::localData));
-	root.getOrNull("localCache").assignAsStr(systemFolder(SystemFolder::localData));
+	root.atOrDef("localData").tryAssign<std::string>(systemFolder(SystemFolder::localData));
+	root.atOrDef("localConfig").tryAssign<std::string>(systemFolder(SystemFolder::localData));
+	root.atOrDef("localCache").tryAssign<std::string>(systemFolder(SystemFolder::localData));
 }
 
 

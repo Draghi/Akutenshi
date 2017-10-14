@@ -121,15 +121,15 @@ static void startLogger(const ak::data::PValue& /*args*/) {
 
 static void startConfig(const ak::data::PValue& args) {
 
-	auto configLocation = args.getOrNull("configLocation").asStrOr("./startup.config");
+	auto configLocation = args.atOrDef("configLocation").asOrDef("./startup.config");
 
 	ak::engine::subscribeConfigReload([](ak::engine::ConfigReloadEvent& event){
-		auto systemFolders = event.config().getOrNull("systemFolders");
+		auto systemFolders = event.config().atOrDef("systemFolders");
 		ak::filesystem::deserializeFolders(systemFolders);
 	});
 
 	ak::engine::subscribeConfigReload([](ak::engine::ConfigReloadEvent& event){
-		auto logLevel = event.config().getOrNull("logLevel").asIntOr(static_cast<int64>(ak::log::Level::INFO));
+		auto logLevel = event.config().atOrDef("logLevel").asOrDef(static_cast<int64>(ak::log::Level::INFO));
 		ak::log::setLogLevel(static_cast<ak::log::Level>(logLevel));
 	});
 
