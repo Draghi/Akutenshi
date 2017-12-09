@@ -33,6 +33,20 @@ else()
 endif()
 
 ###############
+# Build Setup # 
+###############
+
+# Setup Sugar
+set(SUGAR_ROOT "${CMAKE_SOURCE_DIR}/cmake/sugar/")
+include("${SUGAR_ROOT}/cmake/Sugar")
+include(sugar_include)
+include(sugar_files)
+
+# Hide sugar variables
+set(SUGAR_STATUS_PRINT OFF CACHE INTERNAL "" FORCE)
+set(SUGAR_STATUS_DEBUG OFF CACHE INTERNAL "" FORCE)
+
+###############
 # Build GLFW  # 
 ###############
 
@@ -45,6 +59,12 @@ set(LIB_SUFFIX "" CACHE INTERNAL "" FORCE)
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/cmake/glfw")
 
+##############
+# Build GL3  # 
+##############
+
+add_subdirectory("${CMAKE_SOURCE_DIR}/cmake/GL4")
+
 #################
 # Library Paths # 
 #################
@@ -54,6 +74,7 @@ set(ORDERED_MAP_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/ordered-map/src")
 set(RAPIDJSON_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/rapidjson/include")
 set(BACKWARD_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/backward-cpp")
 set(GLFW_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/glfw/include")
+set(GL4_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/GL4/inc")
 
 ###############
 # CMake Setup #
@@ -72,20 +93,6 @@ endif()
 
 # Hide variables
 set(CMAKE_INSTALL_PREFIX "install/" CACHE INTERNAL "${AK_OUTPUT_ROOT}" FORCE)
-
-###############
-# Build Setup # 
-###############
-
-# Setup Sugar
-set(SUGAR_ROOT "${CMAKE_SOURCE_DIR}/cmake/sugar/")
-include("${SUGAR_ROOT}/cmake/Sugar")
-include(sugar_include)
-include(sugar_files)
-
-# Hide sugar variables
-set(SUGAR_STATUS_PRINT OFF CACHE INTERNAL "" FORCE)
-set(SUGAR_STATUS_DEBUG OFF CACHE INTERNAL "" FORCE)
 
 
 

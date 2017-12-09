@@ -14,25 +14,9 @@
  * limitations under the License.
  **/
 
-#ifndef AK_DATA_IMAGES_HPP_
-#define AK_DATA_IMAGES_HPP_
+#ifndef AK_MACROS_HPP_
+#define AK_MACROS_HPP_
 
-#include <ak/data/Vector2D.hpp>
-#include <ak/PrimitiveTypes.hpp>
-
-namespace ak {
-	namespace data {
-
-		struct RGBA {
-			uint8 red;
-			uint8 green;
-			uint8 blue;
-			uint8 alpha;
-		};
-
-		using Image = Vector2D<RGBA>;
-
-	}
-}
+#define AK_STRING_VIEW(str) std::string_view(str, sizeof(str) - 1)
 
 #endif

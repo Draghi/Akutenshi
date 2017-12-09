@@ -47,4 +47,9 @@ namespace ak {
 	}
 }
 
+
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_DATA_ALIAS_DISABLE))
+namespace akd = ak::data;
+#endif
+
 #endif

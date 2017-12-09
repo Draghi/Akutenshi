@@ -33,20 +33,25 @@ namespace ak {
 		split(src, delims, std::function<void(const std::string&, const std::string&)>(out));
 	}
 
-	template<typename type_t> std::string buildString(std::stringstream& stream, const type_t& value) {
-		stream << value;
-		return stream.str();
+	namespace internal {
+		template<typename type_t> void buildString(std::stringstream& sstream, const typename std::enable_if<!(std::is_invocable<type_t>::value || std::is_function<type_t>::value), type_t>::type& val) { sstream << val; }
+		template<typename type_t> void buildString(std::stringstream& sstream, const typename std::enable_if<std::is_invocable<type_t>::value || std::is_function<type_t>::value, type_t>::type& val) { sstream << val(); }
+
 	}
 
-	template<typename type_t, typename... vargs_t> std::string buildString(std::stringstream& stream, const type_t& value, const vargs_t&... vargs) {
-		stream << value;
-		return buildString<vargs_t...>(stream, vargs...);
+	template<typename type_t> std::stringstream& buildString(std::stringstream& sstream, const type_t& val) {
+		internal::buildString<type_t>(sstream, val);
+		return sstream;
 	}
 
+	template<typename type_t, typename... vargs_t> std::stringstream& buildString(std::stringstream& sstream, const type_t& val, const vargs_t&... vargs) {
+		internal::buildString<type_t>(sstream, val);
+		buildString(sstream, vargs...);
+		return sstream;
+	}
 	template<typename type_t, typename... vargs_t> std::string buildString(const type_t& value, const vargs_t&... vargs) {
 		std::stringstream stream;
-		stream << value;
-		return buildString<vargs_t...>(stream, vargs...);
+		return buildString<type_t, vargs_t...>(stream, value, vargs...).str();
 	}
 }
 

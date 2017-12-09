@@ -22,34 +22,79 @@
 #include <string>
 #include <string_view>
 
-#define AK_IMPLEMENT_EVENT(eventName, isCancelableVal) \
-	public: static constexpr const std::string_view EVENT_NAME = std::string_view(eventName, ak::clen(eventName)); \
-	public: static constexpr ak::event::EventID EVENT_ID = ak::event::calculateEventID(EVENT_NAME); \
-	public: virtual ak::event::EventID id() const { return EVENT_ID; } \
-	public: virtual std::string name() const { return std::string(EVENT_NAME); } \
-	public: virtual bool isCancelable() const { return isCancelableVal; }
+#define AK_DEFINE_EVENT(eventName, dataType, canCancel) \
+	namespace internalEvent { using eventName = ::ak::event::Event<dataType, canCancel, []()constexpr{ return std::string_view(#eventName, sizeof(#eventName) - 1);} >; } \
+	class eventName final : public internalEvent:: eventName { using internalEvent:: eventName ::Event; }
 
 namespace ak {
 	namespace event {
 
-		class Event {
+		namespace internal {
+			class IEvent {
+				IEvent(const IEvent&) = delete;
+				IEvent& operator=(const IEvent&) = delete;
+				public:
+					IEvent() = default;
+					virtual ~IEvent() = default;
+
+					virtual bool cancel() = 0;
+					virtual bool isCanceled() const = 0;
+
+					virtual ak::event::EventID id() const = 0;
+					virtual std::string_view name() const = 0;
+					virtual bool isCancelable() const = 0;
+			};
+		}
+
+		using EventNameFuncSig = std::string_view(*)();
+
+		template<typename data_t, bool isCancelableVal, EventNameFuncSig name_f> class Event : public internal::IEvent {
 			template<typename> friend class Dispatcher;
 
-			Event(const Event&) = delete;
-			Event& operator=(const Event&) = delete;
+			public:
+				static constexpr const std::string_view EVENT_NAME = name_f();
+				static constexpr ak::event::EventID EVENT_ID = ak::event::calculateEventID(EVENT_NAME);
+
+			private:
+				data_t m_data;
+				bool m_canceled;
+
+			public:
+				Event(const data_t& eventData) : m_data(eventData), m_canceled(false) {}
+				virtual ~Event() = default;
+
+				data_t& data() { return m_data; }
+				const data_t& data() const { return m_data; }
+
+				virtual bool cancel() { m_canceled = true; return isCancelable(); }
+				virtual bool isCanceled() const { return !isCancelable() && m_canceled; }
+
+				virtual ak::event::EventID id() const { return EVENT_ID; }
+				virtual std::string_view name() const { return EVENT_NAME; }
+				virtual bool isCancelable() const { return isCancelableVal; }
+
+		};
+
+		template<bool isCancelableVal, EventNameFuncSig name_f> class Event<void, isCancelableVal, name_f> : public internal::IEvent {
+			template<typename> friend class Dispatcher;
+
+			public:
+				static constexpr const std::string_view EVENT_NAME = name_f();
+				static constexpr ak::event::EventID EVENT_ID = ak::event::calculateEventID(EVENT_NAME);
 
 			private:
 				bool m_canceled;
+
 			public:
 				Event() : m_canceled(false) {}
 				virtual ~Event() = default;
 
-				bool cancel() { m_canceled = true; return isCancelable(); }
-				bool isCanceled() const { return !isCancelable() && m_canceled; }
+				virtual bool cancel() { m_canceled = true; return isCancelable(); }
+				virtual bool isCanceled() const { return !isCancelable() && m_canceled; }
 
-				virtual EventID id() const = 0;
-				virtual std::string name() const = 0;
-				virtual bool isCancelable() const = 0;
+				virtual ak::event::EventID id() const { return EVENT_ID; }
+				virtual std::string_view name() const { return EVENT_NAME; }
+				virtual bool isCancelable() const { return isCancelableVal; }
 
 		};
 

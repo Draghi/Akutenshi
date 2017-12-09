@@ -30,16 +30,18 @@ static Monitor createMonitorFromGLFWMonitor(GLFWmonitor* monitor);
 
 std::vector<Monitor> ak::window::getAllWindowMonitors() {
 	if (!windowHandle) return {Monitor::NullMonitor()};
-	return getMonitorsAt(pos(), winSize());
+	return getMonitorsAt(position(), size());
 }
 
 Monitor ak::window::currentMonitor() {
 	if (!windowHandle) return Monitor::NullMonitor();
-	return getMonitorsAt(pos(), {0,0}).front();
+	return getMonitorsAt(position(), {0,0}).front();
 }
 
 Monitor ak::window::primaryMonitor() {
-	return createMonitorFromGLFWMonitor(glfwGetPrimaryMonitor());
+	auto* monitor = glfwGetPrimaryMonitor();
+	if (monitor) return createMonitorFromGLFWMonitor(monitor);
+	return Monitor::NullMonitor();
 }
 
 std::vector<Monitor> ak::window::monitors() {
@@ -58,7 +60,8 @@ std::vector<Monitor> ak::window::monitors() {
 }
 
 void ak::window::setGamma(const Monitor* monitor, fpDouble gamma) {
-
+	if (!monitor) return;
+	glfwSetGamma(static_cast<GLFWmonitor*>(monitor->handle), static_cast<float>(gamma));
 }
 
 static VideoMode createVideoModeFromGLFWVidMode(const GLFWvidmode* videoMode) {

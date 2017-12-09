@@ -30,14 +30,14 @@ namespace ak {
 			Right = 1,
 			Middle = 2,
 
-			/* Special Keys */
-			Scroll_Up = std::numeric_limits<uint8>::max(),
-			Scroll_Down  = Scroll_Up - 1,
-			Scroll_Left  = Scroll_Up - 2,
-			Scroll_Right = Scroll_Up - 3,
+			BUTTON_LAST = Middle + 1,
 		};
 
 	}
 }
+
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_INPUT_ALIAS_DISABLE))
+namespace akin = ak::input;
+#endif
 
 #endif

@@ -24,10 +24,23 @@
 #include <functional>
 #include <map>
 #include <optional>
+#include <stdexcept>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 namespace ak {
 	namespace data {
+
+		class PValue;
+
+		enum class TraverseAction : uint8 {
+			ObjectStart,
+			ObjectEnd,
+			ArrayStart,
+			ArrayEnd,
+			Value,
+		};
 
 		enum class PType : uint8 {
 			Null,
@@ -39,6 +52,11 @@ namespace ak {
 			Decimal,
 			Boolean,
 		};
+
+		void traversePValue(const PValue& cNode, const std::function<void(const Path& path, TraverseAction action, const PValue& value)>& callback);
+
+		template<typename type_t> type_t deserialize(const PValue& root);
+		template<typename type_t> void serialize(PValue& root, const type_t& val);
 
 		class PValue final {
 			public:
@@ -74,6 +92,52 @@ namespace ak {
 				static PValue& navigate_internal(PValue& cNode, const Path& path);
 				static const PValue* navigate_internal(const PValue* currentNode, const Path& path);
 
+				PValue& setNull();
+				PValue& setPValue(const PValue& val);
+
+				PValue& setObj();
+				PValue& setObj(const obj_t& val);
+
+				PValue& setArr();
+				PValue& setArr(const arr_t& val);
+
+				PValue& setStr(const str_t& val);
+				PValue& setInt(const int_t& val);
+				PValue& setUInt(const uint_t& val);
+				PValue& setDec(const dec_t& val);
+				PValue& setBool(const bool_t& val);
+
+				obj_t& asObj();
+				arr_t& asArr();
+				str_t& asStr();
+				int_t& asInt();
+				uint_t& asUInt();
+				dec_t& asDec();
+				bool_t& asBool();
+
+				obj_t& asObjOrSet(const obj_t& val = obj_t());
+				arr_t& asArrOrSet(const arr_t& val = arr_t());
+				str_t& asStrOrSet(const str_t& val = str_t());
+				int_t& asIntOrSet(int_t val);
+				uint_t& asUIntOrSet(uint_t val);
+				dec_t& asDecOrSet(dec_t val);
+				bool_t& asBoolOrSet(bool_t val);
+
+				const obj_t& asObj() const;
+				const arr_t& asArr() const;
+				const str_t& asStr() const;
+				int_t asInt() const;
+				uint_t asUInt() const;
+				dec_t asDec() const;
+				bool_t asBool() const;
+
+				const obj_t& asObjOrDef(const obj_t& val = obj_t()) const;
+				const arr_t& asArrOrDef(const arr_t& val = arr_t()) const;
+				const str_t& asStrOrDef(const str_t& val = str_t()) const;
+				int_t asIntOrDef(int_t val) const;
+				uint_t asUIntOrDef(uint_t val) const;
+				dec_t asDecOrDef(dec_t val) const;
+				bool_t asBoolOrDef(bool_t val) const;
 
 			public:
 				PValue() : m_type(PType::Null) {}
@@ -134,37 +198,18 @@ namespace ak {
 				// // Values // //
 				// //////////// //
 
-				obj_t& asObj();
-				arr_t& asArr();
-				str_t& asStr();
-				int_t& asInt();
-				uint_t& asUInt();
-				dec_t& asDec();
-				bool_t& asBool();
 
-				obj_t& asObjOrSet(const obj_t& val = obj_t());
-				arr_t& asArrOrSet(const arr_t& val = arr_t());
-				str_t& asStrOrSet(const str_t& val = str_t());
-				int_t& asIntOrSet(int_t val);
-				uint_t& asUIntOrSet(uint_t val);
-				dec_t& asDecOrSet(dec_t val);
-				bool_t& asBoolOrSet(bool_t val);
+				template<typename type_t> bool assign(type_t& dest) const {
+					if (isNull()) return false;
+					dest = as<type_t>();
+					return true;
+				}
 
-				const obj_t& asObj() const;
-				const arr_t& asArr() const;
-				const str_t& asStr() const;
-				int_t asInt() const;
-				uint_t asUInt() const;
-				dec_t asDec() const;
-				bool_t asBool() const;
-
-				const obj_t& asObjOrDef(const obj_t& val = obj_t()) const;
-				const arr_t& asArrOrDef(const arr_t& val = arr_t()) const;
-				const str_t& asStrOrDef(const str_t& val = str_t()) const;
-				int_t asIntOrDef(int_t val) const;
-				uint_t asUIntOrDef(uint_t val) const;
-				dec_t asDecOrDef(dec_t val) const;
-				bool_t asBoolOrDef(bool_t val) const;
+				template<typename dest_t, typename type_t> bool assign(type_t& dest) const {
+					if (isNull()) return false;
+					dest = static_cast<type_t>(as<dest_t>());
+					return true;
+				}
 
 				template<typename type_t> bool tryAssign(std::optional<type_t>& dest) const {
 					if (isNull()) return false;
@@ -175,12 +220,6 @@ namespace ak {
 				template<typename dest_t, typename type_t> bool tryAssign(std::optional<type_t>& dest) const {
 					if (isNull()) return false;
 					dest = static_cast<type_t>(as<dest_t>());
-					return true;
-				}
-
-				template<typename type_t> bool assign(type_t& dest) const {
-					if (isNull()) return false;
-					dest = as<type_t>();
 					return true;
 				}
 
@@ -207,42 +246,18 @@ namespace ak {
 				// // Assignment // //
 				// //////////////// //
 
-				PValue& setNull();
-				PValue& setPValue(const PValue& val);
-
-				PValue& setObj();
-				PValue& setObj(const obj_t& val);
-
-				PValue& setArr();
-				PValue& setArr(const arr_t& val);
-
-				PValue& setStr(const str_t& val);
-				PValue& setInt(const int_t& val);
-				PValue& setUInt(const uint_t& val);
-				PValue& setDec(const dec_t& val);
-				PValue& setBool(const bool_t& val);
 
 				template<typename type_t> PValue& set(const typename std::enable_if<std::is_same<type_t, PValue>::value, type_t>::type& val) { return setPValue(val); }
 
 				template<typename type_t> PValue& set(const typename std::enable_if<std::is_same<type_t, obj_t>::value, type_t>::type& val) { return setObj(val); }
 				template<typename type_t> PValue& set(const typename std::enable_if<std::is_same<type_t, arr_t>::value, type_t>::type& val) { return setArr(val); }
-				template<typename type_t> PValue& set(const typename std::enable_if<std::is_same<type_t, str_t>::value, type_t>::type& val) { return setStr(val); }
+				template<typename type_t> PValue& set(const typename std::enable_if<std::is_same<type_t, str_t>::value || std::is_same<typename std::decay<type_t>::type, char*>::value, type_t>::type& val) { return setStr(val); }
 
 				template<typename type_t> PValue& set(const typename std::enable_if<std::is_integral<type_t>::value && std::is_signed<type_t>::value, type_t>::type& val) { return setInt(static_cast<int_t>(val)); }
-				template<typename type_t> PValue& set(const typename std::enable_if<std::is_integral<type_t>::value && std::is_unsigned<type_t>::value, type_t>::type& val) { return setUInt(static_cast<uint_t>(val)); }
+				template<typename type_t> PValue& set(const typename std::enable_if<std::is_integral<type_t>::value && std::is_unsigned<type_t>::value && !std::is_same<type_t, bool>::value, type_t>::type& val) { return setUInt(static_cast<uint_t>(val)); }
 				template<typename type_t> PValue& set(const typename std::enable_if<std::is_floating_point<type_t>::value, type_t>::type& val) { return setDec(static_cast<dec_t>(val)); }
 				template<typename type_t> PValue& set(const typename std::enable_if<std::is_same<type_t, bool>::value, type_t>::type& val) { return setBool(static_cast<bool_t>(val)); }
 
-				PValue& trySetPValue(const std::optional<PValue>& val) { return val ? setPValue(*val) : setNull(); }
-
-				PValue& trySetObj(const std::optional<obj_t>& val) { return val ? setObj(*val) : setNull(); }
-				PValue& trySetArr(const std::optional<arr_t>& val) { return val ? setArr(*val) : setNull(); }
-				PValue& trySetStr(const std::optional<str_t>& val) { return val ? setStr(*val) : setNull(); }
-
-				PValue& trySetInt(const std::optional<int_t>& val)   { return val ? setInt(*val) : setNull(); }
-				PValue& trySetUInt(const std::optional<uint_t>& val) { return val ? setUInt(*val) : setNull(); }
-				PValue& trySetDec(const std::optional<dec_t>& val)   { return val ? setDec(*val) : setNull(); }
-				PValue& trySetBool(const std::optional<bool_t>& val) { return val ? setBool(*val) : setNull(); }
 
 				template<typename type_t> PValue& trySet(const std::optional<type_t>& val) {
 					if (val) return set<type_t>(*val);
@@ -391,17 +406,11 @@ namespace ak {
 				}
 
 		};
-
-		enum class TraverseAction {
-			ObjectStart,
-			ObjectEnd,
-			ArrayStart,
-			ArrayEnd,
-			Value,
-		};
-
-		void traversePValue(const PValue& cNode, const std::function<void(const Path& path, TraverseAction action, const PValue& value)>& callback);
 	}
 }
+
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_DATA_ALIAS_DISABLE))
+namespace akd = ak::data;
+#endif
 
 #endif

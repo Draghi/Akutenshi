@@ -57,7 +57,7 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 				auto& tValue = *valueStack.back();
 
 				if (tValue.isObj()) nValue = &tValue[cKey];
-				else if (tValue.isArr()) nValue = &tValue[tValue.asArr().size()];
+				else if (tValue.isArr()) nValue = &tValue[tValue.as<ak::data::PValue::arr_t>().size()];
 				else throw std::logic_error("JSONParser: Invalid parse state");
 			} else {
 				nValue = &root;
@@ -163,8 +163,8 @@ std::string ak::data::serializeJson(const ak::data::PValue& src, bool pretty) {
 			}
 
 			case ak::data::TraverseAction::ArrayEnd: {
-				if (pretty) pWriter.EndArray(static_cast<rj::SizeType>(value.asArr().size()));
-				else nWriter.EndArray(static_cast<rj::SizeType>(value.asArr().size()));
+				if (pretty) pWriter.EndArray(static_cast<rj::SizeType>(value.as<ak::data::PValue::arr_t>().size()));
+				else nWriter.EndArray(static_cast<rj::SizeType>(value.as<ak::data::PValue::arr_t>().size()));
 				break;
 			}
 
@@ -175,8 +175,8 @@ std::string ak::data::serializeJson(const ak::data::PValue& src, bool pretty) {
 			}
 
 			case ak::data::TraverseAction::ObjectEnd: {
-				if (pretty) pWriter.EndObject(static_cast<rj::SizeType>(value.asObj().size()));
-				else nWriter.EndObject(static_cast<rj::SizeType>(value.asObj().size()));
+				if (pretty) pWriter.EndObject(static_cast<rj::SizeType>(value.as<ak::data::PValue::obj_t>().size()));
+				else nWriter.EndObject(static_cast<rj::SizeType>(value.as<ak::data::PValue::obj_t>().size()));
 				break;
 			}
 
@@ -191,38 +191,38 @@ std::string ak::data::serializeJson(const ak::data::PValue& src, bool pretty) {
 						break;
 
 					case ak::data::PType::Boolean:
-						if (pretty) pWriter.Bool(value.asBool());
-						else nWriter.Bool(value.asBool());
+						if (pretty) pWriter.Bool(value.as<bool>());
+						else nWriter.Bool(value.as<bool>());
 						break;
 
 					case ak::data::PType::Integer:
-						if ((value.asInt() >= std::numeric_limits<int>::min()) && (value.asInt() <= std::numeric_limits<int>::max())) {
-							if (pretty) pWriter.Int(static_cast<int>(value.asInt()));
-							else nWriter.Int(static_cast<int>(value.asInt()));
+						if ((value.as<int64>() >= std::numeric_limits<int>::min()) && (value.as<int64>() <= std::numeric_limits<int>::max())) {
+							if (pretty) pWriter.Int(value.as<int>());
+							else nWriter.Int(value.as<int>());
 						} else {
-							if (pretty) pWriter.Int64(value.asInt());
-							else nWriter.Int64(value.asInt());
+							if (pretty) pWriter.Int64(value.as<int64>());
+							else nWriter.Int64(value.as<int64>());
 						}
 						break;
 
 					case ak::data::PType::Unsigned:
-						if ((value.asUInt() <= std::numeric_limits<unsigned>::max())) {
-							if (pretty) pWriter.Uint(static_cast<unsigned>(value.asUInt()));
-							else nWriter.Uint(static_cast<unsigned>(value.asUInt()));
+						if ((value.as<uint64>() <= std::numeric_limits<unsigned>::max())) {
+							if (pretty) pWriter.Uint(static_cast<unsigned>(value.as<uint>()));
+							else nWriter.Uint(static_cast<unsigned>(value.as<uint>()));
 						} else {
-							if (pretty) pWriter.Uint64(value.asUInt());
-							else nWriter.Uint64(value.asUInt());
+							if (pretty) pWriter.Uint64(value.as<uint64>());
+							else nWriter.Uint64(value.as<uint64>());
 						}
 						break;
 
 					case ak::data::PType::Decimal:
-						if (pretty) pWriter.Double(value.asDec());
-						else nWriter.Double(value.asDec());
+						if (pretty) pWriter.Double(value.as<fpDouble>());
+						else nWriter.Double(value.as<fpDouble>());
 						break;
 
 					case ak::data::PType::String:
-						if (pretty) pWriter.String(value.asStr().c_str(), static_cast<rj::SizeType>(value.asStr().size()));
-						else nWriter.String(value.asStr().c_str(), static_cast<rj::SizeType>(value.asStr().size()));
+						if (pretty) pWriter.String(value.as<std::string>().c_str(), static_cast<rj::SizeType>(value.as<std::string>().size()));
+						else nWriter.String(value.as<std::string>().c_str(), static_cast<rj::SizeType>(value.as<std::string>().size()));
 						break;
 				}
 				break;

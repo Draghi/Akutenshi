@@ -17,16 +17,20 @@
 #ifndef AK_CONTAINER_DOUBLEBUFFER_HPP_
 #define AK_CONTAINER_DOUBLEBUFFER_HPP_
 
+#include <ak/PrimitiveTypes.hpp>
+#include <ak/ScopeGuard.hpp>
+#include <ak/thread/RecursiveSpinlock.hpp>
+#include <stddef.h>
+#include <sys/types.h>
 #include <vector>
-#include <ak/thread/Spinlock.hpp>
 
 namespace ak {
 	namespace container {
 
 		template<typename type_t> class DoubleBuffer final {
 			private:
-				ak::thread::Spinlock m_writeLock;
-				ak::thread::Spinlock m_readLock;
+				ak::thread::RecursiveSpinlock m_writeLock;
+				ak::thread::RecursiveSpinlock m_readLock;
 
 				uint8 m_index;
 				std::vector<type_t> m_buffers[2];

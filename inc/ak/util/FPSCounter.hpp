@@ -18,11 +18,11 @@
 #define AK_TIME_FPSCOUNTER_HPP_
 
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/time/Timer.hpp>
+#include <ak/util/Timer.hpp>
 #include <deque>
 
 namespace ak {
-	namespace time {
+	namespace util {
 
 		class FPSCounter final {
 			private:
@@ -58,5 +58,9 @@ namespace ak {
 
 	}
 }
+
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_UTIL_ALIAS_DISABLE))
+namespace aku = ak::util;
+#endif
 
 #endif

@@ -21,11 +21,23 @@ namespace ak {
 	namespace input {
 
 		enum class Action {
+			None,
 			Pressed,
-			Released
+			Released,
+			Bumped,
+			Repeat
+		};
+
+		enum class State {
+			Up,
+			Down
 		};
 
 	}
 }
+
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_INPUT_ALIAS_DISABLE))
+namespace akin = ak::input;
+#endif
 
 #endif

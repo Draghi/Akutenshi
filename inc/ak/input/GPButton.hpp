@@ -62,4 +62,8 @@ namespace ak {
 	}
 }
 
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_INPUT_ALIAS_DISABLE))
+namespace akin = ak::input;
+#endif
+
 #endif

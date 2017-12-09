@@ -20,53 +20,30 @@
 #include <ak/data/PValue.hpp>
 #include <ak/event/Dispatcher.hpp>
 #include <ak/event/Event.hpp>
-#include <functional>
-
-namespace ak {
-	namespace filesystem {
-		class CFile;
-	}
-}
-
-namespace ak {
-	namespace data {
-		class PValue;
-	}
-}
-
-namespace ak {
-	namespace event {
-		class Subscription;
-	}
-}
 
 namespace ak {
 	namespace engine {
+		AK_DEFINE_EVENT(RegenerateConfigEvent, ak::data::PValue&, false);
+		AK_DEFINE_EVENT(LoadConfigEvent,  ak::data::PValue&, false);
+		AK_DEFINE_EVENT(SaveConfigEvent,  ak::data::PValue&, false);
+		AK_DEFINE_EVENT(SetConfigEvent,  const ak::data::PValue&, false);
 
-		void setConfigFile(ak::filesystem::CFile&& configFile);
-		bool reloadConfig();
+		const ak::event::DispatcherProxy<RegenerateConfigEvent>& regenerateConfigDispatch();
+		const ak::event::DispatcherProxy<LoadConfigEvent>& loadConfigDispatch();
+		const ak::event::DispatcherProxy<SaveConfigEvent>& saveConfigDispatch();
+		const ak::event::DispatcherProxy<SetConfigEvent>& setConfigDispatch();
+
+		const ak::data::PValue& config();
+		void setConfig(const ak::data::PValue& nConfig);
+
+		void regenerateConfig();
+		bool loadConfig();
 		bool saveConfig();
-		ak::data::PValue& config();
-
-
-		class ConfigReloadEvent : public ak::event::Event {
-			AK_IMPLEMENT_EVENT("ConfigReloadEvent", false)
-			private:
-				const ak::data::PValue& m_config;
-			public:
-				ConfigReloadEvent(const ak::data::PValue& config) : m_config(config) {}
-				const ak::data::PValue& config() const { return m_config; }
-		};
-
-		void subscribeConfigReload(ak::event::Subscription& subscriber, const std::function<void(ConfigReloadEvent&)>& callback);
-		template<typename func_t> inline void subscribeConfigReload(ak::event::Subscription& subscriber, const func_t& callback) { subscribeConfigReload(subscriber, std::function<void(ConfigReloadEvent&)>(callback)); }
-
-		ak::event::SubscriberID subscribeConfigReload(const std::function<void(ConfigReloadEvent&)>& callback);
-		template<typename func_t> inline ak::event::SubscriberID subscribeConfigReload(const func_t& callback) { return subscribeConfigReload(std::function<void(ConfigReloadEvent&)>(callback)); }
-
-		void unsubscribeConfigReload(ak::event::Subscription& subscriber);
-
 	}
 }
+
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_ENGINE_ALIAS_DISABLE))
+namespace ake = ak::engine;
+#endif
 
 #endif

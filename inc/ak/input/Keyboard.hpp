@@ -17,61 +17,50 @@
 #ifndef AK_INPUT_KEYBOARD_HPP_
 #define AK_INPUT_KEYBOARD_HPP_
 
+#include <ak/event/Dispatcher.hpp>
 #include <ak/event/Event.hpp>
-#include <ak/event/Util.hpp>
 #include <ak/input/Keys.hpp>
 #include <ak/input/Types.hpp>
-#include <functional>
 
 namespace ak {
 	namespace input {
 
-		class KeyboardActionEvent;
+		class Keyboard;
+
+		struct KeyEventData {
+			Key key;
+			Action action;
+			const Keyboard* sender;
+
+			bool  wasPressed(Key keyVal) const { return (key == keyVal) && ((action == Action::Pressed) || (action == Action::Bumped));  }
+			bool wasReleased(Key keyVal) const { return (key == keyVal) && ((action == Action::Released) || (action == Action::Bumped)); }
+			bool   wasBumped(Key keyVal) const { return (key == keyVal) && (action == Action::Bumped); }
+		};
+		AK_DEFINE_EVENT(KeyEvent, const KeyEventData, true);
 
 		class Keyboard {
 			Keyboard(const Keyboard&) = delete;
 			Keyboard& operator=(const Keyboard&) = delete;
 			public:
-				using KeyboardAction_f = std::function<void(KeyboardActionEvent&)>;
-
 				Keyboard() = default;
 				virtual ~Keyboard() = default;
+
+				virtual const ak::event::DispatcherProxy<KeyEvent>& keyEvent() = 0;
 
 				virtual bool isUp(Key key) const { return !isDown(key); }
 				virtual bool isDown(Key key) const = 0;
 
 				virtual bool wasPressed(Key key) const = 0;
 				virtual bool wasReleased(Key key) const = 0;
-
-				virtual ak::event::EventID subscribe(const KeyboardAction_f& callback) = 0;
-				virtual ak::event::EventID subscribe(ak::event::Subscription& subscriber, const KeyboardAction_f& callback) = 0;
-				virtual void unsubscribe(ak::event::EventID eventID) = 0;
-				virtual void unsubscribe(ak::event::Subscription& subscriber) = 0;
+				virtual bool wasBumped(Key key) const = 0;
 
 				virtual void update() = 0;
-
-
 		};
-
-		class KeyboardActionEvent final : public ak::event::Event {
-			AK_IMPLEMENT_EVENT("KeyboardActionEvent", true)
-			private:
-				Key m_key;
-				Action m_action;
-				const Keyboard& m_sender;
-			public:
-				KeyboardActionEvent(Key keyVal, Action actionVal, Keyboard& senderVal) : m_key(keyVal), m_action(actionVal), m_sender(senderVal) {}
-
-				Key key() const { return m_key; }
-				Action action() const { return m_action; }
-				const Keyboard& sender() const { return m_sender; }
-
-				bool  wasPressed(Key keyVal) const { return (m_key == keyVal) && (m_action == Action::Pressed);  }
-				bool wasReleased(Key keyVal) const { return (m_key == keyVal) && (m_action == Action::Released); }
-		};
-
-
 	}
 }
+
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_INPUT_ALIAS_DISABLE))
+namespace akin = ak::input;
+#endif
 
 #endif

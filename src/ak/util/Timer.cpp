@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-#include <ak/time/Timer.hpp>
+#include <ak/util/Timer.hpp>
 
 #ifdef __linux__
 
@@ -23,7 +23,7 @@
 #include <ctime>
 #include <iostream>
 
-using namespace ak::time;
+using namespace ak::util;
 
 Timer::duration_t Timer::currentTime() {
 	using nanoseconds_dur = std::chrono::duration<uint64, nano_t>;

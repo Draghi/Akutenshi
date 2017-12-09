@@ -16,3 +16,6 @@
 [submodule "cmake/glfw"]
 	path = cmake/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "cmake/GL4"]
+	path = cmake/GL4
+	url = https://github.com/Draghi/GL4.git

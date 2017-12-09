@@ -14,12 +14,16 @@
  * limitations under the License.
  **/
 
+#include <ak/engine/Config.hpp>
+#include <ak/event/Dispatcher.hpp>
+#include <ak/event/Subscription.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Filesystem.hpp>
-#include <ak/PrimitiveTypes.hpp>
+#include <stddef.h>
 #include <stx/Filesystem.hpp>
 #include <cstdlib>
-#include <optional>
+#include <experimental/filesystem>
+#include <string>
 
 using namespace ak::filesystem;
 
@@ -276,4 +280,12 @@ void ak::filesystem::deserializeFolders(const ak::data::PValue& root) {
 	root.atOrDef("localCache").tryAssign<std::string>(systemFolder(SystemFolder::localData));
 }
 
+static ak::event::SubscriberID fsSInitRegenerateConfigHook = ak::engine::regenerateConfigDispatch().subscribe([](ak::engine::RegenerateConfigEvent& event){
+	serializeFolders(event.data()["systemFolders"]);
+});
+
+static ak::event::SubscriberID fsSInitSetConfigHook = ak::engine::setConfigDispatch().subscribe([](ak::engine::SetConfigEvent& event){
+	auto systemFolders = event.data().atOrDef("systemFolders");
+	ak::filesystem::deserializeFolders(systemFolders);
+});
 

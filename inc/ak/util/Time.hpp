@@ -21,7 +21,7 @@
 #include <ctime>
 
 namespace ak {
-	namespace time {
+	namespace util {
 		struct Timestamp {
 			std::tm ctime;
 			uint32 milliseconds;
@@ -40,5 +40,9 @@ namespace ak {
 		Timestamp localTimestamp();
 	}
 }
+
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_UTIL_ALIAS_DISABLE))
+namespace aku = ak::util;
+#endif
 
 #endif

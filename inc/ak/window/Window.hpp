@@ -17,8 +17,14 @@
 #ifndef AK_WINDOW_WINDOW_HPP_
 #define AK_WINDOW_WINDOW_HPP_
 
-#include <ak/data/PValue.hpp>
 #include <string>
+
+namespace ak {
+	namespace input {
+		class Keyboard;
+		class Mouse;
+	}
+}
 
 namespace ak {
 	namespace window {
@@ -48,38 +54,36 @@ namespace ak {
 
 		std::string title();
 
-		WindowCoord pos();
+		WindowCoord position();
 
-		WindowCoord winSize();
-		WindowCoord winSizeMin();
-		WindowCoord winSizeMax();
-		WindowCoord winAspectConstraint();
+		WindowCoord size();
+		WindowCoord sizeMin();
+		WindowCoord sizeMax();
+		WindowCoord aspectConstraint();
 
 		FrameCoord frameSize();
 		int refreshRate();
 
-		bool isCloseRequested();
+		bool closeRequested();
 
-		bool isFocused();
-		bool isMinimised();
-		bool isFullscreen();
-		bool isVisisble();
+		bool focused();
+		bool minimised();
+		bool fullscreen();
+		bool visible();
 
-		bool isAlwaysOnTop();
-		bool isDecorated();
-		bool isResizable();
-
-
+		bool alwaysOnTop();
+		bool decorated();
+		bool resizable();
 
 		void setTitle(const std::string& title);
 
-		void setPos(WindowCoord nPos);
+		void setPosition(WindowCoord nPos);
 
-		void setWinSize(WindowCoord size);
-		void setWinSizeLimits(WindowCoord minSize, WindowCoord maxSize);
-		void setWinAspectConstraint(WindowCoord aspectSize);
+		void setSize(WindowCoord size);
+		void setSizeLimit(WindowCoord minSize, WindowCoord maxSize);
+		void setAspectConstraint(WindowCoord aspectSize);
 
-		void setCloseRequest(bool state);
+		void setCloseFlag(bool state);
 
 		void restore();
 		void minimise();
@@ -88,7 +92,14 @@ namespace ak {
 		void setFullscreen(Monitor targetMonitor, WindowCoord pos, WindowCoord size, int frameRate);
 		void setVisibility(bool state);
 
+		ak::input::Mouse& mouse();
+		ak::input::Keyboard& keyboard();
+
 	}
 }
+
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_WINDOW_ALIAS_DISABLE))
+namespace akw = ak::window;
+#endif
 
 #endif

@@ -22,7 +22,7 @@
 #include <ratio>
 
 namespace ak {
-	namespace time {
+	namespace util {
 		class Timer final {
 			private:
 				using nano_t  = std::nano;
@@ -134,6 +134,10 @@ namespace ak {
 		};
 	}
 }
+
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_UTIL_ALIAS_DISABLE))
+namespace aku = ak::util;
+#endif
 
 
 

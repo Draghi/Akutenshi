@@ -52,28 +52,6 @@ namespace ak {
 				uint8 m_glMSSA = 4;
 				VSync m_glVSync = VSync::NONE;
 
-				static Monitor findMonitorByName(const std::vector<Monitor>& allMonitors, const std::string& name) {
-					auto iter = std::find_if(allMonitors.begin(), allMonitors.end(), [&](const Monitor& monitor){ return monitor.name == name; });
-					if (iter == allMonitors.end()) return Monitor::NullMonitor();
-					if (std::find_if(iter + 1, allMonitors.end(), [&](const Monitor& monitor){ return monitor.name == name; }) != allMonitors.end()) return Monitor::NullMonitor();
-					return *iter;
-				}
-
-				static Monitor findTargetMonitor(const std::string& name, WindowCoord pos) {
-					auto monitorByName = findMonitorByName(monitors(), name);
-					if (monitorByName != Monitor::NullMonitor()) return monitorByName;
-
-					auto monitorsAt = ak::window::getMonitorsAt(pos, {0,0});
-					if (monitorsAt.size() == 1) {
-						if (monitorsAt.front() != Monitor::NullMonitor()) return monitorsAt.front();
-						return primaryMonitor();
-					}
-
-					monitorByName = findMonitorByName(monitorsAt, name);
-					if (monitorByName != Monitor::NullMonitor()) return monitorByName;
-					return primaryMonitor();
-				}
-
 			public:
 				WindowOptions& position(WindowCoord val) { m_offsetPosition = val; return *this; }
 				WindowOptions& title(const std::string& val) { m_title = val; return *this; }
@@ -96,8 +74,8 @@ namespace ak {
 				WindowOptions& glCore(bool val) { m_glCore = val; return *this; }
 				WindowOptions& glForwardCompat(bool val) { m_glForward = val; return *this; }
 				WindowOptions& glDebugContext(bool val) { m_glDebug = val; return *this; }
-				WindowOptions& glStereo(bool val) { m_glStereo = val; return *this; }
-				WindowOptions& glsRGB(bool val) { m_glSRGB = val; return *this; }
+				WindowOptions& glStereoBuffer(bool val) { m_glStereo = val; return *this; }
+				WindowOptions& glSRGB(bool val) { m_glSRGB = val; return *this; }
 				WindowOptions& glDoubleBuffer(bool val) { m_glDoubleBuffer = val; return *this; }
 				WindowOptions& glMSAA(uint8 val) { m_glMSSA = val; return *this; }
 				WindowOptions& glVSync(VSync val) { m_glVSync = val; return *this; }
@@ -123,96 +101,22 @@ namespace ak {
 				bool glCore() const { return m_glCore; }
 				bool glForwardCompat() const { return m_glForward; }
 				bool glDebugContext() const { return m_glDebug; }
-				bool glStereo() const { return m_glStereo; }
-				bool glsRGB() const { return m_glSRGB; }
+				bool glStereoBuffer() const { return m_glStereo; }
+				bool glSRGB() const { return m_glSRGB; }
 				bool glDoubleBuffer() const { return m_glDoubleBuffer; }
 				VSync glVSync() const { return m_glVSync; }
 				int glMSAA() const { return m_glMSSA; }
-
-				static WindowOptions deserialize(const ak::data::PValue& root) {
-					WindowCoord pos = {root["pos"][0].as<int>(), root["pos"][1].as<int>()};
-					WindowCoord winSize = {root["videoMode"]["size"][0].as<int>(), root["videoMode"]["size"][1].as<int>()};
-					VideoMode videoMode = {winSize, root["videoMode"]["refreshRate"].as<int>()};
-
-					auto targetMonitor = findTargetMonitor(root["monitor"]["name"].asStr(), {root["monitor"]["pos"][0].as<int>(), root["monitor"]["pos"][1].as<int>()});
-
-					VSync vsyncType = vsyncType = VSync::NONE;
-					auto vsyncStr = root["glVSync"].asStr();
-					if (vsyncStr == "None") vsyncType = VSync::NONE;
-					else if (vsyncStr == "Full") vsyncType = VSync::FULL;
-					else if (vsyncStr == "Half") vsyncType = VSync::HALF;
-					else if (vsyncStr == "Adaptive") vsyncType = VSync::ADAPTIVE;
-
-					return WindowOptions()
-						.position(pos)
-						.title(root["title"].asStr())
-
-						.fullscreen(root["isFullscreen"].as<bool>())
-						.centerOnMonitor(root["centerOnMonitor"].as<bool>())
-
-						.targetMonitor(targetMonitor)
-						.videoMode(videoMode)
-
-						.resizable(root["isResizable"].as<bool>())
-						.visible(root["isVisible"].as<bool>())
-						.decorated(root["isDecorated"].as<bool>())
-						.alwaysOnTop(root["isAlwaysOnTop"].as<bool>())
-						.maximised(root["isMinimised"].as<bool>())
-
-						.glVSync(vsyncType)
-
-						.glVersion(root["glVersion"][0].as<int>(), root["glVersion"][1].as<int>())
-						.glCore(root["glCore"].as<bool>())
-						.glForwardCompat(root["glForward"].as<bool>())
-						.glDebugContext(root["glDebug"].as<bool>())
-						.glStereo(root["glStereo"].as<bool>())
-						.glsRGB(root["glSRGB"].as<bool>())
-						.glDoubleBuffer(root["glDoubleBuffer"].as<bool>())
-						.glMSAA(root["glMSAA"].as<uint8>());
-				}
-
-				void serialize(ak::data::PValue& root) {
-					root["pos"][0].setInt(m_offsetPosition.x);
-					root["pos"][1].setInt(m_offsetPosition.y);
-
-					root["title"].setStr(m_title);
-
-					root["isFullscreen"].setBool(m_fullscreen);
-					root["centerOnMonitor"].setBool(m_centerOnMonitor);
-
-					root["monitor"]["name"].setStr(m_targetMonitor.name);
-					root["monitor"]["pos"][0].setInt(m_targetMonitor.position.x);
-					root["monitor"]["pos"][1].setInt(m_targetMonitor.position.y);
-
-					root["videoMode"]["refreshRate"].setInt(m_videoMode.refreshRate);
-					root["videoMode"]["size"][0].setInt(m_videoMode.resolution.x);
-					root["videoMode"]["size"][1].setInt(m_videoMode.resolution.y);
-
-					root["isResizable"].setBool(m_isResizable);
-					root["isVisible"].setBool(m_isVisible);
-					root["isDecorated"].setBool(m_isDecorated);
-					root["isAlwaysOnTop"].setBool(m_alwaysOnTop);
-					root["isMinimised"].setBool(m_minimised);
-
-					switch(m_glVSync) {
-						case VSync::NONE:      root["glVSync"].setStr("None"); break;
-						case VSync::FULL:      root["glVSync"].setStr("Full"); break;
-						case VSync::HALF:      root["glVSync"].setStr("Half"); break;
-						case VSync::ADAPTIVE:  root["glVSync"].setStr("Adaptive"); break;
-					}
-
-					root["glVersion"][0].setInt(m_glMajor);
-					root["glVersion"][1].setInt(m_glMinor);
-					root["glCore"].setBool(m_glCore);
-					root["glForward"].setBool(m_glForward);
-					root["glDebug"].setBool(m_glDebug);
-					root["glStereo"].setBool(m_glStereo);
-					root["glSRGB"].setBool(m_glSRGB);
-					root["glDoubleBuffer"].setBool(m_glDoubleBuffer);
-					root["glMSAA"].setInt(m_glMSSA);
-				}
 		};
 	}
+
+	namespace data {
+		template<> ak::window::WindowOptions deserialize<ak::window::WindowOptions>(const ak::data::PValue& root);
+		template<> void serialize<ak::window::WindowOptions>(ak::data::PValue& root, const ak::window::WindowOptions& val);
+	}
 }
+
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_WINDOW_ALIAS_DISABLE))
+namespace akw = ak::window;
+#endif
 
 #endif

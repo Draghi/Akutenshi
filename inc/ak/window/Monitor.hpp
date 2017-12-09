@@ -63,4 +63,8 @@ namespace ak {
 	}
 }
 
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_WINDOW_ALIAS_DISABLE))
+namespace akw = ak::window;
+#endif
+
 #endif

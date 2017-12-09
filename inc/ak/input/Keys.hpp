@@ -167,14 +167,13 @@ namespace ak {
 
 				/* Special keys */
 				KEY_LAST_NORMAL = MENU,
-
-				SHIFT = std::numeric_limits<uint16>::max(),
-				CTRL  = SHIFT - 1,
-				ALT   = SHIFT - 2,
-				SUPER = SHIFT - 3,
 		};
 
 	}
 }
+
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_INPUT_ALIAS_DISABLE))
+namespace akin = ak::input;
+#endif
 
 #endif

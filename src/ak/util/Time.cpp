@@ -14,19 +14,19 @@
  * limitations under the License.
  **/
 
-#include "ak/time/Time.hpp"
+#include "ak/util/Time.hpp"
 #include <chrono>
 
-using namespace ak::time;
+using namespace ak::util;
 
-Timestamp ak::time::utcTimestamp() {
+Timestamp ak::util::utcTimestamp() {
 	auto cTime = std::chrono::system_clock::now();
 	auto time = std::chrono::system_clock::to_time_t(cTime);
 	auto utcTime = std::gmtime(&time);
 	return {*utcTime, std::chrono::duration_cast<std::chrono::milliseconds>(cTime.time_since_epoch()).count() % 1000};
 }
 
-Timestamp ak::time::localTimestamp() {
+Timestamp ak::util::localTimestamp() {
 	auto cTime = std::chrono::system_clock::now();
 	auto time = std::chrono::system_clock::to_time_t(cTime);
 	auto utcTime = std::localtime(&time);

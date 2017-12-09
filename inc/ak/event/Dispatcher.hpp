@@ -39,6 +39,7 @@ namespace ak {
 				using callback_s = void(event_t&);
 				using callback_t = std::function<void(event_t&)>;
 
+			private:
 				SubscriberID m_id;
 				tsl::ordered_map<SubscriberID, callback_t> m_callbacks;
 				tsl::ordered_map<Subscription*, SubscriberID> m_subscriptions;
@@ -87,6 +88,9 @@ namespace ak {
 					m_callbacks.erase(subscriber);
 				}
 
+				EventID id() { return event_t::EVENT_ID; }
+				std::string_view name() { return event_t::EVENT_NAME; }
+
 				ssize_t send(event_t& event) {
 					auto localCopy = m_callbacks;
 
@@ -103,12 +107,30 @@ namespace ak {
 
 				void mediate(const std::shared_ptr<event_t>& event) { m_mediator.schedule([this, event](){send(*event);}); }
 
-				EventID id() { return event_t::EVENT_ID; }
-				std::string_view name() { return std::string_view(event_t::EVENT_NAME, sizeof(event_t::EVENT_NAME)); }
-
 				template<typename func_t> bool subscribe(Subscription& subscriber, const func_t& func) { return subscribe(subscriber, callback_t(func)); }
 				template<typename func_t> bool subscribe(const func_t& func) { return subscribe(callback_t(func)); }
 				template<typename... vargs_t> void mediate(vargs_t... vargs) { mediate(std::shared_ptr<event_t>(new event_t(vargs...))); }
+		};
+
+		template<typename event_t> class DispatcherProxy final {
+			private:
+				using callback_s = void(event_t&);
+				using callback_t = std::function<void(event_t&)>;
+
+				Dispatcher<event_t>& m_dispatcher;
+
+			public:
+				DispatcherProxy(Dispatcher<event_t>& dispatcher) : m_dispatcher(dispatcher) {}
+				~DispatcherProxy() = default;
+
+				SubscriberID subscribe(Subscription& subscriber, const callback_t& func) const { return m_dispatcher.subscribe(subscriber, func); }
+				SubscriberID subscribe(const callback_t& func) const { return m_dispatcher.subscribe(func); }
+
+				void unsubscribe(Subscription& subscriber) const { return m_dispatcher.unsubscribe(subscriber); }
+				void unsubscribe(SubscriberID subscriber) const { return m_dispatcher.unsubscribe(subscriber); }
+
+				EventID id() const { return m_dispatcher.id(); }
+				std::string_view name() const { return m_dispatcher.name(); }
 		};
 
 

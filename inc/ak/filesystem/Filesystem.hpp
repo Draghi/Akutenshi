@@ -73,4 +73,8 @@ namespace ak {
 	}
 }
 
+#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_FILESYSTEM_ALIAS_DISABLE))
+namespace akfs = ak::filesystem;
+#endif
+
 #endif
