@@ -38,4 +38,4 @@ See the [HISTORY](History.md) file for more information.
 
 ## License
 
-See the [LICENSE](LICENCE.md) file for more information.
+See the [LICENSE](License.md) file for more information.
