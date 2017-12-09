@@ -15,6 +15,7 @@
  **/
 
 #include <ak/render/Texture.hpp>
+#include <utility>
 
 #include "GL/gl4.h"
 
@@ -47,174 +48,168 @@ void ak::render::bind(uint32 unit, const Texture& texture) {
 	glBindTextureUnit(unit, texture.id());
 }
 
+void ak::render::setTextureFilters(TexTarget target, FilterType minFilter, FilterType magFilter) {
+	int32 glMinFilter;
+	switch(minFilter) {
+		case FilterType::Nearest: glMinFilter = GL_NEAREST; break;
+		case FilterType::Linear:  glMinFilter = GL_LINEAR;  break;
+	}
 
+	int32 glMagFilter;
+	switch(magFilter) {
+		case FilterType::Nearest: glMagFilter = GL_NEAREST; break;
+		case FilterType::Linear:  glMagFilter = GL_LINEAR;  break;
+	}
 
-void ak::render::createTextureStorage1D(TexFormat format, uint32 width, uint32 mipLevels) {
+	uint32 glTarget;
+	switch(target) {
+		case TexTarget::Tex1D: glTarget = GL_TEXTURE_1D; break;
+		case TexTarget::Tex1D_Array: glTarget = GL_TEXTURE_1D_ARRAY; break;
+		case TexTarget::Tex2D: glTarget = GL_TEXTURE_2D; break;
+		case TexTarget::Tex2D_Array: glTarget = GL_TEXTURE_2D_ARRAY; break;
+		case TexTarget::Tex3D: glTarget = GL_TEXTURE_3D; break;
+		case TexTarget::TexCubeMap: glTarget = GL_TEXTURE_CUBE_MAP; break;
+	}
+
+	glTexParameteri(glTarget, GL_TEXTURE_MIN_FILTER, glMinFilter);
+	glTexParameteri(glTarget, GL_TEXTURE_MAG_FILTER, glMagFilter);
+}
+
+void ak::render::setTextureFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter, FilterType magMipFilter) {
+	int32 glMinFilter;
+	switch(minFilter) {
+		case FilterType::Nearest: glMinFilter = minMipFilter == FilterType::Nearest ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_LINEAR; break;
+		case FilterType::Linear:  glMinFilter = minMipFilter == FilterType::Nearest ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_LINEAR; break;
+	}
+
+	int32 glMagFilter;
+	switch(magFilter) {
+		case FilterType::Nearest: glMagFilter = magMipFilter == FilterType::Nearest ? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR; break;
+		case FilterType::Linear:  glMagFilter = magMipFilter == FilterType::Nearest ? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR; break;
+	}
+
+	uint32 glTarget;
+	switch(target) {
+		case TexTarget::Tex1D: glTarget = GL_TEXTURE_1D; break;
+		case TexTarget::Tex1D_Array: glTarget = GL_TEXTURE_1D_ARRAY; break;
+		case TexTarget::Tex2D: glTarget = GL_TEXTURE_2D; break;
+		case TexTarget::Tex2D_Array: glTarget = GL_TEXTURE_2D_ARRAY; break;
+		case TexTarget::Tex3D: glTarget = GL_TEXTURE_3D; break;
+		case TexTarget::TexCubeMap: glTarget = GL_TEXTURE_CUBE_MAP; break;
+	}
+
+	glTexParameteri(glTarget, GL_TEXTURE_MAG_FILTER, glMinFilter);
+	glTexParameteri(glTarget, GL_TEXTURE_MIN_FILTER, glMagFilter);
+}
+
+void ak::render::setTextureClamping(TexTarget target, ClampDir clampDir, ClampType clampType, ak::math::Vec4 borderColour) {
+	uint32 glClampDir;
+	switch(clampDir) {
+		case ClampDir::S: glClampDir = GL_TEXTURE_WRAP_S; break;
+		case ClampDir::T: glClampDir = GL_TEXTURE_WRAP_T; break;
+		case ClampDir::R: glClampDir = GL_TEXTURE_WRAP_R; break;
+	}
+
+	int32 glClampType;
+	switch(clampType) {
+		case ClampType::Repeat:     glClampType = GL_REPEAT; break;
+		case ClampType::Mirror:     glClampType = GL_MIRRORED_REPEAT; break;
+		case ClampType::Edge:       glClampType = GL_CLAMP_TO_EDGE; break;
+		case ClampType::Border:     glClampType = GL_CLAMP_TO_BORDER; break;
+	}
+
+	uint32 glTarget;
+	switch(target) {
+		case TexTarget::Tex1D: glTarget = GL_TEXTURE_1D; break;
+		case TexTarget::Tex1D_Array: glTarget = GL_TEXTURE_1D_ARRAY; break;
+		case TexTarget::Tex2D: glTarget = GL_TEXTURE_2D; break;
+		case TexTarget::Tex2D_Array: glTarget = GL_TEXTURE_2D_ARRAY; break;
+		case TexTarget::Tex3D: glTarget = GL_TEXTURE_3D; break;
+		case TexTarget::TexCubeMap: glTarget = GL_TEXTURE_CUBE_MAP; break;
+	}
+
+	if (clampType == ClampType::Border) glTexParameterfv(glTarget, GL_TEXTURE_BORDER_COLOR, &borderColour[0]);
+
+	glTexParameteri(glTarget, glClampDir, glClampType);
+}
+
+static std::pair<uint32, uint32> texFormatToGLFormats(TexFormat format) {
 	switch(format) {
-		case TexFormat::R:    glTextureStorage1D(GL_TEXTURE_1D, mipLevels, GL_RGBA32F,  width); break;
-		case TexFormat::RG:   glTextureStorage1D(GL_TEXTURE_1D, mipLevels, GL_RGBA32F,   width); break;
-		case TexFormat::RGB:  glTextureStorage1D(GL_TEXTURE_1D, mipLevels, GL_RGBA32F,  width); break;
-		case TexFormat::RGBA: glTextureStorage1D(GL_TEXTURE_1D, mipLevels, GL_RGBA32F, width); break;
-		case TexFormat::BGR:  glTextureStorage1D(GL_TEXTURE_1D, mipLevels, GL_RGBA32F,  width); break;
-		case TexFormat::BGRA: glTextureStorage1D(GL_TEXTURE_1D, mipLevels, GL_RGBA32F, width); break;
+		case TexFormat::R:    return {GL_R32F,    GL_RED };
+		case TexFormat::RG:   return {GL_RG32F,   GL_RG  };
+		case TexFormat::RGB:  return {GL_RGB32F,  GL_RGB };
+		case TexFormat::RGBA: return {GL_RGBA32F, GL_RGBA};
+		case TexFormat::BGR:  return {GL_RGB32F,  GL_BGR };
+		case TexFormat::BGRA: return {GL_RGBA32F, GL_BGRA};
 	}
 }
 
-void ak::render::createTextureStorage1D(TexFormat format, uint32 width, uint32 layers, uint32 mipLevels) {
-	switch(format) {
-		case TexFormat::R:    glTextureStorage2D(GL_TEXTURE_1D_ARRAY, mipLevels, GL_RGBA32F,  width, layers); break;
-		case TexFormat::RG:   glTextureStorage2D(GL_TEXTURE_1D_ARRAY, mipLevels, GL_RGBA32F,   width, layers); break;
-		case TexFormat::RGB:  glTextureStorage2D(GL_TEXTURE_1D_ARRAY, mipLevels, GL_RGBA32F,  width, layers); break;
-		case TexFormat::RGBA: glTextureStorage2D(GL_TEXTURE_1D_ARRAY, mipLevels, GL_RGBA32F, width, layers); break;
-		case TexFormat::BGR:  glTextureStorage2D(GL_TEXTURE_1D_ARRAY, mipLevels, GL_RGBA32F,  width, layers); break;
-		case TexFormat::BGRA: glTextureStorage2D(GL_TEXTURE_1D_ARRAY, mipLevels, GL_RGBA32F, width, layers); break;
-	}
+void ak::render::createTextureStorage1D(TexFormat format, int32 width, int32 mipLevels) {
+	glTextureStorage1D(GL_TEXTURE_1D, mipLevels, texFormatToGLFormats(format).first, width);
 }
 
-void ak::render::createTextureStorage2D(TexFormat format, uint32 width, uint32 height, uint32 mipLevels) {
-	switch(format) {
-		case TexFormat::R:    glTextureStorage2D(GL_TEXTURE_2D, mipLevels, GL_RGBA32F,  width, height); break;
-		case TexFormat::RG:   glTextureStorage2D(GL_TEXTURE_2D, mipLevels, GL_RGBA32F,   width, height); break;
-		case TexFormat::RGB:  glTextureStorage2D(GL_TEXTURE_2D, mipLevels, GL_RGBA32F,  width, height); break;
-		case TexFormat::RGBA: glTextureStorage2D(GL_TEXTURE_2D, mipLevels, GL_RGBA32F, width, height); break;
-		case TexFormat::BGR:  glTextureStorage2D(GL_TEXTURE_2D, mipLevels, GL_RGBA32F,  width, height); break;
-		case TexFormat::BGRA: glTextureStorage2D(GL_TEXTURE_2D, mipLevels, GL_RGBA32F, width, height); break;
-	}
+void ak::render::createTextureStorage1D(TexFormat format, int32 width, int32 layers, int32 mipLevels) {
+	glTextureStorage2D(GL_TEXTURE_1D_ARRAY, mipLevels, texFormatToGLFormats(format).first, width, layers);
 }
 
-void ak::render::createTextureStorage2D(TexFormat format, uint32 width, uint32 height, uint32 layers, uint32 mipLevels) {
-	switch(format) {
-		case TexFormat::R:    glTextureStorage3D(GL_TEXTURE_2D_ARRAY, mipLevels, GL_RGBA32F,  width, height, layers); break;
-		case TexFormat::RG:   glTextureStorage3D(GL_TEXTURE_2D_ARRAY, mipLevels, GL_RGBA32F,   width, height, layers); break;
-		case TexFormat::RGB:  glTextureStorage3D(GL_TEXTURE_2D_ARRAY, mipLevels, GL_RGBA32F,  width, height, layers); break;
-		case TexFormat::RGBA: glTextureStorage3D(GL_TEXTURE_2D_ARRAY, mipLevels, GL_RGBA32F, width, height, layers); break;
-		case TexFormat::BGR:  glTextureStorage3D(GL_TEXTURE_2D_ARRAY, mipLevels, GL_RGBA32F,  width, height, layers); break;
-		case TexFormat::BGRA: glTextureStorage3D(GL_TEXTURE_2D_ARRAY, mipLevels, GL_RGBA32F, width, height, layers); break;
-	}
+void ak::render::createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 mipLevels) {
+	glTextureStorage2D(GL_TEXTURE_2D, mipLevels, texFormatToGLFormats(format).first, width, height);
 }
 
-void ak::render::createTextureStorage3D(TexFormat format, uint32 width, uint32 height, uint32 depth, uint32 mipLevels) {
-	switch(format) {
-		case TexFormat::R:    glTextureStorage3D(GL_TEXTURE_3D, mipLevels, GL_RGBA32F,  width, height, depth); break;
-		case TexFormat::RG:   glTextureStorage3D(GL_TEXTURE_3D, mipLevels, GL_RGBA32F,   width, height, depth); break;
-		case TexFormat::RGB:  glTextureStorage3D(GL_TEXTURE_3D, mipLevels, GL_RGBA32F,  width, height, depth); break;
-		case TexFormat::RGBA: glTextureStorage3D(GL_TEXTURE_3D, mipLevels, GL_RGBA32F, width, height, depth); break;
-		case TexFormat::BGR:  glTextureStorage3D(GL_TEXTURE_3D, mipLevels, GL_RGBA32F,  width, height, depth); break;
-		case TexFormat::BGRA: glTextureStorage3D(GL_TEXTURE_3D, mipLevels, GL_RGBA32F, width, height, depth); break;
-	}
+void ak::render::createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 layers, int32 mipLevels) {
+	glTextureStorage3D(GL_TEXTURE_2D_ARRAY, mipLevels, texFormatToGLFormats(format).first, width, height, layers);
+}
+
+void ak::render::createTextureStorage3D(TexFormat format, int32 width, int32 height, int32 depth, int32 mipLevels) {
+	glTextureStorage3D(GL_TEXTURE_3D, mipLevels, texFormatToGLFormats(format).first, width, height, depth);
 }
 
 
 
-void ak::render::setTextureData1D(TexFormat format, uint32 width, const fpSingle* data, uint32 level) {
-	switch(format) {
-		case TexFormat::R:    glTexImage1D(GL_TEXTURE_1D, level, GL_RGBA32F,  width, 0, GL_RED,  GL_FLOAT, data); break;
-		case TexFormat::RG:   glTexImage1D(GL_TEXTURE_1D, level, GL_RGBA32F,   width, 0, GL_RG,   GL_FLOAT, data); break;
-		case TexFormat::RGB:  glTexImage1D(GL_TEXTURE_1D, level, GL_RGBA32F,  width, 0, GL_RGB,  GL_FLOAT, data); break;
-		case TexFormat::RGBA: glTexImage1D(GL_TEXTURE_1D, level, GL_RGBA32F, width, 0, GL_RGBA, GL_FLOAT, data); break;
-		case TexFormat::BGR:  glTexImage1D(GL_TEXTURE_1D, level, GL_RGBA32F,  width, 0, GL_BGR,  GL_FLOAT, data); break;
-		case TexFormat::BGRA: glTexImage1D(GL_TEXTURE_1D, level, GL_RGBA32F, width, 0, GL_BGRA, GL_FLOAT, data); break;
-	}
+void ak::render::setTextureData1D(TexFormat format, int32 width, const fpSingle* data, int32 level) {
+	auto [glFormat, usrFormat] = texFormatToGLFormats(format);
+	glTexImage1D(GL_TEXTURE_1D, level, static_cast<int32>(glFormat), width, 0, usrFormat, GL_FLOAT, data);
 }
 
-void ak::render::setTextureData1D(TexFormat format, uint32 width, uint32 layers, const fpSingle* data, uint32 level) {
-	switch(format) {
-		case TexFormat::R:    glTexImage2D(GL_TEXTURE_1D_ARRAY, level, GL_RGBA32F,  width, layers, 0, GL_RED,  GL_FLOAT, data); break;
-		case TexFormat::RG:   glTexImage2D(GL_TEXTURE_1D_ARRAY, level, GL_RGBA32F,   width, layers, 0, GL_RG,   GL_FLOAT, data); break;
-		case TexFormat::RGB:  glTexImage2D(GL_TEXTURE_1D_ARRAY, level, GL_RGBA32F,  width, layers, 0, GL_RGB,  GL_FLOAT, data); break;
-		case TexFormat::RGBA: glTexImage2D(GL_TEXTURE_1D_ARRAY, level, GL_RGBA32F, width, layers, 0, GL_RGBA, GL_FLOAT, data); break;
-		case TexFormat::BGR:  glTexImage2D(GL_TEXTURE_1D_ARRAY, level, GL_RGBA32F,  width, layers, 0, GL_BGR,  GL_FLOAT, data); break;
-		case TexFormat::BGRA: glTexImage2D(GL_TEXTURE_1D_ARRAY, level, GL_RGBA32F, width, layers, 0, GL_BGRA, GL_FLOAT, data); break;
-	}
+void ak::render::setTextureData1D(TexFormat format, int32 width, int32 layers, const fpSingle* data, int32 level) {
+	auto [glFormat, usrFormat] = texFormatToGLFormats(format);
+	glTexImage2D(GL_TEXTURE_1D_ARRAY, level, static_cast<int32>(glFormat), width, layers, 0, usrFormat, GL_FLOAT, data);
 }
 
-void ak::render::setTextureData2D(TexFormat format, uint32 width, uint32 height, const fpSingle* data, uint32 level) {
-	switch(format) {
-		case TexFormat::R:    glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA32F,  width, height, 0, GL_RED,  GL_FLOAT, data); break;
-		case TexFormat::RG:   glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA32F,   width, height, 0, GL_RG,   GL_FLOAT, data); break;
-		case TexFormat::RGB:  glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA32F,  width, height, 0, GL_RGB,  GL_FLOAT, data); break;
-		case TexFormat::RGBA: glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, data); break;
-		case TexFormat::BGR:  glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA32F,  width, height, 0, GL_BGR,  GL_FLOAT, data); break;
-		case TexFormat::BGRA: glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA32F, width, height, 0, GL_BGRA, GL_FLOAT, data); break;
-	}
+void ak::render::setTextureData2D(TexFormat format, int32 width, int32 height, const fpSingle* data, int32 level) {
+	auto [glFormat, usrFormat] = texFormatToGLFormats(format);
+	glTexImage2D(GL_TEXTURE_2D, level, static_cast<int32>(glFormat), width, height, 0, usrFormat, GL_FLOAT, data);
 }
 
-void ak::render::setTextureData2D(TexFormat format, uint32 width, uint32 height, uint32 layers, const fpSingle* data, uint32 level) {
-	switch(format) {
-		case TexFormat::R:    glTexImage3D(GL_TEXTURE_2D_ARRAY, level, GL_RGBA32F,  width, height, layers, 0, GL_RED,  GL_FLOAT, data); break;
-		case TexFormat::RG:   glTexImage3D(GL_TEXTURE_2D_ARRAY, level, GL_RGBA32F,   width, height, layers, 0, GL_RG,   GL_FLOAT, data); break;
-		case TexFormat::RGB:  glTexImage3D(GL_TEXTURE_2D_ARRAY, level, GL_RGBA32F,  width, height, layers, 0, GL_RGB,  GL_FLOAT, data); break;
-		case TexFormat::RGBA: glTexImage3D(GL_TEXTURE_2D_ARRAY, level, GL_RGBA32F, width, height, layers, 0, GL_RGBA, GL_FLOAT, data); break;
-		case TexFormat::BGR:  glTexImage3D(GL_TEXTURE_2D_ARRAY, level, GL_RGBA32F,  width, height, layers, 0, GL_BGR,  GL_FLOAT, data); break;
-		case TexFormat::BGRA: glTexImage3D(GL_TEXTURE_2D_ARRAY, level, GL_RGBA32F, width, height, layers, 0, GL_BGRA, GL_FLOAT, data); break;
-	}
+void ak::render::setTextureData2D(TexFormat format, int32 width, int32 height, int32 layers, const fpSingle* data, int32 level) {
+	auto [glFormat, usrFormat] = texFormatToGLFormats(format);
+	glTexImage3D(GL_TEXTURE_2D_ARRAY, level, static_cast<int32>(glFormat), width, height, layers, 0, usrFormat, GL_FLOAT, data);
 }
 
-void ak::render::setTextureData3D(TexFormat format, uint32 width, uint32 height, uint32 depth, const fpSingle* data, uint32 level) {
-	switch(format) {
-		case TexFormat::R:    glTexImage3D(GL_TEXTURE_3D, level, GL_RGBA32F,  width, height, depth, 0, GL_RED,  GL_FLOAT, data); break;
-		case TexFormat::RG:   glTexImage3D(GL_TEXTURE_3D, level, GL_RGBA32F,   width, height, depth, 0, GL_RG,   GL_FLOAT, data); break;
-		case TexFormat::RGB:  glTexImage3D(GL_TEXTURE_3D, level, GL_RGBA32F,  width, height, depth, 0, GL_RGB,  GL_FLOAT, data); break;
-		case TexFormat::RGBA: glTexImage3D(GL_TEXTURE_3D, level, GL_RGBA32F, width, height, depth, 0, GL_RGBA, GL_FLOAT, data); break;
-		case TexFormat::BGR:  glTexImage3D(GL_TEXTURE_3D, level, GL_RGBA32F,  width, height, depth, 0, GL_BGR,  GL_FLOAT, data); break;
-		case TexFormat::BGRA: glTexImage3D(GL_TEXTURE_3D, level, GL_RGBA32F, width, height, depth, 0, GL_BGRA, GL_FLOAT, data); break;
-	}
+void ak::render::setTextureData3D(TexFormat format, int32 width, int32 height, int32 depth, const fpSingle* data, int32 level) {
+	auto [glFormat, usrFormat] = texFormatToGLFormats(format);
+	glTexImage3D(GL_TEXTURE_3D, level, static_cast<int32>(glFormat), width, height, depth, 0, usrFormat, GL_FLOAT, data);
 }
 
 
 
-void ak::render::replaceTextureData1D(TexFormat format, uint32 xOff, uint32 width, const fpSingle* data, uint32 level) {
-	switch(format) {
-		case TexFormat::R:    glTexSubImage1D(GL_TEXTURE_1D, level, xOff, width, GL_RED,  GL_FLOAT, data); break;
-		case TexFormat::RG:   glTexSubImage1D(GL_TEXTURE_1D, level, xOff, width, GL_RG,   GL_FLOAT, data); break;
-		case TexFormat::RGB:  glTexSubImage1D(GL_TEXTURE_1D, level, xOff, width, GL_RGB,  GL_FLOAT, data); break;
-		case TexFormat::RGBA: glTexSubImage1D(GL_TEXTURE_1D, level, xOff, width, GL_RGBA, GL_FLOAT, data); break;
-		case TexFormat::BGR:  glTexSubImage1D(GL_TEXTURE_1D, level, xOff, width, GL_BGR,  GL_FLOAT, data); break;
-		case TexFormat::BGRA: glTexSubImage1D(GL_TEXTURE_1D, level, xOff, width, GL_BGRA, GL_FLOAT, data); break;
-	}
+void ak::render::replaceTextureData1D(TexFormat format, int32 xOff, int32 width, const fpSingle* data, int32 level) {
+	glTexSubImage1D(GL_TEXTURE_1D, level, xOff, width, texFormatToGLFormats(format).second, GL_FLOAT, data);
 }
 
-void ak::render::replaceTextureData1D(TexFormat format, uint32 xOff, uint32 lOff, uint32 width, uint32 layers, const fpSingle* data, uint32 level) {
-	switch(format) {
-		case TexFormat::R:    glTexSubImage2D(GL_TEXTURE_1D_ARRAY, level, xOff, lOff, width, layers, GL_RED,  GL_FLOAT, data); break;
-		case TexFormat::RG:   glTexSubImage2D(GL_TEXTURE_1D_ARRAY, level, xOff, lOff, width, layers, GL_RG,   GL_FLOAT, data); break;
-		case TexFormat::RGB:  glTexSubImage2D(GL_TEXTURE_1D_ARRAY, level, xOff, lOff, width, layers, GL_RGB,  GL_FLOAT, data); break;
-		case TexFormat::RGBA: glTexSubImage2D(GL_TEXTURE_1D_ARRAY, level, xOff, lOff, width, layers, GL_RGBA, GL_FLOAT, data); break;
-		case TexFormat::BGR:  glTexSubImage2D(GL_TEXTURE_1D_ARRAY, level, xOff, lOff, width, layers, GL_BGR,  GL_FLOAT, data); break;
-		case TexFormat::BGRA: glTexSubImage2D(GL_TEXTURE_1D_ARRAY, level, xOff, lOff, width, layers, GL_BGRA, GL_FLOAT, data); break;
-	}
+void ak::render::replaceTextureData1D(TexFormat format, int32 xOff, int32 lOff, int32 width, int32 layers, const fpSingle* data, int32 level) {
+	glTexSubImage2D(GL_TEXTURE_1D_ARRAY, level, xOff, lOff, width, layers, texFormatToGLFormats(format).second, GL_FLOAT, data);
 }
 
-void ak::render::replaceTextureData2D(TexFormat format, uint32 xOff, uint32 yOff, uint32 width, uint32 height, const fpSingle* data, uint32 level) {
-	switch(format) {
-		case TexFormat::R:    glTexSubImage2D(GL_TEXTURE_2D, level, xOff, yOff, width, height, GL_RED,  GL_FLOAT, data); break;
-		case TexFormat::RG:   glTexSubImage2D(GL_TEXTURE_2D, level, xOff, yOff, width, height, GL_RG,   GL_FLOAT, data); break;
-		case TexFormat::RGB:  glTexSubImage2D(GL_TEXTURE_2D, level, xOff, yOff, width, height, GL_RGB,  GL_FLOAT, data); break;
-		case TexFormat::RGBA: glTexSubImage2D(GL_TEXTURE_2D, level, xOff, yOff, width, height, GL_RGBA, GL_FLOAT, data); break;
-		case TexFormat::BGR:  glTexSubImage2D(GL_TEXTURE_2D, level, xOff, yOff, width, height, GL_BGR,  GL_FLOAT, data); break;
-		case TexFormat::BGRA: glTexSubImage2D(GL_TEXTURE_2D, level, xOff, yOff, width, height, GL_BGRA, GL_FLOAT, data); break;
-	}
+void ak::render::replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 width, int32 height, const fpSingle* data, int32 level) {
+	glTexSubImage2D(GL_TEXTURE_2D, level, xOff, yOff, width, height, texFormatToGLFormats(format).second, GL_FLOAT, data);
 }
 
-void ak::render::replaceTextureData2D(TexFormat format, uint32 xOff, uint32 yOff, uint32 lOff, uint32 width, uint32 height, uint32 layers, const fpSingle* data, uint32 level) {
-	switch(format) {
-		case TexFormat::R:    glTexSubImage3D(GL_TEXTURE_2D_ARRAY, level, xOff, yOff, lOff, width, height, layers, GL_RED,  GL_FLOAT, data); break;
-		case TexFormat::RG:   glTexSubImage3D(GL_TEXTURE_2D_ARRAY, level, xOff, yOff, lOff, width, height, layers, GL_RG,   GL_FLOAT, data); break;
-		case TexFormat::RGB:  glTexSubImage3D(GL_TEXTURE_2D_ARRAY, level, xOff, yOff, lOff, width, height, layers, GL_RGB,  GL_FLOAT, data); break;
-		case TexFormat::RGBA: glTexSubImage3D(GL_TEXTURE_2D_ARRAY, level, xOff, yOff, lOff, width, height, layers, GL_RGBA, GL_FLOAT, data); break;
-		case TexFormat::BGR:  glTexSubImage3D(GL_TEXTURE_2D_ARRAY, level, xOff, yOff, lOff, width, height, layers, GL_BGR,  GL_FLOAT, data); break;
-		case TexFormat::BGRA: glTexSubImage3D(GL_TEXTURE_2D_ARRAY, level, xOff, yOff, lOff, width, height, layers, GL_BGRA, GL_FLOAT, data); break;
-	}
+void ak::render::replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 lOff, int32 width, int32 height, int32 layers, const fpSingle* data, int32 level) {
+	glTexSubImage3D(GL_TEXTURE_2D_ARRAY, level, xOff, yOff, lOff, width, height, layers, texFormatToGLFormats(format).second, GL_FLOAT, data);
 }
 
-void ak::render::replaceTextureData3D(TexFormat format, uint32 xOff, uint32 yOff, uint32 zOff, uint32 width, uint32 height, uint32 depth, const fpSingle* data, uint32 level) {
-	switch(format) {
-		case TexFormat::R:    glTexSubImage3D(GL_TEXTURE_3D, level, xOff, yOff, zOff, width, height, depth, GL_RED,  GL_FLOAT, data); break;
-		case TexFormat::RG:   glTexSubImage3D(GL_TEXTURE_3D, level, xOff, yOff, zOff, width, height, depth, GL_RG,   GL_FLOAT, data); break;
-		case TexFormat::RGB:  glTexSubImage3D(GL_TEXTURE_3D, level, xOff, yOff, zOff, width, height, depth, GL_RGB,  GL_FLOAT, data); break;
-		case TexFormat::RGBA: glTexSubImage3D(GL_TEXTURE_3D, level, xOff, yOff, zOff, width, height, depth, GL_RGBA, GL_FLOAT, data); break;
-		case TexFormat::BGR:  glTexSubImage3D(GL_TEXTURE_3D, level, xOff, yOff, zOff, width, height, depth, GL_BGR,  GL_FLOAT, data); break;
-		case TexFormat::BGRA: glTexSubImage3D(GL_TEXTURE_3D, level, xOff, yOff, zOff, width, height, depth, GL_BGRA, GL_FLOAT, data); break;
-	}
+void ak::render::replaceTextureData3D(TexFormat format, int32 xOff, int32 yOff, int32 zOff, int32 width, int32 height, int32 depth, const fpSingle* data, int32 level) {
+	glTexSubImage3D(GL_TEXTURE_3D, level, xOff, yOff, zOff, width, height, depth, texFormatToGLFormats(format).second, GL_FLOAT, data);
 }
 

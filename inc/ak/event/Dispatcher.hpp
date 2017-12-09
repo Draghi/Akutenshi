@@ -20,7 +20,6 @@
 #include <ak/event/Subscription.hpp>
 #include <ak/event/Util.hpp>
 #include <ak/thread/CurrentThread.hpp>
-#include <ak/thread/RecursiveSpinlock.hpp>
 #include <ak/thread/Thread.hpp>
 #include <ordered_map.h>
 #include <stddef.h>

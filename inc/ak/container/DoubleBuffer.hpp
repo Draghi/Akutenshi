@@ -19,7 +19,7 @@
 
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/ScopeGuard.hpp>
-#include <ak/thread/RecursiveSpinlock.hpp>
+#include <ak/thread/Spinlock.hpp>
 #include <stddef.h>
 #include <sys/types.h>
 #include <vector>
@@ -29,8 +29,8 @@ namespace ak {
 
 		template<typename type_t> class DoubleBuffer final {
 			private:
-				ak::thread::RecursiveSpinlock m_writeLock;
-				ak::thread::RecursiveSpinlock m_readLock;
+				ak::thread::Spinlock m_writeLock;
+				ak::thread::Spinlock m_readLock;
 
 				uint8 m_index;
 				std::vector<type_t> m_buffers[2];

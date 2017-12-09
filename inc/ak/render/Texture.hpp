@@ -17,6 +17,7 @@
 #ifndef AK_RENDER_TEXTURE_HPP_
 #define AK_RENDER_TEXTURE_HPP_
 
+#include <ak/math/Vector.hpp>
 #include <ak/PrimitiveTypes.hpp>
 
 namespace ak {
@@ -54,6 +55,24 @@ namespace ak {
 			BGRA,
 		};
 
+		enum class FilterType {
+			Nearest,
+			Linear,
+		};
+
+		enum class ClampType {
+			Repeat,
+			Mirror,
+			Edge,
+			Border,
+		};
+
+		enum class ClampDir {
+			S,
+			T,
+			R
+		};
+
 		class Texture {
 			protected:
 				uint32 m_id;
@@ -70,23 +89,27 @@ namespace ak {
 		void setActiveTextureUnit(uint32 unit);
 		void bind(uint32 unit, const Texture& texture);
 
-		void createTextureStorage1D(TexFormat format, uint32 width, uint32 mipLevels);
-		void createTextureStorage1D(TexFormat format, uint32 width, uint32 layers, uint32 mipLevels);
-		void createTextureStorage2D(TexFormat format, uint32 width, uint32 height, uint32 mipLevels);
-		void createTextureStorage2D(TexFormat format, uint32 width, uint32 height, uint32 layers, uint32 mipLevels);
-		void createTextureStorage3D(TexFormat format, uint32 width, uint32 height, uint32 depth, uint32 mipLevels);
+		void setTextureFilters(TexTarget target, FilterType minFilter, FilterType magFilter);
+		void setTextureFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter, FilterType magMipFilter);
+		void setTextureClamping(TexTarget target, ClampDir clampDir, ClampType clampType, ak::math::Vec4 borderColour = ak::math::Vec4(0,0,0,0));
 
-		void setTextureData1D(TexFormat format, uint32 width, const fpSingle* data, uint32 level = 0);
-		void setTextureData1D(TexFormat format, uint32 width, uint32 layers, const fpSingle* data, uint32 level = 0);
-		void setTextureData2D(TexFormat format, uint32 width, uint32 height, const fpSingle* data, uint32 level = 0);
-		void setTextureData2D(TexFormat format, uint32 width, uint32 height, uint32 layers, const fpSingle* data, uint32 level = 0);
-		void setTextureData3D(TexFormat format, uint32 width, uint32 height, uint32 depth, const fpSingle* data, uint32 level = 0);
+		void createTextureStorage1D(TexFormat format, int32 width, int32 mipLevels);
+		void createTextureStorage1D(TexFormat format, int32 width, int32 layers, int32 mipLevels);
+		void createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 mipLevels);
+		void createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 layers, int32 mipLevels);
+		void createTextureStorage3D(TexFormat format, int32 width, int32 height, int32 depth,  int32 mipLevels);
 
-		void replaceTextureData1D(TexFormat format, uint32 xOff, uint32 width, const fpSingle* data, uint32 level = 0);
-		void replaceTextureData1D(TexFormat format, uint32 xOff, uint32 lOff, uint32 width, uint32 layers, const fpSingle* data, uint32 level = 0);
-		void replaceTextureData2D(TexFormat format, uint32 xOff, uint32 yOff, uint32 width, uint32 height, const fpSingle* data, uint32 level = 0);
-		void replaceTextureData2D(TexFormat format, uint32 xOff, uint32 yOff, uint32 lOff, uint32 width, uint32 height, uint32 layers, const fpSingle* data, uint32 level = 0);
-		void replaceTextureData3D(TexFormat format, uint32 xOff, uint32 yOff, uint32 zOff, uint32 width, uint32 height, uint32 depth, const fpSingle* data, uint32 level = 0);
+		void setTextureData1D(TexFormat format, int32 width, const fpSingle* data, int32 level = 0);
+		void setTextureData1D(TexFormat format, int32 width, int32 layers, const fpSingle* data, int32 level = 0);
+		void setTextureData2D(TexFormat format, int32 width, int32 height, const fpSingle* data, int32 level = 0);
+		void setTextureData2D(TexFormat format, int32 width, int32 height, int32 layers, const fpSingle* data, int32 level = 0);
+		void setTextureData3D(TexFormat format, int32 width, int32 height, int32 depth,  const fpSingle* data, int32 level = 0);
+
+		void replaceTextureData1D(TexFormat format, int32 xOff, int32 width, const fpSingle* data, int32 level = 0);
+		void replaceTextureData1D(TexFormat format, int32 xOff, int32 lOff, int32 width, int32 layers, const fpSingle* data, int32 level = 0);
+		void replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 width, int32 height, const fpSingle* data, int32 level = 0);
+		void replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 lOff,  int32 width, int32 height, int32 layers, const fpSingle* data, int32 level = 0);
+		void replaceTextureData3D(TexFormat format, int32 xOff, int32 yOff, int32 zOff,  int32 width, int32 height, int32 depth,  const fpSingle* data, int32 level = 0);
 
 	}
 }

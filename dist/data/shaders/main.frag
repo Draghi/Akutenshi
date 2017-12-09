@@ -4,8 +4,7 @@ in vec3 fPos;
 in vec3 fNorm;
 in vec2 fTex;
 
-layout(location = 2) uniform vec3 uColour;
-layout(location = 3) uniform sampler2D uTex;
+layout(location = 2) uniform sampler2D uTex;
 
 out vec4 fragColour;
 

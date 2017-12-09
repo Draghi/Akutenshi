@@ -52,7 +52,7 @@ namespace ak {
 			 * Move-constructs a copy of the given ScopeGuard
 			 * @param other The scope guard to move
 			 */
-			ScopeGuard(ScopeGuard&& other) : m_func(std::move(other.m_func)) { }
+			ScopeGuard(ScopeGuard&& other) : m_func(std::move(other.m_func)) { other.clear(); }
 
 			/**
 			 * Destructor, calls stored function
@@ -65,22 +65,29 @@ namespace ak {
 			 */
 			ScopeGuard& operator=(ScopeGuard&& other) {
 				m_func = std::move(other.m_func);
+				other.clear();
 				return *this;
 			}
 
 			/**
 			 * Releases the stored function.
+			 * @return The stored function
 			 */
-			auto release() {
-				return exchange(m_func, func_t());
-			}
+			func_t release() { return exchange(m_func, func_t()); }
+
+			/**
+			 * Releases the stored function.
+			 */
+			void clear() { m_func = func_t(); }
 
 			/**
 			 * Executes the stored function and then releases it
 			 */
 			void execute() {
-				if (!empty()) m_func();
-				release();
+				if (m_func) {
+					m_func();
+					clear();
+				}
 			}
 
 			/**

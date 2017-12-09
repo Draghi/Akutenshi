@@ -20,11 +20,10 @@
 #include <ak/filesystem/Filesystem.hpp>
 #include <ak/Log.hpp>
 #include <ak/ScopeGuard.hpp>
-#include <ak/thread/RecursiveSpinlock.hpp>
+#include <ak/thread/Spinlock.hpp>
 #include <stddef.h>
 #include <algorithm>
 #include <atomic>
-#include <experimental/filesystem>
 #include <iostream>
 #include <utility>
 
@@ -32,14 +31,14 @@ using namespace ak::log;
 
 static ak::thread::Thread loggingThread("Log");
 
-static ak::thread::RecursiveSpinlock messageQueueProcessLock;
+static ak::thread::Spinlock messageQueueProcessLock;
 static ak::container::DoubleBuffer<std::pair<Level, std::string>> logMessageBuffer;
 static Level consoleFilterLevel = Level::ALL;
 static Level fileFilterLevel = Level::ALL;
 
 static std::atomic<bool> isRedirrectingStd = false;
 
-static ak::thread::RecursiveSpinlock logFileLock;
+static ak::thread::Spinlock logFileLock;
 static ak::filesystem::CFile logFile;
 
 bool ak::log::startProcessing(uint64 delayUS) {

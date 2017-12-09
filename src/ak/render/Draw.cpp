@@ -27,6 +27,9 @@ void ak::render::init() {
 	glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
 	glClearDepth(1.0f);
 
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
 	hasInit = true;
 }
 

@@ -46,10 +46,10 @@ std::vector<fpSingle> ak::render::genCubeMesh(akm::Vec3 p1, akm::Vec3 p2, bool g
 
 	const akm::Vec2 texcoord[] = {
 		akm::Vec2(0, 0),
-		akm::Vec2(0, 1),
-		akm::Vec2(1, 1),
-		akm::Vec2(1, 1),
 		akm::Vec2(1, 0),
+		akm::Vec2(1, 1),
+		akm::Vec2(1, 1),
+		akm::Vec2(0, 1),
 		akm::Vec2(0, 0),
 	};
 
