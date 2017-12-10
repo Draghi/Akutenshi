@@ -16,17 +16,16 @@
 
 #include <ak/data/JsonParser.hpp>
 #include <ak/data/Path.hpp>
-#include <ak/data/PValue.hpp>
 #include <ak/PrimitiveTypes.hpp>
+#include <bits/stdint-intn.h>
+#include <bits/stdint-uintn.h>
 #include <algorithm>
-#include <cstdint>
 #include <deque>
-#include <functional>
 #include <iostream>
 #include <limits>
 #include <map>
 #include <stdexcept>
-#include <string>
+#include <utility>
 
 #include "rapidjson/encodings.h"
 #include "rapidjson/error/error.h"
@@ -43,28 +42,29 @@ namespace rj = rapidjson;
 
 struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 
-		PValue& root;
+		//PValue& root;
 		std::deque<PValue*> valueStack;
 		std::string cKey;
 
 
-		JSONParser(ak::data::PValue& a) : root(a), valueStack(), cKey("") {}
+		JSONParser(ak::data::PValue& a) : valueStack(), cKey("") { a.setNull(); valueStack.push_back(&a);}
 
 		void addPValue(PValue&& value) {
 
-			ak::data::PValue* nValue;
-			if (valueStack.size() > 0) {
-				auto& tValue = *valueStack.back();
+			bool isObjOrArr = value.isObj() || value.isArr();
 
-				if (tValue.isObj()) nValue = &tValue[cKey];
-				else if (tValue.isArr()) nValue = &tValue[tValue.as<ak::data::PValue::arr_t>().size()];
-				else throw std::logic_error("JSONParser: Invalid parse state");
+			ak::data::PValue& cValue = *valueStack.back();
+
+			if (cValue.isObj()) {
+				cValue.asObj().insert(std::make_pair(cKey, std::move(value)));
+				if (isObjOrArr) valueStack.push_back(&cValue.asObj().at(cKey));
+			} else if (cValue.isArr()) {
+				cValue.asArr().push_back(std::move(value));
+				if (isObjOrArr) valueStack.push_back(&cValue.asArr().back());
 			} else {
-				nValue = &root;
+				cValue.set<akd::PValue>(value);
+				if (!isObjOrArr) valueStack.pop_back();
 			}
-
-			*nValue = std::move(value);
-			if (nValue->isObj() || nValue->isArr()) valueStack.push_back(nValue);
 		}
 
 	    bool Null() {
@@ -134,6 +134,7 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 };
 
 bool ak::data::deserializeJson(ak::data::PValue& dest, std::istream& jsonStream) {
+	dest = akd::PValue();
 	JSONParser handler(dest);
 	rj::Reader reader;
 	rj::IStreamWrapper stream(jsonStream);

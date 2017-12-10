@@ -92,53 +92,6 @@ namespace ak {
 				static PValue& navigate_internal(PValue& cNode, const Path& path);
 				static const PValue* navigate_internal(const PValue* currentNode, const Path& path);
 
-				PValue& setNull();
-				PValue& setPValue(const PValue& val);
-
-				PValue& setObj();
-				PValue& setObj(const obj_t& val);
-
-				PValue& setArr();
-				PValue& setArr(const arr_t& val);
-
-				PValue& setStr(const str_t& val);
-				PValue& setInt(const int_t& val);
-				PValue& setUInt(const uint_t& val);
-				PValue& setDec(const dec_t& val);
-				PValue& setBool(const bool_t& val);
-
-				obj_t& asObj();
-				arr_t& asArr();
-				str_t& asStr();
-				int_t& asInt();
-				uint_t& asUInt();
-				dec_t& asDec();
-				bool_t& asBool();
-
-				obj_t& asObjOrSet(const obj_t& val = obj_t());
-				arr_t& asArrOrSet(const arr_t& val = arr_t());
-				str_t& asStrOrSet(const str_t& val = str_t());
-				int_t& asIntOrSet(int_t val);
-				uint_t& asUIntOrSet(uint_t val);
-				dec_t& asDecOrSet(dec_t val);
-				bool_t& asBoolOrSet(bool_t val);
-
-				const obj_t& asObj() const;
-				const arr_t& asArr() const;
-				const str_t& asStr() const;
-				int_t asInt() const;
-				uint_t asUInt() const;
-				dec_t asDec() const;
-				bool_t asBool() const;
-
-				const obj_t& asObjOrDef(const obj_t& val = obj_t()) const;
-				const arr_t& asArrOrDef(const arr_t& val = arr_t()) const;
-				const str_t& asStrOrDef(const str_t& val = str_t()) const;
-				int_t asIntOrDef(int_t val) const;
-				uint_t asUIntOrDef(uint_t val) const;
-				dec_t asDecOrDef(dec_t val) const;
-				bool_t asBoolOrDef(bool_t val) const;
-
 			public:
 				PValue() : m_type(PType::Null) {}
 				PValue(const PValue& val) : m_type(PType::Null) { setPValue(val); }
@@ -191,8 +144,60 @@ namespace ak {
 				bool exists(const std::string& name) const { return (isObj()) && (asObj().find(name) != asObj().end()); }
 				bool exists(size_t id) const { return (isArr()) && (id < asArr().size()); }
 
-				const PValue& operator[](const std::string& name) const { return at(name); }
-				const PValue& operator[](const size_t& id) const { return at(id); }
+				const PValue& operator[](const std::string& name) const { return atOrDef(name); }
+				const PValue& operator[](const size_t& id) const { return atOrDef(id); }
+
+				// ///////////// //
+				// // Dirrect // //
+				// ///////////// //
+
+				PValue& setNull();
+				PValue& setPValue(const PValue& val);
+
+				PValue& setObj();
+				PValue& setObj(const obj_t& val);
+
+				PValue& setArr();
+				PValue& setArr(const arr_t& val);
+
+				PValue& setStr(const str_t& val);
+				PValue& setInt(const int_t& val);
+				PValue& setUInt(const uint_t& val);
+				PValue& setDec(const dec_t& val);
+				PValue& setBool(const bool_t& val);
+
+				obj_t& asObj();
+				arr_t& asArr();
+				str_t& asStr();
+				int_t& asInt();
+				uint_t& asUInt();
+				dec_t& asDec();
+				bool_t& asBool();
+
+				obj_t& asObjOrSet(const obj_t& val = obj_t());
+				arr_t& asArrOrSet(const arr_t& val = arr_t());
+				str_t& asStrOrSet(const str_t& val = str_t());
+				int_t& asIntOrSet(int_t val);
+				uint_t& asUIntOrSet(uint_t val);
+				dec_t& asDecOrSet(dec_t val);
+				bool_t& asBoolOrSet(bool_t val);
+
+				const obj_t& asObj() const;
+				const arr_t& asArr() const;
+				const str_t& asStr() const;
+				int_t asInt() const;
+				uint_t asUInt() const;
+				dec_t asDec() const;
+				bool_t asBool() const;
+
+				const obj_t& asObjOrDef(const obj_t& val = obj_t()) const;
+				const arr_t& asArrOrDef(const arr_t& val = arr_t()) const;
+				const str_t& asStrOrDef(const str_t& val = str_t()) const;
+				int_t asIntOrDef(int_t val) const;
+				uint_t asUIntOrDef(uint_t val) const;
+				dec_t asDecOrDef(dec_t val) const;
+				bool_t asBoolOrDef(bool_t val) const;
+
 
 				// //////////// //
 				// // Values // //
@@ -241,6 +246,8 @@ namespace ak {
 				bool isInteger() const { return isSInt() || isUInt(); }
 				bool isNumber() const { return isSInt() || isUInt() || isDec(); }
 				bool isPrimitive() const { return isSInt() || isUInt() || isDec() || isBool(); }
+
+				size_t size() const { return asArr().size(); }
 
 				// //////////////// //
 				// // Assignment // //
@@ -368,7 +375,7 @@ namespace ak {
 					return m_value.sVal;
 				}
 
-				template<typename type_t> typename std::enable_if<std::is_integral<type_t>::value && std::is_signed<type_t>::value, type_t>::type asOrDef(const type_t& val) const {
+				template<typename type_t> typename std::enable_if<std::is_integral<type_t>::value && std::is_signed<type_t>::value && !std::is_same<type_t, bool>::value, type_t>::type asOrDef(const type_t& val) const {
 					if (isSInt()) return static_cast<type_t>(m_value.iVal);
 					if (isUInt()) return static_cast<type_t>(m_value.uVal);
 					if (isDec())  return static_cast<type_t>(m_value.dVal);
@@ -376,7 +383,7 @@ namespace ak {
 					return val;
 				}
 
-				template<typename type_t> typename std::enable_if<std::is_integral<type_t>::value && std::is_unsigned<type_t>::value, type_t>::type asOrDef(const type_t& val) const {
+				template<typename type_t> typename std::enable_if<std::is_integral<type_t>::value && std::is_unsigned<type_t>::value && !std::is_same<type_t, bool>::value, type_t>::type asOrDef(const type_t& val) const {
 					if (isSInt()) return static_cast<type_t>(m_value.iVal);
 					if (isUInt()) return static_cast<type_t>(m_value.uVal);
 					if (isDec())  return static_cast<type_t>(m_value.dVal);
@@ -384,7 +391,7 @@ namespace ak {
 					return val;
 				}
 
-				template<typename type_t> typename std::enable_if<std::is_floating_point<type_t>::value, type_t>::type asOrDef(const type_t& val) const {
+				template<typename type_t> typename std::enable_if<std::is_floating_point<type_t>::value && !std::is_same<type_t, bool>::value, type_t>::type asOrDef(const type_t& val) const {
 					if (isSInt()) return static_cast<type_t>(m_value.iVal);
 					if (isUInt()) return static_cast<type_t>(m_value.uVal);
 					if (isDec())  return static_cast<type_t>(m_value.dVal);

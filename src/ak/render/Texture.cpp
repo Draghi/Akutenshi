@@ -24,15 +24,12 @@ using namespace ak::render;
 
 Texture::Texture(TexTarget target) : m_id(0), m_type(target) {
 	switch(m_type) {
-		case TexTarget::Tex1D: glCreateTextures(GL_TEXTURE_1D, 1, &m_id); break;
+		case TexTarget::Tex1D:       glCreateTextures(GL_TEXTURE_1D,       1, &m_id); break;
 		case TexTarget::Tex1D_Array: glCreateTextures(GL_TEXTURE_1D_ARRAY, 1, &m_id); break;
-
-		case TexTarget::Tex2D: glCreateTextures(GL_TEXTURE_2D, 1, &m_id); break;
+		case TexTarget::Tex2D:       glCreateTextures(GL_TEXTURE_2D,       1, &m_id); break;
 		case TexTarget::Tex2D_Array: glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &m_id); break;
-
-		case TexTarget::Tex3D: glCreateTextures(GL_TEXTURE_3D, 1, &m_id); break;
-
-		case TexTarget::TexCubeMap: glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_id); break;
+		case TexTarget::Tex3D:       glCreateTextures(GL_TEXTURE_3D,       1, &m_id); break;
+		case TexTarget::TexCubeMap:  glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_id); break;
 	}
 }
 
@@ -75,34 +72,34 @@ void ak::render::setTextureFilters(TexTarget target, FilterType minFilter, Filte
 	glTexParameteri(glTarget, GL_TEXTURE_MAG_FILTER, glMagFilter);
 }
 
-void ak::render::setTextureFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter, FilterType magMipFilter) {
+void ak::render::setTextureFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter) {
 	int32 glMinFilter;
 	switch(minFilter) {
-		case FilterType::Nearest: glMinFilter = minMipFilter == FilterType::Nearest ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_LINEAR; break;
-		case FilterType::Linear:  glMinFilter = minMipFilter == FilterType::Nearest ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_LINEAR; break;
+		case FilterType::Nearest: glMinFilter = (minMipFilter == FilterType::Nearest) ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_LINEAR; break;
+		case FilterType::Linear:  glMinFilter = (minMipFilter == FilterType::Nearest) ? GL_LINEAR_MIPMAP_NEAREST  : GL_LINEAR_MIPMAP_LINEAR;  break;
 	}
 
 	int32 glMagFilter;
 	switch(magFilter) {
-		case FilterType::Nearest: glMagFilter = magMipFilter == FilterType::Nearest ? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR; break;
-		case FilterType::Linear:  glMagFilter = magMipFilter == FilterType::Nearest ? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR; break;
+		case FilterType::Nearest: glMagFilter = GL_NEAREST; break;
+		case FilterType::Linear:  glMagFilter = GL_LINEAR; break;
 	}
 
 	uint32 glTarget;
 	switch(target) {
-		case TexTarget::Tex1D: glTarget = GL_TEXTURE_1D; break;
+		case TexTarget::Tex1D:       glTarget = GL_TEXTURE_1D;       break;
 		case TexTarget::Tex1D_Array: glTarget = GL_TEXTURE_1D_ARRAY; break;
-		case TexTarget::Tex2D: glTarget = GL_TEXTURE_2D; break;
+		case TexTarget::Tex2D:       glTarget = GL_TEXTURE_2D;       break;
 		case TexTarget::Tex2D_Array: glTarget = GL_TEXTURE_2D_ARRAY; break;
-		case TexTarget::Tex3D: glTarget = GL_TEXTURE_3D; break;
-		case TexTarget::TexCubeMap: glTarget = GL_TEXTURE_CUBE_MAP; break;
+		case TexTarget::Tex3D:       glTarget = GL_TEXTURE_3D;       break;
+		case TexTarget::TexCubeMap:  glTarget = GL_TEXTURE_CUBE_MAP; break;
 	}
 
-	glTexParameteri(glTarget, GL_TEXTURE_MAG_FILTER, glMinFilter);
-	glTexParameteri(glTarget, GL_TEXTURE_MIN_FILTER, glMagFilter);
+	glTexParameteri(glTarget, GL_TEXTURE_MAG_FILTER, glMagFilter);
+	glTexParameteri(glTarget, GL_TEXTURE_MIN_FILTER, glMinFilter);
 }
 
-void ak::render::setTextureClamping(TexTarget target, ClampDir clampDir, ClampType clampType, ak::math::Vec4 borderColour) {
+void ak::render::setTextureClamping(TexTarget target, ClampDir clampDir, ClampType clampType) {
 	uint32 glClampDir;
 	switch(clampDir) {
 		case ClampDir::S: glClampDir = GL_TEXTURE_WRAP_S; break;
@@ -128,40 +125,64 @@ void ak::render::setTextureClamping(TexTarget target, ClampDir clampDir, ClampTy
 		case TexTarget::TexCubeMap: glTarget = GL_TEXTURE_CUBE_MAP; break;
 	}
 
-	if (clampType == ClampType::Border) glTexParameterfv(glTarget, GL_TEXTURE_BORDER_COLOR, &borderColour[0]);
-
 	glTexParameteri(glTarget, glClampDir, glClampType);
+}
+
+void ak::render::setTextureBorder(TexTarget target, akm::Vec4 colour) {
+	uint32 glTarget;
+	switch(target) {
+		case TexTarget::Tex1D: glTarget = GL_TEXTURE_1D; break;
+		case TexTarget::Tex1D_Array: glTarget = GL_TEXTURE_1D_ARRAY; break;
+		case TexTarget::Tex2D: glTarget = GL_TEXTURE_2D; break;
+		case TexTarget::Tex2D_Array: glTarget = GL_TEXTURE_2D_ARRAY; break;
+		case TexTarget::Tex3D: glTarget = GL_TEXTURE_3D; break;
+		case TexTarget::TexCubeMap: glTarget = GL_TEXTURE_CUBE_MAP; break;
+	}
+	glTexParameterfv(glTarget, GL_TEXTURE_BORDER_COLOR, &colour[0]);
+}
+
+void ak::render::generateMipmaps(TexTarget target) {
+	uint32 glTarget;
+	switch(target) {
+		case TexTarget::Tex1D: glTarget = GL_TEXTURE_1D; break;
+		case TexTarget::Tex1D_Array: glTarget = GL_TEXTURE_1D_ARRAY; break;
+		case TexTarget::Tex2D: glTarget = GL_TEXTURE_2D; break;
+		case TexTarget::Tex2D_Array: glTarget = GL_TEXTURE_2D_ARRAY; break;
+		case TexTarget::Tex3D: glTarget = GL_TEXTURE_3D; break;
+		case TexTarget::TexCubeMap: glTarget = GL_TEXTURE_CUBE_MAP; break;
+	}
+	glGenerateMipmap(glTarget);
 }
 
 static std::pair<uint32, uint32> texFormatToGLFormats(TexFormat format) {
 	switch(format) {
-		case TexFormat::R:    return {GL_R32F,    GL_RED };
-		case TexFormat::RG:   return {GL_RG32F,   GL_RG  };
-		case TexFormat::RGB:  return {GL_RGB32F,  GL_RGB };
-		case TexFormat::RGBA: return {GL_RGBA32F, GL_RGBA};
-		case TexFormat::BGR:  return {GL_RGB32F,  GL_BGR };
-		case TexFormat::BGRA: return {GL_RGBA32F, GL_BGRA};
+		case TexFormat::R:    return {GL_R16F,    GL_RED };
+		case TexFormat::RG:   return {GL_RG16F,   GL_RG  };
+		case TexFormat::RGB:  return {GL_RGB16F,  GL_RGB };
+		case TexFormat::RGBA: return {GL_RGBA16F, GL_RGBA};
+		case TexFormat::BGR:  return {GL_RGB16F,  GL_BGR };
+		case TexFormat::BGRA: return {GL_RGBA16F, GL_BGRA};
 	}
 }
 
 void ak::render::createTextureStorage1D(TexFormat format, int32 width, int32 mipLevels) {
-	glTextureStorage1D(GL_TEXTURE_1D, mipLevels, texFormatToGLFormats(format).first, width);
+	glTexStorage1D(GL_TEXTURE_1D, mipLevels, texFormatToGLFormats(format).first, width);
 }
 
 void ak::render::createTextureStorage1D(TexFormat format, int32 width, int32 layers, int32 mipLevels) {
-	glTextureStorage2D(GL_TEXTURE_1D_ARRAY, mipLevels, texFormatToGLFormats(format).first, width, layers);
+	glTexStorage2D(GL_TEXTURE_1D_ARRAY, mipLevels, texFormatToGLFormats(format).first, width, layers);
 }
 
 void ak::render::createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 mipLevels) {
-	glTextureStorage2D(GL_TEXTURE_2D, mipLevels, texFormatToGLFormats(format).first, width, height);
+	glTexStorage2D(GL_TEXTURE_2D, mipLevels, texFormatToGLFormats(format).first, width, height);
 }
 
 void ak::render::createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 layers, int32 mipLevels) {
-	glTextureStorage3D(GL_TEXTURE_2D_ARRAY, mipLevels, texFormatToGLFormats(format).first, width, height, layers);
+	glTexStorage3D(GL_TEXTURE_2D_ARRAY, mipLevels, texFormatToGLFormats(format).first, width, height, layers);
 }
 
 void ak::render::createTextureStorage3D(TexFormat format, int32 width, int32 height, int32 depth, int32 mipLevels) {
-	glTextureStorage3D(GL_TEXTURE_3D, mipLevels, texFormatToGLFormats(format).first, width, height, depth);
+	glTexStorage3D(GL_TEXTURE_3D, mipLevels, texFormatToGLFormats(format).first, width, height, depth);
 }
 
 

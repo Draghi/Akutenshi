@@ -75,6 +75,7 @@ set(RAPIDJSON_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/rapidjson/include")
 set(BACKWARD_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/backward-cpp")
 set(GLFW_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/glfw/include")
 set(GL4_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/GL4/inc")
+set(STB_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/stb")
 
 ###############
 # CMake Setup #

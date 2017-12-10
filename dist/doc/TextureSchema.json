@@ -1,0 +1,33 @@
+{
+    "type":["1D", "1Da", "2D", "2Da", "3D", "CubeMap"],
+    
+    ["type":["1D", "2D"]] "filename" : "path/to/Texture.png",
+    
+    ["type":["1Da", "2Da", "3Da"]] "filenames" : [
+        "path/to/Layer1.png",
+        "path/to/Layer2.png",
+        "path/to/Layer3.png",
+    ],
+    
+    ["type":"CubeMap"] "filenames" : {
+        "front":"path/to/front.png",
+        "back":"path/to/back.png",
+        "left":"path/to/left.png",
+        "right":"path/to/right.png",
+        "top":"path/to/top.png",
+        "bottom":"path/to/bottom.png",
+    },
+    
+    ["type":"3D"] "slice":["xy","xz","yz"],
+    
+    "mipFilter": ["None", "Nearest", "Linear"],
+    "minFilter" : ["Nearest", "Linear"],
+    "magFilter" : ["Nearest", "Linear"],
+    
+    "wrap":{
+        "border":{Red, Green, Blue, Alpha},
+        "s":["Edge", "Border", "Repeat", "Mirror"],
+        "t":["Edge", "Border", "Repeat", "Mirror"],
+        "r":["Edge", "Border", "Repeat", "Mirror"],
+    }
+}

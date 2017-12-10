@@ -19,3 +19,6 @@
 [submodule "cmake/GL4"]
 	path = cmake/GL4
 	url = https://github.com/Draghi/GL4.git
+[submodule "cmake/stb"]
+	path = cmake/stb
+	url = https://github.com/nothings/stb.git

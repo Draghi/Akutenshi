@@ -1,0 +1,13 @@
+{
+    "type":"2D",
+    "filename":"test.png",
+    "mipFilter":"linear",
+    "minFilter":"linear",
+    "magFilter":"linear",
+    "wrap":{
+        "border":[1.0,1.0,1.0,1.0],
+        "s":"repeat",
+        "t":"repeat"
+    },
+    "anisotropy":16
+}

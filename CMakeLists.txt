@@ -16,6 +16,7 @@ target_include_directories(akutenshi SYSTEM PUBLIC ${RAPIDJSON_INCLUDE_DIR})
 target_include_directories(akutenshi SYSTEM PUBLIC ${BACKWARD_INCLUDE_DIR})
 target_include_directories(akutenshi SYSTEM PUBLIC ${GLFW_INCLUDE_DIR})
 target_include_directories(akutenshi SYSTEM PUBLIC ${GL4_INCLUDE_DIR})
+target_include_directories(akutenshi SYSTEM PUBLIC ${STB_INCLUDE_DIR})
 
 target_compile_options(akutenshi PUBLIC ${AK_BUILD_CXX_WARNING_FLAGS})
 target_compile_options(akutenshi PUBLIC ${AK_BUILD_CXX_COMPILER_FLAGS})

@@ -2,6 +2,7 @@
 #include <ak/engine/Config.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Filesystem.hpp>
+#include <ak/filesystem/TextureLoader.hpp>
 #include <ak/input/Keyboard.hpp>
 #include <ak/input/Keys.hpp>
 #include <ak/input/Mouse.hpp>
@@ -18,7 +19,6 @@
 #include <ak/render/VertexMapping.hpp>
 #include <ak/ScopeGuard.hpp>
 #include <ak/thread/CurrentThread.hpp>
-#include <ak/util/FPSCounter.hpp>
 #include <ak/util/Time.hpp>
 #include <ak/window/Types.hpp>
 #include <ak/window/Window.hpp>
@@ -47,7 +47,7 @@ static void printLogHeader(const ak::log::Logger& logger);
 static ak::ScopeGuard startup();
 
 static void createShaderProgram(akr::Pipeline& pipeline);
-static void createTexture();
+static void createTexture(akr::Texture& tex);
 
 
 int main() {
@@ -93,7 +93,7 @@ int main() {
 		akr::Texture tex(akr::TexTarget::Tex2D);
 		akr::setActiveTextureUnit(0);
 		akr::bind(0, tex);
-		createTexture();
+		createTexture(tex);
 	// Setup Finish
 
 	while(!ak::window::closeRequested()) {
@@ -227,8 +227,8 @@ static void createShaderProgram(akr::Pipeline& pipeline) {
 	pipeline.link();
 }
 
-static void createTexture() {
-	const fpSingle texData[] = {
+static void createTexture(akr::Texture& tex) {
+	/*const fpSingle texData[] = {
 		1.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f,
 
@@ -236,8 +236,11 @@ static void createTexture() {
 		1.0f, 1.0f, 1.0f,
 	};
 
-	akr::setTextureData2D(akr::TexFormat::RGB, 2, 2, texData);
-	akr::setTextureFilters(akr::TexTarget::Tex2D, akr::FilterType::Nearest, akr::FilterType::Nearest);
-	akr::setTextureClamping(akr::TexTarget::Tex2D, akr::ClampDir::S, akr::ClampType::Edge);
-	akr::setTextureClamping(akr::TexTarget::Tex2D, akr::ClampDir::T, akr::ClampType::Edge);
+	akr::setTextureData2D(akr::TexFormat::RGB, 2, 2, texData);*/
+
+	akfs::loadTexture(akfs::SystemFolder::appData, "textures/testTexture2D.json", tex);
+
+	//akr::setTextureFilters(akr::TexTarget::Tex2D, akr::FilterType::Nearest, akr::FilterType::Nearest);
+	//akr::setTextureClamping(akr::TexTarget::Tex2D, akr::ClampDir::S, akr::ClampType::Edge);
+	//akr::setTextureClamping(akr::TexTarget::Tex2D, akr::ClampDir::T, akr::ClampType::Edge);
 }

@@ -14,12 +14,16 @@
  * limitations under the License.
  **/
 
+#include <ak/Log.hpp>
 #include <ak/render/Draw.hpp>
+
 #include "GL/gl4.h"
 
 using namespace ak::render;
 
 void ak::render::init() {
+	constexpr ak::log::Logger log("Render::Init");
+
 	static bool hasInit = false;
 	if (hasInit) return;
 	if (ogl_LoadFunctions() == ogl_LoadStatus::ogl_LOAD_FAILED) return;
@@ -30,6 +34,8 @@ void ak::render::init() {
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+	if (!ogl_ext_EXT_texture_filter_anisotropic) log.warn("Failed to load EXT_texture_filter_anisotropic");
+
 	hasInit = true;
 }
 
@@ -37,17 +43,17 @@ void ak::render::draw(DrawType mode, uint32 vertexCount, uint32 offset) {
 	switch(mode) {
 		case DrawType::Points: glDrawArrays(GL_POINTS, offset, vertexCount); break;
 
-		case DrawType::Lines: glDrawArrays(GL_LINES, offset, vertexCount); break;
-		case DrawType::LinesAdj: glDrawArrays(GL_LINES_ADJACENCY, offset, vertexCount); break;
-		case DrawType::LineStrip: glDrawArrays(GL_LINE_STRIP, offset, vertexCount); break;
+		case DrawType::Lines:        glDrawArrays(GL_LINES, offset, vertexCount); break;
+		case DrawType::LinesAdj:     glDrawArrays(GL_LINES_ADJACENCY, offset, vertexCount); break;
+		case DrawType::LineStrip:    glDrawArrays(GL_LINE_STRIP, offset, vertexCount); break;
 		case DrawType::LineStripAdj: glDrawArrays(GL_LINE_STRIP_ADJACENCY, offset, vertexCount); break;
-		case DrawType::LineLoop: glDrawArrays(GL_LINE_LOOP, offset, vertexCount); break;
+		case DrawType::LineLoop:     glDrawArrays(GL_LINE_LOOP, offset, vertexCount); break;
 
-		case DrawType::Triangles: glDrawArrays(GL_TRIANGLES, offset, vertexCount); break;
-		case DrawType::TrianglesAdj: glDrawArrays(GL_TRIANGLES_ADJACENCY, offset, vertexCount); break;
-		case DrawType::TriangleStrip: glDrawArrays(GL_TRIANGLE_STRIP, offset, vertexCount); break;
+		case DrawType::Triangles:        glDrawArrays(GL_TRIANGLES, offset, vertexCount); break;
+		case DrawType::TrianglesAdj:     glDrawArrays(GL_TRIANGLES_ADJACENCY, offset, vertexCount); break;
+		case DrawType::TriangleStrip:    glDrawArrays(GL_TRIANGLE_STRIP, offset, vertexCount); break;
 		case DrawType::TriangleStripAdj: glDrawArrays(GL_TRIANGLE_STRIP_ADJACENCY, offset, vertexCount); break;
-		case DrawType::TriangleFan: glDrawArrays(GL_TRIANGLE_FAN, offset, vertexCount); break;
+		case DrawType::TriangleFan:      glDrawArrays(GL_TRIANGLE_FAN, offset, vertexCount); break;
 	}
 }
 
@@ -115,38 +121,40 @@ void ak::render::setFillMode(FillMode fillMode, Face face) {
 	}
 
 	switch(face) {
-		case Face::Front: glPolygonMode(GL_FRONT, glFillMode); break;
-		case Face::Back:  glPolygonMode(GL_BACK, glFillMode); break;
+		case Face::Front:        glPolygonMode(GL_FRONT,          glFillMode); break;
+		case Face::Back:         glPolygonMode(GL_BACK,           glFillMode); break;
 		case Face::FrontAndBack: glPolygonMode(GL_FRONT_AND_BACK, glFillMode); break;
 	}
 }
 
 void ak::render::enableDepthTest(bool state) {
-	if (state) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
+	if (state) glEnable(GL_DEPTH_TEST);
+	else glDisable(GL_DEPTH_TEST);
 }
 
 void ak::render::enableCullFace(bool state) {
-	if (state) glEnable(GL_CULL_FACE); else glDisable(GL_CULL_FACE);
+	if (state) glEnable(GL_CULL_FACE);
+	else glDisable(GL_CULL_FACE);
 }
 
 void ak::render::setDepthTestMode(DepthMode depthMode) {
 	switch(depthMode) {
-		case DepthMode::Never:        glDepthFunc(GL_NEVER); break;
-		case DepthMode::Always:       glDepthFunc(GL_ALWAYS); break;
-		case DepthMode::Less:         glDepthFunc(GL_LESS); break;
-		case DepthMode::LessEqual:    glDepthFunc(GL_LEQUAL); break;
-		case DepthMode::Equal:        glDepthFunc(GL_EQUAL); break;
+		case DepthMode::Never:        glDepthFunc(GL_NEVER);    break;
+		case DepthMode::Always:       glDepthFunc(GL_ALWAYS);   break;
+		case DepthMode::Less:         glDepthFunc(GL_LESS);     break;
+		case DepthMode::LessEqual:    glDepthFunc(GL_LEQUAL);   break;
+		case DepthMode::Equal:        glDepthFunc(GL_EQUAL);    break;
 		case DepthMode::NotEqual:     glDepthFunc(GL_NOTEQUAL); break;
-		case DepthMode::Greater:      glDepthFunc(GL_GREATER); break;
-		case DepthMode::GreaterEqual: glDepthFunc(GL_GEQUAL); break;
+		case DepthMode::Greater:      glDepthFunc(GL_GREATER);  break;
+		case DepthMode::GreaterEqual: glDepthFunc(GL_GEQUAL);   break;
 	}
 }
 
 void ak::render::setCullFaceMode(CullMode cullMode) {
 	switch(cullMode) {
-		case CullMode::Front: glCullFace(GL_FRONT);
-		case CullMode::Back: glCullFace(GL_BACK);
-		case CullMode::FrontAndBack: glCullFace(GL_FRONT_AND_BACK);
+		case CullMode::Front:        glCullFace(GL_FRONT);          break;
+		case CullMode::Back:         glCullFace(GL_BACK);           break;
+		case CullMode::FrontAndBack: glCullFace(GL_FRONT_AND_BACK); break;
 	}
 }
 

@@ -90,8 +90,10 @@ namespace ak {
 		void bind(uint32 unit, const Texture& texture);
 
 		void setTextureFilters(TexTarget target, FilterType minFilter, FilterType magFilter);
-		void setTextureFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter, FilterType magMipFilter);
-		void setTextureClamping(TexTarget target, ClampDir clampDir, ClampType clampType, ak::math::Vec4 borderColour = ak::math::Vec4(0,0,0,0));
+		void setTextureFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter);
+		void setTextureClamping(TexTarget target, ClampDir clampDir, ClampType clampType);
+		void setTextureBorder(TexTarget target, akm::Vec4 colour);
+		void generateMipmaps(TexTarget target);
 
 		void createTextureStorage1D(TexFormat format, int32 width, int32 mipLevels);
 		void createTextureStorage1D(TexFormat format, int32 width, int32 layers, int32 mipLevels);
