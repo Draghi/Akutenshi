@@ -22,13 +22,11 @@
 
 namespace ak {
 	namespace math {
-		using  Quat = glm::tquat<fpSingle, glm::highp>;
-		using DQuat = glm::tquat<fpDouble, glm::highp>;
+		using Quat = glm::tquat<fpSingle, glm::highp>;
 
 		using glm::lerp;
 		using glm::slerp;
 		using glm::conjugate;
-
 	}
 }
 

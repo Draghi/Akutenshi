@@ -30,10 +30,6 @@ namespace ak {
 		using Vec3 = Vec<3, fpSingle>;
 		using Vec4 = Vec<4, fpSingle>;
 
-		using DVec2 = Vec<2, fpDouble>;
-		using DVec3 = Vec<3, fpDouble>;
-		using DVec4 = Vec<4, fpDouble>;
-
 		using glm::cross;
 		using glm::dot;
 		using glm::distance;
@@ -43,7 +39,6 @@ namespace ak {
 		using glm::refract;
 
 		inline Vec2 perpendicular(const Vec2& vec) { return Vec2(-vec.y, vec.x); }
-		inline DVec2 perpendicular(const DVec2& vec) { return DVec2(-vec.y, vec.x); }
 
 		template<typename vec_t> typename vec_t::value_type sqrLength(const vec_t& vec) { return dot(vec, vec); }
 

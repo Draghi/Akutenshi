@@ -135,7 +135,7 @@ bool ak::window::open(const WindowOptions& options) {
 		auto size = akw::size();
 		mouseInst.onMoveEvent(ak::input::MoveEventData{
 			{x, size.y - y},
-			ak::math::DVec2{x, size.y - y} - mouseInst.position(),
+			ak::math::Vec2{x, size.y - y} - mouseInst.position(),
 			&mouseInst
 		});
 	});
@@ -203,6 +203,7 @@ bool ak::window::alwaysOnTop() { return windowState.isAlwaysOnTop; }
 bool ak::window::decorated() { return windowState.isDecorated; }
 bool ak::window::resizable() { return windowState.isResizable; }
 
+CursorMode ak::window::cursorMode() { return windowState.cursorMode; }
 
 
 void ak::window::setTitle(const std::string& title) {
@@ -248,6 +249,11 @@ void ak::window::setFullscreen(Monitor targetMonitor, WindowCoord pos, WindowCoo
 void ak::window::setVisibility(bool state) {
 	actionBuffer.push_back(Action::Visibility(state));
 }
+
+void ak::window::setCursorMode(CursorMode mode) {
+	actionBuffer.push_back(Action::CursorMode(mode));
+}
+
 
 ak::input::Mouse& ak::window::mouse() {
 	return mouseInst;

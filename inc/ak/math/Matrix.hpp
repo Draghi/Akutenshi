@@ -40,10 +40,6 @@ namespace ak {
 		using Mat3 = Mat<3, fpSingle>;
 		using Mat4 = Mat<4, fpSingle>;
 
-		using DMat2 = Mat<2, fpDouble>;
-		using DMat3 = Mat<3, fpDouble>;
-		using DMat4 = Mat<4, fpDouble>;
-
 		using glm::colMajor2;
 		using glm::colMajor3;
 		using glm::colMajor4;

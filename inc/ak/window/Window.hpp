@@ -92,6 +92,9 @@ namespace ak {
 		void setFullscreen(Monitor targetMonitor, WindowCoord pos, WindowCoord size, int frameRate);
 		void setVisibility(bool state);
 
+		void setCursorMode(CursorMode mode);
+		CursorMode cursorMode();
+
 		ak::input::Mouse& mouse();
 		ak::input::Keyboard& keyboard();
 

@@ -64,6 +64,16 @@ int main() {
 		ak::window::open(defaultWindowOptions);
 	}
 
+	akw::setCursorMode(akw::CursorMode::Captured);
+
+	ak::window::pollEvents();
+	ak::window::mouse().update();
+	ak::window::keyboard().update();
+
+	ak::window::pollEvents();
+	ak::window::mouse().update();
+	ak::window::keyboard().update();
+
 	// Setup Render
 		// Init
 		akr::init();
@@ -96,6 +106,9 @@ int main() {
 		createTexture(tex);
 	// Setup Finish
 
+	akm::Vec3 lookPos;
+	akm::Mat4 lookOrient(1);
+
 	while(!ak::window::closeRequested()) {
 		// Input Start
 			ak::window::pollEvents();
@@ -103,12 +116,21 @@ int main() {
 			ak::window::keyboard().update();
 
 			static fpSingle x = 0, y = 0, z = 0;
-			if (akw::keyboard().isDown(akin::Key::W)) y += 1/60.0;
+/*			if (akw::keyboard().isDown(akin::Key::W)) y += 1/60.0;
 			if (akw::keyboard().isDown(akin::Key::A)) x -= 1/60.0;
 			if (akw::keyboard().isDown(akin::Key::S)) y -= 1/60.0;
 			if (akw::keyboard().isDown(akin::Key::D)) x += 1/60.0;
 			if (akw::keyboard().isDown(akin::Key::R)) z += 1/60.0;
-			if (akw::keyboard().isDown(akin::Key::F)) z -= 1/60.0;
+			if (akw::keyboard().isDown(akin::Key::F)) z -= 1/60.0;*/
+
+			if (akw::keyboard().isDown(akin::Key::W)) lookPos += akm::Vec3(lookOrient * akm::Vec4(0, 0,  1/60.0, 0));
+			if (akw::keyboard().isDown(akin::Key::S)) lookPos += akm::Vec3(lookOrient * akm::Vec4(0, 0, -1/60.0, 0));
+
+			if (akw::keyboard().isDown(akin::Key::D)) lookPos += akm::Vec3(lookOrient * akm::Vec4( 1/60.0, 0, 0, 0));
+			if (akw::keyboard().isDown(akin::Key::A)) lookPos += akm::Vec3(lookOrient * akm::Vec4(-1/60.0, 0, 0, 0));
+
+			lookOrient = lookOrient * akm::rotate(akw::mouse().deltaPosition().x/1000.0f, akm::Vec3(0, 1, 0));
+			lookOrient = lookOrient * akm::rotate(-akw::mouse().deltaPosition().y/1000.0f, akm::Vec3(1, 0, 0));
 		// Input End
 
 		// Render Start
@@ -119,15 +141,17 @@ int main() {
 			// Setup Cube
 			akr::bind(vMapping);
 			akr::setUniform(0, akm::perspective<fpSingle>(1.0472f, akw::size().x/static_cast<fpSingle>(akw::size().y), 0.1f, 100.0f));
-			akr::setUniform(2, 0);
+			akr::setUniform(1, akm::inverse(akm::translate(lookPos) * akm::Mat4(lookOrient)));
+
+			akr::setUniform(3, 0);
 
 			// Draw Controlled Cube
-			akr::setUniform(1, akm::translate(akm::Vec3(x, y, z)));
+			akr::setUniform(2, akm::translate(akm::Vec3(x, y, z)));
 			akr::draw(akr::DrawType::Triangles, 36);
 
 			// Draw Floor
 			for(int i = 0; i < 32; i++) for(int j = 0; j < 32; j++) {
-				akr::setUniform(1, akm::translate(akm::Vec3(i-16, -2, j)));
+				akr::setUniform(2, akm::translate(akm::Vec3(i-16, -2, j)));
 				akr::draw(akr::DrawType::Triangles, 36);
 			}
 

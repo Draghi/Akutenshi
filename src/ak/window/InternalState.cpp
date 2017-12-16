@@ -74,60 +74,64 @@ void ak::window::internal::processEventBuffer() {
 	WindowState newState = windowState;
 	eventBuffer.iterate([&](size_t /*index*/, const Action& action){
 		switch(action.type) {
-			case Title:
+			case ActionType::Title:
 				newState.title = action.title;
 				break;
 
-			case Position:
+			case ActionType::Position:
 				newState.position = action.winCoord1;
 				break;
 
-			case WinSize:
+			case ActionType::WinSize:
 				newState.windowSize = action.winCoord1;
 				break;
 
-			case WinSizeLimit:
+			case ActionType::WinSizeLimit:
 				newState.windowMinSize = action.winCoord1;
 				newState.windowMaxSize = action.winCoord2;
 				break;
 
-			case WinAspectConstraint:
+			case ActionType::WinAspectConstraint:
 				newState.windowAspect = action.winCoord1;
 				break;
 
-			case FrameSize:
+			case ActionType::FrameSize:
 				newState.frameSize = action.frameCoord;
 				break;
 
-			case CloseRequest:
+			case ActionType::CloseRequest:
 				newState.isCloseRequested = action.state;
 				break;
 
-			case Restore:
+			case ActionType::Restore:
 				newState.isMinimised = false;
 				break;
 
-			case Minimise:
+			case ActionType::Minimise:
 				newState.isMinimised = true;
 				break;
 
-			case Maximise:
+			case ActionType::Maximise:
 				newState.isMinimised = false;
 				break;
 
-			case Focus:
+			case ActionType::Focus:
 				newState.isFocused = action.state;
 				break;
 
-			case Fullscreen:
+			case ActionType::Fullscreen:
 				newState.fullscreenMonitor = action.fullscreenMonitor;
 				newState.position = action.winCoord1;
 				newState.windowSize = action.winCoord2;
 				newState.refreshRate = action.targetFramerate;
 				break;
 
-			case Visibility:
+			case ActionType::Visibility:
 				newState.isVisible = action.state;
+				break;
+
+			case ActionType::CursorMode:
+				newState.cursorMode = action.cursorMode;
 				break;
 		}
 	});
@@ -139,64 +143,73 @@ void ak::window::internal::processActionBuffer() {
 	actionBuffer.swap();
 	actionBuffer.iterate([&](size_t /*index*/, const Action& action){
 		switch(action.type) {
-			case Title:
+			case ActionType::Title:
 				glfwSetWindowTitle(windowHandle, action.title.c_str());
 				break;
 
-			case Position:
+			case ActionType::Position:
 				glfwSetWindowPos(windowHandle, action.winCoord1.x, action.winCoord1.y);
 				break;
 
-			case WinSize:
+			case ActionType::WinSize:
 				glfwSetWindowSize(windowHandle, action.winCoord1.x, action.winCoord1.y);
 				break;
 
-			case WinSizeLimit:
+			case ActionType::WinSizeLimit:
 				glfwSetWindowSizeLimits(windowHandle, action.winCoord1.x, action.winCoord1.y, action.winCoord2.x, action.winCoord2.y);
 				eventBuffer.push_back(action);
 				glfwPollEvents();
 				break;
 
-			case WinAspectConstraint:
+			case ActionType::WinAspectConstraint:
 				glfwSetWindowAspectRatio(windowHandle, action.winCoord1.y, action.winCoord1.x);
 				eventBuffer.push_back(action);
 				glfwPollEvents();
 				break;
 
-			case FrameSize:
+			case ActionType::FrameSize:
 				break;
 
-			case CloseRequest:
+			case ActionType::CloseRequest:
 				glfwSetWindowShouldClose(windowHandle, action.state);
 				break;
 
-			case Restore:
+			case ActionType::Restore:
 				if (action.state) glfwRestoreWindow(windowHandle);
 				break;
 
-			case Minimise:
+			case ActionType::Minimise:
 				if (action.state) glfwIconifyWindow(windowHandle);
 				break;
 
-			case Maximise:
+			case ActionType::Maximise:
 				if (action.state) glfwMaximizeWindow(windowHandle);
 				eventBuffer.push_back(action);
 				glfwPollEvents();
 				break;
 
-			case Focus:
+			case ActionType::Focus:
 				if (action.state) glfwFocusWindow(windowHandle);
 				break;
 
-			case Fullscreen:
+			case ActionType::Fullscreen:
 				glfwSetWindowMonitor(windowHandle, static_cast<GLFWmonitor*>(action.fullscreenMonitor.handle), action.winCoord1.x, action.winCoord1.y, action.winCoord2.x, action.winCoord2.y, action.targetFramerate);
 				glfwPollEvents();
 				eventBuffer.push_back(action);
 				break;
 
-			case Visibility:
+			case ActionType::Visibility:
 				if (action.state) glfwShowWindow(windowHandle);
 				else glfwHideWindow(windowHandle);
+				break;
+
+			case ActionType::CursorMode:
+				switch(action.cursorMode) {
+					case CursorMode::Normal:   glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);   break;
+					case CursorMode::Captured: glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED); break;
+					case CursorMode::Hidden:   glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);   break;
+				}
+				eventBuffer.push_back(action);
 				break;
 		}
 	});

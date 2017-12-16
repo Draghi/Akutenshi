@@ -41,6 +41,12 @@ namespace ak {
 			bool operator==(const FrameCoord& other) const { return x == other.x && y == other.y; }
 		};
 
+		enum class CursorMode {
+			Captured,
+			Hidden,
+			Normal
+		};
+
 	}
 }
 

@@ -103,8 +103,8 @@ namespace ak {
 				ak::event::DispatcherProxy<MoveEvent> m_moveEventProxy = m_moveEventDispatcher;
 
 
-				ak::math::DVec2 m_mousePosition;
-				ak::math::DVec2 m_lastPosition;
+				ak::math::Vec2 m_mousePosition;
+				ak::math::Vec2 m_lastPosition;
 
 				std::array<std::pair<Action, State>, static_cast<size_t>(Button::BUTTON_LAST)> m_buttonStates;
 
@@ -136,8 +136,8 @@ namespace ak {
 				int32 scrollUp() const override;
 				int32 scrollDown() const override;
 
-				ak::math::DVec2 position() const override;
-				ak::math::DVec2 deltaPosition() const override;
+				ak::math::Vec2 position() const override;
+				ak::math::Vec2 deltaPosition() const override;
 
 				void update() override;
 

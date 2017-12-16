@@ -71,8 +71,8 @@ int32 EventMouse::scrollRight() const { return m_scrollRight; }
 int32 EventMouse::scrollUp() const { return m_scrollUp; }
 int32 EventMouse::scrollDown() const { return m_scrollDown; }
 
-ak::math::DVec2 EventMouse::position() const { return m_mousePosition; }
-ak::math::DVec2 EventMouse::deltaPosition() const { return m_mousePosition - m_lastPosition; }
+ak::math::Vec2 EventMouse::position() const { return m_mousePosition; }
+ak::math::Vec2 EventMouse::deltaPosition() const { return m_mousePosition - m_lastPosition; }
 
 void EventMouse::update() {
 	m_eventBuffer.swap();

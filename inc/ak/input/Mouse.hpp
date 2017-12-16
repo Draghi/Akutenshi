@@ -54,8 +54,8 @@ namespace ak {
 		AK_DEFINE_EVENT(ScrollEvent, const ScrollEventData, true);
 
 		struct MoveEventData {
-			ak::math::DVec2 position;
-			ak::math::DVec2 delta;
+			ak::math::Vec2 position;
+			ak::math::Vec2 delta;
 			const Mouse* sender;
 		};
 		AK_DEFINE_EVENT(MoveEvent, const MoveEventData, true);
@@ -86,8 +86,8 @@ namespace ak {
 				virtual int32 scrollDown() const = 0;
 				virtual int32 scrollY() const { return scrollDown() - scrollUp(); }
 
-				virtual ak::math::DVec2 position() const = 0;
-				virtual ak::math::DVec2 deltaPosition() const = 0;
+				virtual ak::math::Vec2 position() const = 0;
+				virtual ak::math::Vec2 deltaPosition() const = 0;
 
 				virtual void update() = 0;
 		};

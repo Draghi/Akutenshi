@@ -61,11 +61,13 @@ namespace ak {
 
 				Monitor fullscreenMonitor = Monitor::NullMonitor();
 				Monitor currentMonitor = Monitor::NullMonitor();
+
+				CursorMode cursorMode = CursorMode::Normal;
 			};
 
 			extern WindowState windowState;
 
-			enum ActionType {
+			enum class ActionType {
 				Title,
 
 				Position,
@@ -85,6 +87,8 @@ namespace ak {
 
 				Fullscreen,
 				Visibility,
+
+				CursorMode
 			};
 
 			struct Action {
@@ -100,25 +104,29 @@ namespace ak {
 				Monitor fullscreenMonitor;
 				int targetFramerate;
 
-				static Action Title(const std::string& title) { return {ActionType::Title, title, {0,0}, {0,0}, {0,0}, false, Monitor::NullMonitor(), 0}; }
+				CursorMode cursorMode;
 
-				static Action Position(WindowCoord pos) { return {ActionType::Position, "", pos, {0,0}, {0,0}, false, Monitor::NullMonitor(), 0}; }
-				static Action WinSize(WindowCoord size) { return {ActionType::WinSize, "", size, {0,0}, {0,0}, false, Monitor::NullMonitor(), 0}; }
+				static Action Title(const std::string& title) { return {ActionType::Title, title, {0,0}, {0,0}, {0,0}, false, Monitor::NullMonitor(), 0, CursorMode::Normal}; }
 
-				static Action WinSizeLimit(WindowCoord minSize, WindowCoord maxSize) { return {ActionType::WinSizeLimit, "", minSize, maxSize, {0,0}, false, Monitor::NullMonitor(), 0}; }
-				static Action AspectConstraint(WindowCoord aspectConstraint) { return {ActionType::WinAspectConstraint, "", aspectConstraint, {0,0}, {0,0}, false, Monitor::NullMonitor(), 0}; }
+				static Action Position(WindowCoord pos) { return {ActionType::Position, "", pos, {0,0}, {0,0}, false, Monitor::NullMonitor(), 0, CursorMode::Normal}; }
+				static Action WinSize(WindowCoord size) { return {ActionType::WinSize, "", size, {0,0}, {0,0}, false, Monitor::NullMonitor(), 0, CursorMode::Normal}; }
 
-				static Action FrameSize(FrameCoord frameSize) { return {ActionType::FrameSize, "", {0,0}, {0,0}, frameSize, false, Monitor::NullMonitor(), 0}; }
+				static Action WinSizeLimit(WindowCoord minSize, WindowCoord maxSize) { return {ActionType::WinSizeLimit, "", minSize, maxSize, {0,0}, false, Monitor::NullMonitor(), 0, CursorMode::Normal}; }
+				static Action AspectConstraint(WindowCoord aspectConstraint) { return {ActionType::WinAspectConstraint, "", aspectConstraint, {0,0}, {0,0}, false, Monitor::NullMonitor(), 0, CursorMode::Normal}; }
 
-				static Action Close(bool state) { return {ActionType::CloseRequest, "", {0,0}, {0,0}, {0,0}, state, Monitor::NullMonitor(), 0}; }
+				static Action FrameSize(FrameCoord frameSize) { return {ActionType::FrameSize, "", {0,0}, {0,0}, frameSize, false, Monitor::NullMonitor(), 0, CursorMode::Normal}; }
 
-				static Action Restore(bool state) { return {ActionType::Restore, "", {0,0}, {0,0}, {0,0}, state, Monitor::NullMonitor(), 0}; }
-				static Action Minimise(bool state) { return {ActionType::Minimise, "", {0,0}, {0,0}, {0,0}, state, Monitor::NullMonitor(), 0}; }
-				static Action Maximise(bool state) { return {ActionType::Maximise, "", {0,0}, {0,0}, {0,0}, state, Monitor::NullMonitor(), 0}; }
-				static Action Focus(bool state) { return {ActionType::Focus, "", {0,0}, {0,0}, {0,0}, state, Monitor::NullMonitor(), 0}; }
+				static Action Close(bool state) { return {ActionType::CloseRequest, "", {0,0}, {0,0}, {0,0}, state, Monitor::NullMonitor(), 0, CursorMode::Normal}; }
 
-				static Action Fullscreen(Monitor monitor, WindowCoord pos, WindowCoord size, int frameRate) { return {ActionType::Fullscreen, "", pos, size, {0,0}, false, monitor, frameRate}; }
-				static Action Visibility(bool state) { return {ActionType::Visibility, "", {0,0}, {0,0}, {0,0}, state, Monitor::NullMonitor(), 0}; }
+				static Action Restore(bool state) { return {ActionType::Restore, "", {0,0}, {0,0}, {0,0}, state, Monitor::NullMonitor(), 0, CursorMode::Normal}; }
+				static Action Minimise(bool state) { return {ActionType::Minimise, "", {0,0}, {0,0}, {0,0}, state, Monitor::NullMonitor(), 0, CursorMode::Normal}; }
+				static Action Maximise(bool state) { return {ActionType::Maximise, "", {0,0}, {0,0}, {0,0}, state, Monitor::NullMonitor(), 0, CursorMode::Normal}; }
+				static Action Focus(bool state) { return {ActionType::Focus, "", {0,0}, {0,0}, {0,0}, state, Monitor::NullMonitor(), 0, CursorMode::Normal}; }
+
+				static Action Fullscreen(Monitor monitor, WindowCoord pos, WindowCoord size, int frameRate) { return {ActionType::Fullscreen, "", pos, size, {0,0}, false, monitor, frameRate, CursorMode::Normal}; }
+				static Action Visibility(bool state) { return {ActionType::Visibility, "", {0,0}, {0,0}, {0,0}, state, Monitor::NullMonitor(), 0, CursorMode::Normal}; }
+
+				static Action CursorMode(CursorMode mode) { return {ActionType::CursorMode, "", {0,0}, {0,0}, {0,0}, false, Monitor::NullMonitor(), 0, mode}; }
 			};
 
 			extern ak::container::DoubleBuffer<Action> eventBuffer;
