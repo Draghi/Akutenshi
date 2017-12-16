@@ -23,7 +23,7 @@
 #include <string>
 #include <system_error>
 
-using namespace ak::engine;
+using namespace ake;
 
 static const stx::filesystem::path CONFIG_PATH = "./akutenshi.config";
 static const stx::filesystem::path BACKUP_PATH = "./akutenshi.config.akbak";
@@ -32,34 +32,34 @@ static bool backupConfig();
 static bool deleteBackup();
 static bool restoreBackup();
 
-static ak::data::PValue& configInstance() {
-	static ak::data::PValue instance;
+static akd::PValue& configInstance() {
+	static akd::PValue instance;
 	return instance;
 }
 
-static ak::event::Dispatcher<RegenerateConfigEvent>& regenerateConfigDispatcher() { static ak::event::Dispatcher<RegenerateConfigEvent> instance; return instance; }
-static ak::event::Dispatcher<LoadConfigEvent>&  loadConfigDispatcher()  { static ak::event::Dispatcher<LoadConfigEvent>  instance; return instance; }
-static ak::event::Dispatcher<SaveConfigEvent>&  saveConfigDispatcher()  { static ak::event::Dispatcher<SaveConfigEvent>  instance; return instance; }
-static ak::event::Dispatcher<SetConfigEvent>&   setConfigDispatcher()   { static ak::event::Dispatcher<SetConfigEvent>   instance; return instance; }
+static akev::Dispatcher<RegenerateConfigEvent>& regenerateConfigDispatcher() { static akev::Dispatcher<RegenerateConfigEvent> instance; return instance; }
+static akev::Dispatcher<LoadConfigEvent>&  loadConfigDispatcher()  { static akev::Dispatcher<LoadConfigEvent>  instance; return instance; }
+static akev::Dispatcher<SaveConfigEvent>&  saveConfigDispatcher()  { static akev::Dispatcher<SaveConfigEvent>  instance; return instance; }
+static akev::Dispatcher<SetConfigEvent>&   setConfigDispatcher()   { static akev::Dispatcher<SetConfigEvent>   instance; return instance; }
 
-const ak::event::DispatcherProxy<RegenerateConfigEvent>& ak::engine::regenerateConfigDispatch() { static ak::event::DispatcherProxy<RegenerateConfigEvent> instance(regenerateConfigDispatcher()); return instance; }
-const ak::event::DispatcherProxy<LoadConfigEvent>&  ak::engine::loadConfigDispatch()  { static ak::event::DispatcherProxy<LoadConfigEvent>  instance(loadConfigDispatcher());  return instance; }
-const ak::event::DispatcherProxy<SaveConfigEvent>&  ak::engine::saveConfigDispatch()  { static ak::event::DispatcherProxy<SaveConfigEvent>  instance(saveConfigDispatcher());  return instance; }
-const ak::event::DispatcherProxy<SetConfigEvent>&   ak::engine::setConfigDispatch()   { static ak::event::DispatcherProxy<SetConfigEvent>   instance(setConfigDispatcher());   return instance; }
+const akev::DispatcherProxy<RegenerateConfigEvent>& ake::regenerateConfigDispatch() { static akev::DispatcherProxy<RegenerateConfigEvent> instance(regenerateConfigDispatcher()); return instance; }
+const akev::DispatcherProxy<LoadConfigEvent>&  ake::loadConfigDispatch()  { static akev::DispatcherProxy<LoadConfigEvent>  instance(loadConfigDispatcher());  return instance; }
+const akev::DispatcherProxy<SaveConfigEvent>&  ake::saveConfigDispatch()  { static akev::DispatcherProxy<SaveConfigEvent>  instance(saveConfigDispatcher());  return instance; }
+const akev::DispatcherProxy<SetConfigEvent>&   ake::setConfigDispatch()   { static akev::DispatcherProxy<SetConfigEvent>   instance(setConfigDispatcher());   return instance; }
 
-const ak::data::PValue& ak::engine::config() {
+const akd::PValue& ake::config() {
 	return configInstance();
 }
 
-void ak::engine::setConfig(const ak::data::PValue& nConfig) {
+void ake::setConfig(const akd::PValue& nConfig) {
 	configInstance() = nConfig;
 
 	SetConfigEvent event(nConfig);
 	setConfigDispatcher().send(event);
 }
 
-void ak::engine::regenerateConfig() {
-	ak::data::PValue newConfig;
+void ake::regenerateConfig() {
+	akd::PValue newConfig;
 
 	RegenerateConfigEvent event(newConfig);
 	regenerateConfigDispatcher().send(event);
@@ -67,36 +67,36 @@ void ak::engine::regenerateConfig() {
 	setConfig(newConfig);
 }
 
-bool ak::engine::loadConfig() {
-	ak::filesystem::CFile configFile(CONFIG_PATH, ak::filesystem::In);
+bool ake::loadConfig() {
+	akfs::CFile configFile(CONFIG_PATH, akfs::In);
 	if (!configFile) return false;
 
 	std::string configContents;
 	if (configFile.readLine(configContents, false, {}) <= 0) return false;
 
-	ak::data::PValue newConfig;
+	akd::PValue newConfig;
 	std::istringstream sstrean(configContents);
-	if (!ak::data::deserializeJson(newConfig, sstrean)) return false;
+	if (!akd::deserializeJson(newConfig, sstrean)) return false;
 
 	setConfig(newConfig);
 
 	return true;
 }
 
-bool ak::engine::saveConfig() {
+bool ake::saveConfig() {
 	if (!backupConfig()) return false;
 
-	ak::filesystem::CFile configFile(CONFIG_PATH, ak::filesystem::Out | ak::filesystem::Truncate);
+	akfs::CFile configFile(CONFIG_PATH, akfs::Out | akfs::Truncate);
 	if (!configFile) return false;
 
-	ak::data::PValue configSnapshot = config();
+	akd::PValue configSnapshot = config();
 	SaveConfigEvent event(configSnapshot);
 	saveConfigDispatcher().send(event);
 
-	std::string contents = ak::data::serializeJson(configSnapshot, true);
+	std::string contents = akd::serializeJson(configSnapshot, true);
 
 	if (configFile.write(contents.data(), contents.size()) <= 0) {
-		configFile = ak::filesystem::CFile();
+		configFile = akfs::CFile();
 		restoreBackup();
 		return false;
 	}
@@ -130,26 +130,26 @@ static bool restoreBackup() {
 }
 
 
-/*static ak::event::Dispatcher<ConfigReloadEvent>& configReloadDispatcher();
-static ak::data::PValue currentConfig;
+/*static akev::Dispatcher<ConfigReloadEvent>& configReloadDispatcher();
+static akd::PValue currentConfig;
 
 static ak::log::Logger configLog("Config");
 static stx::filesystem::path configPath;
 
-void ak::engine::setConfigFile(const stx::filesystem::path& cPath) {
+void ake::setConfigFile(const stx::filesystem::path& cPath) {
 	configPath = cPath;
 }
 
-bool ak::engine::reloadConfig() {
-	auto configFile = ak::filesystem::CFile(configPath, ak::filesystem::In);
+bool ake::reloadConfig() {
+	auto configFile = akfs::CFile(configPath, akfs::In);
 	if (!configFile) return false;
 
 	std::string configContents;
 	if (configFile.readLine(configContents, false, {}) <= 0) { configLog.warn("Failed to read global config contents"); return false; }
 
-	ak::data::PValue gConfig;
+	akd::PValue gConfig;
 	std::stringstream sstream(configContents);
-	if (!ak::data::deserializeJson(gConfig, sstream)) { configLog.warn("Failed to read global config contents"); return false; }
+	if (!akd::deserializeJson(gConfig, sstream)) { configLog.warn("Failed to read global config contents"); return false; }
 
 	currentConfig = gConfig;
 
@@ -190,12 +190,12 @@ static bool restoreBackup() {
 	return !(err && stx::filesystem::exists(bPath));
 }
 
-bool ak::engine::saveConfig() {
+bool ake::saveConfig() {
 	backupConfig();
 
-	auto configFile = ak::filesystem::CFile(configPath, ak::filesystem::Out | ak::filesystem::Truncate);
+	auto configFile = akfs::CFile(configPath, akfs::Out | akfs::Truncate);
 
-	if ((!configFile) || (configFile.writeLine(ak::data::serializeJson(config(), true)) <= 0)) {
+	if ((!configFile) || (configFile.writeLine(akd::serializeJson(config(), true)) <= 0)) {
 		restoreBackup();
 		return false;
 	}
@@ -204,29 +204,29 @@ bool ak::engine::saveConfig() {
 	return true;
 }
 
-ak::data::PValue& ak::engine::config() {
+akd::PValue& ake::config() {
 	return currentConfig;
 }
 
-const ak::event::DispatcherProxy<ConfigReloadEvent>& ak::engine::reloadEvent() {
-	static ak::event::DispatcherProxy<ConfigReloadEvent> dispatchProxy(configReloadDispatcher());
+const akev::DispatcherProxy<ConfigReloadEvent>& ake::reloadEvent() {
+	static akev::DispatcherProxy<ConfigReloadEvent> dispatchProxy(configReloadDispatcher());
 	return dispatchProxy;
 }
 
-static ak::event::Dispatcher<ConfigReloadEvent>& configReloadDispatcher() {
-	static ak::event::Dispatcher<ConfigReloadEvent> sConfigReloadDispatcher;
+static akev::Dispatcher<ConfigReloadEvent>& configReloadDispatcher() {
+	static akev::Dispatcher<ConfigReloadEvent> sConfigReloadDispatcher;
 	return sConfigReloadDispatcher;
 }*/
 
-/*void ak::engine::subscribeConfigReload(ak::event::Subscription& subscriber, const std::function<void(ConfigReloadEvent&)>& callback) {
+/*void ake::subscribeConfigReload(akev::Subscription& subscriber, const std::function<void(ConfigReloadEvent&)>& callback) {
 	configReloadDispatcher.subscribe(subscriber, callback);
 }
 
-ak::event::SubscriberID ak::engine::subscribeConfigReload(const std::function<void(ConfigReloadEvent&)>& callback) {
+akev::SubscriberID ake::subscribeConfigReload(const std::function<void(ConfigReloadEvent&)>& callback) {
 	return configReloadDispatcher.subscribe(callback);
 }
 
-void ak::engine::unsubscribeConfigReload(ak::event::Subscription& subscriber) {
+void ake::unsubscribeConfigReload(akev::Subscription& subscriber) {
 	configReloadDispatcher.unsubscribe(subscriber);
 }*/
 

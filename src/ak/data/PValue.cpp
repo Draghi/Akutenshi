@@ -21,7 +21,7 @@
 #include <utility>
 #include <sstream>
 
-using namespace ak::data;
+using namespace akd;
 
 // //////////// //
 // // Values // //
@@ -281,7 +281,7 @@ static void traversePValue_internal(Path& path, const PValue& cNode, const std::
 
 			callback(path, TraverseAction::ObjectStart, cNode);
 
-			const auto& obj = cNode.as<ak::data::PValue::obj_t>();
+			const auto& obj = cNode.as<akd::PValue::obj_t>();
 			for(auto iter = obj.begin(); iter != obj.end(); iter++) {
 				traversePValue_internal(path.append(iter->first), iter->second, callback);
 				path.pop();
@@ -296,7 +296,7 @@ static void traversePValue_internal(Path& path, const PValue& cNode, const std::
 
 			callback(path, TraverseAction::ArrayStart, cNode);
 
-			const auto& arr = cNode.as<ak::data::PValue::arr_t>();
+			const auto& arr = cNode.as<akd::PValue::arr_t>();
 			for(size_t i = 0; i < arr.size(); i++) {
 				traversePValue_internal(path.append(i), arr[i], callback);
 				path.pop();
@@ -316,7 +316,7 @@ static void traversePValue_internal(Path& path, const PValue& cNode, const std::
 
 }
 
-void ak::data::traversePValue(const PValue& cNode, const std::function<void(const Path& path, TraverseAction action, const PValue& value)>& callback) {
+void akd::traversePValue(const PValue& cNode, const std::function<void(const Path& path, TraverseAction action, const PValue& value)>& callback) {
 	Path path;
 	traversePValue_internal(path, cNode, callback);
 

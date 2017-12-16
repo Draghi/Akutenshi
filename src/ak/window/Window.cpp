@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-#include <ak/container/DoubleBuffer.hpp>
+#include <ak/thread/DoubleBuffer.hpp>
 #include <ak/input/EventInput.hpp>
 #include <ak/window/InternalState.hpp>
 #include <ak/window/Monitor.hpp>
@@ -32,36 +32,36 @@ namespace ak {
 	}
 }
 
-using namespace ak::window;
-using namespace ak::window::internal;
+using namespace akw;
+using namespace akw::internal;
 
 #define DEFAULT_BIT_DEPTH_RED   8
 #define DEFAULT_BIT_DEPTH_GREEN 8
 #define DEFAULT_BIT_DEPTH_BLUE  8
 
-static ak::input::EventMouse mouseInst;
-static ak::input::EventKeyboard keyboardInst;
+static akin::EventMouse mouseInst;
+static akin::EventKeyboard keyboardInst;
 
-static ak::input::Action convertGLFWActionToAK(int action) {
-	if (action == GLFW_PRESS) return ak::input::Action::Pressed;
-	if (action == GLFW_RELEASE) return ak::input::Action::Released;
-	if (action == GLFW_REPEAT) return ak::input::Action::Repeat;
-	return ak::input::Action::None;
+static akin::Action convertGLFWActionToAK(int action) {
+	if (action == GLFW_PRESS) return akin::Action::Pressed;
+	if (action == GLFW_RELEASE) return akin::Action::Released;
+	if (action == GLFW_REPEAT) return akin::Action::Repeat;
+	return akin::Action::None;
 }
 
-void ak::window::init() {
+void akw::init() {
 	if (hasInit.exchange(true)) return;
 	glfwInit();
 }
 
-void ak::window::shutdown() {
+void akw::shutdown() {
 	if (!hasInit.exchange(false)) return;
 	windowHandle = nullptr;
 	glfwTerminate();
 }
 
 
-bool ak::window::open(const WindowOptions& options) {
+bool akw::open(const WindowOptions& options) {
 	if (!hasInit) return false;
 	if (windowHandle) return false;
 
@@ -107,8 +107,8 @@ bool ak::window::open(const WindowOptions& options) {
 		if (options.centerOnMonitor()) {
 			auto monitor = options.targetMonitor().handle ? options.targetMonitor() : getMonitorsAt(pos)[0];
 
-			pos.x += monitor.position.x + ak::math::max(monitor.prefVideoMode.resolution.x/2 - options.videoMode().resolution.x/2, 0);
-			pos.y += monitor.position.y + ak::math::max(monitor.prefVideoMode.resolution.y/2 - options.videoMode().resolution.y/2, 0);
+			pos.x += monitor.position.x + akm::max(monitor.prefVideoMode.resolution.x/2 - options.videoMode().resolution.x/2, 0);
+			pos.y += monitor.position.y + akm::max(monitor.prefVideoMode.resolution.y/2 - options.videoMode().resolution.y/2, 0);
 		}
 		glfwSetWindowPos(windowHandle, pos.x, pos.y);
 	}
@@ -128,137 +128,137 @@ bool ak::window::open(const WindowOptions& options) {
 	windowState.refreshRate = options.videoMode().refreshRate;
 
 	glfwSetMouseButtonCallback(windowHandle, [](GLFWwindow* /*window*/, int buttonCode, int action, int /*mods*/){
-		mouseInst.onButtonEvent(ak::input::ButtonEventData{static_cast<ak::input::Button>(buttonCode), convertGLFWActionToAK(action), &mouseInst});
+		mouseInst.onButtonEvent(akin::ButtonEventData{static_cast<akin::Button>(buttonCode), convertGLFWActionToAK(action), &mouseInst});
 	});
 
 	glfwSetCursorPosCallback(windowHandle, [](GLFWwindow* /*window*/, double x, double y) {
 		auto size = akw::size();
-		mouseInst.onMoveEvent(ak::input::MoveEventData{
+		mouseInst.onMoveEvent(akin::MoveEventData{
 			{x, size.y - y},
-			ak::math::Vec2{x, size.y - y} - mouseInst.position(),
+			akm::Vec2{x, size.y - y} - mouseInst.position(),
 			&mouseInst
 		});
 	});
 
 	glfwSetScrollCallback(windowHandle, [](GLFWwindow* /*window*/, double x, double y) {
-		mouseInst.onScrollEvent(ak::input::ScrollEventData{
-			static_cast<int32>(ak::math::max(0.0,  y)),
-			static_cast<int32>(ak::math::max(0.0, -y)),
-			static_cast<int32>(ak::math::max(0.0,  x)),
-			static_cast<int32>(ak::math::max(0.0, -x)),
+		mouseInst.onScrollEvent(akin::ScrollEventData{
+			static_cast<int32>(akm::max(0.0,  y)),
+			static_cast<int32>(akm::max(0.0, -y)),
+			static_cast<int32>(akm::max(0.0,  x)),
+			static_cast<int32>(akm::max(0.0, -x)),
 			&mouseInst
 		});
 	});
 
 
 	glfwSetKeyCallback(windowHandle, [](GLFWwindow* /*window*/, int keycode, int /*scancode*/, int action, int /*mods*/) {
-		keyboardInst.onKeyEvent(ak::input::KeyEventData{static_cast<ak::input::Key>(keycode), convertGLFWActionToAK(action), &keyboardInst});
+		keyboardInst.onKeyEvent(akin::KeyEventData{static_cast<akin::Key>(keycode), convertGLFWActionToAK(action), &keyboardInst});
 	});
 
 
-	ak::window::pollEvents();
+	akw::pollEvents();
 
 	return true;
 }
 
-bool ak::window::close() {
+bool akw::close() {
 	if (!windowHandle) return false;
 	glfwDestroyWindow(windowHandle);
 	windowHandle = nullptr;
 	return true;
 }
 
-void ak::window::pollEvents() {
+void akw::pollEvents() {
 	processActionBuffer();
 	glfwPollEvents();
 	processEventBuffer();
 }
 
-bool ak::window::swapBuffer() {
+bool akw::swapBuffer() {
 	if (!windowHandle) return false;
 	glfwSwapBuffers(windowHandle);
 	return true;
 }
 
-std::string ak::window::title() { return windowState.title; }
+std::string akw::title() { return windowState.title; }
 
-WindowCoord ak::window::position() { return windowState.position; }
+WindowCoord akw::position() { return windowState.position; }
 
-WindowCoord ak::window::size() { return windowState.windowSize; }
-WindowCoord ak::window::sizeMin() { return windowState.windowMinSize; }
-WindowCoord ak::window::sizeMax() { return windowState.windowMaxSize; }
-WindowCoord ak::window::aspectConstraint() { return windowState.windowAspect; }
+WindowCoord akw::size() { return windowState.windowSize; }
+WindowCoord akw::sizeMin() { return windowState.windowMinSize; }
+WindowCoord akw::sizeMax() { return windowState.windowMaxSize; }
+WindowCoord akw::aspectConstraint() { return windowState.windowAspect; }
 
-FrameCoord ak::window::frameSize() { return windowState.frameSize; }
-int ak::window::refreshRate() { return windowState.refreshRate; }
+FrameCoord akw::frameSize() { return windowState.frameSize; }
+int akw::refreshRate() { return windowState.refreshRate; }
 
-bool ak::window::closeRequested() { return windowState.isCloseRequested; }
+bool akw::closeRequested() { return windowState.isCloseRequested; }
 
-bool ak::window::focused() { return windowState.isFocused; }
-bool ak::window::minimised() { return windowState.isMinimised; }
-bool ak::window::fullscreen() { return windowState.isFullscreen; }
-bool ak::window::visible() { return windowState.isVisible; }
+bool akw::focused() { return windowState.isFocused; }
+bool akw::minimised() { return windowState.isMinimised; }
+bool akw::fullscreen() { return windowState.isFullscreen; }
+bool akw::visible() { return windowState.isVisible; }
 
-bool ak::window::alwaysOnTop() { return windowState.isAlwaysOnTop; }
-bool ak::window::decorated() { return windowState.isDecorated; }
-bool ak::window::resizable() { return windowState.isResizable; }
+bool akw::alwaysOnTop() { return windowState.isAlwaysOnTop; }
+bool akw::decorated() { return windowState.isDecorated; }
+bool akw::resizable() { return windowState.isResizable; }
 
-CursorMode ak::window::cursorMode() { return windowState.cursorMode; }
+CursorMode akw::cursorMode() { return windowState.cursorMode; }
 
 
-void ak::window::setTitle(const std::string& title) {
+void akw::setTitle(const std::string& title) {
 	actionBuffer.push_back(Action::Title(title));
 }
 
-void ak::window::setPosition(WindowCoord nPos) {
+void akw::setPosition(WindowCoord nPos) {
 	actionBuffer.push_back(Action::Position(nPos));
 }
 
-void ak::window::setSize(WindowCoord size) {
+void akw::setSize(WindowCoord size) {
 	actionBuffer.push_back(Action::WinSize(size));
 }
 
-void ak::window::setSizeLimit(WindowCoord minSize, WindowCoord maxSize) {
+void akw::setSizeLimit(WindowCoord minSize, WindowCoord maxSize) {
 	actionBuffer.push_back(Action::WinSizeLimit(minSize, maxSize));
 }
 
-void ak::window::setAspectConstraint(WindowCoord aspectSize) {
+void akw::setAspectConstraint(WindowCoord aspectSize) {
 	actionBuffer.push_back(Action::AspectConstraint(aspectSize));
 }
 
-void ak::window::setCloseFlag(bool state) {
+void akw::setCloseFlag(bool state) {
 	actionBuffer.push_back(Action::Close(state));
 }
 
-void ak::window::restore() {
+void akw::restore() {
 	actionBuffer.push_back(Action::Restore(true));
 }
 
-void ak::window::minimise() {
+void akw::minimise() {
 	actionBuffer.push_back(Action::Minimise(true));
 }
 
-void ak::window::maximise() {
+void akw::maximise() {
 	actionBuffer.push_back(Action::Maximise(true));
 }
 
-void ak::window::setFullscreen(Monitor targetMonitor, WindowCoord pos, WindowCoord size, int frameRate) {
+void akw::setFullscreen(Monitor targetMonitor, WindowCoord pos, WindowCoord size, int frameRate) {
 	actionBuffer.push_back(Action::Fullscreen(targetMonitor, pos, size, frameRate));
 }
 
-void ak::window::setVisibility(bool state) {
+void akw::setVisibility(bool state) {
 	actionBuffer.push_back(Action::Visibility(state));
 }
 
-void ak::window::setCursorMode(CursorMode mode) {
+void akw::setCursorMode(CursorMode mode) {
 	actionBuffer.push_back(Action::CursorMode(mode));
 }
 
 
-ak::input::Mouse& ak::window::mouse() {
+akin::Mouse& akw::mouse() {
 	return mouseInst;
 }
 
-ak::input::Keyboard& ak::window::keyboard() {
+akin::Keyboard& akw::keyboard() {
 	return keyboardInst;
 }

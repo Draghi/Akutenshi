@@ -16,7 +16,7 @@
 
 #include "ak/filesystem/CFile.hpp"
 
-using namespace ak::filesystem;
+using namespace akfs;
 
 std::string CFile::openFlagsToCOpenFlags(uint8 openFlags) {
 	bool hasInFlag       = (openFlags & OpenFlags::In      ) == OpenFlags::In;

@@ -20,29 +20,23 @@
 #include <ak/PrimitiveTypes.hpp>
 #include <ctime>
 
-namespace ak {
-	namespace util {
-		struct Timestamp {
-			std::tm ctime;
-			uint32 milliseconds;
-		};
+namespace aku {
+	struct Timestamp {
+		std::tm ctime;
+		uint32 milliseconds;
+	};
 
-		/**
-		 * Returns the current UTC timestamp
-		 * @return The current UTC timestamp
-		 */
-		Timestamp utcTimestamp();
+	/**
+	 * Returns the current UTC timestamp
+	 * @return The current UTC timestamp
+	 */
+	Timestamp utcTimestamp();
 
-		/**
-		 * Returns the current local timestamp
-		 * @return The current local timestamp
-		 */
-		Timestamp localTimestamp();
-	}
+	/**
+	 * Returns the current local timestamp
+	 * @return The current local timestamp
+	 */
+	Timestamp localTimestamp();
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_UTIL_ALIAS_DISABLE))
-namespace aku = ak::util;
-#endif
 
 #endif

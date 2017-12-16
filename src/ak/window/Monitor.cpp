@@ -23,28 +23,28 @@
 #include <iterator>
 #include <stdexcept>
 
-using namespace ak::window;
-using namespace ak::window::internal;
+using namespace akw;
+using namespace akw::internal;
 
 static Monitor createMonitorFromGLFWMonitor(GLFWmonitor* monitor);
 
-std::vector<Monitor> ak::window::getAllWindowMonitors() {
+std::vector<Monitor> akw::getAllWindowMonitors() {
 	if (!windowHandle) return {Monitor::NullMonitor()};
 	return getMonitorsAt(position(), size());
 }
 
-Monitor ak::window::currentMonitor() {
+Monitor akw::currentMonitor() {
 	if (!windowHandle) return Monitor::NullMonitor();
 	return getMonitorsAt(position(), {0,0}).front();
 }
 
-Monitor ak::window::primaryMonitor() {
+Monitor akw::primaryMonitor() {
 	auto* monitor = glfwGetPrimaryMonitor();
 	if (monitor) return createMonitorFromGLFWMonitor(monitor);
 	return Monitor::NullMonitor();
 }
 
-std::vector<Monitor> ak::window::monitors() {
+std::vector<Monitor> akw::monitors() {
 	if (!hasInit) throw std::logic_error("Window system not initialized");
 
 	int monitorCount;
@@ -59,7 +59,7 @@ std::vector<Monitor> ak::window::monitors() {
 	return result;
 }
 
-void ak::window::setGamma(const Monitor* monitor, fpDouble gamma) {
+void akw::setGamma(const Monitor* monitor, fpDouble gamma) {
 	if (!monitor) return;
 	glfwSetGamma(static_cast<GLFWmonitor*>(monitor->handle), static_cast<float>(gamma));
 }
@@ -91,7 +91,7 @@ static Monitor createMonitorFromGLFWMonitor(GLFWmonitor* monitor) {
 	return monitorRecord;
 }
 
-std::vector<Monitor> ak::window::getMonitorsAt(WindowCoord pos, WindowCoord size) {
+std::vector<Monitor> akw::getMonitorsAt(WindowCoord pos, WindowCoord size) {
 	if (!hasInit) return {Monitor::NullMonitor()};
 
 	auto wLeft   = pos.x;

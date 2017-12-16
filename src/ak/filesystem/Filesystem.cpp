@@ -25,7 +25,7 @@
 #include <experimental/filesystem>
 #include <string>
 
-using namespace ak::filesystem;
+using namespace akfs;
 
 #ifdef __linux__
 
@@ -138,84 +138,84 @@ static std::optional<stx::filesystem::path>& systemFolder(SystemFolder folder) {
 }
 
 
-void ak::filesystem::overrideFolder(SystemFolder folder, const stx::filesystem::path& path) {
+void akfs::overrideFolder(SystemFolder folder, const stx::filesystem::path& path) {
 	auto index = static_cast<uint8>(folder);
 	if (index >= systemFolders().size()) return;
 	systemFolders()[index] = path;
 }
 
-void ak::filesystem::resetFolder(SystemFolder folder) {
+void akfs::resetFolder(SystemFolder folder) {
 	auto index = static_cast<uint8>(folder);
 	if (index >= systemFolders().size()) return;
 	systemFolders()[index] = resolveSystemPath(folder);
 }
 
-std::optional<stx::filesystem::path> ak::filesystem::resolveFolder(SystemFolder folder) {
+std::optional<stx::filesystem::path> akfs::resolveFolder(SystemFolder folder) {
 	auto index = static_cast<uint8>(folder);
 	if (index >= systemFolders().size()) return std::optional<stx::filesystem::path>();
 	return systemFolders()[index];
 }
 
-ak::filesystem::CFile ak::filesystem::open(SystemFolder folder, const stx::filesystem::path& path, uint8 openFlags) {
+akfs::CFile akfs::open(SystemFolder folder, const stx::filesystem::path& path, uint8 openFlags) {
 	auto index = static_cast<uint8>(folder);
-	if (index < systemFolders().size()) return ak::filesystem::CFile(resolveFolder(folder).value()/path, openFlags);
+	if (index < systemFolders().size()) return akfs::CFile(resolveFolder(folder).value()/path, openFlags);
 
 	switch(folder) {
 		case SystemFolder::searchCache: {
 
-			ak::filesystem::CFile file;
+			akfs::CFile file;
 			uint8 searchFlags = openFlags | OpenFlags::NoCreate;
 			for(size_t i = 0; i < 2; i++) {
-				file = ak::filesystem::CFile(resolveFolder(SystemFolder::localCache).value()/path, searchFlags);
+				file = akfs::CFile(resolveFolder(SystemFolder::localCache).value()/path, searchFlags);
 				if (file) return file;
 
-				file = ak::filesystem::CFile(resolveFolder(SystemFolder::appCache).value()/path, searchFlags);
+				file = akfs::CFile(resolveFolder(SystemFolder::appCache).value()/path, searchFlags);
 				if (file) return file;
 
 				searchFlags = openFlags;
 			}
 
-			return ak::filesystem::CFile();
+			return akfs::CFile();
 		}
 
 		case SystemFolder::searchConfig: {
 
-			ak::filesystem::CFile file;
+			akfs::CFile file;
 			uint8 searchFlags = openFlags | OpenFlags::NoCreate;
 			for(size_t i = 0; i < 2; i++) {
-				file = ak::filesystem::CFile(resolveFolder(SystemFolder::userConfig).value()/path, searchFlags);
+				file = akfs::CFile(resolveFolder(SystemFolder::userConfig).value()/path, searchFlags);
 				if (file) return file;
 
-				file = ak::filesystem::CFile(resolveFolder(SystemFolder::localConfig).value()/path, searchFlags);
+				file = akfs::CFile(resolveFolder(SystemFolder::localConfig).value()/path, searchFlags);
 				if (file) return file;
 
-				file = ak::filesystem::CFile(resolveFolder(SystemFolder::appConfig).value()/path, searchFlags);
+				file = akfs::CFile(resolveFolder(SystemFolder::appConfig).value()/path, searchFlags);
 				if (file) return file;
 
 				searchFlags = openFlags;
 			}
 
-			return ak::filesystem::CFile();
+			return akfs::CFile();
 		}
 
 		case SystemFolder::searchData: {
 
-			ak::filesystem::CFile file;
+			akfs::CFile file;
 			uint8 searchFlags = openFlags | OpenFlags::NoCreate;
 			for(size_t i = 0; i < 2; i++) {
-				file = ak::filesystem::CFile(resolveFolder(SystemFolder::userData).value()/path, searchFlags);
+				file = akfs::CFile(resolveFolder(SystemFolder::userData).value()/path, searchFlags);
 				if (file) return file;
 
-				file = ak::filesystem::CFile(resolveFolder(SystemFolder::localData).value()/path, searchFlags);
+				file = akfs::CFile(resolveFolder(SystemFolder::localData).value()/path, searchFlags);
 				if (file) return file;
 
-				file = ak::filesystem::CFile(resolveFolder(SystemFolder::appData).value()/path, searchFlags);
+				file = akfs::CFile(resolveFolder(SystemFolder::appData).value()/path, searchFlags);
 				if (file) return file;
 
 				searchFlags = openFlags;
 			}
 
-			return ak::filesystem::CFile();
+			return akfs::CFile();
 		}
 
 		case SystemFolder::appData:
@@ -234,11 +234,11 @@ ak::filesystem::CFile ak::filesystem::open(SystemFolder folder, const stx::files
 		case SystemFolder::localConfig:
 		case SystemFolder::localCache:
 		default:
-			return ak::filesystem::CFile();
+			return akfs::CFile();
 	}
 }
 
-void ak::filesystem::serializeFolders(ak::data::PValue& root) {
+void akfs::serializeFolders(akd::PValue& root) {
 	root["appData"].trySet<std::string>(systemFolder(SystemFolder::appData));
 	root["appConfig"].trySet<std::string>(systemFolder(SystemFolder::appConfig));
 	root["appCache"].trySet<std::string>(systemFolder(SystemFolder::appCache));
@@ -259,7 +259,7 @@ void ak::filesystem::serializeFolders(ak::data::PValue& root) {
 	root["localCache"].trySet<std::string>(systemFolder(SystemFolder::localCache));
 }
 
-void ak::filesystem::deserializeFolders(const ak::data::PValue& root) {
+void akfs::deserializeFolders(const akd::PValue& root) {
 	root.atOrDef("appData").tryAssign<std::string>(systemFolder(SystemFolder::appData));
 	root.atOrDef("appConfig").tryAssign<std::string>(systemFolder(SystemFolder::appConfig));
 	root.atOrDef("appCache").tryAssign<std::string>(systemFolder(SystemFolder::appCache));
@@ -280,12 +280,12 @@ void ak::filesystem::deserializeFolders(const ak::data::PValue& root) {
 	root.atOrDef("localCache").tryAssign<std::string>(systemFolder(SystemFolder::localData));
 }
 
-static ak::event::SubscriberID fsSInitRegenerateConfigHook = ak::engine::regenerateConfigDispatch().subscribe([](ak::engine::RegenerateConfigEvent& event){
+static akev::SubscriberID fsSInitRegenerateConfigHook = ake::regenerateConfigDispatch().subscribe([](ake::RegenerateConfigEvent& event){
 	serializeFolders(event.data()["systemFolders"]);
 });
 
-static ak::event::SubscriberID fsSInitSetConfigHook = ak::engine::setConfigDispatch().subscribe([](ak::engine::SetConfigEvent& event){
+static akev::SubscriberID fsSInitSetConfigHook = ake::setConfigDispatch().subscribe([](ake::SetConfigEvent& event){
 	auto systemFolders = event.data().atOrDef("systemFolders");
-	ak::filesystem::deserializeFolders(systemFolders);
+	akfs::deserializeFolders(systemFolders);
 });
 

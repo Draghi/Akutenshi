@@ -18,22 +18,20 @@
 #include <GLFW/glfw3.h>
 #include <stddef.h>
 
-namespace ak {
-	namespace window {
-		namespace internal {
-			std::atomic<bool> hasInit = false;
-			GLFWwindow* windowHandle = nullptr;
+namespace akw {
+	namespace internal {
+		std::atomic<bool> hasInit = false;
+		GLFWwindow* windowHandle = nullptr;
 
-			WindowState windowState;
+		WindowState windowState;
 
-			ak::container::DoubleBuffer<Action> eventBuffer;
-			ak::container::DoubleBuffer<Action> actionBuffer;
-		}
+		akt::DoubleBuffer<Action> eventBuffer;
+		akt::DoubleBuffer<Action> actionBuffer;
 	}
 }
 
-using namespace ak::window;
-using namespace ak::window::internal;
+using namespace akw;
+using namespace akw::internal;
 
 static void glfwPosHandler(GLFWwindow* /*handle*/, int x, int y) {
 	eventBuffer.push_back(Action::Position({x, y}));
@@ -59,7 +57,7 @@ static void glfwFrameSizeHandler(GLFWwindow* /*handle*/, int w, int h) {
 	eventBuffer.push_back(Action::FrameSize({w, h}));
 }
 
-void ak::window::internal::registerCallbacks() {
+void akw::internal::registerCallbacks() {
 	glfwSetWindowPosCallback(windowHandle, glfwPosHandler);
 	glfwSetWindowSizeCallback(windowHandle, glfwSizeHandler);
 	glfwSetWindowCloseCallback(windowHandle, glfwCloseHandler);
@@ -68,7 +66,7 @@ void ak::window::internal::registerCallbacks() {
 	glfwSetFramebufferSizeCallback(windowHandle, glfwFrameSizeHandler);
 }
 
-void ak::window::internal::processEventBuffer() {
+void akw::internal::processEventBuffer() {
 	eventBuffer.swap();
 
 	WindowState newState = windowState;
@@ -139,7 +137,7 @@ void ak::window::internal::processEventBuffer() {
 
 }
 
-void ak::window::internal::processActionBuffer() {
+void akw::internal::processActionBuffer() {
 	actionBuffer.swap();
 	actionBuffer.iterate([&](size_t /*index*/, const Action& action){
 		switch(action.type) {

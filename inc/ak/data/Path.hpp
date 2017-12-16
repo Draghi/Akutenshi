@@ -24,100 +24,92 @@
 
 #include "ak/PrimitiveTypes.hpp"
 
-namespace ak {
-	namespace data {
+namespace akd {
+	struct PathEntry {
+		bool isIndex;
+		std::string path;
+		uint64 index;
+	};
 
-		struct PathEntry {
-			bool isIndex;
-			std::string path;
-			uint64 index;
-		};
+	class Path final {
+		private:
+			std::vector<PathEntry> m_path;
 
-		class Path final {
-			private:
-				std::vector<PathEntry> m_path;
+			using diff_t = typename std::vector<PathEntry>::difference_type;
 
-				using diff_t = typename std::vector<PathEntry>::difference_type;
+		public:
+			Path() = default;
 
-			public:
-				Path() = default;
+			Path& append(const std::string& path) {
+				m_path.push_back(PathEntry{false, path, 0});
+				return *this;
+			}
 
-				Path& append(const std::string& path) {
-					m_path.push_back(PathEntry{false, path, 0});
-					return *this;
+			Path& append(uint64 index) {
+				m_path.push_back(PathEntry{true, std::string(), index});
+				return *this;
+			}
+
+			Path& append(PathEntry entry) {
+				m_path.push_back(entry);
+				return *this;
+			}
+
+			Path& append(const Path& entry) {
+				for(auto iter = entry.m_path.begin(); iter != entry.m_path.end(); iter++) {
+					m_path.push_back(*iter);
 				}
+				return *this;
+			}
 
-				Path& append(uint64 index) {
-					m_path.push_back(PathEntry{true, std::string(), index});
-					return *this;
-				}
+			Path& pop(uint64 count = 1) {
+				for(uint64 i = 0; i < count; i++) m_path.pop_back();
+				return *this;
+			}
 
-				Path& append(PathEntry entry) {
-					m_path.push_back(entry);
-					return *this;
-				}
+			Path& remove(diff_t index) {
+				m_path.erase(m_path.begin() + index);
+				return *this;
+			}
 
-				Path& append(const Path& entry) {
-					for(auto iter = entry.m_path.begin(); iter != entry.m_path.end(); iter++) {
-						m_path.push_back(*iter);
-					}
-					return *this;
-				}
+			Path& clear() {
+				m_path.clear();
+				return *this;
+			}
 
-				Path& pop(uint64 count = 1) {
-					for(uint64 i = 0; i < count; i++) m_path.pop_back();
-					return *this;
-				}
-
-				Path& remove(diff_t index) {
-					m_path.erase(m_path.begin() + index);
-					return *this;
-				}
-
-				Path& clear() {
-					m_path.clear();
-					return *this;
-				}
-
-				template<typename index_f, typename path_f> void forEach(index_f indexCB, path_f pathCB) const {
-					for(size_t i = 0; i < m_path.size(); i++) {
-						auto e = entry(i);
-						if (e.isIndex) {
-							indexCB(e.index);
-						} else {
-							pathCB(e.path);
-						}
+			template<typename index_f, typename path_f> void forEach(index_f indexCB, path_f pathCB) const {
+				for(size_t i = 0; i < m_path.size(); i++) {
+					auto e = entry(i);
+					if (e.isIndex) {
+						indexCB(e.index);
+					} else {
+						pathCB(e.path);
 					}
 				}
+			}
 
-				PathEntry& entry(uint64 index) { return m_path[index]; }
-				PathEntry entry(uint64 index) const { return m_path[index]; }
+			PathEntry& entry(uint64 index) { return m_path[index]; }
+			PathEntry entry(uint64 index) const { return m_path[index]; }
 
-				std::string entryAsString(uint64 index) const {
-					auto& e = m_path[index];
-					return (e.isIndex) ? std::to_string(e.index) : e.path;
-				}
+			std::string entryAsString(uint64 index) const {
+				auto& e = m_path[index];
+				return (e.isIndex) ? std::to_string(e.index) : e.path;
+			}
 
-				PathEntry& operator[](uint64 index) { return entry(index); }
-				PathEntry operator[](uint64 index) const { return entry(index); }
+			PathEntry& operator[](uint64 index) { return entry(index); }
+			PathEntry operator[](uint64 index) const { return entry(index); }
 
-				Path& operator<<(const std::string& path) { return append(path); }
-				Path& operator<<(uint64 index) { return append(index); }
-				Path& operator<<(PathEntry entry) { return append(entry); }
+			Path& operator<<(const std::string& path) { return append(path); }
+			Path& operator<<(uint64 index) { return append(index); }
+			Path& operator<<(PathEntry entry) { return append(entry); }
 
-				size_t size() const { return m_path.size(); }
-				bool empty() const { return m_path.size() <= 0; }
+			size_t size() const { return m_path.size(); }
+			bool empty() const { return m_path.size() <= 0; }
 
-		};
+	};
 
-		Path parseObjectDotNotation(const std::string& path);
-		std::string pathToObjectDotNotation(const Path& path);
-
-	}
+	Path parseObjectDotNotation(const std::string& path);
+	std::string pathToObjectDotNotation(const Path& path);
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_DATA_ALIAS_DISABLE))
-namespace akd = ak::data;
-#endif
 
 #endif

@@ -19,21 +19,15 @@
 
 #include <ak/PrimitiveTypes.hpp>
 
-namespace ak {
-	namespace input {
+namespace akin {
 
-		enum class Analog : uint8 {
-			LTrigger,
-			RTrigger,
-			LStick,
-			RStick
-		};
+	enum class Analog : uint8 {
+		LTrigger,
+		RTrigger,
+		LStick,
+		RStick
+	};
 
-	}
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_INPUT_ALIAS_DISABLE))
-namespace akin = ak::input;
-#endif
 
 #endif

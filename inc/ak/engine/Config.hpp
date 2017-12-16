@@ -21,29 +21,23 @@
 #include <ak/event/Dispatcher.hpp>
 #include <ak/event/Event.hpp>
 
-namespace ak {
-	namespace engine {
-		AK_DEFINE_EVENT(RegenerateConfigEvent, ak::data::PValue&, false);
-		AK_DEFINE_EVENT(LoadConfigEvent,  ak::data::PValue&, false);
-		AK_DEFINE_EVENT(SaveConfigEvent,  ak::data::PValue&, false);
-		AK_DEFINE_EVENT(SetConfigEvent,  const ak::data::PValue&, false);
+namespace ake {
+	AK_DEFINE_EVENT(RegenerateConfigEvent, akd::PValue&, false);
+	AK_DEFINE_EVENT(LoadConfigEvent,  akd::PValue&, false);
+	AK_DEFINE_EVENT(SaveConfigEvent,  akd::PValue&, false);
+	AK_DEFINE_EVENT(SetConfigEvent,  const akd::PValue&, false);
 
-		const ak::event::DispatcherProxy<RegenerateConfigEvent>& regenerateConfigDispatch();
-		const ak::event::DispatcherProxy<LoadConfigEvent>& loadConfigDispatch();
-		const ak::event::DispatcherProxy<SaveConfigEvent>& saveConfigDispatch();
-		const ak::event::DispatcherProxy<SetConfigEvent>& setConfigDispatch();
+	const akev::DispatcherProxy<RegenerateConfigEvent>& regenerateConfigDispatch();
+	const akev::DispatcherProxy<LoadConfigEvent>& loadConfigDispatch();
+	const akev::DispatcherProxy<SaveConfigEvent>& saveConfigDispatch();
+	const akev::DispatcherProxy<SetConfigEvent>& setConfigDispatch();
 
-		const ak::data::PValue& config();
-		void setConfig(const ak::data::PValue& nConfig);
+	const akd::PValue& config();
+	void setConfig(const akd::PValue& nConfig);
 
-		void regenerateConfig();
-		bool loadConfig();
-		bool saveConfig();
-	}
+	void regenerateConfig();
+	bool loadConfig();
+	bool saveConfig();
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_ENGINE_ALIAS_DISABLE))
-namespace ake = ak::engine;
-#endif
 
 #endif

@@ -19,51 +19,45 @@
 
 #include <ak/PrimitiveTypes.hpp>
 
-namespace ak {
-	namespace input {
+namespace akin {
 
-		enum class GPButton : uint8 {
-			A,
-			B,
-			X,
-			Y,
+	enum class GPButton : uint8 {
+		A,
+		B,
+		X,
+		Y,
 
-			Cross = A,
-			Circle = B,
-			Square = X,
-			Triangle = Y,
+		Cross = A,
+		Circle = B,
+		Square = X,
+		Triangle = Y,
 
-			Start,
-			Select,
-			Menu,
+		Start,
+		Select,
+		Menu,
 
-			Up,
-			Down,
-			Left,
-			Right,
+		Up,
+		Down,
+		Left,
+		Right,
 
-			LBumper,
-			LTrigger,
-			LStick,
+		LBumper,
+		LTrigger,
+		LStick,
 
-			L1 = LBumper,
-			L2 = LTrigger,
-			L3 = LStick,
+		L1 = LBumper,
+		L2 = LTrigger,
+		L3 = LStick,
 
-			RBumper,
-			RTrigger,
-			RStick,
+		RBumper,
+		RTrigger,
+		RStick,
 
-			R1 = RBumper,
-			R2 = RTrigger,
-			R3 = RStick,
-		};
+		R1 = RBumper,
+		R2 = RTrigger,
+		R3 = RStick,
+	};
 
-	}
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_INPUT_ALIAS_DISABLE))
-namespace akin = ak::input;
-#endif
 
 #endif

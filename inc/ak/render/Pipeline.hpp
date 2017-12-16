@@ -23,59 +23,55 @@
 #include <array>
 #include <string>
 
-namespace ak {
-	namespace render {
+namespace akr {
 
-		class PipelineStage final {
-			PipelineStage(const PipelineStage&) = delete;
-			PipelineStage& operator=(const PipelineStage&) = delete;
+	class PipelineStage final {
+		PipelineStage(const PipelineStage&) = delete;
+		PipelineStage& operator=(const PipelineStage&) = delete;
 
-			private:
-				uint32 m_id;
-				StageType m_type;
-				std::string m_src;
+		private:
+			uint32 m_id;
+			StageType m_type;
+			std::string m_src;
 
-			public:
-				PipelineStage(StageType stageType);
-				PipelineStage(PipelineStage&& other) : m_id(other.m_id), m_type(other.m_type), m_src(std::move(other.m_src)) { other.m_id = 0; }
-				~PipelineStage();
+		public:
+			PipelineStage(StageType stageType);
+			PipelineStage(PipelineStage&& other) : m_id(other.m_id), m_type(other.m_type), m_src(std::move(other.m_src)) { other.m_id = 0; }
+			~PipelineStage();
 
-				bool attach(const std::string& src);
-				bool compile();
+			bool attach(const std::string& src);
+			bool compile();
 
-				uint32 id() const { return m_id; }
-				StageType type() const { return m_type; }
-				std::string source() const { return m_src; }
-				bool isCompiled() const;
-		};
+			uint32 id() const { return m_id; }
+			StageType type() const { return m_type; }
+			std::string source() const { return m_src; }
+			bool isCompiled() const;
+	};
 
-		class Pipeline final {
-			Pipeline(const Pipeline&) = delete;
-			Pipeline& operator=(const Pipeline&) = delete;
+	class Pipeline final {
+		Pipeline(const Pipeline&) = delete;
+		Pipeline& operator=(const Pipeline&) = delete;
 
-			private:
-				uint32 m_id;
-				std::array<uint32, 3> m_attachedShaders;
-				bool m_isLinked;
+		private:
+			uint32 m_id;
+			std::array<uint32, 3> m_attachedShaders;
+			bool m_isLinked;
 
-			public:
-				Pipeline();
-				Pipeline(Pipeline&& other) : m_id(other.m_id), m_attachedShaders(std::move(other.m_attachedShaders)), m_isLinked(other.m_isLinked) { other.m_id = 0; }
-				~Pipeline();
+		public:
+			Pipeline();
+			Pipeline(Pipeline&& other) : m_id(other.m_id), m_attachedShaders(std::move(other.m_attachedShaders)), m_isLinked(other.m_isLinked) { other.m_id = 0; }
+			~Pipeline();
 
-				bool attach(const PipelineStage& stage);
-				bool link();
+			bool attach(const PipelineStage& stage);
+			bool link();
 
-				uint32 id() const { return m_id; }
-				bool isLinked() const { return m_isLinked; }
-		};
+			uint32 id() const { return m_id; }
+			bool isLinked() const { return m_isLinked; }
+	};
 
-		bool resetActivePipeline();
-		bool setActivePipeline(const Pipeline& pipeline);
+	bool resetActivePipeline();
+	bool setActivePipeline(const Pipeline& pipeline);
 
-	}
 }
-
-namespace akr = ak::render;
 
 #endif

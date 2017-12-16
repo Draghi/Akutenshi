@@ -19,7 +19,7 @@
 
 #include "GL/gl4.h"
 
-using namespace ak::render;
+using namespace akr;
 
 
 PipelineStage::PipelineStage(StageType stageType) : m_id(0), m_type(stageType), m_src() {
@@ -56,7 +56,7 @@ bool PipelineStage::compile() {
 		GLint logLength = 0;
 		glGetShaderiv(m_id, GL_INFO_LOG_LENGTH, &logLength);
 		if (logLength > 0) {
-			GLchar* log = new GLchar[logLength+1];
+			GLchar* log = new GLchar[static_cast<uint>(logLength)+1];
 			GLsizei logSize = 0;
 			glGetShaderInfoLog(m_id, logLength+1, &logSize, log);
 			logString = std::string(log);
@@ -99,5 +99,5 @@ bool Pipeline::link() {
 	return true;
 }
 
-bool ak::render::resetActivePipeline() { glUseProgram(0); return true; }
-bool ak::render::setActivePipeline(const Pipeline& pipeline) { glUseProgram(pipeline.id()); return true; }
+bool akr::resetActivePipeline() { glUseProgram(0); return true; }
+bool akr::setActivePipeline(const Pipeline& pipeline) { glUseProgram(pipeline.id()); return true; }

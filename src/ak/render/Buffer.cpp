@@ -17,12 +17,12 @@
 #include <ak/render/Buffer.hpp>
 #include "GL/gl4.h"
 
-using namespace ak::render;
+using namespace akr;
 
 Buffer::Buffer() : m_id(0) { glGenBuffers(1, &m_id); }
 Buffer::~Buffer() { if (m_id) glDeleteBuffers(1, &m_id); }
 
-void ak::render::bind(BufferTarget target, const Buffer& buffer) {
+void akr::bind(BufferTarget target, const Buffer& buffer) {
 	switch(target) {
 		case BufferTarget::VARRYING: glBindBuffer(GL_ARRAY_BUFFER,         buffer.id()); break;
 		case BufferTarget::UNIFORM:  glBindBuffer(GL_UNIFORM_BUFFER,       buffer.id()); break;
@@ -30,7 +30,7 @@ void ak::render::bind(BufferTarget target, const Buffer& buffer) {
 	}
 }
 
-void ak::render::setDataRaw(BufferTarget target, const void* data, uint32 size) {
+void akr::setDataRaw(BufferTarget target, const void* data, uint32 size) {
 	switch(target) {
 		case BufferTarget::VARRYING: glBufferData(GL_ARRAY_BUFFER,         size, data, GL_STATIC_DRAW); break;
 		case BufferTarget::UNIFORM:  glBufferData(GL_UNIFORM_BUFFER,       size, data, GL_STATIC_DRAW); break;
@@ -38,7 +38,7 @@ void ak::render::setDataRaw(BufferTarget target, const void* data, uint32 size) 
 	}
 }
 
-void ak::render::replaceDataRaw(BufferTarget target, uint32 offset, const void* data, uint32 size) {
+void akr::replaceDataRaw(BufferTarget target, uint32 offset, const void* data, uint32 size) {
 	switch(target) {
 		case BufferTarget::VARRYING: glBufferSubData(GL_ARRAY_BUFFER,         offset, size, data); break;
 		case BufferTarget::UNIFORM:  glBufferSubData(GL_UNIFORM_BUFFER,       offset, size, data); break;

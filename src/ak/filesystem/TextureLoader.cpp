@@ -35,9 +35,9 @@
 
 #include "stb_image.h"
 
-using namespace ak::filesystem;
+using namespace akfs;
 
-static void load2DTexture(const stx::filesystem::path& path, const ak::data::PValue& resourceCfg, ak::render::Texture& tex);
+static void load2DTexture(const stx::filesystem::path& path, const akd::PValue& resourceCfg, akr::Texture& tex);
 
 static akr::FilterType strToFilterType(const std::string& val) {
 	if (val == "nearest") return akr::FilterType::Nearest;
@@ -53,7 +53,7 @@ static akr::ClampType strToClampType(const std::string& val) {
 	throw std::runtime_error("Bad value");
 }
 
-void ak::filesystem::loadTexture(SystemFolder folder, const stx::filesystem::path& path, ak::render::Texture& tex) {
+void akfs::loadTexture(SystemFolder folder, const stx::filesystem::path& path, akr::Texture& tex) {
 	auto baseDir = resolveFolder(folder).value()/path.parent_path();
 
 	// Load Config
@@ -63,9 +63,9 @@ void ak::filesystem::loadTexture(SystemFolder folder, const stx::filesystem::pat
 	if (!cfgFile.readLine(cfgFileContents, false, {})) throw std::runtime_error("Failed to read texture resource config");
 
 	// Parse Config
-	ak::data::PValue resourceCfg;
+	akd::PValue resourceCfg;
 	std::istringstream cfgFileStream(cfgFileContents);
-	if (!ak::data::deserializeJson(resourceCfg, cfgFileStream)) throw std::runtime_error("Failed to parse texture resource config");
+	if (!akd::deserializeJson(resourceCfg, cfgFileStream)) throw std::runtime_error("Failed to parse texture resource config");
 
 	// Load Texture
 	akr::TexTarget glTarget = akr::TexTarget::Tex1D;
@@ -110,7 +110,7 @@ void ak::filesystem::loadTexture(SystemFolder folder, const stx::filesystem::pat
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, akm::min(fLargest, resourceCfg["anisotropy"].asOrDef<fpSingle>(0)));
 }
 
-static void load2DTexture(const stx::filesystem::path& path, const ak::data::PValue& resourceCfg, ak::render::Texture& tex) {
+static void load2DTexture(const stx::filesystem::path& path, const akd::PValue& resourceCfg, akr::Texture& tex) {
 	std::string filename = path.string() + "/" + resourceCfg["filename"].as<std::string>();
 
 	int w, h, comp;

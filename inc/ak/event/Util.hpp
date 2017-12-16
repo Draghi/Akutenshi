@@ -21,33 +21,27 @@
 #include <ak/PrimitiveTypes.hpp>
 #include <string_view>
 
-namespace ak {
-	namespace event {
+namespace akev {
 
-		using EventID = uint64;
-		class Subscription;
+	using EventID = uint64;
+	class Subscription;
 
-		namespace internal {
-			class IDispatcher {
-				IDispatcher(const IDispatcher&) = delete;
-				IDispatcher& operator=(const IDispatcher&) = delete;
-				public:
-					IDispatcher() = default;
-					virtual ~IDispatcher() = default;
+	namespace internal {
+		class IDispatcher {
+			IDispatcher(const IDispatcher&) = delete;
+			IDispatcher& operator=(const IDispatcher&) = delete;
+			public:
+				IDispatcher() = default;
+				virtual ~IDispatcher() = default;
 
-					virtual void unsubscribe(Subscription&) = 0;
-			};
-		}
-
-		inline constexpr EventID calculateEventID(const std::string_view& eventName) {
-			return ak::data::calculateFNV1AHash(eventName.data(), eventName.size());
-		}
-
+				virtual void unsubscribe(Subscription&) = 0;
+		};
 	}
-}
 
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_EVENT_ALIAS_DISABLE))
-namespace akev = ak::event;
-#endif
+	inline constexpr EventID calculateEventID(const std::string_view& eventName) {
+		return akd::calculateFNV1AHash(eventName.data(), eventName.size());
+	}
+
+}
 
 #endif

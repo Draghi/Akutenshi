@@ -19,7 +19,7 @@
 
 #include "GL/gl4.h"
 
-using namespace ak::render;
+using namespace akr;
 
 
 Texture::Texture(TexTarget target) : m_id(0), m_type(target) {
@@ -37,15 +37,15 @@ Texture::~Texture() {
 	if (m_id != 0) glDeleteTextures(1, &m_id);
 }
 
-void ak::render::setActiveTextureUnit(uint32 unit) {
+void akr::setActiveTextureUnit(uint32 unit) {
 	glActiveTexture(GL_TEXTURE0 + unit);
 }
 
-void ak::render::bind(uint32 unit, const Texture& texture) {
+void akr::bind(uint32 unit, const Texture& texture) {
 	glBindTextureUnit(unit, texture.id());
 }
 
-void ak::render::setTextureFilters(TexTarget target, FilterType minFilter, FilterType magFilter) {
+void akr::setTextureFilters(TexTarget target, FilterType minFilter, FilterType magFilter) {
 	int32 glMinFilter;
 	switch(minFilter) {
 		case FilterType::Nearest: glMinFilter = GL_NEAREST; break;
@@ -72,7 +72,7 @@ void ak::render::setTextureFilters(TexTarget target, FilterType minFilter, Filte
 	glTexParameteri(glTarget, GL_TEXTURE_MAG_FILTER, glMagFilter);
 }
 
-void ak::render::setTextureFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter) {
+void akr::setTextureFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter) {
 	int32 glMinFilter;
 	switch(minFilter) {
 		case FilterType::Nearest: glMinFilter = (minMipFilter == FilterType::Nearest) ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_LINEAR; break;
@@ -99,7 +99,7 @@ void ak::render::setTextureFilters(TexTarget target, FilterType minFilter, Filte
 	glTexParameteri(glTarget, GL_TEXTURE_MIN_FILTER, glMinFilter);
 }
 
-void ak::render::setTextureClamping(TexTarget target, ClampDir clampDir, ClampType clampType) {
+void akr::setTextureClamping(TexTarget target, ClampDir clampDir, ClampType clampType) {
 	uint32 glClampDir;
 	switch(clampDir) {
 		case ClampDir::S: glClampDir = GL_TEXTURE_WRAP_S; break;
@@ -128,7 +128,7 @@ void ak::render::setTextureClamping(TexTarget target, ClampDir clampDir, ClampTy
 	glTexParameteri(glTarget, glClampDir, glClampType);
 }
 
-void ak::render::setTextureBorder(TexTarget target, akm::Vec4 colour) {
+void akr::setTextureBorder(TexTarget target, akm::Vec4 colour) {
 	uint32 glTarget;
 	switch(target) {
 		case TexTarget::Tex1D: glTarget = GL_TEXTURE_1D; break;
@@ -141,7 +141,7 @@ void ak::render::setTextureBorder(TexTarget target, akm::Vec4 colour) {
 	glTexParameterfv(glTarget, GL_TEXTURE_BORDER_COLOR, &colour[0]);
 }
 
-void ak::render::generateMipmaps(TexTarget target) {
+void akr::generateMipmaps(TexTarget target) {
 	uint32 glTarget;
 	switch(target) {
 		case TexTarget::Tex1D: glTarget = GL_TEXTURE_1D; break;
@@ -165,72 +165,72 @@ static std::pair<uint32, uint32> texFormatToGLFormats(TexFormat format) {
 	}
 }
 
-void ak::render::createTextureStorage1D(TexFormat format, int32 width, int32 mipLevels) {
+void akr::createTextureStorage1D(TexFormat format, int32 width, int32 mipLevels) {
 	glTexStorage1D(GL_TEXTURE_1D, mipLevels, texFormatToGLFormats(format).first, width);
 }
 
-void ak::render::createTextureStorage1D(TexFormat format, int32 width, int32 layers, int32 mipLevels) {
+void akr::createTextureStorage1D(TexFormat format, int32 width, int32 layers, int32 mipLevels) {
 	glTexStorage2D(GL_TEXTURE_1D_ARRAY, mipLevels, texFormatToGLFormats(format).first, width, layers);
 }
 
-void ak::render::createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 mipLevels) {
+void akr::createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 mipLevels) {
 	glTexStorage2D(GL_TEXTURE_2D, mipLevels, texFormatToGLFormats(format).first, width, height);
 }
 
-void ak::render::createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 layers, int32 mipLevels) {
+void akr::createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 layers, int32 mipLevels) {
 	glTexStorage3D(GL_TEXTURE_2D_ARRAY, mipLevels, texFormatToGLFormats(format).first, width, height, layers);
 }
 
-void ak::render::createTextureStorage3D(TexFormat format, int32 width, int32 height, int32 depth, int32 mipLevels) {
+void akr::createTextureStorage3D(TexFormat format, int32 width, int32 height, int32 depth, int32 mipLevels) {
 	glTexStorage3D(GL_TEXTURE_3D, mipLevels, texFormatToGLFormats(format).first, width, height, depth);
 }
 
 
 
-void ak::render::setTextureData1D(TexFormat format, int32 width, const fpSingle* data, int32 level) {
+void akr::setTextureData1D(TexFormat format, int32 width, const fpSingle* data, int32 level) {
 	auto [glFormat, usrFormat] = texFormatToGLFormats(format);
 	glTexImage1D(GL_TEXTURE_1D, level, static_cast<int32>(glFormat), width, 0, usrFormat, GL_FLOAT, data);
 }
 
-void ak::render::setTextureData1D(TexFormat format, int32 width, int32 layers, const fpSingle* data, int32 level) {
+void akr::setTextureData1D(TexFormat format, int32 width, int32 layers, const fpSingle* data, int32 level) {
 	auto [glFormat, usrFormat] = texFormatToGLFormats(format);
 	glTexImage2D(GL_TEXTURE_1D_ARRAY, level, static_cast<int32>(glFormat), width, layers, 0, usrFormat, GL_FLOAT, data);
 }
 
-void ak::render::setTextureData2D(TexFormat format, int32 width, int32 height, const fpSingle* data, int32 level) {
+void akr::setTextureData2D(TexFormat format, int32 width, int32 height, const fpSingle* data, int32 level) {
 	auto [glFormat, usrFormat] = texFormatToGLFormats(format);
 	glTexImage2D(GL_TEXTURE_2D, level, static_cast<int32>(glFormat), width, height, 0, usrFormat, GL_FLOAT, data);
 }
 
-void ak::render::setTextureData2D(TexFormat format, int32 width, int32 height, int32 layers, const fpSingle* data, int32 level) {
+void akr::setTextureData2D(TexFormat format, int32 width, int32 height, int32 layers, const fpSingle* data, int32 level) {
 	auto [glFormat, usrFormat] = texFormatToGLFormats(format);
 	glTexImage3D(GL_TEXTURE_2D_ARRAY, level, static_cast<int32>(glFormat), width, height, layers, 0, usrFormat, GL_FLOAT, data);
 }
 
-void ak::render::setTextureData3D(TexFormat format, int32 width, int32 height, int32 depth, const fpSingle* data, int32 level) {
+void akr::setTextureData3D(TexFormat format, int32 width, int32 height, int32 depth, const fpSingle* data, int32 level) {
 	auto [glFormat, usrFormat] = texFormatToGLFormats(format);
 	glTexImage3D(GL_TEXTURE_3D, level, static_cast<int32>(glFormat), width, height, depth, 0, usrFormat, GL_FLOAT, data);
 }
 
 
 
-void ak::render::replaceTextureData1D(TexFormat format, int32 xOff, int32 width, const fpSingle* data, int32 level) {
+void akr::replaceTextureData1D(TexFormat format, int32 xOff, int32 width, const fpSingle* data, int32 level) {
 	glTexSubImage1D(GL_TEXTURE_1D, level, xOff, width, texFormatToGLFormats(format).second, GL_FLOAT, data);
 }
 
-void ak::render::replaceTextureData1D(TexFormat format, int32 xOff, int32 lOff, int32 width, int32 layers, const fpSingle* data, int32 level) {
+void akr::replaceTextureData1D(TexFormat format, int32 xOff, int32 lOff, int32 width, int32 layers, const fpSingle* data, int32 level) {
 	glTexSubImage2D(GL_TEXTURE_1D_ARRAY, level, xOff, lOff, width, layers, texFormatToGLFormats(format).second, GL_FLOAT, data);
 }
 
-void ak::render::replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 width, int32 height, const fpSingle* data, int32 level) {
+void akr::replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 width, int32 height, const fpSingle* data, int32 level) {
 	glTexSubImage2D(GL_TEXTURE_2D, level, xOff, yOff, width, height, texFormatToGLFormats(format).second, GL_FLOAT, data);
 }
 
-void ak::render::replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 lOff, int32 width, int32 height, int32 layers, const fpSingle* data, int32 level) {
+void akr::replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 lOff, int32 width, int32 height, int32 layers, const fpSingle* data, int32 level) {
 	glTexSubImage3D(GL_TEXTURE_2D_ARRAY, level, xOff, yOff, lOff, width, height, layers, texFormatToGLFormats(format).second, GL_FLOAT, data);
 }
 
-void ak::render::replaceTextureData3D(TexFormat format, int32 xOff, int32 yOff, int32 zOff, int32 width, int32 height, int32 depth, const fpSingle* data, int32 level) {
+void akr::replaceTextureData3D(TexFormat format, int32 xOff, int32 yOff, int32 zOff, int32 width, int32 height, int32 depth, const fpSingle* data, int32 level) {
 	glTexSubImage3D(GL_TEXTURE_3D, level, xOff, yOff, zOff, width, height, depth, texFormatToGLFormats(format).second, GL_FLOAT, data);
 }
 

@@ -21,49 +21,45 @@
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/Types.hpp>
 
-namespace ak {
-	namespace render {
+namespace akr {
 
-		void init();
+	void init();
 
-		void draw(DrawType mode, uint32 vertexCount, uint32 offset = 0);
-		void drawIndexed(DrawType mode, IDataType indexType, uint32 vertexCount, uint32 offset = 0);
+	void draw(DrawType mode, uint32 vertexCount, uint32 offset = 0);
+	void drawIndexed(DrawType mode, IDataType indexType, uint32 vertexCount, uint32 offset = 0);
 
-		void clear(ClearMode clearMode = ClearMode::All);
-		void setClearColour(fpSingle red, fpSingle green, fpSingle blue, fpSingle alpha = 0);
-		void setClearDepth(fpSingle depth);
-		void setClearStencil(int32 stencil);
+	void clear(ClearMode clearMode = ClearMode::All);
+	void setClearColour(fpSingle red, fpSingle green, fpSingle blue, fpSingle alpha = 0);
+	void setClearDepth(fpSingle depth);
+	void setClearStencil(int32 stencil);
 
-		void setFillMode(FillMode fillMode, Face face = Face::FrontAndBack);
+	void setFillMode(FillMode fillMode, Face face = Face::FrontAndBack);
 
-		void enableDepthTest(bool state);
-		void enableCullFace(bool state);
+	void enableDepthTest(bool state);
+	void enableCullFace(bool state);
 
-		void setDepthTestMode(DepthMode depthMode);
-		void setCullFaceMode(CullMode cullMode);
+	void setDepthTestMode(DepthMode depthMode);
+	void setCullFaceMode(CullMode cullMode);
 
-		void setUniform(uint32 bindingLocation, uint32 x);
-		void setUniform(uint32 bindingLocation, uint32 x, uint32 y);
-		void setUniform(uint32 bindingLocation, uint32 x, uint32 y, uint32 z);
-		void setUniform(uint32 bindingLocation, uint32 x, uint32 y, uint32 z, uint32 w);
+	void setUniform(uint32 bindingLocation, uint32 x);
+	void setUniform(uint32 bindingLocation, uint32 x, uint32 y);
+	void setUniform(uint32 bindingLocation, uint32 x, uint32 y, uint32 z);
+	void setUniform(uint32 bindingLocation, uint32 x, uint32 y, uint32 z, uint32 w);
 
-		void setUniform(uint32 bindingLocation, int32 x);
-		void setUniform(uint32 bindingLocation, int32 x, int32 y);
-		void setUniform(uint32 bindingLocation, int32 x, int32 y, int32 z);
-		void setUniform(uint32 bindingLocation, int32 x, int32 y, int32 z, int32 w);
+	void setUniform(uint32 bindingLocation, int32 x);
+	void setUniform(uint32 bindingLocation, int32 x, int32 y);
+	void setUniform(uint32 bindingLocation, int32 x, int32 y, int32 z);
+	void setUniform(uint32 bindingLocation, int32 x, int32 y, int32 z, int32 w);
 
-		void setUniform(uint32 bindingLocation, fpSingle x);
-		void setUniform(uint32 bindingLocation, fpSingle x, fpSingle y);
-		void setUniform(uint32 bindingLocation, fpSingle x, fpSingle y, fpSingle z);
-		void setUniform(uint32 bindingLocation, fpSingle x, fpSingle y, fpSingle z, fpSingle w);
+	void setUniform(uint32 bindingLocation, fpSingle x);
+	void setUniform(uint32 bindingLocation, fpSingle x, fpSingle y);
+	void setUniform(uint32 bindingLocation, fpSingle x, fpSingle y, fpSingle z);
+	void setUniform(uint32 bindingLocation, fpSingle x, fpSingle y, fpSingle z, fpSingle w);
 
-		void setUniform(uint32 bindingLocation, akm::Mat4 matrix);
-		void setUniform(uint32 bindingLocation, akm::Mat3 matrix);
-		void setUniform(uint32 bindingLocation, akm::Mat2 matrix);
+	void setUniform(uint32 bindingLocation, akm::Mat4 matrix);
+	void setUniform(uint32 bindingLocation, akm::Mat3 matrix);
+	void setUniform(uint32 bindingLocation, akm::Mat2 matrix);
 
-	}
 }
-
-namespace akr = ak::render;
 
 #endif

@@ -21,38 +21,30 @@
 #include <cstddef>
 #include <type_traits>
 
-namespace ak {
-	namespace data {
+namespace akd {
+	/**
+	 * Calculates the 64-bit FNV-1A hash for given sized array
+	 * @param data The data to hash
+	 * @param count The number of elements in the data
+	 * @return The calculated FNV-1A hash of the array
+	 */
+	template<typename type_t> constexpr uint64 calculateFNV1AHash(const type_t* data, size_t count) {
+		static_assert(std::is_fundamental<type_t>(), "Data array must be a fundamental type.");
 
-		/**
-		 * Calculates the 64-bit FNV-1A hash for given sized array
-		 * @param data The data to hash
-		 * @param count The number of elements in the data
-		 * @return The calculated FNV-1A hash of the array
-		 */
-		template<typename type_t> constexpr uint64 calculateFNV1AHash(const type_t* data, size_t count) {
-			static_assert(std::is_fundamental<type_t>(), "Data array must be a fundamental type.");
+		constexpr uint64 offsetBasis = 0xcbf29ce484222325;
+		constexpr uint64 prime = 1099511628211;
 
-			constexpr uint64 offsetBasis = 0xcbf29ce484222325;
-			constexpr uint64 prime = 1099511628211;
+		size_t totalCount = sizeof(type_t)*count;
+		const char* rawData = static_cast<const char*>(data);
 
-			size_t totalCount = sizeof(type_t)*count;
-			const char* rawData = static_cast<const char*>(data);
-
-			uint64 hash = offsetBasis;
-			for(size_t i = 0; i < totalCount; i++) {
-				hash ^= static_cast<uint8>(rawData[i]);
-				hash *= prime;
-			}
-
-			return hash;
+		uint64 hash = offsetBasis;
+		for(size_t i = 0; i < totalCount; i++) {
+			hash ^= static_cast<uint8>(rawData[i]);
+			hash *= prime;
 		}
 
+		return hash;
 	}
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_DATA_ALIAS_DISABLE))
-namespace akd = ak::data;
-#endif
 
 #endif

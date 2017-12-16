@@ -20,30 +20,26 @@
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/Types.hpp>
 
-namespace ak {
-	namespace render {
+namespace akr {
 
-		class VertexMapping final {
-			private:
-				uint32 m_id;
-			public:
-				VertexMapping();
-				~VertexMapping();
+	class VertexMapping final {
+		private:
+			uint32 m_id;
+		public:
+			VertexMapping();
+			~VertexMapping();
 
-				uint32 id() const { return m_id; }
-		};
+			uint32 id() const { return m_id; }
+	};
 
-		void bind(const VertexMapping& mapping);
+	void bind(const VertexMapping& mapping);
 
-		bool mapVertexBufferF(uint32 index, uint32 sizePerVert, DataType dType, bool normalize = false, uint32 offset = 0, uint32 stride = 0, bool autoEnable = true);
-		bool mapVertexBufferI(uint32 index, uint32 sizePerVert, DataType dType, uint32 offset = 0, uint32 stride = 0, bool autoEnable = true);
+	bool mapVertexBufferF(uint32 index, uint32 sizePerVert, DataType dType, bool normalize = false, uint32 offset = 0, uint32 stride = 0, bool autoEnable = true);
+	bool mapVertexBufferI(uint32 index, uint32 sizePerVert, DataType dType, uint32 offset = 0, uint32 stride = 0, bool autoEnable = true);
 
-		void enableVertexMapping(uint32 index);
-		void disableVertexMapping(uint32 index);
+	void enableVertexMapping(uint32 index);
+	void disableVertexMapping(uint32 index);
 
-	}
 }
-
-namespace akr = ak::render;
 
 #endif

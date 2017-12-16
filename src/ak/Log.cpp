@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-#include <ak/container/DoubleBuffer.hpp>
+#include <ak/thread/DoubleBuffer.hpp>
 #include <ak/engine/Config.hpp>
 #include <ak/event/Dispatcher.hpp>
 #include <ak/filesystem/Filesystem.hpp>
@@ -29,25 +29,25 @@
 
 using namespace ak::log;
 
-static ak::thread::Thread loggingThread("Log");
+static akt::Thread loggingThread("Log");
 
-static ak::thread::Spinlock messageQueueProcessLock;
-static ak::container::DoubleBuffer<std::pair<Level, std::string>> logMessageBuffer;
+static akt::Spinlock messageQueueProcessLock;
+static akt::DoubleBuffer<std::pair<Level, std::string>> logMessageBuffer;
 static Level consoleFilterLevel = Level::ALL;
 static Level fileFilterLevel = Level::ALL;
 
 static std::atomic<bool> isRedirrectingStd = false;
 
-static ak::thread::Spinlock logFileLock;
-static ak::filesystem::CFile logFile;
+static akt::Spinlock logFileLock;
+static akfs::CFile logFile;
 
 bool ak::log::startProcessing(uint64 delayUS) {
 	if (loggingThread.isRunning()) return false;
 
 	loggingThread.execute([=]{
-		while(!ak::thread::current().isCloseRequested()) {
+		while(!akt::current().isCloseRequested()) {
 			processMessageQueue();
-			ak::thread::current().sleep(static_cast<int64>(delayUS));
+			akt::current().sleep(static_cast<int64>(delayUS));
 		}
 	});
 
@@ -93,11 +93,11 @@ void ak::log::processMessageQueue() {
 bool ak::log::enableFileOutput() {
 	auto fileLock = logFileLock.lock();
 
-	auto utc = ak::util::utcTimestamp();
+	auto utc = aku::utcTimestamp();
 	std::stringstream filename;
 	filename << "logs/log_" << std::put_time(&utc.ctime, "%Y%m%d_%H%M%S") << ".txt";
 
-	auto newLogFile = ak::filesystem::open(akfs::SystemFolder::appData, filename.str(), ak::filesystem::OpenFlags::Out | ak::filesystem::OpenFlags::Truncate);
+	auto newLogFile = akfs::open(akfs::SystemFolder::appData, filename.str(), akfs::OpenFlags::Out | akfs::OpenFlags::Truncate);
 	if (!newLogFile) return false;
 	logFile = std::move(newLogFile);
 
@@ -106,7 +106,7 @@ bool ak::log::enableFileOutput() {
 
 void ak::log::disableFileOutput() {
 	auto fileLock = logFileLock.lock();
-	logFile = ak::filesystem::CFile();
+	logFile = akfs::CFile();
 }
 
 void ak::log::setConsoleFilterLevel(Level logLevel) {
@@ -153,12 +153,12 @@ void Logger::printMessage(Level logLevel, const std::string& str) {
 }
 
 
-static ak::event::SubscriberID logSInitRegenerateConfigHook = ak::engine::regenerateConfigDispatch().subscribe([](ak::engine::RegenerateConfigEvent& event){
+static akev::SubscriberID logSInitRegenerateConfigHook = ake::regenerateConfigDispatch().subscribe([](ake::RegenerateConfigEvent& event){
 	event.data()["log"]["consoleFilterLevel"].set<uint8>(static_cast<int8>(ak::log::Level::DEBUG));
 	event.data()["log"]["fileFilterLevel"].set<uint8>(static_cast<int8>(ak::log::Level::DEBUG));
 });
 
-static ak::event::SubscriberID logSInitRegisterConfigHooks = ak::engine::setConfigDispatch().subscribe([](ak::engine::SetConfigEvent& event){
+static akev::SubscriberID logSInitRegisterConfigHooks = ake::setConfigDispatch().subscribe([](ake::SetConfigEvent& event){
 	ak::log::setConsoleFilterLevel(static_cast<ak::log::Level>(event.data().atOrDef("log").atOrDef("consoleFilterLevel", static_cast<int64>(ak::log::Level::DEBUG)).as<uint8>()));
 	ak::log::setFileFilterLevel(static_cast<ak::log::Level>(event.data().atOrDef("log").atOrDef("fileFilterLevel", static_cast<int64>(ak::log::Level::DEBUG)).as<uint8>()));
 });

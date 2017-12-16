@@ -17,16 +17,16 @@
 #include "ak/util/Time.hpp"
 #include <chrono>
 
-using namespace ak::util;
+using namespace aku;
 
-Timestamp ak::util::utcTimestamp() {
+Timestamp aku::utcTimestamp() {
 	auto cTime = std::chrono::system_clock::now();
 	auto time = std::chrono::system_clock::to_time_t(cTime);
 	auto utcTime = std::gmtime(&time);
 	return {*utcTime, std::chrono::duration_cast<std::chrono::milliseconds>(cTime.time_since_epoch()).count() % 1000};
 }
 
-Timestamp ak::util::localTimestamp() {
+Timestamp aku::localTimestamp() {
 	auto cTime = std::chrono::system_clock::now();
 	auto time = std::chrono::system_clock::to_time_t(cTime);
 	auto utcTime = std::localtime(&time);

@@ -22,58 +22,51 @@
 #include <cmath>
 #include <glm/glm.hpp>
 
-namespace ak {
-	namespace math {
+namespace akm {
+	constexpr fpDouble PI = 3.141592653589793238462643;
 
-		constexpr fpDouble PI = 3.141592653589793238462643;
-
-		template<typename scalar_t> scalar_t degToRad(scalar_t deg) {
-			constexpr scalar_t conversionFactor = static_cast<scalar_t>(180/PI);
-			return deg * conversionFactor;
-		}
-
-		template<typename scalar_t> scalar_t radToDeg(scalar_t rad) {
-			constexpr scalar_t conversionFactor = static_cast<scalar_t>(PI/180);
-			return rad * conversionFactor;
-		}
-
-		using glm::abs;
-
-		using glm::ceil;
-		using glm::floor;
-		using glm::round;
-		using glm::trunc;
-
-		using glm::mod;
-
-		using glm::isinf;
-		using glm::isnan;
-
-		using glm::max;
-		using glm::min;
-		using glm::clamp;
-
-		using glm::mix;
-		using glm::smoothstep;
-		using glm::step;
-
-		using glm::sign;
-
-		using glm::sin;
-		using glm::cos;
-		using glm::tan;
-
-		using glm::asin;
-		using glm::acos;
-		using glm::atan;
-
-		using std::sqrt;
-
+	template<typename scalar_t> scalar_t degToRad(scalar_t deg) {
+		constexpr scalar_t conversionFactor = static_cast<scalar_t>(180/PI);
+		return deg * conversionFactor;
 	}
+
+	template<typename scalar_t> scalar_t radToDeg(scalar_t rad) {
+		constexpr scalar_t conversionFactor = static_cast<scalar_t>(PI/180);
+		return rad * conversionFactor;
+	}
+
+	using glm::abs;
+
+	using glm::ceil;
+	using glm::floor;
+	using glm::round;
+	using glm::trunc;
+
+	using glm::mod;
+
+	using glm::isinf;
+	using glm::isnan;
+
+	using glm::max;
+	using glm::min;
+	using glm::clamp;
+
+	using glm::mix;
+	using glm::smoothstep;
+	using glm::step;
+
+	using glm::sign;
+
+	using glm::sin;
+	using glm::cos;
+	using glm::tan;
+
+	using glm::asin;
+	using glm::acos;
+	using glm::atan;
+
+	using std::sqrt;
 }
 
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_MATH_ALIAS_DISABLE))
-namespace akm = ak::math;
-#endif
 
 #endif

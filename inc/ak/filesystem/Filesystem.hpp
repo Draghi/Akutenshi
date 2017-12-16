@@ -23,58 +23,50 @@
 #include <array>
 #include <optional>
 
-namespace ak {
-	namespace filesystem {
-		class CFile;
-	}
+namespace akfs {
+	class CFile;
 }
 
-namespace ak {
-	namespace filesystem {
+namespace akfs {
 
-		enum class SystemFolder : uint8 {
-			appData,
-			appConfig,
-			appCache,
+	enum class SystemFolder : uint8 {
+		appData,
+		appConfig,
+		appCache,
 
-			userDesktop,
-			userDocuments,
-			userDownloads,
-			userPictures,
-			userVideos,
-			userMusic,
+		userDesktop,
+		userDocuments,
+		userDownloads,
+		userPictures,
+		userVideos,
+		userMusic,
 
-			userData,
-			userConfig,
-			userSaveGames,
+		userData,
+		userConfig,
+		userSaveGames,
 
-			localData,
-			localConfig,
-			localCache,
+		localData,
+		localConfig,
+		localCache,
 
-			// ///////////////////////// //
-			// // Special Directories // //
-			// ///////////////////////// //
-			searchData,
-			searchConfig,
-			searchCache,
-		};
+		// ///////////////////////// //
+		// // Special Directories // //
+		// ///////////////////////// //
+		searchData,
+		searchConfig,
+		searchCache,
+	};
 
-		constexpr uint8 SYSTEM_FOLDER_ENUM_COUNT = static_cast<uint8>(SystemFolder::localCache) + 1;
+	constexpr uint8 SYSTEM_FOLDER_ENUM_COUNT = static_cast<uint8>(SystemFolder::localCache) + 1;
 
-		void overrideFolder(SystemFolder folder, const stx::filesystem::path& path);
-		void resetFolder(SystemFolder folder);
+	void overrideFolder(SystemFolder folder, const stx::filesystem::path& path);
+	void resetFolder(SystemFolder folder);
 
-		std::optional<stx::filesystem::path> resolveFolder(SystemFolder folder);
-		ak::filesystem::CFile open(SystemFolder folder, const stx::filesystem::path& path, uint8 openFlags);
+	std::optional<stx::filesystem::path> resolveFolder(SystemFolder folder);
+	akfs::CFile open(SystemFolder folder, const stx::filesystem::path& path, uint8 openFlags);
 
-		void serializeFolders(ak::data::PValue& root);
-		void deserializeFolders(const ak::data::PValue& root);
-	}
+	void serializeFolders(akd::PValue& root);
+	void deserializeFolders(const akd::PValue& root);
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_FILESYSTEM_ALIAS_DISABLE))
-namespace akfs = ak::filesystem;
-#endif
 
 #endif

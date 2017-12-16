@@ -17,7 +17,7 @@
 #ifndef AK_THREAD_THREAD_HPP_
 #define AK_THREAD_THREAD_HPP_
 
-#include <ak/container/DoubleBuffer.hpp>
+#include <ak/thread/DoubleBuffer.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/ScopeGuard.hpp>
 #include <ak/thread/Spinlock.hpp>
@@ -27,79 +27,72 @@
 #include <string>
 #include <thread>
 
-namespace ak {
+namespace akt {
+	class CurrentThread;
+	CurrentThread& current();
 
-	namespace thread {
-		class CurrentThread;
-		CurrentThread& current();
+	class Thread final {
+		friend CurrentThread& current();
+		private:
+			Thread(const Thread&) = delete;
+			Thread& operator=(const Thread&) = delete;
 
-		class Thread final {
-			friend CurrentThread& current();
-			private:
-				Thread(const Thread&) = delete;
-				Thread& operator=(const Thread&) = delete;
+			std::string m_name;
+			uint64 m_id;
+			std::thread::id m_threadId;
+			akt::Spinlock m_lock;
+			std::thread m_thread;
+			std::atomic<bool> m_closeRequested;
+			std::atomic<bool> m_runLock;
 
-				std::string m_name;
-				uint64 m_id;
-				std::thread::id m_threadId;
-				ak::thread::Spinlock m_lock;
-				std::thread m_thread;
-				std::atomic<bool> m_closeRequested;
-				std::atomic<bool> m_runLock;
+			akt::DoubleBuffer<std::function<void()>> m_scheduledCallbacks;
+			akt::Spinlock m_updateLock;
 
-				ak::container::DoubleBuffer<std::function<void()>> m_scheduledCallbacks;
-				ak::thread::Spinlock m_updateLock;
+			ak::ScopeGuard performThreadStartup();
 
-				ak::ScopeGuard performThreadStartup();
+		public:
+			Thread();
+			Thread(const std::string& name);
+			~Thread();
 
-			public:
-				Thread();
-				Thread(const std::string& name);
-				~Thread();
+			template<typename func_t> bool execute(const func_t& callback) {
+				if (m_runLock.exchange(true)) return false;
 
-				template<typename func_t> bool execute(const func_t& callback) {
-					if (m_runLock.exchange(true)) return false;
+				m_closeRequested = false;
+				m_thread = std::thread([this, callback]() {
+					auto threadCleanup = performThreadStartup();
+					callback();
+				});
 
-					m_closeRequested = false;
-					m_thread = std::thread([this, callback]() {
-						auto threadCleanup = performThreadStartup();
-						callback();
-					});
+				return true;
+			}
 
-					return true;
-				}
+			template<typename func_t> void schedule(const func_t& func) {
+				schedule(std::function<void(Thread&)>(func));
+			}
 
-				template<typename func_t> void schedule(const func_t& func) {
-					schedule(std::function<void(Thread&)>(func));
-				}
+			void schedule(const std::function<void()>& func);
+			bool update();
 
-				void schedule(const std::function<void()>& func);
-				bool update();
+			void setName(const std::string& name);
 
-				void setName(const std::string& name);
+			Thread& requestClose();
+			Thread& cancelClose();
 
-				Thread& requestClose();
-				Thread& cancelClose();
+			bool detach();
+			bool join();
 
-				bool detach();
-				bool join();
+			bool waitFor() const;
 
-				bool waitFor() const;
+			bool isCloseRequested() const;
+			bool isRunning() const;
+			bool isCurrent() const;
 
-				bool isCloseRequested() const;
-				bool isRunning() const;
-				bool isCurrent() const;
+			const std::string& name() const;
+			uint64 id() const;
+			std::thread::id threadID() const;
+	};
 
-				const std::string& name() const;
-				uint64 id() const;
-				std::thread::id threadID() const;
-		};
-
-	}
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_THREAD_ALIAS_DISABLE))
-namespace akt = ak::thread;
-#endif
 
 #endif

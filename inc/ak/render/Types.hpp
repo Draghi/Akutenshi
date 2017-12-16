@@ -17,102 +17,100 @@
 #ifndef AK_RENDER_TYPES_HPP_
 #define AK_RENDER_TYPES_HPP_
 
-namespace ak {
-	namespace render {
+namespace akr {
 
-		enum class BufferTarget {
-			VARRYING,
-			UNIFORM,
-			INDEX,
-		};
+	enum class BufferTarget {
+		VARRYING,
+		UNIFORM,
+		INDEX,
+	};
 
-		enum class StageType : uint8 {
-			Vertex = 0,
-			Geometry = 1,
-			Fragment = 2,
-		};
+	enum class StageType : uint8 {
+		Vertex = 0,
+		Geometry = 1,
+		Fragment = 2,
+	};
 
-		enum class DrawType {
-			Points,
+	enum class DrawType {
+		Points,
 
-			Lines,
-			LinesAdj,
-			LineStrip,
-			LineStripAdj,
-			LineLoop,
+		Lines,
+		LinesAdj,
+		LineStrip,
+		LineStripAdj,
+		LineLoop,
 
-			Triangles,
-			TrianglesAdj,
-			TriangleStrip,
-			TriangleStripAdj,
-			TriangleFan,
-		};
+		Triangles,
+		TrianglesAdj,
+		TriangleStrip,
+		TriangleStripAdj,
+		TriangleFan,
+	};
 
-		enum class Face {
-			Front,
-			Back,
-			FrontAndBack
-		};
+	enum class Face {
+		Front,
+		Back,
+		FrontAndBack
+	};
 
-		enum class FillMode {
-			Point,
-			Line,
-			Fill
-		};
+	enum class FillMode {
+		Point,
+		Line,
+		Fill
+	};
 
-		enum class ClearMode : uint8 {
-			Colour  = 0x01,
-			Depth   = 0x02,
-			Stencil = 0x04,
+	enum class ClearMode : uint8 {
+		Colour  = 0x01,
+		Depth   = 0x02,
+		Stencil = 0x04,
 
-			ColourAndDepth = Colour | Depth,
-			ColourAndStencil = Colour | Stencil,
+		ColourAndDepth = Colour | Depth,
+		ColourAndStencil = Colour | Stencil,
 
-			DepthAndStencil = Colour | Stencil,
+		DepthAndStencil = Colour | Stencil,
 
-			All = Colour | Depth | Stencil,
-		};
+		All = Colour | Depth | Stencil,
+	};
 
-		enum class CullMode {
-			Front,
-			Back,
-			FrontAndBack
-		};
+	enum class CullMode {
+		Front,
+		Back,
+		FrontAndBack
+	};
 
-		enum class DepthMode {
-			Never,
-			Always,
-			Less,
-			LessEqual,
-			Equal,
-			NotEqual,
-			Greater,
-			GreaterEqual
-		};
+	enum class DepthMode {
+		Never,
+		Always,
+		Less,
+		LessEqual,
+		Equal,
+		NotEqual,
+		Greater,
+		GreaterEqual
+	};
 
-		enum class IDataType {
-			Int8,
-			Int16,
-			Int32,
+	enum class IDataType {
+		Int8,
+		Int16,
+		Int32,
 
-			UInt8,
-			UInt16,
-			UInt32,
-		};
+		UInt8,
+		UInt16,
+		UInt32,
+	};
 
-		enum class DataType {
-			Int8,
-			Int16,
-			Int32,
+	enum class DataType {
+		Int8,
+		Int16,
+		Int32,
 
-			UInt8,
-			UInt16,
-			UInt32,
+		UInt8,
+		UInt16,
+		UInt32,
 
-			FPDouble,
-			FPSingle
-		};
-	}
+		FPDouble,
+		FPSingle
+	};
 }
 
 #endif

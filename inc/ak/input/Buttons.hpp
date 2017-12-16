@@ -21,23 +21,17 @@
 #include <ak/PrimitiveTypes.hpp>
 #include <limits>
 
-namespace ak {
-	namespace input {
+namespace akin {
 
-		enum class Button : uint8 {
-			/* Normal Keys */
-			Left = 0,
-			Right = 1,
-			Middle = 2,
+	enum class Button : uint8 {
+		/* Normal Keys */
+		Left = 0,
+		Right = 1,
+		Middle = 2,
 
-			BUTTON_LAST = Middle + 1,
-		};
+		BUTTON_LAST = Middle + 1,
+	};
 
-	}
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_INPUT_ALIAS_DISABLE))
-namespace akin = ak::input;
-#endif
 
 #endif

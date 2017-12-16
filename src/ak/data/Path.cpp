@@ -20,9 +20,9 @@
 #include <cctype>
 #include <stdexcept>
 
-using namespace ak::data;
+using namespace akd;
 
-Path ak::data::parseObjectDotNotation(const std::string& path) {
+Path akd::parseObjectDotNotation(const std::string& path) {
 	if (path.size() <= 0) return Path();
 
 	Path result;
@@ -32,17 +32,17 @@ Path ak::data::parseObjectDotNotation(const std::string& path) {
 
 		if (parsingIndex) {
 			if (str.empty()) {
-				throw std::invalid_argument("ak::data::parseObjectDotNotation: Incomplete array index");;
+				throw std::invalid_argument("akd::parseObjectDotNotation: Incomplete array index");;
 			}
 
 			auto pos = str.find_first_of(']');
 			if (pos == std::string::npos) {
-				throw std::invalid_argument("ak::data::parseObjectDotNotation: Invalid array index");
+				throw std::invalid_argument("akd::parseObjectDotNotation: Invalid array index");
 			}
 
 			std::string indexStr = str.substr(0, pos);
 			if (!std::all_of(indexStr.begin(), indexStr.end(), ::isdigit)) {
-				throw std::invalid_argument("ak::data::parseObjectDotNotation: Invalid array index");
+				throw std::invalid_argument("akd::parseObjectDotNotation: Invalid array index");
 			}
 
 			result.append(std::stoull(indexStr));
@@ -58,7 +58,7 @@ Path ak::data::parseObjectDotNotation(const std::string& path) {
 	return result;
 }
 
-std::string ak::data::pathToObjectDotNotation(const Path& path) {
+std::string akd::pathToObjectDotNotation(const Path& path) {
 	std::stringstream sstream;
 
 	for(size_t i = 0; i < path.size(); i++) {
@@ -66,7 +66,7 @@ std::string ak::data::pathToObjectDotNotation(const Path& path) {
 		if (path[i].isIndex) {
 			sstream << "[" << path[i].index << "]";
 		} else {
-			if (path[i].path.find_first_of('.') != std::string::npos) throw std::invalid_argument("ak::data::pathToObjectDotNotation: Path contains '.' in entry name");
+			if (path[i].path.find_first_of('.') != std::string::npos) throw std::invalid_argument("akd::pathToObjectDotNotation: Path contains '.' in entry name");
 			sstream << path[i].path;
 		}
 

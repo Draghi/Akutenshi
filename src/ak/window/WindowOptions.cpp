@@ -22,7 +22,7 @@
 #include <iterator>
 #include <vector>
 
-using namespace ak::window;
+using namespace akw;
 
 static Monitor findMonitorByName(const std::vector<Monitor>& allMonitors, const std::string& name) {
 	auto iter = std::find_if(allMonitors.begin(), allMonitors.end(), [&](const Monitor& monitor){ return monitor.name == name; });
@@ -35,7 +35,7 @@ static Monitor findTargetMonitor(const std::string& name, WindowCoord pos) {
 	auto monitorByName = findMonitorByName(monitors(), name);
 	if (monitorByName != Monitor::NullMonitor()) return monitorByName;
 
-	auto monitorsAt = ak::window::getMonitorsAt(pos, {0,0});
+	auto monitorsAt = akw::getMonitorsAt(pos, {0,0});
 	if (monitorsAt.size() == 1) {
 		if (monitorsAt.front() != Monitor::NullMonitor()) return monitorsAt.front();
 		return primaryMonitor();
@@ -46,7 +46,7 @@ static Monitor findTargetMonitor(const std::string& name, WindowCoord pos) {
 	return primaryMonitor();
 }
 
-template<> ak::window::WindowOptions ak::data::deserialize<ak::window::WindowOptions>(const ak::data::PValue& root) {
+template<> akw::WindowOptions akd::deserialize<akw::WindowOptions>(const akd::PValue& root) {
 	WindowCoord pos = {root["position"]["x"].as<int>(), root["position"]["y"].as<int>()};
 	WindowCoord winSize = {root["videoMode"]["resolution"]["x"].as<int>(), root["videoMode"]["resolution"]["y"].as<int>()};
 	VideoMode videoMode = {winSize, root["videoMode"]["refreshRate"].as<int>()};
@@ -89,7 +89,7 @@ template<> ak::window::WindowOptions ak::data::deserialize<ak::window::WindowOpt
 		.glMSAA(root["glMSAA"].as<uint8>());
 }
 
-template<> void ak::data::serialize<ak::window::WindowOptions>(ak::data::PValue& root, const ak::window::WindowOptions& val) {
+template<> void akd::serialize<akw::WindowOptions>(akd::PValue& root, const akw::WindowOptions& val) {
 	root["position"]["x"].set<int>(val.position().x);
 	root["position"]["y"].set<int>(val.position().y);
 
@@ -131,6 +131,6 @@ template<> void ak::data::serialize<ak::window::WindowOptions>(ak::data::PValue&
 	root["glMSAA"].set<int>(val.glMSAA());
 }
 
-static ak::event::SubscriberID windowSInitRegenerateConfigHook = ak::engine::regenerateConfigDispatch().subscribe([](ak::engine::RegenerateConfigEvent& event){
-	ak::data::serialize<ak::window::WindowOptions>(event.data()["window"], ak::window::WindowOptions());
+static akev::SubscriberID windowSInitRegenerateConfigHook = ake::regenerateConfigDispatch().subscribe([](ake::RegenerateConfigEvent& event){
+	akd::serialize<akw::WindowOptions>(event.data()["window"], akw::WindowOptions());
 });

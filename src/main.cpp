@@ -57,22 +57,22 @@ int main() {
 	log.info("Engine started.");
 	printLogHeader(log);
 
-	if (ak::engine::config().exists("window")) {
-		ak::window::open(ak::data::deserialize<ak::window::WindowOptions>(ak::engine::config()["window"]));
+	if (ake::config().exists("window")) {
+		akw::open(akd::deserialize<akw::WindowOptions>(ake::config()["window"]));
 	} else {
-		auto defaultWindowOptions = ak::window::WindowOptions().glVSync(ak::window::VSync::FULL);
-		ak::window::open(defaultWindowOptions);
+		auto defaultWindowOptions = akw::WindowOptions().glVSync(akw::VSync::FULL);
+		akw::open(defaultWindowOptions);
 	}
 
 	akw::setCursorMode(akw::CursorMode::Captured);
 
-	ak::window::pollEvents();
-	ak::window::mouse().update();
-	ak::window::keyboard().update();
+	akw::pollEvents();
+	akw::mouse().update();
+	akw::keyboard().update();
 
-	ak::window::pollEvents();
-	ak::window::mouse().update();
-	ak::window::keyboard().update();
+	akw::pollEvents();
+	akw::mouse().update();
+	akw::keyboard().update();
 
 	// Setup Render
 		// Init
@@ -94,10 +94,10 @@ int main() {
 		akr::Buffer vBuf;
 		akr::bind(akr::BufferTarget::VARRYING, vBuf);
 		auto vData = akr::genCubeMesh();
-		akr::setData(ak::render::BufferTarget::VARRYING, vData.data(), static_cast<uint32>(vData.size()));
-		akr::mapVertexBufferF(0, 3, ak::render::DataType::FPSingle, false,                  0, 8*sizeof(fpSingle));
-		akr::mapVertexBufferF(1, 3, ak::render::DataType::FPSingle, false, 3*sizeof(fpSingle), 8*sizeof(fpSingle));
-		akr::mapVertexBufferF(2, 2, ak::render::DataType::FPSingle, false, 6*sizeof(fpSingle), 8*sizeof(fpSingle));
+		akr::setData(akr::BufferTarget::VARRYING, vData.data(), static_cast<uint32>(vData.size()));
+		akr::mapVertexBufferF(0, 3, akr::DataType::FPSingle, false,                  0, 8*sizeof(fpSingle));
+		akr::mapVertexBufferF(1, 3, akr::DataType::FPSingle, false, 3*sizeof(fpSingle), 8*sizeof(fpSingle));
+		akr::mapVertexBufferF(2, 2, akr::DataType::FPSingle, false, 6*sizeof(fpSingle), 8*sizeof(fpSingle));
 
 		// Tex
 		akr::Texture tex(akr::TexTarget::Tex2D);
@@ -109,11 +109,11 @@ int main() {
 	akm::Vec3 lookPos;
 	akm::Mat4 lookOrient(1);
 
-	while(!ak::window::closeRequested()) {
+	while(!akw::closeRequested()) {
 		// Input Start
-			ak::window::pollEvents();
-			ak::window::mouse().update();
-			ak::window::keyboard().update();
+			akw::pollEvents();
+			akw::mouse().update();
+			akw::keyboard().update();
 
 			static fpSingle x = 0, y = 0, z = 0;
 /*			if (akw::keyboard().isDown(akin::Key::W)) y += 1/60.0;
@@ -156,7 +156,7 @@ int main() {
 			}
 
 			// Finish
-			ak::window::swapBuffer();
+			akw::swapBuffer();
 		// Render End
 	}
 
@@ -164,7 +164,7 @@ int main() {
 }
 
 static void printLogHeader(const ak::log::Logger& logger) {
-	auto utc = ak::util::utcTimestamp();
+	auto utc = aku::utcTimestamp();
 
 	std::stringstream dateStream;
 	dateStream << std::put_time(&utc.ctime, "%Y-%m-%d");
@@ -191,10 +191,10 @@ static void printLogHeader(const ak::log::Logger& logger) {
 
 static void startupConfig() {
 	constexpr ak::log::Logger log(AK_STRING_VIEW("Config"));
-	if (!ak::engine::loadConfig()) {
+	if (!ake::loadConfig()) {
 		log.warn("Failed to load config. Attempting to regenerate.");
-		ak::engine::regenerateConfig();
-		if (!ak::engine::saveConfig()) log.warn("Failed to save new config.");
+		ake::regenerateConfig();
+		if (!ake::saveConfig()) log.warn("Failed to save new config.");
 	}
 }
 
@@ -204,13 +204,13 @@ static void startupLog() {
 }
 
 static void startupWindow() {
-	ak::window::init();
+	akw::init();
 }
 
 static ak::ScopeGuard startup() {
 	constexpr ak::log::Logger startLog(AK_STRING_VIEW("Start"));
 
-	ak::thread::current().setName("Main");
+	akt::current().setName("Main");
 
 	startLog.info("Loading engine config.");
 	startupConfig();
@@ -225,7 +225,7 @@ static ak::ScopeGuard startup() {
 		constexpr ak::log::Logger stopLog(AK_STRING_VIEW("Stop"));
 
 		stopLog.info("Saving config.");
-		if (!ak::engine::saveConfig()) stopLog.warn("Failed to save config.");
+		if (!ake::saveConfig()) stopLog.warn("Failed to save config.");
 
 		stopLog.info("Flushing log system.");
 		ak::log::stopProcessing();
@@ -235,14 +235,14 @@ static ak::ScopeGuard startup() {
 }
 
 static void createShaderProgram(akr::Pipeline& pipeline) {
-	akr::PipelineStage vertStage(ak::render::StageType::Vertex);
+	akr::PipelineStage vertStage(akr::StageType::Vertex);
 	std::string source;
 	akfs::open(akfs::SystemFolder::appData, "shaders/main.vert", akfs::OpenFlags::In).readLine(source, false, {});
 	vertStage.attach(source);
 	vertStage.compile();
 	pipeline.attach(vertStage);
 
-	akr::PipelineStage fragStage(ak::render::StageType::Fragment);
+	akr::PipelineStage fragStage(akr::StageType::Fragment);
 	akfs::open(akfs::SystemFolder::appData, "shaders/main.frag", akfs::OpenFlags::In).readLine(source, false, {});
 	fragStage.attach(source);
 	fragStage.compile();

@@ -20,102 +20,98 @@
 #include <ak/math/Vector.hpp>
 #include <ak/PrimitiveTypes.hpp>
 
-namespace ak {
-	namespace render {
+namespace akr {
 
-		enum class CubeMapTarget {
-			Right,
-			Left,
-			Top,
-			Bottom,
-			Back,
-			Front,
-		};
+	enum class CubeMapTarget {
+		Right,
+		Left,
+		Top,
+		Bottom,
+		Back,
+		Front,
+	};
 
-		enum class TexTarget {
-			Tex1D,
-			Tex1D_Array,
+	enum class TexTarget {
+		Tex1D,
+		Tex1D_Array,
 
-			Tex2D,
-			Tex2D_Array,
+		Tex2D,
+		Tex2D_Array,
 
-			Tex3D,
+		Tex3D,
 
-			TexCubeMap,
-		};
+		TexCubeMap,
+	};
 
-		enum class TexFormat {
-			R,
-			RG,
+	enum class TexFormat {
+		R,
+		RG,
 
-			RGB,
-			RGBA,
+		RGB,
+		RGBA,
 
-			BGR,
-			BGRA,
-		};
+		BGR,
+		BGRA,
+	};
 
-		enum class FilterType {
-			Nearest,
-			Linear,
-		};
+	enum class FilterType {
+		Nearest,
+		Linear,
+	};
 
-		enum class ClampType {
-			Repeat,
-			Mirror,
-			Edge,
-			Border,
-		};
+	enum class ClampType {
+		Repeat,
+		Mirror,
+		Edge,
+		Border,
+	};
 
-		enum class ClampDir {
-			S,
-			T,
-			R
-		};
+	enum class ClampDir {
+		S,
+		T,
+		R
+	};
 
-		class Texture {
-			protected:
-				uint32 m_id;
-				TexTarget m_type;
+	class Texture {
+		protected:
+			uint32 m_id;
+			TexTarget m_type;
 
-			public:
-				Texture(TexTarget target);
-				~Texture();
+		public:
+			Texture(TexTarget target);
+			~Texture();
 
-				uint32 id() const { return m_id; }
-				TexTarget type() const { return m_type; }
-		};
+			uint32 id() const { return m_id; }
+			TexTarget type() const { return m_type; }
+	};
 
-		void setActiveTextureUnit(uint32 unit);
-		void bind(uint32 unit, const Texture& texture);
+	void setActiveTextureUnit(uint32 unit);
+	void bind(uint32 unit, const Texture& texture);
 
-		void setTextureFilters(TexTarget target, FilterType minFilter, FilterType magFilter);
-		void setTextureFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter);
-		void setTextureClamping(TexTarget target, ClampDir clampDir, ClampType clampType);
-		void setTextureBorder(TexTarget target, akm::Vec4 colour);
-		void generateMipmaps(TexTarget target);
+	void setTextureFilters(TexTarget target, FilterType minFilter, FilterType magFilter);
+	void setTextureFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter);
+	void setTextureClamping(TexTarget target, ClampDir clampDir, ClampType clampType);
+	void setTextureBorder(TexTarget target, akm::Vec4 colour);
+	void generateMipmaps(TexTarget target);
 
-		void createTextureStorage1D(TexFormat format, int32 width, int32 mipLevels);
-		void createTextureStorage1D(TexFormat format, int32 width, int32 layers, int32 mipLevels);
-		void createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 mipLevels);
-		void createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 layers, int32 mipLevels);
-		void createTextureStorage3D(TexFormat format, int32 width, int32 height, int32 depth,  int32 mipLevels);
+	void createTextureStorage1D(TexFormat format, int32 width, int32 mipLevels);
+	void createTextureStorage1D(TexFormat format, int32 width, int32 layers, int32 mipLevels);
+	void createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 mipLevels);
+	void createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 layers, int32 mipLevels);
+	void createTextureStorage3D(TexFormat format, int32 width, int32 height, int32 depth,  int32 mipLevels);
 
-		void setTextureData1D(TexFormat format, int32 width, const fpSingle* data, int32 level = 0);
-		void setTextureData1D(TexFormat format, int32 width, int32 layers, const fpSingle* data, int32 level = 0);
-		void setTextureData2D(TexFormat format, int32 width, int32 height, const fpSingle* data, int32 level = 0);
-		void setTextureData2D(TexFormat format, int32 width, int32 height, int32 layers, const fpSingle* data, int32 level = 0);
-		void setTextureData3D(TexFormat format, int32 width, int32 height, int32 depth,  const fpSingle* data, int32 level = 0);
+	void setTextureData1D(TexFormat format, int32 width, const fpSingle* data, int32 level = 0);
+	void setTextureData1D(TexFormat format, int32 width, int32 layers, const fpSingle* data, int32 level = 0);
+	void setTextureData2D(TexFormat format, int32 width, int32 height, const fpSingle* data, int32 level = 0);
+	void setTextureData2D(TexFormat format, int32 width, int32 height, int32 layers, const fpSingle* data, int32 level = 0);
+	void setTextureData3D(TexFormat format, int32 width, int32 height, int32 depth,  const fpSingle* data, int32 level = 0);
 
-		void replaceTextureData1D(TexFormat format, int32 xOff, int32 width, const fpSingle* data, int32 level = 0);
-		void replaceTextureData1D(TexFormat format, int32 xOff, int32 lOff, int32 width, int32 layers, const fpSingle* data, int32 level = 0);
-		void replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 width, int32 height, const fpSingle* data, int32 level = 0);
-		void replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 lOff,  int32 width, int32 height, int32 layers, const fpSingle* data, int32 level = 0);
-		void replaceTextureData3D(TexFormat format, int32 xOff, int32 yOff, int32 zOff,  int32 width, int32 height, int32 depth,  const fpSingle* data, int32 level = 0);
+	void replaceTextureData1D(TexFormat format, int32 xOff, int32 width, const fpSingle* data, int32 level = 0);
+	void replaceTextureData1D(TexFormat format, int32 xOff, int32 lOff, int32 width, int32 layers, const fpSingle* data, int32 level = 0);
+	void replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 width, int32 height, const fpSingle* data, int32 level = 0);
+	void replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 lOff,  int32 width, int32 height, int32 layers, const fpSingle* data, int32 level = 0);
+	void replaceTextureData3D(TexFormat format, int32 xOff, int32 yOff, int32 zOff,  int32 width, int32 height, int32 depth,  const fpSingle* data, int32 level = 0);
 
-	}
 }
-
-namespace akr = ak::render;
 
 #endif

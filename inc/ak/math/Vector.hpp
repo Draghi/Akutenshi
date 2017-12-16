@@ -21,32 +21,26 @@
 
 #include <glm/glm.hpp>
 
-namespace ak {
-	namespace math {
+namespace akm {
 
-		template<int size, typename scalar_t> using Vec = glm::vec<size, scalar_t, glm::highp>;
+	template<int size, typename scalar_t> using Vec = glm::vec<size, scalar_t, glm::highp>;
 
-		using Vec2 = Vec<2, fpSingle>;
-		using Vec3 = Vec<3, fpSingle>;
-		using Vec4 = Vec<4, fpSingle>;
+	using Vec2 = Vec<2, fpSingle>;
+	using Vec3 = Vec<3, fpSingle>;
+	using Vec4 = Vec<4, fpSingle>;
 
-		using glm::cross;
-		using glm::dot;
-		using glm::distance;
-		using glm::length;
-		using glm::normalize;
-		using glm::reflect;
-		using glm::refract;
+	using glm::cross;
+	using glm::dot;
+	using glm::distance;
+	using glm::length;
+	using glm::normalize;
+	using glm::reflect;
+	using glm::refract;
 
-		inline Vec2 perpendicular(const Vec2& vec) { return Vec2(-vec.y, vec.x); }
+	inline Vec2 perpendicular(const Vec2& vec) { return Vec2(-vec.y, vec.x); }
 
-		template<typename vec_t> typename vec_t::value_type sqrLength(const vec_t& vec) { return dot(vec, vec); }
+	template<typename vec_t> typename vec_t::value_type sqrLength(const vec_t& vec) { return dot(vec, vec); }
 
-	}
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_MATH_ALIAS_DISABLE))
-namespace akm = ak::math;
-#endif
 
 #endif

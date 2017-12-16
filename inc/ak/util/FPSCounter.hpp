@@ -21,46 +21,40 @@
 #include <ak/util/Timer.hpp>
 #include <deque>
 
-namespace ak {
-	namespace util {
+namespace aku {
 
-		class FPSCounter final {
-			private:
-				uint64 m_counter = 0;
-				Timer m_timer;
+	class FPSCounter final {
+		private:
+			uint64 m_counter = 0;
+			Timer m_timer;
 
-				uint64 m_maxSamples;
-				std::deque<fpDouble> m_samples;
+			uint64 m_maxSamples;
+			std::deque<fpDouble> m_samples;
 
-			public:
-				FPSCounter(uint64 maxSamples = 6) : m_maxSamples(maxSamples), m_samples() {}
+		public:
+			FPSCounter(uint64 maxSamples = 6) : m_maxSamples(maxSamples), m_samples() {}
 
-				void update() {
-					m_counter++;
-					m_timer.mark();
+			void update() {
+				m_counter++;
+				m_timer.mark();
 
-					if (m_timer.msecs() < 1000) return;
+				if (m_timer.msecs() < 1000) return;
 
-					while(m_samples.size() >= m_maxSamples) m_samples.pop_front();
-					m_samples.push_back((m_counter*1.0e9)/m_timer.nsecs());
+				while(m_samples.size() >= m_maxSamples) m_samples.pop_front();
+				m_samples.push_back((m_counter*1.0e9)/m_timer.nsecs());
 
-					m_timer.reset();
-					m_counter = 0;
-				}
+				m_timer.reset();
+				m_counter = 0;
+			}
 
-				fpDouble fps() {
-					if (m_samples.size() == 0) return 0;
-					fpDouble totalFPS = 0;
-					for(auto iter = m_samples.begin(); iter != m_samples.end(); iter++) totalFPS += *iter;
-					return totalFPS/m_samples.size();
-				}
-		};
+			fpDouble fps() {
+				if (m_samples.size() == 0) return 0;
+				fpDouble totalFPS = 0;
+				for(auto iter = m_samples.begin(); iter != m_samples.end(); iter++) totalFPS += *iter;
+				return totalFPS/m_samples.size();
+			}
+	};
 
-	}
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_UTIL_ALIAS_DISABLE))
-namespace aku = ak::util;
-#endif
 
 #endif

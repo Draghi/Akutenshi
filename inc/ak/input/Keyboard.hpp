@@ -22,45 +22,39 @@
 #include <ak/input/Keys.hpp>
 #include <ak/input/Types.hpp>
 
-namespace ak {
-	namespace input {
+namespace akin {
 
-		class Keyboard;
+	class Keyboard;
 
-		struct KeyEventData {
-			Key key;
-			Action action;
-			const Keyboard* sender;
+	struct KeyEventData {
+		Key key;
+		Action action;
+		const Keyboard* sender;
 
-			bool  wasPressed(Key keyVal) const { return (key == keyVal) && ((action == Action::Pressed) || (action == Action::Bumped));  }
-			bool wasReleased(Key keyVal) const { return (key == keyVal) && ((action == Action::Released) || (action == Action::Bumped)); }
-			bool   wasBumped(Key keyVal) const { return (key == keyVal) && (action == Action::Bumped); }
-		};
-		AK_DEFINE_EVENT(KeyEvent, const KeyEventData, true);
+		bool  wasPressed(Key keyVal) const { return (key == keyVal) && ((action == Action::Pressed) || (action == Action::Bumped));  }
+		bool wasReleased(Key keyVal) const { return (key == keyVal) && ((action == Action::Released) || (action == Action::Bumped)); }
+		bool   wasBumped(Key keyVal) const { return (key == keyVal) && (action == Action::Bumped); }
+	};
+	AK_DEFINE_EVENT(KeyEvent, const KeyEventData, true);
 
-		class Keyboard {
-			Keyboard(const Keyboard&) = delete;
-			Keyboard& operator=(const Keyboard&) = delete;
-			public:
-				Keyboard() = default;
-				virtual ~Keyboard() = default;
+	class Keyboard {
+		Keyboard(const Keyboard&) = delete;
+		Keyboard& operator=(const Keyboard&) = delete;
+		public:
+			Keyboard() = default;
+			virtual ~Keyboard() = default;
 
-				virtual const ak::event::DispatcherProxy<KeyEvent>& keyEvent() = 0;
+			virtual const akev::DispatcherProxy<KeyEvent>& keyEvent() = 0;
 
-				virtual bool isUp(Key key) const { return !isDown(key); }
-				virtual bool isDown(Key key) const = 0;
+			virtual bool isUp(Key key) const { return !isDown(key); }
+			virtual bool isDown(Key key) const = 0;
 
-				virtual bool wasPressed(Key key) const = 0;
-				virtual bool wasReleased(Key key) const = 0;
-				virtual bool wasBumped(Key key) const = 0;
+			virtual bool wasPressed(Key key) const = 0;
+			virtual bool wasReleased(Key key) const = 0;
+			virtual bool wasBumped(Key key) const = 0;
 
-				virtual void update() = 0;
-		};
-	}
+			virtual void update() = 0;
+	};
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_INPUT_ALIAS_DISABLE))
-namespace akin = ak::input;
-#endif
 
 #endif

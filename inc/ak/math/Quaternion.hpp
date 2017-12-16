@@ -20,18 +20,12 @@
 #include <ak/PrimitiveTypes.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-namespace ak {
-	namespace math {
-		using Quat = glm::tquat<fpSingle, glm::highp>;
+namespace akm {
+	using Quat = glm::tquat<fpSingle, glm::highp>;
 
-		using glm::lerp;
-		using glm::slerp;
-		using glm::conjugate;
-	}
+	using glm::lerp;
+	using glm::slerp;
+	using glm::conjugate;
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_MATH_ALIAS_DISABLE))
-namespace akm = ak::math;
-#endif
 
 #endif

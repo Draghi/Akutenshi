@@ -24,21 +24,19 @@
 
 #include "stddef.h"
 
-namespace ak {
-	namespace render {
+namespace akr{
 
-		/**
-		 * Generates cube mesh data
-		 * @param p1 - Bottom-Left-Front vertex (Default: (-0.5, -0.5, -0.5))
-		 * @param p2 - Top-Right-Back vertex    (Default: ( 0.5,  0.5,  0.5))
-		 * @param genNorms - Generate normals?
-		 * @param genTexcoord - Generate texture coords?
-		 * @remarks Format: Vx, Vy, Vz, <Nx, Ny, Nz,> <Ts, Tv,>
-		 * @return The vertex data for the cube
-		 */
-		std::vector<fpSingle> genCubeMesh(akm::Vec3 p1 = akm::Vec3(-0.5, -0.5, -0.5), akm::Vec3 p2 = akm::Vec3(0.5, 0.5, 0.5), bool genNorms = true, bool genTexcoord = true);
+	/**
+	 * Generates cube mesh data
+	 * @param p1 - Bottom-Left-Front vertex (Default: (-0.5, -0.5, -0.5))
+	 * @param p2 - Top-Right-Back vertex    (Default: ( 0.5,  0.5,  0.5))
+	 * @param genNorms - Generate normals?
+	 * @param genTexcoord - Generate texture coords?
+	 * @remarks Format: Vx, Vy, Vz, <Nx, Ny, Nz,> <Ts, Tv,>
+	 * @return The vertex data for the cube
+	 */
+	std::vector<fpSingle> genCubeMesh(akm::Vec3 p1 = akm::Vec3(-0.5, -0.5, -0.5), akm::Vec3 p2 = akm::Vec3(0.5, 0.5, 0.5), bool genNorms = true, bool genTexcoord = true);
 
-	}
 }
 
 #endif

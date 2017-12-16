@@ -19,9 +19,9 @@
 #include <chrono>
 
 using namespace ak;
-using namespace ak::thread;
+using namespace akt;
 
-CurrentThread::CurrentThread(ak::thread::Thread* thread, std::thread::id id) : m_thread(thread), m_id(id) {}
+CurrentThread::CurrentThread(akt::Thread* thread, std::thread::id id) : m_thread(thread), m_id(id) {}
 
 bool CurrentThread::schedule(const std::function<void()>& func) {
 	if (!m_thread) return false;

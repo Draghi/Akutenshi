@@ -20,14 +20,10 @@
 #include <ak/filesystem/Filesystem.hpp>
 #include <ak/render/Texture.hpp>
 
-namespace ak {
-	namespace filesystem {
+namespace akfs {
 
-		void loadTexture(SystemFolder folder, const stx::filesystem::path& path, ak::render::Texture& tex);
+	void loadTexture(SystemFolder folder, const stx::filesystem::path& path, akr::Texture& tex);
 
-	}
 }
-
-namespace akfs = ak::filesystem;
 
 #endif

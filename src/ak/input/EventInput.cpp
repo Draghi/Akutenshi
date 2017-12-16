@@ -16,7 +16,7 @@
 
 #include <ak/input/EventInput.hpp>
 
-using namespace ak::input;
+using namespace akin;
 
 Action EventKeyboard::getKeyAction(Key key) const { return m_keyStates[static_cast<size_t>(key)].first; }
 State EventKeyboard::getKeyState(Key key) const { return m_keyStates[static_cast<size_t>(key)].second; }
@@ -24,7 +24,7 @@ State EventKeyboard::getKeyState(Key key) const { return m_keyStates[static_cast
 EventKeyboard::EventKeyboard() = default;
 EventKeyboard::~EventKeyboard() = default;
 
-const ak::event::DispatcherProxy<KeyEvent>& EventKeyboard::keyEvent() { return m_keyEventProxy; }
+const akev::DispatcherProxy<KeyEvent>& EventKeyboard::keyEvent() { return m_keyEventProxy; }
 
 bool EventKeyboard::isDown(Key key) const { return getKeyState(key) == State::Down; }
 
@@ -55,9 +55,9 @@ State EventMouse::getButtonState(Button key) const { return m_buttonStates[stati
 EventMouse::EventMouse() = default;
 EventMouse::~EventMouse() = default;
 
-const ak::event::DispatcherProxy<ButtonEvent>& EventMouse::buttonEvent() { return m_buttonEventProxy; }
-const ak::event::DispatcherProxy<ScrollEvent>& EventMouse::scrollEvent() { return m_scrollEventProxy; }
-const ak::event::DispatcherProxy<MoveEvent>& EventMouse::moveEvent() { return m_moveEventProxy; }
+const akev::DispatcherProxy<ButtonEvent>& EventMouse::buttonEvent() { return m_buttonEventProxy; }
+const akev::DispatcherProxy<ScrollEvent>& EventMouse::scrollEvent() { return m_scrollEventProxy; }
+const akev::DispatcherProxy<MoveEvent>& EventMouse::moveEvent() { return m_moveEventProxy; }
 
 bool EventMouse::isDown(Button button) const { return getButtonState(button) == State::Down; }
 
@@ -71,8 +71,8 @@ int32 EventMouse::scrollRight() const { return m_scrollRight; }
 int32 EventMouse::scrollUp() const { return m_scrollUp; }
 int32 EventMouse::scrollDown() const { return m_scrollDown; }
 
-ak::math::Vec2 EventMouse::position() const { return m_mousePosition; }
-ak::math::Vec2 EventMouse::deltaPosition() const { return m_mousePosition - m_lastPosition; }
+akm::Vec2 EventMouse::position() const { return m_mousePosition; }
+akm::Vec2 EventMouse::deltaPosition() const { return m_mousePosition - m_lastPosition; }
 
 void EventMouse::update() {
 	m_eventBuffer.swap();

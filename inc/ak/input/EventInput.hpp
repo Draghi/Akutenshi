@@ -17,7 +17,7 @@
 #ifndef AK_INPUT_EVENTINPUT_HPP_
 #define AK_INPUT_EVENTINPUT_HPP_
 
-#include <ak/container/DoubleBuffer.hpp>
+#include <ak/thread/DoubleBuffer.hpp>
 #include <ak/event/Dispatcher.hpp>
 #include <ak/input/Keyboard.hpp>
 #include <ak/input/Keys.hpp>
@@ -28,126 +28,122 @@
 #include <array>
 #include <utility>
 
-namespace ak {
-	namespace input {
+namespace akin {
+	class EventKeyboard final : public Keyboard {
+		private:
+			akt::DoubleBuffer<KeyEventData> m_keyEventBuffer;
 
-		class EventKeyboard final : public Keyboard {
-			private:
-				ak::container::DoubleBuffer<KeyEventData> m_keyEventBuffer;
+			akev::Dispatcher<KeyEvent> m_keyEventDispatcher;
+			akev::DispatcherProxy<KeyEvent> m_keyEventProxy = m_keyEventDispatcher;
 
-				ak::event::Dispatcher<KeyEvent> m_keyEventDispatcher;
-				ak::event::DispatcherProxy<KeyEvent> m_keyEventProxy = m_keyEventDispatcher;
+			std::array<std::pair<Action, State>, static_cast<size_t>(Key::KEY_LAST_NORMAL)> m_keyStates;
 
-				std::array<std::pair<Action, State>, static_cast<size_t>(Key::KEY_LAST_NORMAL)> m_keyStates;
+			Action getKeyAction(Key key) const;
+			State getKeyState(Key key) const;
 
-				Action getKeyAction(Key key) const;
-				State getKeyState(Key key) const;
+		public:
+			EventKeyboard();
+			~EventKeyboard() override;
 
-			public:
-				EventKeyboard();
-				~EventKeyboard() override;
+			const akev::DispatcherProxy<KeyEvent>& keyEvent() override;
 
-				const ak::event::DispatcherProxy<KeyEvent>& keyEvent() override;
+			bool isDown(Key key) const override;
 
-				bool isDown(Key key) const override;
+			bool wasPressed(Key key) const override;
+			bool wasReleased(Key key) const override;
+			bool wasBumped(Key key) const override;
 
-				bool wasPressed(Key key) const override;
-				bool wasReleased(Key key) const override;
-				bool wasBumped(Key key) const override;
+			void update() override;
 
-				void update() override;
+			void onKeyEvent(const KeyEventData& data);
+	};
 
-				void onKeyEvent(const KeyEventData& data);
-		};
+	class EventMouse final : public Mouse {
+		private:
+			enum EventType : uint8 {
+				ButtonType,
+				ScrollType,
+				MoveType
+			};
+			struct EventRecord {
+				EventType eventType;
+				union {
+					ButtonEventData button;
+					ScrollEventData scroll;
+					MoveEventData move;
+				} eventData;
 
-		class EventMouse final : public Mouse {
-			private:
-				enum EventType : uint8 {
-					ButtonType,
-					ScrollType,
-					MoveType
-				};
-				struct EventRecord {
-					EventType eventType;
-					union {
-						ButtonEventData button;
-						ScrollEventData scroll;
-						MoveEventData move;
-					} eventData;
+				EventRecord(ButtonEventData buttonEvent) : eventType(ButtonType) { eventData.button = buttonEvent; }
+				EventRecord(ScrollEventData scrollEvent) : eventType(ScrollType) { eventData.scroll = scrollEvent; }
+				EventRecord(MoveEventData moveEvent) : eventType(MoveType) { eventData.move = moveEvent; }
 
-					EventRecord(ButtonEventData buttonEvent) : eventType(ButtonType) { eventData.button = buttonEvent; }
-					EventRecord(ScrollEventData scrollEvent) : eventType(ScrollType) { eventData.scroll = scrollEvent; }
-					EventRecord(MoveEventData moveEvent) : eventType(MoveType) { eventData.move = moveEvent; }
+				EventRecord(const EventRecord& other) { *this = other; }
 
-					EventRecord(const EventRecord& other) { *this = other; }
-
-					EventRecord& operator=(const EventRecord& other) {
-						eventType = other.eventType;
-						switch(eventType) {
-							case ButtonType: eventData.button = other.eventData.button; return *this;
-							case ScrollType: eventData.scroll = other.eventData.scroll; return *this;
-							case MoveType:   eventData.move   = other.eventData.move;   return *this;
-						}
+				EventRecord& operator=(const EventRecord& other) {
+					eventType = other.eventType;
+					switch(eventType) {
+						case ButtonType: eventData.button = other.eventData.button; return *this;
+						case ScrollType: eventData.scroll = other.eventData.scroll; return *this;
+						case MoveType:   eventData.move   = other.eventData.move;   return *this;
 					}
-				};
+				}
+			};
 
-				ak::container::DoubleBuffer<EventRecord> m_eventBuffer;
+			akt::DoubleBuffer<EventRecord> m_eventBuffer;
 
-				ak::event::Dispatcher<ButtonEvent> m_buttonEventDispatcher;
-				ak::event::DispatcherProxy<ButtonEvent> m_buttonEventProxy = m_buttonEventDispatcher;
+			akev::Dispatcher<ButtonEvent> m_buttonEventDispatcher;
+			akev::DispatcherProxy<ButtonEvent> m_buttonEventProxy = m_buttonEventDispatcher;
 
-				ak::event::Dispatcher<ScrollEvent> m_scrollEventDispatcher;
-				ak::event::DispatcherProxy<ScrollEvent> m_scrollEventProxy = m_scrollEventDispatcher;
+			akev::Dispatcher<ScrollEvent> m_scrollEventDispatcher;
+			akev::DispatcherProxy<ScrollEvent> m_scrollEventProxy = m_scrollEventDispatcher;
 
-				ak::event::Dispatcher<MoveEvent> m_moveEventDispatcher;
-				ak::event::DispatcherProxy<MoveEvent> m_moveEventProxy = m_moveEventDispatcher;
-
-
-				ak::math::Vec2 m_mousePosition;
-				ak::math::Vec2 m_lastPosition;
-
-				std::array<std::pair<Action, State>, static_cast<size_t>(Button::BUTTON_LAST)> m_buttonStates;
-
-				int32 m_scrollUp;
-				int32 m_scrollDown;
-				int32 m_scrollLeft;
-				int32 m_scrollRight;
-
-				Action getButtonAction(Button key) const;
-				State getButtonState(Button key) const;
-
-			public:
-				EventMouse();
-				~EventMouse() override;
-
-				const ak::event::DispatcherProxy<ButtonEvent>& buttonEvent() override;
-				const ak::event::DispatcherProxy<ScrollEvent>& scrollEvent() override;
-				const ak::event::DispatcherProxy<MoveEvent>& moveEvent() override;
-
-				bool isDown(Button button) const override;
-
-				bool wasPressed(Button button) const override;
-				bool wasReleased(Button button) const override;
-				bool wasBumped(Button button) const override;
-
-				int32 scrollLeft() const override;
-				int32 scrollRight() const override;
-
-				int32 scrollUp() const override;
-				int32 scrollDown() const override;
-
-				ak::math::Vec2 position() const override;
-				ak::math::Vec2 deltaPosition() const override;
-
-				void update() override;
-
-				void onButtonEvent(const ButtonEventData& data);
-				void onScrollEvent(const ScrollEventData& data);
-				void onMoveEvent(const MoveEventData& data);
-		};
+			akev::Dispatcher<MoveEvent> m_moveEventDispatcher;
+			akev::DispatcherProxy<MoveEvent> m_moveEventProxy = m_moveEventDispatcher;
 
 
-	}
+			akm::Vec2 m_mousePosition;
+			akm::Vec2 m_lastPosition;
+
+			std::array<std::pair<Action, State>, static_cast<size_t>(Button::BUTTON_LAST)> m_buttonStates;
+
+			int32 m_scrollUp;
+			int32 m_scrollDown;
+			int32 m_scrollLeft;
+			int32 m_scrollRight;
+
+			Action getButtonAction(Button key) const;
+			State getButtonState(Button key) const;
+
+		public:
+			EventMouse();
+			~EventMouse() override;
+
+			const akev::DispatcherProxy<ButtonEvent>& buttonEvent() override;
+			const akev::DispatcherProxy<ScrollEvent>& scrollEvent() override;
+			const akev::DispatcherProxy<MoveEvent>& moveEvent() override;
+
+			bool isDown(Button button) const override;
+
+			bool wasPressed(Button button) const override;
+			bool wasReleased(Button button) const override;
+			bool wasBumped(Button button) const override;
+
+			int32 scrollLeft() const override;
+			int32 scrollRight() const override;
+
+			int32 scrollUp() const override;
+			int32 scrollDown() const override;
+
+			akm::Vec2 position() const override;
+			akm::Vec2 deltaPosition() const override;
+
+			void update() override;
+
+			void onButtonEvent(const ButtonEventData& data);
+			void onScrollEvent(const ScrollEventData& data);
+			void onMoveEvent(const MoveEventData& data);
+	};
 }
+
 
 #endif

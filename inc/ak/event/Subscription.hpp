@@ -22,41 +22,35 @@
 #include <unordered_set>
 #include <utility>
 
-namespace ak {
-	namespace event {
+namespace akev {
 
-		class Subscription final {
-			template<typename> friend class Dispatcher;
-			Subscription(const Subscription&) = delete;
-			Subscription& operator=(const Subscription&) = delete;
-			private:
-				std::unordered_set<internal::IDispatcher*> m_dispatchers;
+	class Subscription final {
+		template<typename> friend class Dispatcher;
+		Subscription(const Subscription&) = delete;
+		Subscription& operator=(const Subscription&) = delete;
+		private:
+			std::unordered_set<internal::IDispatcher*> m_dispatchers;
 
-			protected:
-				bool Subscriber_AddDispatcher(internal::IDispatcher* dispatcher) {
-					return m_dispatchers.insert(dispatcher).second;
+		protected:
+			bool Subscriber_AddDispatcher(internal::IDispatcher* dispatcher) {
+				return m_dispatchers.insert(dispatcher).second;
+			}
+
+			bool Subscriber_RemoveDispatcher(internal::IDispatcher* dispatcher) {
+				return m_dispatchers.erase(dispatcher) > 0;
+			}
+
+		public:
+			Subscription() = default;
+
+			virtual ~Subscription() {
+				for(auto iter = m_dispatchers.begin(); iter != m_dispatchers.end(); iter++) {
+					(*iter)->unsubscribe(*this);
 				}
+			}
 
-				bool Subscriber_RemoveDispatcher(internal::IDispatcher* dispatcher) {
-					return m_dispatchers.erase(dispatcher) > 0;
-				}
+	};
 
-			public:
-				Subscription() = default;
-
-				virtual ~Subscription() {
-					for(auto iter = m_dispatchers.begin(); iter != m_dispatchers.end(); iter++) {
-						(*iter)->unsubscribe(*this);
-					}
-				}
-
-		};
-
-	}
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_EVENT_ALIAS_DISABLE))
-namespace akev = ak::event;
-#endif
 
 #endif

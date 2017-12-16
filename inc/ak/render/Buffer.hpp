@@ -20,32 +20,28 @@
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/Types.hpp>
 
-namespace ak {
-	namespace render {
+namespace akr {
 
-		class Buffer final {
-			private:
-				uint32 m_id;
-			public:
-				Buffer();
-				Buffer(Buffer&& other) : m_id(other.m_id) { other.m_id = 0; }
-				~Buffer();
+	class Buffer final {
+		private:
+			uint32 m_id;
+		public:
+			Buffer();
+			Buffer(Buffer&& other) : m_id(other.m_id) { other.m_id = 0; }
+			~Buffer();
 
-				uint32 id() const { return m_id; }
-		};
+			uint32 id() const { return m_id; }
+	};
 
-		void bind(BufferTarget target, const Buffer& buffer);
+	void bind(BufferTarget target, const Buffer& buffer);
 
-		void setDataRaw(BufferTarget target, const void* data, uint32 size);
-		template<typename type_t> void setData(BufferTarget target, const type_t* data, uint32 count) { setDataRaw(target, data, sizeof(type_t)*count); }
+	void setDataRaw(BufferTarget target, const void* data, uint32 size);
+	template<typename type_t> void setData(BufferTarget target, const type_t* data, uint32 count) { setDataRaw(target, data, sizeof(type_t)*count); }
 
-		void replaceDataRaw(BufferTarget target, uint32 offset, const void* data, uint32 size);
-		template<typename type_t> void replaceData(BufferTarget target, uint32 offset, const type_t* data, uint32 count) { replaceDataRaw(target, sizeof(type_t)*offset, data, sizeof(type_t)*count); }
-		template<typename type_t> void replaceDataB(BufferTarget target, uint32 offset, const type_t* data, uint32 count) { replaceDataRaw(target, offset, data, sizeof(type_t)*count); }
+	void replaceDataRaw(BufferTarget target, uint32 offset, const void* data, uint32 size);
+	template<typename type_t> void replaceData(BufferTarget target, uint32 offset, const type_t* data, uint32 count) { replaceDataRaw(target, sizeof(type_t)*offset, data, sizeof(type_t)*count); }
+	template<typename type_t> void replaceDataB(BufferTarget target, uint32 offset, const type_t* data, uint32 count) { replaceDataRaw(target, offset, data, sizeof(type_t)*count); }
 
-	}
 }
-
-namespace akr = ak::render;
 
 #endif

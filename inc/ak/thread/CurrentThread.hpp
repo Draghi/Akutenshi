@@ -23,42 +23,36 @@
 #include <string>
 #include <thread>
 
-namespace ak {
-	namespace thread { 
-		class Thread;
+namespace akt {
+	class Thread;
 
-		class CurrentThread {
-			friend CurrentThread& ak::thread::current();
-			private:
-				ak::thread::Thread* m_thread;
-				std::thread::id m_id;
+	class CurrentThread {
+		friend CurrentThread& akt::current();
+		private:
+			akt::Thread* m_thread;
+			std::thread::id m_id;
 
-				CurrentThread(ak::thread::Thread* thread, std::thread::id id);
+			CurrentThread(akt::Thread* thread, std::thread::id id);
 
-			public:
+		public:
 
-				template<typename func_t> bool schedule(const func_t& func) {
-					return schedule(std::function<void()>(func));
-				}
+			template<typename func_t> bool schedule(const func_t& func) {
+				return schedule(std::function<void()>(func));
+			}
 
-				bool schedule(const std::function<void()>& func);
-				bool update();
-				bool setName(const std::string& name);
+			bool schedule(const std::function<void()>& func);
+			bool update();
+			bool setName(const std::string& name);
 
-				bool yield() const;
-				bool sleep(int64 microseconds) const;
+			bool yield() const;
+			bool sleep(int64 microseconds) const;
 
-				bool isCloseRequested() const;
+			bool isCloseRequested() const;
 
-				std::string name() const;
-				uint64 id() const;
-				std::thread::id threadID() const;
-		};
-	}
+			std::string name() const;
+			uint64 id() const;
+			std::thread::id threadID() const;
+	};
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_THREAD_ALIAS_DISABLE))
-namespace akt = ak::thread;
-#endif
 
 #endif

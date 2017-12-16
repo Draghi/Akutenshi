@@ -17,41 +17,35 @@
 #ifndef AK_WINDOW_TYPES_HPP_
 #define AK_WINDOW_TYPES_HPP_
 
-namespace ak {
-	namespace window {
+namespace akw {
 
-		struct RealCoord {
-			int x;
-			int y;
+	struct RealCoord {
+		int x;
+		int y;
 
-			bool operator==(const RealCoord& other) const { return x == other.x && y == other.y; }
-		};
+		bool operator==(const RealCoord& other) const { return x == other.x && y == other.y; }
+	};
 
-		struct WindowCoord {
-			int x;
-			int y;
+	struct WindowCoord {
+		int x;
+		int y;
 
-			bool operator==(const WindowCoord& other) const { return x == other.x && y == other.y; }
-		};
+		bool operator==(const WindowCoord& other) const { return x == other.x && y == other.y; }
+	};
 
-		struct FrameCoord {
-			int x;
-			int y;
+	struct FrameCoord {
+		int x;
+		int y;
 
-			bool operator==(const FrameCoord& other) const { return x == other.x && y == other.y; }
-		};
+		bool operator==(const FrameCoord& other) const { return x == other.x && y == other.y; }
+	};
 
-		enum class CursorMode {
-			Captured,
-			Hidden,
-			Normal
-		};
+	enum class CursorMode {
+		Captured,
+		Hidden,
+		Normal
+	};
 
-	}
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_WINDOW_ALIAS_DISABLE))
-namespace akw = ak::window;
-#endif
 
 #endif

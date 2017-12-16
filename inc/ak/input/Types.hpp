@@ -17,27 +17,21 @@
 #ifndef AK_INPUT_TYPES_HPP_
 #define AK_INPUT_TYPES_HPP_
 
-namespace ak {
-	namespace input {
+namespace akin {
 
-		enum class Action {
-			None,
-			Pressed,
-			Released,
-			Bumped,
-			Repeat
-		};
+	enum class Action {
+		None,
+		Pressed,
+		Released,
+		Bumped,
+		Repeat
+	};
 
-		enum class State {
-			Up,
-			Down
-		};
+	enum class State {
+		Up,
+		Down
+	};
 
-	}
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_INPUT_ALIAS_DISABLE))
-namespace akin = ak::input;
-#endif
 
 #endif

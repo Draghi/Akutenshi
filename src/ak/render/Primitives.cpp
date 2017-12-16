@@ -16,9 +16,9 @@
 
 #include <ak/render/Primitives.hpp>
 
-using namespace ak::render;
+using namespace akr;
 
-std::vector<fpSingle> ak::render::genCubeMesh(akm::Vec3 p1, akm::Vec3 p2, bool genNorms, bool genTexcoord) {
+std::vector<fpSingle> akr::genCubeMesh(akm::Vec3 p1, akm::Vec3 p2, bool genNorms, bool genTexcoord) {
 
 	const uint8 indicies[] = {
 		0, 1, 2, //  Front - Bottom

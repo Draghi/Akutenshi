@@ -19,9 +19,9 @@
 
 #include "GL/gl4.h"
 
-using namespace ak::render;
+using namespace akr;
 
-void ak::render::init() {
+void akr::init() {
 	constexpr ak::log::Logger log("Render::Init");
 
 	static bool hasInit = false;
@@ -39,7 +39,7 @@ void ak::render::init() {
 	hasInit = true;
 }
 
-void ak::render::draw(DrawType mode, uint32 vertexCount, uint32 offset) {
+void akr::draw(DrawType mode, uint32 vertexCount, uint32 offset) {
 	switch(mode) {
 		case DrawType::Points: glDrawArrays(GL_POINTS, offset, vertexCount); break;
 
@@ -57,7 +57,7 @@ void ak::render::draw(DrawType mode, uint32 vertexCount, uint32 offset) {
 	}
 }
 
-void ak::render::drawIndexed(DrawType mode, IDataType indexType, uint32 vertexCount, uint32 offset) {
+void akr::drawIndexed(DrawType mode, IDataType indexType, uint32 vertexCount, uint32 offset) {
 
 	uint32 dataType = 0;
 	switch(indexType) {
@@ -86,7 +86,7 @@ void ak::render::drawIndexed(DrawType mode, IDataType indexType, uint32 vertexCo
 	}
 }
 
-void ak::render::clear(ClearMode clearMode) {
+void akr::clear(ClearMode clearMode) {
 	constexpr auto COLOUR_BUFFER  = static_cast<uint32>(ClearMode::Colour);
 	constexpr auto DEPTH_BUFFER   = static_cast<uint32>(ClearMode::Depth);
 	constexpr auto STENCIL_BUFFER = static_cast<uint32>(ClearMode::Stencil);
@@ -100,19 +100,19 @@ void ak::render::clear(ClearMode clearMode) {
 	if (mask) glClear(mask);
 }
 
-void ak::render::setClearColour(fpSingle red, fpSingle green, fpSingle blue, fpSingle alpha) {
+void akr::setClearColour(fpSingle red, fpSingle green, fpSingle blue, fpSingle alpha) {
 	glClearColor(red, green, blue, alpha);
 }
 
-void ak::render::setClearDepth(fpSingle depth) {
+void akr::setClearDepth(fpSingle depth) {
 	glClearDepth(depth);
 }
 
-void ak::render::setClearStencil(int32 stencil) {
+void akr::setClearStencil(int32 stencil) {
 	glClearStencil(stencil);
 }
 
-void ak::render::setFillMode(FillMode fillMode, Face face) {
+void akr::setFillMode(FillMode fillMode, Face face) {
 	uint32 glFillMode = GL_FILL;
 	switch(fillMode) {
 		case FillMode::Point: glFillMode = GL_POINT; break;
@@ -127,17 +127,17 @@ void ak::render::setFillMode(FillMode fillMode, Face face) {
 	}
 }
 
-void ak::render::enableDepthTest(bool state) {
+void akr::enableDepthTest(bool state) {
 	if (state) glEnable(GL_DEPTH_TEST);
 	else glDisable(GL_DEPTH_TEST);
 }
 
-void ak::render::enableCullFace(bool state) {
+void akr::enableCullFace(bool state) {
 	if (state) glEnable(GL_CULL_FACE);
 	else glDisable(GL_CULL_FACE);
 }
 
-void ak::render::setDepthTestMode(DepthMode depthMode) {
+void akr::setDepthTestMode(DepthMode depthMode) {
 	switch(depthMode) {
 		case DepthMode::Never:        glDepthFunc(GL_NEVER);    break;
 		case DepthMode::Always:       glDepthFunc(GL_ALWAYS);   break;
@@ -150,7 +150,7 @@ void ak::render::setDepthTestMode(DepthMode depthMode) {
 	}
 }
 
-void ak::render::setCullFaceMode(CullMode cullMode) {
+void akr::setCullFaceMode(CullMode cullMode) {
 	switch(cullMode) {
 		case CullMode::Front:        glCullFace(GL_FRONT);          break;
 		case CullMode::Back:         glCullFace(GL_BACK);           break;
@@ -158,66 +158,66 @@ void ak::render::setCullFaceMode(CullMode cullMode) {
 	}
 }
 
-void ak::render::setUniform(uint32 bindingLocation, uint32 x) {
+void akr::setUniform(uint32 bindingLocation, uint32 x) {
 	glUniform1ui(bindingLocation, x);
 }
 
-void ak::render::setUniform(uint32 bindingLocation, uint32 x, uint32 y) {
+void akr::setUniform(uint32 bindingLocation, uint32 x, uint32 y) {
 	glUniform2ui(bindingLocation, x, y);
 }
 
-void ak::render::setUniform(uint32 bindingLocation, uint32 x, uint32 y, uint32 z) {
+void akr::setUniform(uint32 bindingLocation, uint32 x, uint32 y, uint32 z) {
 	glUniform3ui(bindingLocation, x, y, z);
 }
 
-void ak::render::setUniform(uint32 bindingLocation, uint32 x, uint32 y, uint32 z, uint32 w) {
+void akr::setUniform(uint32 bindingLocation, uint32 x, uint32 y, uint32 z, uint32 w) {
 	glUniform4ui(bindingLocation, x, y, z, w);
 }
 
 
-void ak::render::setUniform(uint32 bindingLocation, int32 x) {
+void akr::setUniform(uint32 bindingLocation, int32 x) {
 	glUniform1i(bindingLocation, x);
 }
 
-void ak::render::setUniform(uint32 bindingLocation, int32 x, int32 y) {
+void akr::setUniform(uint32 bindingLocation, int32 x, int32 y) {
 	glUniform2i(bindingLocation, x, y);
 }
 
-void ak::render::setUniform(uint32 bindingLocation, int32 x, int32 y, int32 z) {
+void akr::setUniform(uint32 bindingLocation, int32 x, int32 y, int32 z) {
 	glUniform3i(bindingLocation, x, y, z);
 }
 
-void ak::render::setUniform(uint32 bindingLocation, int32 x, int32 y, int32 z, int32 w) {
+void akr::setUniform(uint32 bindingLocation, int32 x, int32 y, int32 z, int32 w) {
 	glUniform4i(bindingLocation, x, y, z, w);
 }
 
 
-void ak::render::setUniform(uint32 bindingLocation, fpSingle x) {
+void akr::setUniform(uint32 bindingLocation, fpSingle x) {
 	glUniform1f(bindingLocation, x);
 }
 
-void ak::render::setUniform(uint32 bindingLocation, fpSingle x, fpSingle y) {
+void akr::setUniform(uint32 bindingLocation, fpSingle x, fpSingle y) {
 	glUniform2f(bindingLocation, x, y);
 }
 
-void ak::render::setUniform(uint32 bindingLocation, fpSingle x, fpSingle y, fpSingle z) {
+void akr::setUniform(uint32 bindingLocation, fpSingle x, fpSingle y, fpSingle z) {
 	glUniform3f(bindingLocation, x, y, z);
 }
 
-void ak::render::setUniform(uint32 bindingLocation, fpSingle x, fpSingle y, fpSingle z, fpSingle w) {
+void akr::setUniform(uint32 bindingLocation, fpSingle x, fpSingle y, fpSingle z, fpSingle w) {
 	glUniform4f(bindingLocation, x, y, z, w);
 }
 
 
-void ak::render::setUniform(uint32 bindingLocation, akm::Mat4 matrix) {
+void akr::setUniform(uint32 bindingLocation, akm::Mat4 matrix) {
 	glUniformMatrix4fv(bindingLocation, 1, GL_FALSE, &matrix[0][0]);
 }
 
-void ak::render::setUniform(uint32 bindingLocation, akm::Mat3 matrix) {
+void akr::setUniform(uint32 bindingLocation, akm::Mat3 matrix) {
 	glUniformMatrix3fv(bindingLocation, 1, GL_FALSE, &matrix[0][0]);
 }
 
-void ak::render::setUniform(uint32 bindingLocation, akm::Mat2 matrix) {
+void akr::setUniform(uint32 bindingLocation, akm::Mat2 matrix) {
 	glUniformMatrix2fv(bindingLocation, 1, GL_FALSE, &matrix[0][0]);
 }
 

@@ -85,12 +85,12 @@ namespace ak {
 				static void printMessage(Level logLevel, const std::string& str);
 
 				template<typename... vargs_t> void build(Level level, const vargs_t&... vargs) const {
-					auto utc = ak::util::utcTimestamp();
+					auto utc = aku::utcTimestamp();
 
 					std::stringstream sstream;
 					sstream << "[" << std::put_time(&utc.ctime, "%H:%M:%S");
 					sstream << "." << std::setfill('0') << std::setw(3) << utc.milliseconds;
-					sstream  << "][" << ak::thread::current().name() << "][" << m_name << "][" << LevelTags[static_cast<uint8>(level)] << "] ";
+					sstream  << "][" << akt::current().name() << "][" << m_name << "][" << LevelTags[static_cast<uint8>(level)] << "] ";
 
 					ak::buildString(sstream, vargs...);
 

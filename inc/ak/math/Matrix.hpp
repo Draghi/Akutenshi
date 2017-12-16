@@ -31,56 +31,50 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/transform.hpp>
 
-namespace ak {
-	namespace math {
+namespace akm {
 
-		template<int size, typename scalar_t> using Mat = glm::mat<size, size, scalar_t, glm::highp>;
+	template<int size, typename scalar_t> using Mat = glm::mat<size, size, scalar_t, glm::highp>;
 
-		using Mat2 = Mat<2, fpSingle>;
-		using Mat3 = Mat<3, fpSingle>;
-		using Mat4 = Mat<4, fpSingle>;
+	using Mat2 = Mat<2, fpSingle>;
+	using Mat3 = Mat<3, fpSingle>;
+	using Mat4 = Mat<4, fpSingle>;
 
-		using glm::colMajor2;
-		using glm::colMajor3;
-		using glm::colMajor4;
+	using glm::colMajor2;
+	using glm::colMajor3;
+	using glm::colMajor4;
 
-		using glm::rowMajor2;
-		using glm::rowMajor3;
-		using glm::rowMajor4;
+	using glm::rowMajor2;
+	using glm::rowMajor3;
+	using glm::rowMajor4;
 
-		using glm::frustum;
-		using glm::ortho;
-		using glm::perspective;
-		using glm::perspectiveFov;
-		using glm::infinitePerspective;
+	using glm::frustum;
+	using glm::ortho;
+	using glm::perspective;
+	using glm::perspectiveFov;
+	using glm::infinitePerspective;
 
-		using glm::lookAt;
-		using glm::rotate;
-		using glm::scale;
-		using glm::translate;
+	using glm::lookAt;
+	using glm::rotate;
+	using glm::scale;
+	using glm::translate;
 
-		using glm::column;
-		using glm::row;
+	using glm::column;
+	using glm::row;
 
-		using glm::determinant;
-		using glm::inverse;
-		using glm::transpose;
+	using glm::determinant;
+	using glm::inverse;
+	using glm::transpose;
 
-		//template<typename scalar_t> Mat<2, scalar_t> translate(const Vec<2, scalar_t>& offset) { return translate(Mat<2, scalar_t>(static_cast<scalar_t>(1)), offset); }
-		template<typename scalar_t> Mat<2, scalar_t> rotate(scalar_t angle) { return rotate(Mat<2, scalar_t>(static_cast<scalar_t>(1)), angle); }
-		template<typename scalar_t> Mat<2, scalar_t> scale(const Vec<2, scalar_t>& factor) { return scale(Mat<2, scalar_t>(static_cast<scalar_t>(1)), factor); }
+	//template<typename scalar_t> Mat<2, scalar_t> translate(const Vec<2, scalar_t>& offset) { return translate(Mat<2, scalar_t>(static_cast<scalar_t>(1)), offset); }
+	template<typename scalar_t> Mat<2, scalar_t> rotate(scalar_t angle) { return rotate(Mat<2, scalar_t>(static_cast<scalar_t>(1)), angle); }
+	template<typename scalar_t> Mat<2, scalar_t> scale(const Vec<2, scalar_t>& factor) { return scale(Mat<2, scalar_t>(static_cast<scalar_t>(1)), factor); }
 
-		template<typename scalar_t> Mat<3, scalar_t> eulerOrient3(const Vec<3, scalar_t>& eulerAngles) { return glm::orientate3(eulerAngles); }
-		template<typename scalar_t> Mat<3, scalar_t> eulerOrient3(scalar_t x, scalar_t y, scalar_t z) { return eulerOrient3(Vec3(x, y, z)); }
+	template<typename scalar_t> Mat<3, scalar_t> eulerOrient3(const Vec<3, scalar_t>& eulerAngles) { return glm::orientate3(eulerAngles); }
+	template<typename scalar_t> Mat<3, scalar_t> eulerOrient3(scalar_t x, scalar_t y, scalar_t z) { return eulerOrient3(Vec3(x, y, z)); }
 
-		template<typename scalar_t> Mat<4, scalar_t> eulerOrient4(const Vec<3, scalar_t>& eulerAngles) { return glm::orientate4(eulerAngles); }
-		template<typename scalar_t> Mat<4, scalar_t> eulerOrient4(scalar_t x, scalar_t y, scalar_t z) { return eulerOrient3(Vec3(x, y, z)); }
+	template<typename scalar_t> Mat<4, scalar_t> eulerOrient4(const Vec<3, scalar_t>& eulerAngles) { return glm::orientate4(eulerAngles); }
+	template<typename scalar_t> Mat<4, scalar_t> eulerOrient4(scalar_t x, scalar_t y, scalar_t z) { return eulerOrient3(Vec3(x, y, z)); }
 
-	}
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_MATH_ALIAS_DISABLE))
-namespace akm = ak::math;
-#endif
 
 #endif

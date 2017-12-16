@@ -19,12 +19,12 @@
 
 #include "GL/gl4.h"
 
-using namespace ak::render;
+using namespace akr;
 
 VertexMapping::VertexMapping() { glGenVertexArrays(1, &m_id); }
 VertexMapping::~VertexMapping() { if (m_id) glDeleteVertexArrays(1, &m_id); }
 
-bool ak::render::mapVertexBufferF(uint32 index, uint32 sizePerVert, DataType dType, bool normalize, uint32 offset, uint32 stride, bool autoEnable) {
+bool akr::mapVertexBufferF(uint32 index, uint32 sizePerVert, DataType dType, bool normalize, uint32 offset, uint32 stride, bool autoEnable) {
 	switch(dType) {
 		case DataType::Int8: glVertexAttribPointer(index, sizePerVert, GL_BYTE, normalize, stride, static_cast<char*>(nullptr) + offset); break;
 		case DataType::Int16: glVertexAttribPointer(index, sizePerVert, GL_SHORT, normalize, stride, static_cast<char*>(nullptr) + offset); break;
@@ -41,7 +41,7 @@ bool ak::render::mapVertexBufferF(uint32 index, uint32 sizePerVert, DataType dTy
 	return true;
 }
 
-bool ak::render::mapVertexBufferI(uint32 index, uint32 sizePerVert, DataType dType, uint32 offset, uint32 stride, bool autoEnable) {
+bool akr::mapVertexBufferI(uint32 index, uint32 sizePerVert, DataType dType, uint32 offset, uint32 stride, bool autoEnable) {
 	switch(dType) {
 		case DataType::Int8: glVertexAttribIPointer(index, sizePerVert, GL_BYTE, stride, static_cast<char*>(nullptr) + offset); break;
 		case DataType::Int16: glVertexAttribIPointer(index, sizePerVert, GL_SHORT, stride, static_cast<char*>(nullptr) + offset); break;
@@ -58,15 +58,15 @@ bool ak::render::mapVertexBufferI(uint32 index, uint32 sizePerVert, DataType dTy
 	return true;
 }
 
-void ak::render::enableVertexMapping(uint32 index) {
+void akr::enableVertexMapping(uint32 index) {
 	glEnableVertexAttribArray(index);
 }
 
-void ak::render::disableVertexMapping(uint32 index) {
+void akr::disableVertexMapping(uint32 index) {
 	glDisableVertexAttribArray(index);
 }
 
-void ak::render::bind(const VertexMapping& mapping) {
+void akr::bind(const VertexMapping& mapping) {
 	glBindVertexArray(mapping.id());
 }
 

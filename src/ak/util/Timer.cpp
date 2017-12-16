@@ -23,7 +23,7 @@
 #include <ctime>
 #include <iostream>
 
-using namespace ak::util;
+using namespace aku;
 
 Timer::duration_t Timer::currentTime() {
 	using nanoseconds_dur = std::chrono::duration<uint64, nano_t>;

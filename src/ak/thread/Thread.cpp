@@ -18,7 +18,7 @@
 #include <ak/thread/Thread.hpp>
 #include <stddef.h>
 
-using namespace ak::thread;
+using namespace akt;
 
 static uint64 getNextID();
 static Thread*& currentThreadPtr();
@@ -111,7 +111,7 @@ bool Thread::isRunning() const {
 }
 
 bool Thread::isCurrent() const {
-	return ak::thread::current().id() == id();
+	return akt::current().id() == id();
 }
 
 const std::string& Thread::name() const {
@@ -141,7 +141,7 @@ static Thread*& currentThreadPtr() {
 	return thread;
 }
 
-ak::thread::CurrentThread& ak::thread::current() {
+akt::CurrentThread& akt::current() {
 	if (::currentThreadPtr() == nullptr) ::currentThreadPtr() = new Thread();
 	thread_local CurrentThread* currentThread = new CurrentThread(::currentThreadPtr(), std::this_thread::get_id());
 	return *currentThread;

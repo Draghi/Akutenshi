@@ -24,51 +24,45 @@
 #include "ak/PrimitiveTypes.hpp"
 #include "ak/ScopeGuard.hpp"
 
-namespace ak {
-	namespace thread {
+namespace akt {
 
-		class Spinlock final {
-			private:
-				static constexpr auto LOCK_MEMORY_ORDER = std::memory_order_acq_rel;
+	class Spinlock final {
+		private:
+			static constexpr auto LOCK_MEMORY_ORDER = std::memory_order_acq_rel;
 
-				std::atomic<bool> m_lock;
-				std::thread::id m_lastAcquiredThread;
+			std::atomic<bool> m_lock;
+			std::thread::id m_lastAcquiredThread;
 
-			protected:
-				void unlock() {
-					m_lock.exchange(false, LOCK_MEMORY_ORDER);
-				}
+		protected:
+			void unlock() {
+				m_lock.exchange(false, LOCK_MEMORY_ORDER);
+			}
 
-			public:
-				Spinlock() : m_lock(false), m_lastAcquiredThread(std::this_thread::get_id()) {}
+		public:
+			Spinlock() : m_lock(false), m_lastAcquiredThread(std::this_thread::get_id()) {}
 
-				ak::ScopeGuard tryLock() {
-					if (m_lock.exchange(true, LOCK_MEMORY_ORDER)) return ak::ScopeGuard();
-					m_lastAcquiredThread = std::this_thread::get_id();
-					return [&](){unlock();};
-				}
+			ak::ScopeGuard tryLock() {
+				if (m_lock.exchange(true, LOCK_MEMORY_ORDER)) return ak::ScopeGuard();
+				m_lastAcquiredThread = std::this_thread::get_id();
+				return [&](){unlock();};
+			}
 
-				ak::ScopeGuard lock() {
-					ak::ScopeGuard result;
-					while((result = tryLock()).empty()) std::this_thread::yield();
-					return result;
-				}
+			ak::ScopeGuard lock() {
+				ak::ScopeGuard result;
+				while((result = tryLock()).empty()) std::this_thread::yield();
+				return result;
+			}
 
-				std::thread::id lastAcquiredThread() {
-					return m_lastAcquiredThread;
-				}
+			std::thread::id lastAcquiredThread() {
+				return m_lastAcquiredThread;
+			}
 
-				bool wasLastAcquiredByThisThread() {
-					return m_lastAcquiredThread == std::this_thread::get_id();
-				}
-		};
+			bool wasLastAcquiredByThisThread() {
+				return m_lastAcquiredThread == std::this_thread::get_id();
+			}
+	};
 
 
-	}
 }
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_THREAD_ALIAS_DISABLE))
-namespace akt = ak::thread;
-#endif
 
 #endif

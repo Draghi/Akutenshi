@@ -20,16 +20,9 @@
 #include <ak/data/PValue.hpp>
 #include <string>
 
-namespace ak {
-	namespace data {
-		std::string serializeJson(const ak::data::PValue& src, bool pretty = false);
-		bool deserializeJson(ak::data::PValue& dest, std::istream& jsonStream);
-	}
+namespace akd {
+	std::string serializeJson(const akd::PValue& src, bool pretty = false);
+	bool deserializeJson(akd::PValue& dest, std::istream& jsonStream);
 }
-
-
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_DATA_ALIAS_DISABLE))
-namespace akd = ak::data;
-#endif
 
 #endif
