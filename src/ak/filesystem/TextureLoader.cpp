@@ -144,7 +144,9 @@ akr::Texture akfs::loadTexture(SystemFolder folder, const stx::filesystem::path&
 	akr::setTextureBorder(glTarget, akm::Vec4(red, green, blue, alpha));
 
 	// anisotropy
-	if (glTarget != akr::TexTarget::Tex3D) akr::setAnisotropy(glTarget, resourceCfg["anisotropy"].asOrDef<fpSingle>(0));
+	if ((glTarget != akr::TexTarget::Tex2D_Array) && (glTarget != akr::TexTarget::Tex3D)) {
+		akr::setAnisotropy(glTarget, resourceCfg["anisotropy"].asOrDef<fpSingle>(0));
+	}
 
 	return tex;
 }
