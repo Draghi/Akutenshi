@@ -90,8 +90,8 @@ template<> akw::WindowOptions akd::deserialize<akw::WindowOptions>(const akd::PV
 }
 
 template<> void akd::serialize<akw::WindowOptions>(akd::PValue& root, const akw::WindowOptions& val) {
-	root["position"]["x"].set<int>(val.position().x);
-	root["position"]["y"].set<int>(val.position().y);
+	root["position"]["x"].set<fpSingle>(val.position().x);
+	root["position"]["y"].set<fpSingle>(val.position().y);
 
 	root["title"].set<std::string>(val.title());
 
@@ -99,12 +99,12 @@ template<> void akd::serialize<akw::WindowOptions>(akd::PValue& root, const akw:
 	root["centerOnMonitor"].set<bool>(val.centerOnMonitor());
 
 	root["targetMonitor"]["name"].set<std::string>(val.targetMonitor().name);
-	root["targetMonitor"]["position"]["x"].set<int>(val.targetMonitor().position.x);
-	root["targetMonitor"]["position"]["y"].set<int>(val.targetMonitor().position.y);
+	root["targetMonitor"]["position"]["x"].set<fpSingle>(val.targetMonitor().position.x);
+	root["targetMonitor"]["position"]["y"].set<fpSingle>(val.targetMonitor().position.y);
 
 	root["videoMode"]["refreshRate"].set<int>(val.videoMode().refreshRate);
-	root["videoMode"]["resolution"]["x"].set<int>(val.videoMode().resolution.x);
-	root["videoMode"]["resolution"]["y"].set<int>(val.videoMode().resolution.y);
+	root["videoMode"]["resolution"]["x"].set<fpSingle>(val.videoMode().resolution.x);
+	root["videoMode"]["resolution"]["y"].set<fpSingle>(val.videoMode().resolution.y);
 
 	root["resizable"].set<bool>(val.resizable());
 	root["visible"].set<bool>(val.visible());

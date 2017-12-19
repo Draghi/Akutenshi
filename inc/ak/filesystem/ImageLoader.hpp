@@ -14,21 +14,19 @@
  * limitations under the License.
  **/
 
-#ifndef AK_MATH_QUATERNION_HPP_
-#define AK_MATH_QUATERNION_HPP_
+#ifndef AK_FILESYSTEM_IMAGELOADER_HPP_
+#define AK_FILESYSTEM_IMAGELOADER_HPP_
 
+#include <vector>
+#include <ak/filesystem/Filesystem.hpp>
+#include <ak/data/Image.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <glm/gtc/quaternion.hpp>
 
-namespace akm {
-	using Quat = glm::tquat<fpSingle, glm::highp>;
+namespace akfs {
 
-	using glm::lerp;
-	using glm::slerp;
-	using glm::conjugate;
-	using glm::quat_cast;
-	using glm::mat3_cast;
-	using glm::mat4_cast;
+	akd::Image1D load1DImage(SystemFolder folder, const stx::filesystem::path& path, uint32 layer = 0);
+	akd::Image2D load2DImage(SystemFolder folder, const stx::filesystem::path& path);
+	akd::Image3D load3DImage(SystemFolder folder, const std::vector<stx::filesystem::path>& path);
 
 }
 

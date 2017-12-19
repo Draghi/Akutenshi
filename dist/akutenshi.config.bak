@@ -1,7 +1,4 @@
 {
-    "engine": {
-        "ticksPerSecond": 1000.0
-    },
     "log": {
         "consoleFilterLevel": 5,
         "fileFilterLevel": 5
@@ -29,12 +26,12 @@
         "decorated": true,
         "fullscreen": false,
         "glCore": true,
-        "glDebugContext": true,
+        "glDebugContext": false,
         "glDoubleBuffer": true,
         "glForwardCompat": true,
         "glMSAA": 4,
-        "glMajor": 3,
-        "glMinor": 3,
+        "glMajor": 4,
+        "glMinor": 5,
         "glSRGB": true,
         "glStereoBuffer": false,
         "glVSync": "Full",

@@ -23,15 +23,16 @@
 #include <glm/glm.hpp>
 
 namespace akm {
-	constexpr fpDouble PI = 3.141592653589793238462643;
+	constexpr fpDouble PI_d = 3.141592653589793238462643;
+	template<typename scalar_t> constexpr scalar_t PI = static_cast<scalar_t>(PI_d);
 
 	template<typename scalar_t> scalar_t degToRad(scalar_t deg) {
-		constexpr scalar_t conversionFactor = static_cast<scalar_t>(180/PI);
+		constexpr scalar_t conversionFactor = 180/PI<scalar_t>;
 		return deg * conversionFactor;
 	}
 
 	template<typename scalar_t> scalar_t radToDeg(scalar_t rad) {
-		constexpr scalar_t conversionFactor = static_cast<scalar_t>(PI/180);
+		constexpr scalar_t conversionFactor = PI<scalar_t>/180;
 		return rad * conversionFactor;
 	}
 
@@ -66,6 +67,20 @@ namespace akm {
 	using glm::atan;
 
 	using std::sqrt;
+
+	template<typename vec_t> vec_t cMin(vec_t x, vec_t y) {
+		vec_t result;
+		for(int32 i = 0; i < x.length(); i++) result[i] = akm::min(x[i], y[i]);
+		return result;
+	}
+
+	template<typename vec_t> vec_t cMax(vec_t x, vec_t y) {
+		vec_t result;
+		for(int32 i = 0; i < x.length(); i++) result[i] = akm::max(x[i], y[i]);
+		return result;
+	}
+
+	template<typename scalar_t> scalar_t remainder(scalar_t x, scalar_t y) { return std::remainder(x, y); }
 }
 
 

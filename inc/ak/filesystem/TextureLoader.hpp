@@ -22,7 +22,11 @@
 
 namespace akfs {
 
-	void loadTexture(SystemFolder folder, const stx::filesystem::path& path, akr::Texture& tex);
+/*	std::pair<fpSingle, akr::Texture> load1DTexture(SystemFolder folder, const stx::filesystem::path& path);
+	std::pair<akm::Vec2, akr::Texture> load2DTexture(SystemFolder folder, const stx::filesystem::path& path);
+	std::pair<akm::Vec3, akr::Texture> load3DTexture(SystemFolder folder, const stx::filesystem::path& path);*/
+
+	akr::Texture loadTexture(SystemFolder folder, const stx::filesystem::path& path);
 
 }
 

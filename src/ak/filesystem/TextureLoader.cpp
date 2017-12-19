@@ -14,30 +14,53 @@
  * limitations under the License.
  **/
 
+#include <ak/data/Image.hpp>
 #include <ak/data/JsonParser.hpp>
 #include <ak/data/PValue.hpp>
 #include <ak/filesystem/CFile.hpp>
-#include <ak/Log.hpp>
-#include <ak/math/Scalar.hpp>
+#include <ak/filesystem/ImageLoader.hpp>
 #include <ak/math/Vector.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <glm/detail/func_common.hpp>
-#include <glm/detail/type_vec4.hpp>
-#include <GL/gl.h>
-#include <GL/glext.h>
+#include <ext/type_traits.h>
+#include <ak/math/Scalar.hpp>
 #include "ak/filesystem/TextureLoader.hpp"
 #include <cmath>
+#include <deque>
 #include <experimental/filesystem>
 #include <iostream>
+#include <map>
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
-#include "stb_image.h"
+#include <GL/gl4.h>
+
 
 using namespace akfs;
 
+static akr::TexFormat componentsToFormat(int32 comp) {
+	switch(comp) {
+		default:
+		case 0: throw std::runtime_error("Invalid image");
+		case 1: return akr::TexFormat::R;
+		case 2: return akr::TexFormat::RG;
+		case 3: return akr::TexFormat::RGB;
+		case 4: return akr::TexFormat::RGBA;
+	}
+}
+
+static int32 calcMipmapLevels(fpSingle w, fpSingle h = 0, fpSingle d = 0) {
+	return static_cast<int32>(std::floor(std::log2(akm::max(akm::max(w, h), d)))+1);
+}
+
+static void load1DTexture(const stx::filesystem::path& path, const akd::PValue& resourceCfg, akr::Texture& tex);
+static void load1DArrayTexture(const stx::filesystem::path& path, const akd::PValue& resourceCfg, akr::Texture& tex);
 static void load2DTexture(const stx::filesystem::path& path, const akd::PValue& resourceCfg, akr::Texture& tex);
+static void load2DArrayTexture(const stx::filesystem::path& path, const akd::PValue& resourceCfg, akr::Texture& tex);
+static void load3DTexture(const stx::filesystem::path& path, const akd::PValue& resourceCfg, akr::Texture& tex);
+static void loadCubemapTexture(const stx::filesystem::path& path, const akd::PValue& resourceCfg, akr::Texture& tex);
 
 static akr::FilterType strToFilterType(const std::string& val) {
 	if (val == "nearest") return akr::FilterType::Nearest;
@@ -53,7 +76,8 @@ static akr::ClampType strToClampType(const std::string& val) {
 	throw std::runtime_error("Bad value");
 }
 
-void akfs::loadTexture(SystemFolder folder, const stx::filesystem::path& path, akr::Texture& tex) {
+akr::Texture akfs::loadTexture(SystemFolder folder, const stx::filesystem::path& path) {
+	akr::Texture tex;
 	auto baseDir = resolveFolder(folder).value()/path.parent_path();
 
 	// Load Config
@@ -71,10 +95,25 @@ void akfs::loadTexture(SystemFolder folder, const stx::filesystem::path& path, a
 	akr::TexTarget glTarget = akr::TexTarget::Tex1D;
 	std::string typeStr = resourceCfg["type"].as<std::string>();
 	if (typeStr == "1D") {
-		throw std::runtime_error("Not implemented");
+		glTarget = akr::TexTarget::Tex1D;
+		load1DTexture(baseDir, resourceCfg, tex);
+	} else if (typeStr == "1D_array") {
+		glTarget = akr::TexTarget::Tex1D_Array;
+		load1DArrayTexture(baseDir, resourceCfg, tex);
 	} else if (typeStr == "2D") {
 		glTarget = akr::TexTarget::Tex2D;
 		load2DTexture(baseDir, resourceCfg, tex);
+	} else if (typeStr == "2D_array") {
+		glTarget = akr::TexTarget::Tex2D_Array;
+		load2DArrayTexture(baseDir, resourceCfg, tex);
+	} else if (typeStr == "3D") {
+		glTarget = akr::TexTarget::Tex3D;
+		load3DTexture(baseDir, resourceCfg, tex);
+	} else if (typeStr == "Cubemap") {
+		glTarget = akr::TexTarget::TexCubemap;
+		loadCubemapTexture(baseDir, resourceCfg, tex);
+	} else {
+		throw std::runtime_error("Unsupported texture type");
 	}
 
 	// Apply Filter
@@ -82,8 +121,8 @@ void akfs::loadTexture(SystemFolder folder, const stx::filesystem::path& path, a
 	auto minFilter = strToFilterType(resourceCfg["minFilter"].asOrDef<std::string>("nearest"));
 	auto magFilter = strToFilterType(resourceCfg["magFilter"].asOrDef<std::string>("nearest"));
 	if (mipFilter != "none") {
-		akr::setTextureFilters(glTarget, minFilter, strToFilterType(mipFilter), magFilter);
 		akr::generateMipmaps(glTarget);
+		akr::setTextureFilters(glTarget, minFilter, strToFilterType(mipFilter), magFilter);
 	} else {
 		akr::setTextureFilters(glTarget, minFilter, magFilter);
 	}
@@ -105,36 +144,154 @@ void akfs::loadTexture(SystemFolder folder, const stx::filesystem::path& path, a
 	akr::setTextureBorder(glTarget, akm::Vec4(red, green, blue, alpha));
 
 	// anisotropy
-	GLfloat fLargest;
-	glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, akm::min(fLargest, resourceCfg["anisotropy"].asOrDef<fpSingle>(0)));
+	if (glTarget != akr::TexTarget::Tex3D) akr::setAnisotropy(glTarget, resourceCfg["anisotropy"].asOrDef<fpSingle>(0));
+
+	return tex;
+}
+
+static void load1DTexture(const stx::filesystem::path& path, const akd::PValue& resourceCfg, akr::Texture& tex) {
+	std::string filename = path.string() + "/" + resourceCfg["filename"].as<std::string>();
+
+	auto img = akfs::load1DImage(akfs::SystemFolder::none, filename, resourceCfg["row"].as<uint32>());
+
+	akr::TexFormat format = componentsToFormat(static_cast<int32>(img.componentCount()));
+	int32 mipmapLevels = (resourceCfg["mipFilter"].asOrDef<std::string>("none") == "none") ? 1 : calcMipmapLevels(img.width(), img.height(), img.depth());
+
+	tex = akr::Texture(akr::TexTarget::Tex1D);
+	akr::bind(0, tex);
+	akr::createTextureStorage1D(format, static_cast<int32>(img.width()), mipmapLevels);
+	akr::replaceTextureData1D(format, 0, static_cast<int32>(img.width()), img.data(), 0);
+}
+
+static void load1DArrayTexture(const stx::filesystem::path& path, const akd::PValue& resourceCfg, akr::Texture& tex) {
+	std::vector<std::pair<stx::filesystem::path, uint32>> layers;
+	std::map<stx::filesystem::path, akd::Image2D> images;
+
+	int32 width = 0, comp = 1;
+
+	auto layerArr = resourceCfg["layers"].as<akd::PValue::arr_t>();
+	for(auto iter = layerArr.begin(); iter != layerArr.end(); iter++) {
+		layers.push_back(std::make_pair(
+			path/(*iter)["filename"].as<std::string>(),
+			(*iter)["row"].asOrDef<uint32>(0)
+		));
+
+		auto& layer = layers.back();
+
+		auto imgIter = images.find(layer.first);
+		if (imgIter != images.end()) {
+			if (imgIter->second.height() <= layer.second) throw std::out_of_range("load1DArrayTexture: Image row out of range");
+			continue;
+		}
+
+		auto image = akfs::load2DImage(akfs::SystemFolder::none, layer.first);
+		if (width == 0u) { width = static_cast<int32>(image.width()); comp = static_cast<int32>(image.componentCount()); }
+		if (width != static_cast<int32>(image.width())) throw std::runtime_error("load1DArrayTexture: Mismatched image width");
+		if (image.height() <= layer.second) throw std::out_of_range("load1DArrayTexture: Image row out of range");
+		if (comp != static_cast<int32>(image.componentCount())) image.setComponentCount(static_cast<size_t>(comp));
+
+		images.insert(std::make_pair(
+			layer.first,
+			std::move(image)
+		));
+	}
+
+	akr::TexFormat format = componentsToFormat(comp);
+	int32 mipmapLevels = (resourceCfg["mipFilter"].asOrDef<std::string>("none") == "none") ? 1 : calcMipmapLevels(width);
+
+	akr::Texture tmpTex(akr::TexTarget::Tex1D_Array);
+	akr::bind(0, tmpTex);
+	akr::createTextureStorage1D(format, width, static_cast<int32>(layers.size()), mipmapLevels);
+
+	for(auto i = 0u; i != layers.size(); i++) {
+		auto& layer = layers[i];
+		auto& image = images.at(layer.first);
+
+		akr::replaceTextureData1D(format, 0, static_cast<int32>(i), static_cast<int32>(width), 1, image.data(), 0);
+	}
+
+	tex = std::move(tmpTex);
 }
 
 static void load2DTexture(const stx::filesystem::path& path, const akd::PValue& resourceCfg, akr::Texture& tex) {
 	std::string filename = path.string() + "/" + resourceCfg["filename"].as<std::string>();
 
-	int w, h, comp;
+	auto img = akfs::load2DImage(akfs::SystemFolder::none, filename);
 
-	stbi_set_flip_vertically_on_load(true);
-	fpSingle* image = stbi_loadf(filename.c_str(), &w, &h, &comp, 0);
+	akr::TexFormat format = componentsToFormat(static_cast<int32>(img.componentCount()));
+	int32 mipmapLevels = (resourceCfg["mipFilter"].asOrDef<std::string>("none") == "none") ? 1 : calcMipmapLevels(img.width(), img.height(), img.depth());
 
-	if (!image) throw std::runtime_error("Failed to load image");
+	tex = akr::Texture(akr::TexTarget::Tex2D);
+	akr::bind(0, tex);
+	akr::createTextureStorage2D(format, static_cast<int32>(img.width()), static_cast<int32>(img.height()), mipmapLevels);
+	akr::replaceTextureData2D(format, 0, 0, static_cast<int32>(img.width()), static_cast<int32>(img.height()), img.data(), 0);
+}
 
-	akr::TexFormat format;
-	switch(comp) {
-		default:
-		case 0: throw std::runtime_error("Invalid image");
-		case 1: format = akr::TexFormat::R;    break;
-		case 2: format = akr::TexFormat::RG;   break;
-		case 3: format = akr::TexFormat::RGB;  break;
-		case 4: format = akr::TexFormat::RGBA; break;
+static void load2DArrayTexture(const stx::filesystem::path& path, const akd::PValue& resourceCfg, akr::Texture& tex) {
+	std::vector<stx::filesystem::path> layers;
+	std::map<stx::filesystem::path, akd::Image2D> images;
+
+	int32 width = 0, height = 0, comp = 1;
+
+	auto layerArr = resourceCfg["layers"].as<akd::PValue::arr_t>();
+	for(auto iter = layerArr.begin(); iter != layerArr.end(); iter++) {
+		layers.push_back(path/(*iter).as<std::string>());
+
+		auto& layer = layers.back();
+
+		auto imgIter = images.find(layer);
+		if (imgIter != images.end()) continue;
+
+		auto image = akfs::load2DImage(akfs::SystemFolder::none, layer);
+
+		if (width == 0u) {
+			width = static_cast<int32>(image.width());
+			height = static_cast<int32>(image.width());
+			comp = static_cast<int32>(image.componentCount());
+		}
+
+		if ((width != static_cast<int32>(image.width())) || (height != static_cast<int32>(image.height()))) throw std::runtime_error("load1DArrayTexture: Mismatched image size");
+		if (comp != static_cast<int32>(image.componentCount())) image.setComponentCount(static_cast<size_t>(comp));
+
+		images.insert(std::make_pair(
+			layer,
+			std::move(image)
+		));
 	}
 
-	int32 mipmapLevels = static_cast<int32>(std::floor(std::log2(akm::max(w,h)))+1);
-	if (resourceCfg["mipFilter"].asOrDef<std::string>("none") == "none") mipmapLevels = 1;
+	akr::TexFormat format = componentsToFormat(comp);
+	int32 mipmapLevels = (resourceCfg["mipFilter"].asOrDef<std::string>("none") == "none") ? 1 : calcMipmapLevels(width, height);
 
+	akr::Texture tmpTex(akr::TexTarget::Tex2D_Array);
+	akr::bind(0, tmpTex);
+	akr::createTextureStorage2D(format, width, height, static_cast<int32>(layers.size()), mipmapLevels);
+
+	for(auto i = 0u; i != layers.size(); i++) {
+		auto& layer = layers[i];
+		auto& image = images.at(layer);
+
+		akr::replaceTextureData2D(format, 0, 0, static_cast<int32>(i), width, height, 1, image.data(), 0);
+	}
+	tex = std::move(tmpTex);
+}
+
+static void load3DTexture(const stx::filesystem::path& path, const akd::PValue& resourceCfg, akr::Texture& tex) {
+
+	std::vector<stx::filesystem::path> filenames;
+	auto filenameArr = resourceCfg["layers"].as<akd::PValue::arr_t>();
+	for(auto iter = filenameArr.begin(); iter != filenameArr.end(); iter++) filenames.push_back(path/iter->as<std::string>());
+
+	auto img = akfs::load3DImage(akfs::SystemFolder::none, filenames);
+
+	akr::TexFormat format = componentsToFormat(static_cast<int32>(img.componentCount()));
+	int32 mipmapLevels = (resourceCfg["mipFilter"].asOrDef<std::string>("none") == "none") ? 1 : calcMipmapLevels(img.width(), img.height(), img.depth());
+
+	tex = akr::Texture(akr::TexTarget::Tex3D);
 	akr::bind(0, tex);
-	akr::createTextureStorage2D(format, w, h, mipmapLevels);
-	akr::replaceTextureData2D(format, 0, 0, w, h, image, 0);
-	stbi_image_free(image);
+	akr::createTextureStorage3D(format, static_cast<int32>(img.width()), static_cast<int32>(img.height()), static_cast<int32>(img.depth()), mipmapLevels);
+	akr::replaceTextureData3D(format, 0, 0, 0, static_cast<int32>(img.width()), static_cast<int32>(img.height()), static_cast<int32>(img.depth()), img.data(), 0);
+}
+
+static void loadCubemapTexture(const stx::filesystem::path& path, const akd::PValue& resourceCfg, akr::Texture& tex) {
+	throw std::logic_error("Not implemented");
 }

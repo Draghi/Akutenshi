@@ -17,9 +17,15 @@
 #ifndef AK_WINDOW_TYPES_HPP_
 #define AK_WINDOW_TYPES_HPP_
 
+#include <ak/math/Vector.hpp>
+
 namespace akw {
 
-	struct RealCoord {
+	using RealCoord  = akm::Vec2;
+	using WindowCoord = akm::Vec2;
+	using FrameCoord  = akm::Vec2;
+
+/*	struct RealCoord {
 		int x;
 		int y;
 
@@ -38,7 +44,7 @@ namespace akw {
 		int y;
 
 		bool operator==(const FrameCoord& other) const { return x == other.x && y == other.y; }
-	};
+	};*/
 
 	enum class CursorMode {
 		Captured,

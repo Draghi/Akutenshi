@@ -30,6 +30,8 @@ namespace akfs {
 namespace akfs {
 
 	enum class SystemFolder : uint8 {
+		none,
+
 		appData,
 		appConfig,
 		appCache,

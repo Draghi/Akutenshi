@@ -74,8 +74,14 @@ static Monitor createMonitorFromGLFWMonitor(GLFWmonitor* monitor) {
 	Monitor monitorRecord;
 	monitorRecord.handle = monitor;
 	monitorRecord.name = glfwGetMonitorName(monitor);
-	glfwGetMonitorPos(monitor, &monitorRecord.position.x, &monitorRecord.position.y);
-	glfwGetMonitorPhysicalSize(monitor, &monitorRecord.realSizeMM.x, &monitorRecord.realSizeMM.y);
+
+	int pX, pY;
+	glfwGetMonitorPos(monitor, &pX, &pY);
+	monitorRecord.position = WindowCoord(pX, pY);
+
+	int sX, sY;
+	glfwGetMonitorPhysicalSize(monitor, &sX, &sY);
+	monitorRecord.realSizeMM = RealCoord(sX, sY);
 
 	monitorRecord.prefVideoMode = createVideoModeFromGLFWVidMode(glfwGetVideoMode(monitor));
 

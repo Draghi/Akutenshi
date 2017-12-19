@@ -13,9 +13,9 @@ out vec3 fNorm;
 out vec2 fTex;
 
 void main() {
-	fPos = (viewMat * modelMat * vec4(in_position, 1)).xyz;
+	fPos = (modelMat * vec4(in_position, 1)).xyz;
 	fNorm = in_norm;
 	fTex = in_tex;
 	
-	gl_Position = projMat * vec4(fPos, 1);
+	gl_Position = projMat * viewMat * vec4(fPos, 1);
 }

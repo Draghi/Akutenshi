@@ -14,15 +14,20 @@
  * limitations under the License.
  **/
 
-#include <ak/thread/DoubleBuffer.hpp>
+#include <ak/input/Buttons.hpp>
 #include <ak/input/EventInput.hpp>
+#include <ak/input/Keys.hpp>
+#include <ak/input/Types.hpp>
+#include <ak/math/Scalar.hpp>
+#include <ak/math/Vector.hpp>
+#include <ak/PrimitiveTypes.hpp>
+#include <ak/thread/DoubleBuffer.hpp>
 #include <ak/window/InternalState.hpp>
 #include <ak/window/Monitor.hpp>
-#include <ak/window/Types.hpp>
 #include <ak/window/Window.hpp>
 #include <ak/window/WindowOptions.hpp>
-#include <ak/math/Scalar.hpp>
 #include <glm/detail/func_common.hpp>
+#include <glm/detail/type_vec2.hpp>
 #include <GLFW/glfw3.h>
 #include <atomic>
 
@@ -93,7 +98,14 @@ bool akw::open(const WindowOptions& options) {
 	glfwWindowHint(GLFW_SRGB_CAPABLE, options.glSRGB());
 
 	auto fsMonitor = options.fullscreen() ? static_cast<GLFWmonitor*>(options.targetMonitor().handle) : nullptr;
-	windowHandle = glfwCreateWindow(options.videoMode().resolution.x, options.videoMode().resolution.y, options.title().c_str(), fsMonitor, nullptr);
+	windowHandle = glfwCreateWindow(
+		static_cast<int>(options.videoMode().resolution.x),
+		static_cast<int>(options.videoMode().resolution.y),
+		options.title().c_str(),
+		fsMonitor,
+		nullptr
+	);
+
 	if (!windowHandle) return false;
 
 	registerCallbacks();
@@ -107,10 +119,9 @@ bool akw::open(const WindowOptions& options) {
 		if (options.centerOnMonitor()) {
 			auto monitor = options.targetMonitor().handle ? options.targetMonitor() : getMonitorsAt(pos)[0];
 
-			pos.x += monitor.position.x + akm::max(monitor.prefVideoMode.resolution.x/2 - options.videoMode().resolution.x/2, 0);
-			pos.y += monitor.position.y + akm::max(monitor.prefVideoMode.resolution.y/2 - options.videoMode().resolution.y/2, 0);
+			pos += monitor.position + akm::cMax(monitor.prefVideoMode.resolution/2.0f - options.videoMode().resolution/2.0f, akm::Vec2(0, 0));
 		}
-		glfwSetWindowPos(windowHandle, pos.x, pos.y);
+		glfwSetWindowPos(windowHandle, static_cast<int>(pos.x), static_cast<int>(pos.y));
 	}
 
 	if (options.minimised()) glfwIconifyWindow(windowHandle);
@@ -119,7 +130,12 @@ bool akw::open(const WindowOptions& options) {
 	windowState.title = options.title();
 	windowState.position = options.position();
 	windowState.windowSize = options.videoMode().resolution;
-	glfwGetFramebufferSize(windowHandle, &windowState.frameSize.x, &windowState.frameSize.y);
+
+	int sX, sY;
+	glfwGetFramebufferSize(windowHandle, &sX, &sY);
+	windowState.frameSize = FrameCoord(sX, sY);
+
+
 	windowState.isDecorated = options.decorated();
 	windowState.isMinimised = options.minimised();
 	windowState.isVisible = options.visible();

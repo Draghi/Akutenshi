@@ -43,6 +43,8 @@ static stx::filesystem::path getHomeDirectory() {
 
 static std::optional<stx::filesystem::path> resolveSystemPath(SystemFolder folder) {
 	switch(folder) {
+		case SystemFolder::none: return stx::filesystem::path();
+
 		case SystemFolder::appData: return stx::filesystem::path("./data");
 		case SystemFolder::appConfig: return stx::filesystem::path("./config");
 		case SystemFolder::appCache: return stx::filesystem::path("./cache");
@@ -140,7 +142,7 @@ static std::optional<stx::filesystem::path>& systemFolder(SystemFolder folder) {
 
 void akfs::overrideFolder(SystemFolder folder, const stx::filesystem::path& path) {
 	auto index = static_cast<uint8>(folder);
-	if (index >= systemFolders().size()) return;
+	if ((index >= systemFolders().size()) || (index <= 0)) return;
 	systemFolders()[index] = path;
 }
 
@@ -218,6 +220,7 @@ akfs::CFile akfs::open(SystemFolder folder, const stx::filesystem::path& path, u
 			return akfs::CFile();
 		}
 
+		case SystemFolder::none:
 		case SystemFolder::appData:
 		case SystemFolder::appConfig:
 		case SystemFolder::appCache:

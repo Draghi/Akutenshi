@@ -22,7 +22,7 @@
 
 namespace akr {
 
-	enum class CubeMapTarget {
+	enum class CubemapTarget {
 		Right,
 		Left,
 		Top,
@@ -40,7 +40,7 @@ namespace akr {
 
 		Tex3D,
 
-		TexCubeMap,
+		TexCubemap,
 	};
 
 	enum class TexFormat {
@@ -72,17 +72,25 @@ namespace akr {
 		R
 	};
 
-	class Texture {
+	class Texture final {
+		Texture(const Texture& other) = delete;
+		Texture& operator=(const Texture& other) = delete;
 		protected:
 			uint32 m_id;
 			TexTarget m_type;
 
 		public:
+			Texture();
 			Texture(TexTarget target);
+			Texture(Texture&& other);
 			~Texture();
 
 			uint32 id() const { return m_id; }
 			TexTarget type() const { return m_type; }
+			bool isValid() { return m_id == 0; }
+
+			Texture& operator=(Texture&& other);
+
 	};
 
 	void setActiveTextureUnit(uint32 unit);
@@ -92,7 +100,11 @@ namespace akr {
 	void setTextureFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter);
 	void setTextureClamping(TexTarget target, ClampDir clampDir, ClampType clampType);
 	void setTextureBorder(TexTarget target, akm::Vec4 colour);
+
 	void generateMipmaps(TexTarget target);
+
+	void setAnisotropy(TexTarget target, fpSingle amount);
+	fpSingle maxAnsiotropy();
 
 	void createTextureStorage1D(TexFormat format, int32 width, int32 mipLevels);
 	void createTextureStorage1D(TexFormat format, int32 width, int32 layers, int32 mipLevels);

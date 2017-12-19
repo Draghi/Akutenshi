@@ -1,5 +1,7 @@
 #include <ak/data/PValue.hpp>
+#include <ak/engine/Camera.hpp>
 #include <ak/engine/Config.hpp>
+#include <ak/event/Dispatcher.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Filesystem.hpp>
 #include <ak/filesystem/TextureLoader.hpp>
@@ -7,6 +9,7 @@
 #include <ak/input/Keys.hpp>
 #include <ak/input/Mouse.hpp>
 #include <ak/Log.hpp>
+#include <ak/math/Scalar.hpp>
 #include <ak/math/Vector.hpp>
 #include <ak/Macros.hpp>
 #include <ak/PrimitiveTypes.hpp>
@@ -19,14 +22,20 @@
 #include <ak/render/VertexMapping.hpp>
 #include <ak/ScopeGuard.hpp>
 #include <ak/thread/CurrentThread.hpp>
+#include <ak/util/FPSCounter.hpp>
 #include <ak/util/Time.hpp>
+#include <ak/util/Timer.hpp>
+#include <ak/window/Monitor.hpp>
 #include <ak/window/Types.hpp>
 #include <ak/window/Window.hpp>
 #include <ak/window/WindowOptions.hpp>
+#include <glm/detail/func_matrix.hpp>
 #include <glm/detail/type_mat4x4.hpp>
 #include <glm/detail/type_vec3.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
+#include <GL/gl.h>
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -47,7 +56,6 @@ static void printLogHeader(const ak::log::Logger& logger);
 static ak::ScopeGuard startup();
 
 static void createShaderProgram(akr::Pipeline& pipeline);
-static void createTexture(akr::Texture& tex);
 
 
 int main() {
@@ -66,17 +74,10 @@ int main() {
 
 	akw::setCursorMode(akw::CursorMode::Captured);
 
-	akw::pollEvents();
-	akw::mouse().update();
-	akw::keyboard().update();
-
-	akw::pollEvents();
-	akw::mouse().update();
-	akw::keyboard().update();
-
 	// Setup Render
 		// Init
 		akr::init();
+
 		akr::enableDepthTest(true);
 		akr::enableCullFace(true);
 		akr::setClearColour(0.2f, 0.2f, 0.2f);
@@ -100,64 +101,93 @@ int main() {
 		akr::mapVertexBufferF(2, 2, akr::DataType::FPSingle, false, 6*sizeof(fpSingle), 8*sizeof(fpSingle));
 
 		// Tex
-		akr::Texture tex(akr::TexTarget::Tex2D);
-		akr::setActiveTextureUnit(0);
-		akr::bind(0, tex);
-		createTexture(tex);
+		akr::Texture tex = akfs::loadTexture(akfs::SystemFolder::appData, "textures/testTexture2DArr.json");
+
 	// Setup Finish
 
-	akm::Vec3 lookPos;
-	akm::Mat4 lookOrient(1);
+	/*akm::Vec3 lookPos(0, 0, 0);
+	akm::SphericalCoord_t<fpSingle> lookOrient;*/
 
-	while(!akw::closeRequested()) {
-		// Input Start
-			akw::pollEvents();
-			akw::mouse().update();
-			akw::keyboard().update();
+	ake::FPSCamera camera;
 
-			static fpSingle x = 0, y = 0, z = 0;
-/*			if (akw::keyboard().isDown(akin::Key::W)) y += 1/60.0;
-			if (akw::keyboard().isDown(akin::Key::A)) x -= 1/60.0;
-			if (akw::keyboard().isDown(akin::Key::S)) y -= 1/60.0;
-			if (akw::keyboard().isDown(akin::Key::D)) x += 1/60.0;
-			if (akw::keyboard().isDown(akin::Key::R)) z += 1/60.0;
-			if (akw::keyboard().isDown(akin::Key::F)) z -= 1/60.0;*/
+	auto renderFunc = [&](fpSingle /*delta*/){
+		static aku::FPSCounter fps;
 
-			if (akw::keyboard().isDown(akin::Key::W)) lookPos += akm::Vec3(lookOrient * akm::Vec4(0, 0,  1/60.0, 0));
-			if (akw::keyboard().isDown(akin::Key::S)) lookPos += akm::Vec3(lookOrient * akm::Vec4(0, 0, -1/60.0, 0));
+		auto lookPos = camera.position();
+		auto lookRot = akm::mat4_cast(camera.oritentation());
 
-			if (akw::keyboard().isDown(akin::Key::D)) lookPos += akm::Vec3(lookOrient * akm::Vec4( 1/60.0, 0, 0, 0));
-			if (akw::keyboard().isDown(akin::Key::A)) lookPos += akm::Vec3(lookOrient * akm::Vec4(-1/60.0, 0, 0, 0));
+		// Prepare
+		akr::clear();
+		akr::setActivePipeline(pipeline);
 
-			lookOrient = lookOrient * akm::rotate(akw::mouse().deltaPosition().x/1000.0f, akm::Vec3(0, 1, 0));
-			lookOrient = lookOrient * akm::rotate(-akw::mouse().deltaPosition().y/1000.0f, akm::Vec3(1, 0, 0));
-		// Input End
+		// Setup Cube
+		akr::bind(vMapping);
+		akr::setUniform(0, akm::perspective<fpSingle>(1.0472f, akw::size().x/static_cast<fpSingle>(akw::size().y), 0.1f, 100.0f));
+		akr::setUniform(1, akm::transpose(lookRot)*akm::translate(-lookPos));
 
-		// Render Start
-			// Prepare
-			akr::clear();
-			akr::setActivePipeline(pipeline);
+		akr::setUniform(3, 0);
 
-			// Setup Cube
-			akr::bind(vMapping);
-			akr::setUniform(0, akm::perspective<fpSingle>(1.0472f, akw::size().x/static_cast<fpSingle>(akw::size().y), 0.1f, 100.0f));
-			akr::setUniform(1, akm::inverse(akm::translate(lookPos) * akm::Mat4(lookOrient)));
+		// Draw Controlled Cube
+		akr::setUniform(2, akm::translate(akm::Vec3(0, 0, 5)));
+		akr::draw(akr::DrawType::Triangles, 36);
 
-			akr::setUniform(3, 0);
-
-			// Draw Controlled Cube
-			akr::setUniform(2, akm::translate(akm::Vec3(x, y, z)));
+		// Draw Floor
+		for(int i = 0; i < 32; i++) for(int j = 0; j < 32; j++) {
+			akr::setUniform(2, akm::translate(akm::Vec3(i-16, -2, j)));
 			akr::draw(akr::DrawType::Triangles, 36);
+		}
 
-			// Draw Floor
-			for(int i = 0; i < 32; i++) for(int j = 0; j < 32; j++) {
-				akr::setUniform(2, akm::translate(akm::Vec3(i-16, -2, j)));
-				akr::draw(akr::DrawType::Triangles, 36);
-			}
+		// Finish
+		akw::swapBuffer();
 
-			// Finish
-			akw::swapBuffer();
-		// Render End
+		fps.update();
+		std::stringstream sstream;
+		sstream << fps.fps() << "fps";
+		akw::setTitle(sstream.str());
+	};
+
+	auto updateFunc = [&](fpSingle delta){
+		akw::pollEvents();
+		akw::mouse().update();
+		akw::keyboard().update();
+
+		if (akw::keyboard().wasPressed(akin::Key::LALT)) akw::setCursorMode(akw::cursorMode() == akw::CursorMode::Captured ? akw::CursorMode::Normal : akw::CursorMode::Captured);
+
+
+		if (akw::cursorMode() == akw::CursorMode::Captured) {
+			auto mPos = akw::mouse().deltaPosition();
+
+			camera.lookLR(akm::degToRad( mPos.x)/50000.0*(camera.up().y >=0 ? 1 : -1));
+			camera.lookUD(akm::degToRad(-mPos.y)/50000.0);
+		}
+
+		if (akw::keyboard().isDown(akin::Key::W)) camera.moveForward( 1*delta);
+		if (akw::keyboard().isDown(akin::Key::S)) camera.moveForward(-1*delta);
+		if (akw::keyboard().isDown(akin::Key::D)) camera.moveRight( 1*delta);
+		if (akw::keyboard().isDown(akin::Key::A)) camera.moveRight(-1*delta);
+		if (akw::keyboard().isDown(akin::Key::R)) camera.moveUp( 1*delta);
+		if (akw::keyboard().isDown(akin::Key::F)) camera.moveUp(-1*delta);
+	};
+
+	fpSingle updateAccum = 0;
+	fpSingle updateDelta = 1/ake::config()["engine"]["ticksPerSecond"].asOrDef<fpSingle>(60.0f);
+	fpSingle renderDelta = 1/static_cast<fpSingle>(akw::currentMonitor().prefVideoMode.refreshRate);
+
+	log.info(updateDelta/renderDelta);
+
+	aku::Timer timer;
+	while(!akw::closeRequested()) {
+		timer.mark();
+		updateAccum += timer.nsecs()*1.0e-9;
+		timer.reset();
+
+		while(updateAccum >= updateDelta) {
+			updateAccum -= updateDelta;
+			updateFunc(updateDelta);
+		}
+
+		renderFunc(renderDelta);
+
 	}
 
 	log.info("Exiting main function");
@@ -251,20 +281,7 @@ static void createShaderProgram(akr::Pipeline& pipeline) {
 	pipeline.link();
 }
 
-static void createTexture(akr::Texture& tex) {
-	/*const fpSingle texData[] = {
-		1.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-
-		0.0f, 0.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-	};
-
-	akr::setTextureData2D(akr::TexFormat::RGB, 2, 2, texData);*/
-
-	akfs::loadTexture(akfs::SystemFolder::appData, "textures/testTexture2D.json", tex);
-
-	//akr::setTextureFilters(akr::TexTarget::Tex2D, akr::FilterType::Nearest, akr::FilterType::Nearest);
-	//akr::setTextureClamping(akr::TexTarget::Tex2D, akr::ClampDir::S, akr::ClampType::Edge);
-	//akr::setTextureClamping(akr::TexTarget::Tex2D, akr::ClampDir::T, akr::ClampType::Edge);
-}
+static const auto cb = ake::regenerateConfigDispatch().subscribe([](ake::RegenerateConfigEvent& ev){
+	auto& config = ev.data()["engine"];
+	config["ticksPerSecond"].set<fpSingle>(60.0f);
+});

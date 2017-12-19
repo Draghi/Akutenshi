@@ -15,26 +15,44 @@
  **/
 
 #include <ak/render/Texture.hpp>
+#include <ak/math/Scalar.hpp>
 #include <utility>
 
 #include "GL/gl4.h"
 
 using namespace akr;
 
+static GLenum akToGLTarget(akr::TexTarget target) {
+	switch(target) {
+		case TexTarget::Tex1D:       return GL_TEXTURE_1D;
+		case TexTarget::Tex1D_Array: return GL_TEXTURE_1D_ARRAY;
+		case TexTarget::Tex2D:       return GL_TEXTURE_2D;
+		case TexTarget::Tex2D_Array: return GL_TEXTURE_2D_ARRAY;
+		case TexTarget::Tex3D:       return GL_TEXTURE_3D;
+		case TexTarget::TexCubemap:  return GL_TEXTURE_CUBE_MAP;
+	}
+}
+
+Texture::Texture() : m_id(0), m_type() {}
 
 Texture::Texture(TexTarget target) : m_id(0), m_type(target) {
-	switch(m_type) {
-		case TexTarget::Tex1D:       glCreateTextures(GL_TEXTURE_1D,       1, &m_id); break;
-		case TexTarget::Tex1D_Array: glCreateTextures(GL_TEXTURE_1D_ARRAY, 1, &m_id); break;
-		case TexTarget::Tex2D:       glCreateTextures(GL_TEXTURE_2D,       1, &m_id); break;
-		case TexTarget::Tex2D_Array: glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &m_id); break;
-		case TexTarget::Tex3D:       glCreateTextures(GL_TEXTURE_3D,       1, &m_id); break;
-		case TexTarget::TexCubeMap:  glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_id); break;
-	}
+	glCreateTextures(akToGLTarget(target), 1, &m_id);
+}
+
+Texture::Texture(Texture&& other) : m_id(other.m_id), m_type(other.m_type) {
+	other.m_id = 0;
 }
 
 Texture::~Texture() {
 	if (m_id != 0) glDeleteTextures(1, &m_id);
+}
+
+Texture& Texture::operator=(Texture&& other) {
+	if (m_id != 0) glDeleteTextures(1, &m_id);
+	m_id = other.m_id;
+	m_type = other.m_type;
+	other.m_id = 0;
+	return *this;
 }
 
 void akr::setActiveTextureUnit(uint32 unit) {
@@ -58,18 +76,8 @@ void akr::setTextureFilters(TexTarget target, FilterType minFilter, FilterType m
 		case FilterType::Linear:  glMagFilter = GL_LINEAR;  break;
 	}
 
-	uint32 glTarget;
-	switch(target) {
-		case TexTarget::Tex1D: glTarget = GL_TEXTURE_1D; break;
-		case TexTarget::Tex1D_Array: glTarget = GL_TEXTURE_1D_ARRAY; break;
-		case TexTarget::Tex2D: glTarget = GL_TEXTURE_2D; break;
-		case TexTarget::Tex2D_Array: glTarget = GL_TEXTURE_2D_ARRAY; break;
-		case TexTarget::Tex3D: glTarget = GL_TEXTURE_3D; break;
-		case TexTarget::TexCubeMap: glTarget = GL_TEXTURE_CUBE_MAP; break;
-	}
-
-	glTexParameteri(glTarget, GL_TEXTURE_MIN_FILTER, glMinFilter);
-	glTexParameteri(glTarget, GL_TEXTURE_MAG_FILTER, glMagFilter);
+	glTexParameteri(akToGLTarget(target), GL_TEXTURE_MIN_FILTER, glMinFilter);
+	glTexParameteri(akToGLTarget(target), GL_TEXTURE_MAG_FILTER, glMagFilter);
 }
 
 void akr::setTextureFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter) {
@@ -85,18 +93,8 @@ void akr::setTextureFilters(TexTarget target, FilterType minFilter, FilterType m
 		case FilterType::Linear:  glMagFilter = GL_LINEAR; break;
 	}
 
-	uint32 glTarget;
-	switch(target) {
-		case TexTarget::Tex1D:       glTarget = GL_TEXTURE_1D;       break;
-		case TexTarget::Tex1D_Array: glTarget = GL_TEXTURE_1D_ARRAY; break;
-		case TexTarget::Tex2D:       glTarget = GL_TEXTURE_2D;       break;
-		case TexTarget::Tex2D_Array: glTarget = GL_TEXTURE_2D_ARRAY; break;
-		case TexTarget::Tex3D:       glTarget = GL_TEXTURE_3D;       break;
-		case TexTarget::TexCubeMap:  glTarget = GL_TEXTURE_CUBE_MAP; break;
-	}
-
-	glTexParameteri(glTarget, GL_TEXTURE_MAG_FILTER, glMagFilter);
-	glTexParameteri(glTarget, GL_TEXTURE_MIN_FILTER, glMinFilter);
+	glTexParameteri(akToGLTarget(target), GL_TEXTURE_MIN_FILTER, glMinFilter);
+	glTexParameteri(akToGLTarget(target), GL_TEXTURE_MAG_FILTER, glMagFilter);
 }
 
 void akr::setTextureClamping(TexTarget target, ClampDir clampDir, ClampType clampType) {
@@ -115,43 +113,28 @@ void akr::setTextureClamping(TexTarget target, ClampDir clampDir, ClampType clam
 		case ClampType::Border:     glClampType = GL_CLAMP_TO_BORDER; break;
 	}
 
-	uint32 glTarget;
-	switch(target) {
-		case TexTarget::Tex1D: glTarget = GL_TEXTURE_1D; break;
-		case TexTarget::Tex1D_Array: glTarget = GL_TEXTURE_1D_ARRAY; break;
-		case TexTarget::Tex2D: glTarget = GL_TEXTURE_2D; break;
-		case TexTarget::Tex2D_Array: glTarget = GL_TEXTURE_2D_ARRAY; break;
-		case TexTarget::Tex3D: glTarget = GL_TEXTURE_3D; break;
-		case TexTarget::TexCubeMap: glTarget = GL_TEXTURE_CUBE_MAP; break;
-	}
-
-	glTexParameteri(glTarget, glClampDir, glClampType);
+	glTexParameteri(akToGLTarget(target), glClampDir, glClampType);
 }
 
 void akr::setTextureBorder(TexTarget target, akm::Vec4 colour) {
-	uint32 glTarget;
-	switch(target) {
-		case TexTarget::Tex1D: glTarget = GL_TEXTURE_1D; break;
-		case TexTarget::Tex1D_Array: glTarget = GL_TEXTURE_1D_ARRAY; break;
-		case TexTarget::Tex2D: glTarget = GL_TEXTURE_2D; break;
-		case TexTarget::Tex2D_Array: glTarget = GL_TEXTURE_2D_ARRAY; break;
-		case TexTarget::Tex3D: glTarget = GL_TEXTURE_3D; break;
-		case TexTarget::TexCubeMap: glTarget = GL_TEXTURE_CUBE_MAP; break;
-	}
-	glTexParameterfv(glTarget, GL_TEXTURE_BORDER_COLOR, &colour[0]);
+	glTexParameterfv(akToGLTarget(target), GL_TEXTURE_BORDER_COLOR, &colour[0]);
 }
 
 void akr::generateMipmaps(TexTarget target) {
-	uint32 glTarget;
-	switch(target) {
-		case TexTarget::Tex1D: glTarget = GL_TEXTURE_1D; break;
-		case TexTarget::Tex1D_Array: glTarget = GL_TEXTURE_1D_ARRAY; break;
-		case TexTarget::Tex2D: glTarget = GL_TEXTURE_2D; break;
-		case TexTarget::Tex2D_Array: glTarget = GL_TEXTURE_2D_ARRAY; break;
-		case TexTarget::Tex3D: glTarget = GL_TEXTURE_3D; break;
-		case TexTarget::TexCubeMap: glTarget = GL_TEXTURE_CUBE_MAP; break;
-	}
-	glGenerateMipmap(glTarget);
+	glGenerateMipmap(akToGLTarget(target));
+}
+
+void akr::setAnisotropy(TexTarget target, fpSingle amount) {
+	glTexParameterf(akToGLTarget(target), GL_TEXTURE_MAX_ANISOTROPY_EXT, akm::min(maxAnsiotropy(), amount));
+}
+
+fpSingle akr::maxAnsiotropy() {
+	static fpSingle maxAnsio = []() {
+		fpSingle fLargest;
+		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest);
+		return fLargest;
+	}();
+	return maxAnsio;
 }
 
 static std::pair<uint32, uint32> texFormatToGLFormats(TexFormat format) {

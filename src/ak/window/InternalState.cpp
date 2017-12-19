@@ -137,6 +137,8 @@ void akw::internal::processEventBuffer() {
 
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-conversion"
 void akw::internal::processActionBuffer() {
 	actionBuffer.swap();
 	actionBuffer.iterate([&](size_t /*index*/, const Action& action){
@@ -212,3 +214,4 @@ void akw::internal::processActionBuffer() {
 		}
 	});
 }
+#pragma clang diagnostic pop

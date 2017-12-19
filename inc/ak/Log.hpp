@@ -40,9 +40,10 @@ namespace ak {
 
 			RAW   = 1,                                //!< RAW Raw output, unfiltered unless the log level is set to none. Doesn't include level, tag, thread or logger name.
 			FATAL = 2,                                //!< FATAL An unrecoverable error has occurred, the program will likely be terminated after this is received.
-			WARN  = 3,                                //!< WARN A recoverable/expected error has occurred and steps have been taken to mitigate it's effect.
-			INFO  = 4,                                //!< INFO General information, useful for general debugging in the case of a crash.
-			DEBUG = 5,                                //!< DEBUG Debug specific information. Information that is only useful for developers, generally should be disabled in user configs.
+			ERROR = 3,                                //!< ERROR An unexpected error has occurred and steps have been taken to mitigate it's effect, however it may still be fatal.
+			WARN  = 4,                                //!< WARN A recoverable/expected error has occurred and steps have been taken to mitigate it's effect.
+			INFO  = 5,                                //!< INFO General information, useful for general debugging in the case of a crash.
+			DEBUG = 6,                                //!< DEBUG Debug specific information. Information that is only useful for developers, generally should be disabled in user configs.
 
 			ALL   = std::numeric_limits<uint8>::max() //!< ALL Log everything. Practically the same as setting the log level to debug, except that it will accounts for adding new levels.
 		};
@@ -103,6 +104,7 @@ namespace ak {
 				constexpr Logger(const std::string_view& name) : m_name(name) {}
 
 				template<typename... vargs_t> void fatal(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::FATAL)) build(Level::FATAL, vargs...); }
+				template<typename... vargs_t> void error(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::ERROR)) build(Level::ERROR, vargs...); }
 				template<typename... vargs_t> void warn(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::WARN))   build(Level::WARN, vargs...); }
 				template<typename... vargs_t> void info(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::INFO))   build(Level::INFO, vargs...); }
 				template<typename... vargs_t> void debug(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::DEBUG)) build(Level::DEBUG, vargs...); }

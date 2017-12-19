@@ -19,7 +19,57 @@
 
 #include "GL/gl4.h"
 
+#if defined(__linux)
+#define BACKWARD_HAS_BFD 1
+#include <signal.h>
+#ifndef SIGUNUSED
+#define SIGUNUSED 31
+#endif
+#include "backward.hpp"
+namespace backward { static backward::SignalHandling sh; }
+#endif
+
 using namespace akr;
+
+static void APIENTRY ogl_logErrorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* /*userParam​*/) {
+	akl::Logger glLog("OpenGL");
+	std::stringstream sstream;
+
+	switch(type) {
+		case GL_DEBUG_TYPE_ERROR:               sstream << "[Error]"; break;
+		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: sstream << "[Deprecated]"; break;
+		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  sstream << "[Undefined]"; break;
+		case GL_DEBUG_TYPE_PORTABILITY:         sstream << "[Portability]"; break;
+		case GL_DEBUG_TYPE_PERFORMANCE:         sstream << "[Performance]"; break;
+		case GL_DEBUG_TYPE_MARKER:              sstream << "[Marker]"; break;
+		case GL_DEBUG_TYPE_PUSH_GROUP:          sstream << "[Push]"; break;
+		case GL_DEBUG_TYPE_POP_GROUP:           sstream << "[Pop]"; break;
+		case GL_DEBUG_TYPE_OTHER:               sstream << "[Other]"; break;
+	}
+
+	switch(source) {
+		case GL_DEBUG_SOURCE_API:             sstream << "[API]"; break;
+		case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   sstream << "[Window]"; break;
+		case GL_DEBUG_SOURCE_SHADER_COMPILER: sstream << "[Shader]"; break;
+		case GL_DEBUG_SOURCE_THIRD_PARTY:     sstream << "[3rd Party]"; break;
+		case GL_DEBUG_SOURCE_APPLICATION:     sstream << "[App]"; break;
+		case GL_DEBUG_SOURCE_OTHER:           sstream << "[Other]"; break;
+	}
+
+	sstream << "[Error Code: " << id << "] " << std::string(message, static_cast<size_t>(length)) << std::endl;
+
+	if (severity == GL_DEBUG_SEVERITY_HIGH) {
+		backward::StackTrace st; st.load_here(32);
+		backward::Printer p; p.print(st, sstream);
+	}
+
+	switch(severity) {
+		case GL_DEBUG_SEVERITY_HIGH:         glLog.error(sstream.str()); break;
+		case GL_DEBUG_SEVERITY_MEDIUM:       glLog.warn( sstream.str()); break;
+		case GL_DEBUG_SEVERITY_LOW:          glLog.info( sstream.str()); break;
+		case GL_DEBUG_SEVERITY_NOTIFICATION: glLog.debug(sstream.str()); break;
+	}
+}
 
 void akr::init() {
 	constexpr ak::log::Logger log("Render::Init");
@@ -27,6 +77,9 @@ void akr::init() {
 	static bool hasInit = false;
 	if (hasInit) return;
 	if (ogl_LoadFunctions() == ogl_LoadStatus::ogl_LOAD_FAILED) return;
+
+	glDebugMessageCallback(ogl_logErrorCallback, nullptr);
+	glEnable(GL_DEBUG_OUTPUT);
 
 	glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
 	glClearDepth(1.0f);
@@ -220,4 +273,3 @@ void akr::setUniform(uint32 bindingLocation, akm::Mat3 matrix) {
 void akr::setUniform(uint32 bindingLocation, akm::Mat2 matrix) {
 	glUniformMatrix2fv(bindingLocation, 1, GL_FALSE, &matrix[0][0]);
 }
-
