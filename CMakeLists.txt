@@ -17,6 +17,9 @@ target_include_directories(akutenshi SYSTEM PUBLIC ${BACKWARD_INCLUDE_DIR})
 target_include_directories(akutenshi SYSTEM PUBLIC ${GLFW_INCLUDE_DIR})
 target_include_directories(akutenshi SYSTEM PUBLIC ${GL4_INCLUDE_DIR})
 target_include_directories(akutenshi SYSTEM PUBLIC ${STB_INCLUDE_DIR})
+target_include_directories(akutenshi SYSTEM PUBLIC ${SMILE_INCLUDE_DIR})
+target_include_directories(akutenshi SYSTEM PUBLIC ${MSGPACK_INCLUDE_DIR})
+target_include_directories(akutenshi SYSTEM PUBLIC ${BROTLI_INCLUDE_DIR})
 
 target_compile_options(akutenshi PUBLIC ${AK_BUILD_CXX_WARNING_FLAGS})
 target_compile_options(akutenshi PUBLIC ${AK_BUILD_CXX_COMPILER_FLAGS})
@@ -30,7 +33,9 @@ target_link_libraries(akutenshi Threads::Threads)
 
 target_link_libraries(akutenshi glfw)
 target_link_libraries(akutenshi GL4)
-target_link_libraries(akutenshi OpenGL)
+target_link_libraries(akutenshi brotlicommon-static)
+target_link_libraries(akutenshi brotlienc-static)
+target_link_libraries(akutenshi brotlidec-static)
 
 if(WIN32)
 

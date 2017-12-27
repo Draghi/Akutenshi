@@ -53,6 +53,12 @@ namespace ak {
 		std::stringstream stream;
 		return buildString<type_t, vargs_t...>(stream, value, vargs...).str();
 	}
+
+	template<typename container_t> bool equalsAny(const std::string& first, const container_t& compare) {
+		for(auto iter = compare.begin(); iter != compare.end(); iter++) if (first == *iter) return true;
+		return false;
+	}
+
 }
 
 #endif

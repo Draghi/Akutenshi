@@ -1,3 +1,6 @@
+#include <ak/data/BrotliCompression.hpp>
+#include <ak/data/JsonParser.hpp>
+#include <ak/data/MsgPackParser.hpp>
 #include <ak/data/PValue.hpp>
 #include <ak/engine/Camera.hpp>
 #include <ak/engine/Config.hpp>
@@ -35,9 +38,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
-#include <GL/gl.h>
 #include <iomanip>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -51,6 +54,11 @@
 #include "backward.hpp"
 namespace backward { static backward::SignalHandling sh; }
 #endif
+
+#include <ak/animation/Animation.hpp>
+#include <ak/animation/Mesh.hpp>
+#include <ak/animation/Skeleton.hpp>
+#include <ak/animation/Model.hpp>
 
 static void printLogHeader(const ak::log::Logger& logger);
 static ak::ScopeGuard startup();
@@ -70,6 +78,19 @@ int main() {
 	} else {
 		auto defaultWindowOptions = akw::WindowOptions().glVSync(akw::VSync::FULL);
 		akw::open(defaultWindowOptions);
+	}
+
+	auto file = akfs::open(akfs::SystemFolder::appData, "test.mpac.br", akfs::OpenFlags::In);
+	if (file) {
+		std::vector<uint8> compressedData;
+		compressedData.resize(file.sizeOnDisk());
+		file.read(compressedData.data(), compressedData.size());
+
+		auto data = akd::decompressBrotli(compressedData);
+
+		akd::PValue dTree;
+		akd::deserializeMsgPack(dTree, data);
+		log.info("Json Parse: ", akd::serializeJson(dTree, true));
 	}
 
 	akw::setCursorMode(akw::CursorMode::Captured);
@@ -101,9 +122,48 @@ int main() {
 		akr::mapVertexBufferF(2, 2, akr::DataType::FPSingle, false, 6*sizeof(fpSingle), 8*sizeof(fpSingle));
 
 		// Tex
-		akr::Texture tex = akfs::loadTexture(akfs::SystemFolder::appData, "textures/testTexture2DArr.json");
+		akr::Texture tex = akfs::loadTexture2D(akfs::SystemFolder::appData, "textures/testTexture2D.json").texture;
+
 
 	// Setup Finish
+
+	// Skybox
+
+
+		akr::Pipeline skyboxProgram;
+		akr::PipelineStage cubeVStage(akr::StageType::Vertex);
+		std::string source;
+		akfs::open(akfs::SystemFolder::appData, "shaders/skybox.vert", akfs::OpenFlags::In).readLine(source, false, {});
+		cubeVStage.attach(source);
+		cubeVStage.compile();
+		skyboxProgram.attach(cubeVStage);
+
+		akr::PipelineStage cubeFStage(akr::StageType::Fragment);
+		akfs::open(akfs::SystemFolder::appData, "shaders/skybox.frag", akfs::OpenFlags::In).readLine(source, false, {});
+		cubeFStage.attach(source);
+		cubeFStage.compile();
+		skyboxProgram.attach(cubeFStage);
+
+		skyboxProgram.link();
+
+		akr::Texture cubeMap = akfs::loadTextureCubemap(akfs::SystemFolder::appData, "textures/testCubeMap.json").texture;
+
+		akr::VertexMapping vSkybox;
+		akr::bind(vSkybox);
+
+		akr::Buffer vSkyboxBuffer;
+		akr::bind(akr::BufferTarget::VARRYING, vSkyboxBuffer);
+		fpSingle vData2[] = {
+			-1, -1,
+			 1, -1,
+			 1,  1,
+
+			 1,  1,
+			-1,  1,
+			-1, -1,
+		};
+		akr::setData(akr::BufferTarget::VARRYING, vData2, 12);
+		akr::mapVertexBufferF(0, 2, akr::DataType::FPSingle);
 
 	/*akm::Vec3 lookPos(0, 0, 0);
 	akm::SphericalCoord_t<fpSingle> lookOrient;*/
@@ -118,10 +178,29 @@ int main() {
 
 		// Prepare
 		akr::clear();
+
+		// Skybox
+		akr::setActivePipeline(skyboxProgram);
+		akr::enableDepthTest(false);
+		akr::enableCullFace(false);
+
+		akr::setUniform(0, akm::perspective<fpSingle>(1.0472f, akw::size().x/static_cast<fpSingle>(akw::size().y), 0.1f, 100.0f));
+		akr::setUniform(1, akm::transpose(lookRot)*akm::translate(-lookPos));
+
+		akr::bind(0, cubeMap);
+		akr::setUniform(3, 0);
+
+		akr::bind(vSkybox);
+		akr::draw(akr::DrawType::Triangles, 6);
+
+		// Scene
 		akr::setActivePipeline(pipeline);
+		akr::enableDepthTest(true);
+		akr::enableCullFace(true);
 
 		// Setup Cube
 		akr::bind(vMapping);
+		akr::bind(0, tex);
 		akr::setUniform(0, akm::perspective<fpSingle>(1.0472f, akw::size().x/static_cast<fpSingle>(akw::size().y), 0.1f, 100.0f));
 		akr::setUniform(1, akm::transpose(lookRot)*akm::translate(-lookPos));
 
@@ -156,9 +235,8 @@ int main() {
 
 		if (akw::cursorMode() == akw::CursorMode::Captured) {
 			auto mPos = akw::mouse().deltaPosition();
-
-			camera.lookLR(akm::degToRad( mPos.x)/50000.0*(camera.up().y >=0 ? 1 : -1));
-			camera.lookUD(akm::degToRad(-mPos.y)/50000.0);
+			camera.lookLR(akm::degToRad( mPos.x)/20.0f*(camera.up().y >=0 ? 1 : -1));
+			camera.lookUD(akm::degToRad(-mPos.y)/20.0f);
 		}
 
 		if (akw::keyboard().isDown(akin::Key::W)) camera.moveForward( 1*delta);
@@ -221,10 +299,18 @@ static void printLogHeader(const ak::log::Logger& logger) {
 
 static void startupConfig() {
 	constexpr ak::log::Logger log(AK_STRING_VIEW("Config"));
-	if (!ake::loadConfig()) {
+
+	auto result = ake::loadConfig();
+	if (result == ake::ConfigLoadResult::CannotOpen) {
 		log.warn("Failed to load config. Attempting to regenerate.");
 		ake::regenerateConfig();
 		if (!ake::saveConfig()) log.warn("Failed to save new config.");
+	} else if (result == ake::ConfigLoadResult::CannotRead) {
+		log.fatal("Cannot read config. Fix permissions or delete to attempt regeneration.");
+		throw std::runtime_error("Startup error, cannot read config.");
+	} else if (result == ake::ConfigLoadResult::CannotParse) {
+		log.fatal("Cannot parse config. Fix format or delete to attempt regeneration.");
+		throw std::runtime_error("Startup error, cannot parse config.");
 	}
 }
 

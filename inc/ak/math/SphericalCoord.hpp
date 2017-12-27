@@ -50,7 +50,13 @@ namespace akm {
 			scalar_t m_azimuth;
 
 		public:
+			using value_type = scalar_t;
+
 			SphericalCoord_t() : m_radius(1), m_polar(0), m_azimuth(akm::PI<scalar_t>/2) {}
+
+			void setRadius(scalar_t radius) {
+				m_radius = radius;
+			}
 
 			void rotateLR(scalar_t hAngle) {
 				m_polar += hAngle;
@@ -85,7 +91,13 @@ namespace akm {
 			akm::Vec3 getOrientationUp() const {
 				return toOrientation()[1];
 			}
+
+			scalar_t radius() const { return m_radius; }
+			scalar_t polar() const { return m_polar; }
+			scalar_t azimuth() const { return m_azimuth; }
 	};
+
+	using SphericalCoord = SphericalCoord_t<fpSingle>;
 
 }
 

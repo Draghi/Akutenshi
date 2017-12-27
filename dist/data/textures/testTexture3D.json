@@ -1,6 +1,6 @@
 {
     "type":"3D",
-    "filename":[
+    "layers":[
         "Test3D/Tex1.png",
         "Test3D/Tex2.png",
         "Test3D/Tex3.png",
@@ -11,7 +11,7 @@
         "Test3D/Tex8.png",
         "Test3D/Tex9.png",
         "Test3D/Tex10.png",
-        "Test3D/Tex11.png",
+        "Test3D/Tex11.png"
     ],
     "mipFilter":"linear",
     "minFilter":"linear",

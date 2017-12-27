@@ -16,6 +16,7 @@
 
 #include <ak/data/JsonParser.hpp>
 #include <ak/data/Path.hpp>
+#include <ak/Log.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <bits/stdint-intn.h>
 #include <bits/stdint-uintn.h>
@@ -35,6 +36,7 @@
 #include "rapidjson/reader.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
+#include "rapidjson/error/en.h"
 
 using namespace akd;
 
@@ -138,7 +140,11 @@ bool akd::deserializeJson(akd::PValue& dest, std::istream& jsonStream) {
 	JSONParser handler(dest);
 	rj::Reader reader;
 	rj::IStreamWrapper stream(jsonStream);
-	reader.Parse(stream, handler);
+	auto result = reader.Parse<rj::kParseTrailingCommasFlag | rj::kParseFullPrecisionFlag>(stream, handler);
+	if (result.IsError()) {
+		akl::Logger("Json").warn("JSON Parse error (Offset ", result.Offset(), "): ", rj::GetParseError_En(result.Code()));
+		return false;
+	}
 	return true;
 }
 

@@ -1,6 +1,5 @@
 {
     "type":"2D",
-    "row":120,
     "filename":"test.png",
     "mipFilter":"linear",
     "minFilter":"linear",

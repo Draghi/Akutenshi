@@ -22,11 +22,26 @@
 
 namespace akfs {
 
-/*	std::pair<fpSingle, akr::Texture> load1DTexture(SystemFolder folder, const stx::filesystem::path& path);
-	std::pair<akm::Vec2, akr::Texture> load2DTexture(SystemFolder folder, const stx::filesystem::path& path);
-	std::pair<akm::Vec3, akr::Texture> load3DTexture(SystemFolder folder, const stx::filesystem::path& path);*/
+	struct TexLoadResult {
+		akr::Texture texture;
 
-	akr::Texture loadTexture(SystemFolder folder, const stx::filesystem::path& path);
+		size_t width;
+		size_t height;
+		size_t depth;
+		size_t layers;
+
+		size_t components;
+	};
+
+	TexLoadResult loadTexture1D(SystemFolder folder, const stx::filesystem::path& path);
+	TexLoadResult loadTextureArray1D(SystemFolder folder, const stx::filesystem::path& path);
+
+	TexLoadResult loadTexture2D(SystemFolder folder, const stx::filesystem::path& path);
+	TexLoadResult loadTextureArray2D(SystemFolder folder, const stx::filesystem::path& path);
+
+	TexLoadResult loadTexture3D(SystemFolder folder, const stx::filesystem::path& path);
+
+	TexLoadResult loadTextureCubemap(SystemFolder folder, const stx::filesystem::path& path);
 
 }
 

@@ -35,8 +35,15 @@ namespace ake {
 	const akd::PValue& config();
 	void setConfig(const akd::PValue& nConfig);
 
+	enum class ConfigLoadResult {
+		Success,
+		CannotOpen,
+		CannotRead,
+		CannotParse,
+	};
+
 	void regenerateConfig();
-	bool loadConfig();
+	ConfigLoadResult loadConfig();
 	bool saveConfig();
 }
 

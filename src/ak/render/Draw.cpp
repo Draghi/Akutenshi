@@ -56,9 +56,10 @@ static void APIENTRY ogl_logErrorCallback(GLenum source, GLenum type, GLuint id,
 		case GL_DEBUG_SOURCE_OTHER:           sstream << "[Other]"; break;
 	}
 
-	sstream << "[Error Code: " << id << "] " << std::string(message, static_cast<size_t>(length)) << std::endl;
+	sstream << "[Error Code: " << id << "] " << std::string(message, static_cast<size_t>(length));
 
 	if (severity == GL_DEBUG_SEVERITY_HIGH) {
+		sstream << std::endl;
 		backward::StackTrace st; st.load_here(32);
 		backward::Printer p; p.print(st, sstream);
 	}
@@ -86,6 +87,7 @@ void akr::init() {
 
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
 	if (!ogl_ext_EXT_texture_filter_anisotropic) log.warn("Failed to load EXT_texture_filter_anisotropic");
 

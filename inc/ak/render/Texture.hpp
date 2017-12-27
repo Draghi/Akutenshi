@@ -23,12 +23,12 @@
 namespace akr {
 
 	enum class CubemapTarget {
-		Right,
-		Left,
-		Top,
-		Bottom,
-		Back,
-		Front,
+		PosX,
+		PosY,
+		PosZ,
+		NegX,
+		NegY,
+		NegZ,
 	};
 
 	enum class TexTarget {
@@ -111,18 +111,14 @@ namespace akr {
 	void createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 mipLevels);
 	void createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 layers, int32 mipLevels);
 	void createTextureStorage3D(TexFormat format, int32 width, int32 height, int32 depth,  int32 mipLevels);
-
-	void setTextureData1D(TexFormat format, int32 width, const fpSingle* data, int32 level = 0);
-	void setTextureData1D(TexFormat format, int32 width, int32 layers, const fpSingle* data, int32 level = 0);
-	void setTextureData2D(TexFormat format, int32 width, int32 height, const fpSingle* data, int32 level = 0);
-	void setTextureData2D(TexFormat format, int32 width, int32 height, int32 layers, const fpSingle* data, int32 level = 0);
-	void setTextureData3D(TexFormat format, int32 width, int32 height, int32 depth,  const fpSingle* data, int32 level = 0);
+	void createTextureStorageCube(TexFormat format, int32 width, int32 height, int32 mipLevels);
 
 	void replaceTextureData1D(TexFormat format, int32 xOff, int32 width, const fpSingle* data, int32 level = 0);
 	void replaceTextureData1D(TexFormat format, int32 xOff, int32 lOff, int32 width, int32 layers, const fpSingle* data, int32 level = 0);
 	void replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 width, int32 height, const fpSingle* data, int32 level = 0);
 	void replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 lOff,  int32 width, int32 height, int32 layers, const fpSingle* data, int32 level = 0);
 	void replaceTextureData3D(TexFormat format, int32 xOff, int32 yOff, int32 zOff,  int32 width, int32 height, int32 depth,  const fpSingle* data, int32 level = 0);
+	void replaceTextureDataCubemap(CubemapTarget cubemap, TexFormat format, int32 xOff, int32 yOff, int32 width, int32 height, const fpSingle* data, int32 level = 0);
 
 }
 

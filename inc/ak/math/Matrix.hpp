@@ -18,17 +18,16 @@
 #define AK_MATH_MATRIX_HPP_
 
 
-#include <ak/PrimitiveTypes.hpp>
 #include <ak/math/Vector.hpp>
-
-#include <glm/glm.hpp>
-
+#include <ak/PrimitiveTypes.hpp>
+#include <glm/detail/func_matrix.hpp>
+#include <glm/detail/precision.hpp>
 #include <glm/gtc/matrix_access.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/matrix_major_storage.hpp>
 #include <glm/gtx/matrix_transform_2d.hpp>
-#include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/transform.hpp>
 
 namespace akm {

@@ -45,7 +45,7 @@ namespace akw {
 			bool m_isResizable = false, m_isVisible = true,  m_isDecorated = true;
 			bool m_alwaysOnTop = false, m_minimised = false, m_maximised   = false;
 
-			int m_glMajor = 3, m_glMinor = 3;
+			int m_glMajor = 4, m_glMinor = 5;
 			bool m_glCore = true, m_glForward = true, m_glDebug = false;
 			bool m_glStereo = false, m_glSRGB = true, m_glDoubleBuffer = true;
 			uint8 m_glMSSA = 4;

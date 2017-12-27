@@ -76,6 +76,7 @@ namespace ak {
 					std::string_view(),
 					std::string_view(),
 					std::string_view("FATAL", 5),
+					std::string_view("ERROR", 5),
 					std::string_view("WARN",  4),
 					std::string_view("INFO",  4),
 					std::string_view("DEBUG", 5)
@@ -91,11 +92,14 @@ namespace ak {
 					std::stringstream sstream;
 					sstream << "[" << std::put_time(&utc.ctime, "%H:%M:%S");
 					sstream << "." << std::setfill('0') << std::setw(3) << utc.milliseconds;
-					sstream  << "][" << akt::current().name() << "][" << m_name << "][" << LevelTags[static_cast<uint8>(level)] << "] ";
+					sstream  << "][" << akt::current().name() << "][" << m_name << "][" << LevelTags[static_cast<uint8>(level)] << "]";
 
-					ak::buildString(sstream, vargs...);
+					std::stringstream vargStream;
+					ak::buildString(vargStream, vargs...);
 
-					sstream << std::endl;
+					if (vargStream.str().front() != '[') sstream << " ";
+
+					sstream << vargStream.str() << std::endl;
 
 					printMessage(level, sstream.str());
 				}

@@ -1,0 +1,21 @@
+{
+    "type":"cubemap",
+    "layers":{
+        "pX":"TestCube/pX.jpg",
+        "pY":"TestCube/pY.jpg",
+        "pZ":"TestCube/pZ.jpg",
+        "nX":"TestCube/nX.jpg",
+        "nY":"TestCube/nY.jpg",
+        "nZ":"TestCube/nZ.jpg"
+    },
+    "mipFilter":"linear",
+    "minFilter":"linear",
+    "magFilter":"linear",
+    "wrap":{
+        "border":[1.0,1.0,1.0,1.0],
+        "s":"border",
+        "t":"border",
+        "r":"border"
+    },
+    "anisotropy":16
+}

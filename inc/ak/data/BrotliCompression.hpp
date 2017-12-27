@@ -1,12 +1,12 @@
 /**
  * Copyright 2017 Michael J. Baker
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,20 +14,23 @@
  * limitations under the License.
  **/
 
-#ifndef AK_FILESYSTEM_IMAGELOADER_HPP_
-#define AK_FILESYSTEM_IMAGELOADER_HPP_
-
-#include <vector>
-#include <ak/filesystem/Filesystem.hpp>
-#include <ak/data/Image.hpp>
 #include <ak/PrimitiveTypes.hpp>
+#include <vector>
 
-namespace akfs {
+namespace akd {
 
-	akd::Image1D load1DImage(SystemFolder folder, const stx::filesystem::path& path, uint32 layer = 0, bool bottomUp = true);
-	akd::Image2D load2DImage(SystemFolder folder, const stx::filesystem::path& path, bool bottomUp = true);
-	akd::Image3D load3DImage(SystemFolder folder, const std::vector<stx::filesystem::path>& path, bool bottomUp = true);
+	/**
+	 * =========== NOT IMPLEMENTED ===========
+	 * @param inData data to compress
+	 * @return The compressed data
+	 */
+	std::vector<uint8> compressBrotli(const std::vector<uint8>& inData);
+
+	/**
+	 * Decompresses a buffer fill with brotli data
+	 * @param inData The buffer with brotli compressed data
+	 * @return The uncompressed data
+	 */
+	std::vector<uint8> decompressBrotli(const std::vector<uint8>& inData);
 
 }
-
-#endif

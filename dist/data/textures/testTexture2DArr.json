@@ -11,9 +11,9 @@
         "Test3D/Tex8.png",
         "Test3D/Tex9.png",
         "Test3D/Tex10.png",
-        "Test3D/Tex11.png",
+        "Test3D/Tex11.png"
     ],
-    "mipFilter":"linear",
+    "mipFilter":"none",
     "minFilter":"linear",
     "magFilter":"linear",
     "wrap":{

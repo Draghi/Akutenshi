@@ -22,3 +22,9 @@
 [submodule "cmake/stb"]
 	path = cmake/stb
 	url = https://github.com/nothings/stb.git
+[submodule "cmake/msgpack-c"]
+	path = cmake/msgpack-c
+	url = https://github.com/msgpack/msgpack-c.git
+[submodule "cmake/brotli"]
+	path = cmake/brotli
+	url = https://github.com/Draghi/brotli.git

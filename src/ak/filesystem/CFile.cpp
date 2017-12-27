@@ -137,8 +137,8 @@ size_t CFile::writeLines(const std::string* lines, size_t lineCount, const std::
 	return lineCount;
 }
 
-int64_t CFile::sizeOnDisk() const {
+size_t CFile::sizeOnDisk() const {
 	std::error_code error_code;
 	auto size = stx::filesystem::file_size(m_path, error_code);
-	return error_code ? -1 : static_cast<int64_t>(size);
+	return error_code ? 0 : static_cast<size_t>(size);
 }

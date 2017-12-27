@@ -67,20 +67,19 @@ void ake::regenerateConfig() {
 	setConfig(newConfig);
 }
 
-bool ake::loadConfig() {
+ConfigLoadResult ake::loadConfig() {
 	akfs::CFile configFile(CONFIG_PATH, akfs::In);
-	if (!configFile) return false;
+	if (!configFile) return ConfigLoadResult::CannotOpen;
 
 	std::string configContents;
-	if (configFile.readLine(configContents, false, {}) <= 0) return false;
+	if (configFile.readLine(configContents, false, {}) <= 0) return ConfigLoadResult::CannotRead;
 
 	akd::PValue newConfig;
 	std::istringstream sstrean(configContents);
-	if (!akd::deserializeJson(newConfig, sstrean)) return false;
+	if (!akd::deserializeJson(newConfig, sstrean)) return ConfigLoadResult::CannotParse;
 
 	setConfig(newConfig);
-
-	return true;
+	return ConfigLoadResult::Success;
 }
 
 bool ake::saveConfig() {

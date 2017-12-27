@@ -23,6 +23,10 @@
 #include <vector>
 
 namespace akd {
+
+	/**
+	 * Base image class to facilitate generic handlers
+	 */
 	class Image {
 		Image(const Image&) = delete;
 		Image& operator=(const Image&) = delete;
@@ -30,16 +34,51 @@ namespace akd {
 			Image() = default;
 			virtual ~Image() = default;
 
+			/**
+			 * Returns the number of colour components in the image (1 - R, 2, RG, 3 RGB, 4 - RGBA etc.)
+			 * @return the number of colour components in the image
+			 */
 			virtual size_t componentCount() const = 0;
+
+			/**
+			 * Changes the number of components in the image
+			 * @param targetFormat The target number of components for the image
+			 * @remarks Setting to a target with 4 or more components will default the 4th component to 1
+			 */
 			virtual void setComponentCount(size_t targetFormat) = 0;
+
+			/**
+			 * Returns the underlying data
+			 * @return The underlying data
+			 * @remarks Stored left-right, bottom-top, front-back
+			 */
 			virtual const fpSingle* data() const = 0;
 
+			/**
+			 * The width of the image.
+			 * @return The width of the image.
+			 */
 			virtual size_t width()  const = 0;
+
+			/**
+			 * The height of the image.
+			 * @return The height of the image.
+			 * @remarks 1D images will return 0.
+			 */
 			virtual size_t height() const = 0;
+
+			/**
+			 * The depth of the image.
+			 * @return The depth of the image.
+			 * @remarks 1D and 2D images will return 0.
+			 */
 			virtual size_t depth()  const = 0;
 	};
 
-	class Image1D : public Image {
+	/**
+	 * 1D Image
+	 */
+	class Image1D final : public Image {
 		private:
 			size_t m_componentCount;
 			std::vector<fpSingle> m_imageData;
@@ -61,19 +100,51 @@ namespace akd {
 			akm::Vec3 asRGB(uint32 x) const;
 			akm::Vec4 asRGBA(uint32 x) const;
 
+			/**
+			 * Returns the number of colour components in the image (1 - R, 2, RG, 3 RGB, 4 - RGBA etc.)
+			 * @return the number of colour components in the image
+			 */
 			size_t componentCount() const override;
+
+			/**
+			 * Changes the number of components in the image
+			 * @param targetFormat The target number of components for the image
+			 * @remarks Setting to a target with 4 or more components will default the 4th component to 1
+			 */
 			void setComponentCount(size_t targetFormat) override;
+
+			/**
+			 * Returns the underlying data
+			 * @return The underlying data
+			 * @remarks Stored left-right, bottom-top, front-back
+			 */
 			const fpSingle* data() const override;
 
+			/**
+			 * The width of the image.
+			 * @return The width of the image.
+			 */
 			size_t width()  const override;
+
+			/**
+			 * The height of the image.
+			 * @return The height of the image.
+			 * @remarks 1D images will return 0.
+			 */
 			size_t height() const override;
+
+			/**
+			 * The depth of the image.
+			 * @return The depth of the image.
+			 * @remarks 1D and 2D images will return 0.
+			 */
 			size_t depth()  const override;
 
 			Image1D& operator=(const Image1D& other);
 			Image1D& operator=(Image1D&& other);
 	};
 
-	class Image2D : public Image {
+	class Image2D final : public Image {
 		private:
 			size_t m_componentCount;
 			std::vector<fpSingle> m_imageData;
@@ -95,19 +166,51 @@ namespace akd {
 			akm::Vec3 asRGB(uint32 x, uint32 y) const;
 			akm::Vec4 asRGBA(uint32 x, uint32 y) const;
 
+			/**
+			 * Returns the number of colour components in the image (1 - R, 2, RG, 3 RGB, 4 - RGBA etc.)
+			 * @return the number of colour components in the image
+			 */
 			size_t componentCount() const override;
+
+			/**
+			 * Changes the number of components in the image
+			 * @param targetFormat The target number of components for the image
+			 * @remarks Setting to a target with 4 or more components will default the 4th component to 1
+			 */
 			void setComponentCount(size_t targetFormat) override;
+
+			/**
+			 * Returns the underlying data
+			 * @return The underlying data
+			 * @remarks Stored left-right, bottom-top, front-back
+			 */
 			const fpSingle* data() const override;
 
+			/**
+			 * The width of the image.
+			 * @return The width of the image.
+			 */
 			size_t width()  const override;
+
+			/**
+			 * The height of the image.
+			 * @return The height of the image.
+			 * @remarks 1D images will return 0.
+			 */
 			size_t height() const override;
+
+			/**
+			 * The depth of the image.
+			 * @return The depth of the image.
+			 * @remarks 1D and 2D images will return 0.
+			 */
 			size_t depth()  const override;
 
 			Image2D& operator=(const Image2D& other);
 			Image2D& operator=(Image2D&& other);
 	};
 
-	class Image3D : public Image {
+	class Image3D final : public Image {
 		private:
 			size_t m_componentCount;
 			std::vector<fpSingle> m_imageData;
@@ -129,12 +232,44 @@ namespace akd {
 			akm::Vec3 asRGB(uint32 x, uint32 y, uint32 z) const;
 			akm::Vec4 asRGBA(uint32 x, uint32 y, uint32 z) const;
 
+			/**
+			 * Returns the number of colour components in the image (1 - R, 2, RG, 3 RGB, 4 - RGBA etc.)
+			 * @return the number of colour components in the image
+			 */
 			size_t componentCount() const override;
+
+			/**
+			 * Changes the number of components in the image
+			 * @param targetFormat The target number of components for the image
+			 * @remarks Setting to a target with 4 or more components will default the 4th component to 1
+			 */
 			void setComponentCount(size_t targetFormat) override;
+
+			/**
+			 * Returns the underlying data
+			 * @return The underlying data
+			 * @remarks Stored left-right, bottom-top, front-back
+			 */
 			const fpSingle* data() const override;
 
+			/**
+			 * The width of the image.
+			 * @return The width of the image.
+			 */
 			size_t width()  const override;
+
+			/**
+			 * The height of the image.
+			 * @return The height of the image.
+			 * @remarks 1D images will return 0.
+			 */
 			size_t height() const override;
+
+			/**
+			 * The depth of the image.
+			 * @return The depth of the image.
+			 * @remarks 1D and 2D images will return 0.
+			 */
 			size_t depth()  const override;
 
 			Image3D& operator=(const Image3D& other);

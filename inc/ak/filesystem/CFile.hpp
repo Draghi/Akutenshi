@@ -232,7 +232,7 @@ namespace akfs {
 			 * Returns the size of the file on disk, in bytes
 			 * @return The size of the file on disk
 			 */
-			int64_t sizeOnDisk() const;
+			size_t sizeOnDisk() const;
 
 			/**
 			 * Returns the path of the file that was opened

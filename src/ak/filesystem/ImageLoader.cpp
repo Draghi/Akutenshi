@@ -26,10 +26,10 @@
 
 using namespace akfs;
 
-akd::Image1D akfs::load1DImage(SystemFolder folder, const stx::filesystem::path& path, uint32 layer) {
+akd::Image1D akfs::load1DImage(SystemFolder folder, const stx::filesystem::path& path, uint32 layer, bool bottomUp) {
 	auto fullpath = akfs::resolveFolder(folder).value()/path;
 
-	stbi_set_flip_vertically_on_load(true);
+	stbi_set_flip_vertically_on_load(bottomUp);
 
 	akl::Logger("load1D").info(fullpath.c_str());
 
@@ -44,41 +44,44 @@ akd::Image1D akfs::load1DImage(SystemFolder folder, const stx::filesystem::path&
 	return img;
 }
 
-akd::Image2D akfs::load2DImage(SystemFolder folder, const stx::filesystem::path& path) {
+akd::Image2D akfs::load2DImage(SystemFolder folder, const stx::filesystem::path& path, bool bottomUp) {
 	auto fullpath = akfs::resolveFolder(folder).value()/path;
 
-	stbi_set_flip_vertically_on_load(true);
+	stbi_set_flip_vertically_on_load(bottomUp);
 
 	int w, h, comp;
 	auto* image = stbi_loadf(fullpath.c_str(), &w, &h, &comp, 0);
 
-	if (!image) throw std::runtime_error("Load1DImage: Failed to load image");
+	if (!image) throw std::runtime_error("Load2DImage: Failed to load image (" + fullpath.string() + ")");
 	akd::Image2D img(image, static_cast<size_t>(comp), static_cast<size_t>(w), static_cast<size_t>(h));
 
 	stbi_image_free(image);
 	return img;
 }
 
-akd::Image3D akfs::load3DImage(SystemFolder folder, const std::vector<stx::filesystem::path>& path) {
+akd::Image3D akfs::load3DImage(SystemFolder folder, const std::vector<stx::filesystem::path>& path, bool bottomUp) {
 	std::vector<akd::Image2D> layers;
 
 	size_t w = 0, h = 0, comp = 0;
 
 	for(auto i = 0u; i < path.size(); i++) {
-		layers.push_back(load2DImage(folder, path[i]));
+		layers.push_back(load2DImage(folder, path[i], bottomUp));
 		auto& img = layers.back();
 
 		if (w == 0) { w = img.width(); h = img.height(); comp = img.componentCount(); }
 		if ((w != img.width()) || (h != img.height())) throw std::runtime_error("load3DImage: bad image size");
 
-		if (comp != img.componentCount()) img.setComponentCount(comp);
+		if (comp < img.componentCount()) comp = img.componentCount();
 	}
 
 	size_t layerSize = static_cast<size_t>(w*h*comp);
 
 	std::vector<fpSingle> img3D;
 	img3D.resize(layerSize*layers.size());
-	for(auto i = 0u; i < layers.size(); i++) std::memcpy(img3D.data() + i*layerSize, layers[i].data(), layerSize*sizeof(fpSingle));
+	for(auto i = 0u; i < layers.size(); i++) {
+		layers[i].setComponentCount(comp);
+		std::memcpy(img3D.data() + i*layerSize , layers[i].data(), layerSize*sizeof(fpSingle));
+	}
 
 	return akd::Image3D(img3D.data(), comp, w, h, layers.size());
 }

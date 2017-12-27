@@ -43,7 +43,7 @@ namespace ake {
 			mutable bool m_isDirty;
 			mutable akm::Mat4 m_cache;
 
-			akm::SphericalCoord_t<fpSingle> m_look;
+			akm::SphericalCoord m_look;
 			akm::Vec3 m_pos;
 
 			akm::Mat4& cacheMat() const {

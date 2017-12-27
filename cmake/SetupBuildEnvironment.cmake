@@ -1,5 +1,5 @@
 ###################
-# Akutenshi Setup # 
+# Akutenshi Setup #
 ###################
 
 # Setup Internal Variables
@@ -34,7 +34,7 @@ else()
 endif()
 
 ###############
-# Build Setup # 
+# Build Setup #
 ###############
 
 # Setup Sugar
@@ -48,7 +48,7 @@ set(SUGAR_STATUS_PRINT OFF CACHE INTERNAL "" FORCE)
 set(SUGAR_STATUS_DEBUG OFF CACHE INTERNAL "" FORCE)
 
 ###############
-# Build GLFW  # 
+# Build GLFW  #
 ###############
 
 set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "" FORCE)
@@ -61,13 +61,21 @@ set(LIB_SUFFIX "" CACHE INTERNAL "" FORCE)
 add_subdirectory("${CMAKE_SOURCE_DIR}/cmake/glfw")
 
 ##############
-# Build GL3  # 
+# Build GL3  #
 ##############
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/cmake/GL4")
 
 #################
-# Library Paths # 
+# Build Brotli  #
+#################
+
+set(BROTLI_BUNDLED_MODE ON)
+# set(ENABLE_SANITIZER "undefined")
+add_subdirectory("${CMAKE_SOURCE_DIR}/cmake/brotli")
+
+#################
+# Library Paths #
 #################
 
 set(GLM_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/glm")
@@ -77,6 +85,9 @@ set(BACKWARD_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/backward-cpp")
 set(GLFW_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/glfw/include")
 set(GL4_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/GL4/inc")
 set(STB_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/stb")
+set(SMILE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/libsmile/include")
+set(MSGPACK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/msgpack-c/include")
+set(BROTLI_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/brotli/c/include")
 
 ###############
 # CMake Setup #

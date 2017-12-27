@@ -27,12 +27,12 @@ namespace akm {
 	template<typename scalar_t> constexpr scalar_t PI = static_cast<scalar_t>(PI_d);
 
 	template<typename scalar_t> scalar_t degToRad(scalar_t deg) {
-		constexpr scalar_t conversionFactor = 180/PI<scalar_t>;
+		constexpr scalar_t conversionFactor = PI<scalar_t>/180;
 		return deg * conversionFactor;
 	}
 
 	template<typename scalar_t> scalar_t radToDeg(scalar_t rad) {
-		constexpr scalar_t conversionFactor = PI<scalar_t>/180;
+		constexpr scalar_t conversionFactor = 180/PI<scalar_t>;
 		return rad * conversionFactor;
 	}
 

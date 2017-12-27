@@ -1,0 +1,98 @@
+Mesh File
+====================================================
+{
+    "verts":[
+        [x,y,z],
+        [x,y,z],
+        [x,y,z]
+    ],
+    "norms":[
+        [x,y,z],
+        [x,y,z],
+        [x,y,z]
+    ],
+    "uv":[
+        [s,t],
+        [s,t],
+        [s,t]
+    ],
+    "faces":[
+        {
+            "vFace":[1, 2, 3],
+            "nFace":[1, 2, 3],
+            "tFace":[1, 2, 3],
+            "bones":[
+                ["leg_left_upper", 0.75],
+                ["leg_left_lower", 0.25],
+            ]
+        }
+    }
+}
+
+Skeleton File
+====================================================
+[
+    {
+        "name":"leg_left_upper",
+        "parent":"root",
+        "position":[x,y,z],
+        "rotation":[x,y,z,w]
+    },
+    {
+        "name":"leg_left_lower",
+        "parent":"leg_left_upper",
+        "position":[x,y,z],
+        "rotation":[x,y,z,w]
+    }
+]
+
+Animation File
+====================================================
+{
+    "frameRate":60,
+    "loop":"none/repeat/reverse",
+    "keyframes":[
+        {
+            "frame":id,
+            "bones":{
+                "leg_upper_left":[
+                    xx,xy,xz,xw,
+                    yx,yy,yz,yw,
+                    zx,zy,zz,zw,
+                    wx,wy,wz,ww
+                ],
+                "leg_lower_left":[
+                    xx,xy,xz,xw,
+                    yx,yy,yz,yw,
+                    zx,zy,zz,zw,
+                    wx,wy,wz,ww
+                ],
+            }
+        }
+    ]
+}
+
+Material
+====================================================
+{
+    "ambient":"texture/guard_unarmoured_ao.json",
+    "albedo":"texture/guard_unarmoured_albedo.json",
+    "roughness":"texture/guard_unarmoured_roughness.json",
+    "metalness":"texture/guard_unarmoured_metalness.json",
+    "normal":"texture/guard_unarmoured_normal.json"
+}
+
+Model File
+====================================================
+{
+    "material":"material/guard_unarmoured.json",
+    "skeleton":"skeleton/human.json",
+    "mesh":"meshes/guard.json",
+    "animations":{
+        "idle":"human_idle.json",
+        "walk":"human_walk.json",
+        "attack":"guard_swing.json"
+    }
+}
+
+

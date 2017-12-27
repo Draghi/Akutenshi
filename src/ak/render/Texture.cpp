@@ -16,6 +16,7 @@
 
 #include <ak/render/Texture.hpp>
 #include <ak/math/Scalar.hpp>
+#include <stdexcept>
 #include <utility>
 
 #include "GL/gl4.h"
@@ -168,33 +169,9 @@ void akr::createTextureStorage3D(TexFormat format, int32 width, int32 height, in
 	glTexStorage3D(GL_TEXTURE_3D, mipLevels, texFormatToGLFormats(format).first, width, height, depth);
 }
 
-
-
-void akr::setTextureData1D(TexFormat format, int32 width, const fpSingle* data, int32 level) {
-	auto [glFormat, usrFormat] = texFormatToGLFormats(format);
-	glTexImage1D(GL_TEXTURE_1D, level, static_cast<int32>(glFormat), width, 0, usrFormat, GL_FLOAT, data);
+void akr::createTextureStorageCube(TexFormat format, int32 width, int32 height, int32 mipLevels) {
+	glTexStorage2D(GL_TEXTURE_CUBE_MAP, mipLevels, texFormatToGLFormats(format).first, width, height);
 }
-
-void akr::setTextureData1D(TexFormat format, int32 width, int32 layers, const fpSingle* data, int32 level) {
-	auto [glFormat, usrFormat] = texFormatToGLFormats(format);
-	glTexImage2D(GL_TEXTURE_1D_ARRAY, level, static_cast<int32>(glFormat), width, layers, 0, usrFormat, GL_FLOAT, data);
-}
-
-void akr::setTextureData2D(TexFormat format, int32 width, int32 height, const fpSingle* data, int32 level) {
-	auto [glFormat, usrFormat] = texFormatToGLFormats(format);
-	glTexImage2D(GL_TEXTURE_2D, level, static_cast<int32>(glFormat), width, height, 0, usrFormat, GL_FLOAT, data);
-}
-
-void akr::setTextureData2D(TexFormat format, int32 width, int32 height, int32 layers, const fpSingle* data, int32 level) {
-	auto [glFormat, usrFormat] = texFormatToGLFormats(format);
-	glTexImage3D(GL_TEXTURE_2D_ARRAY, level, static_cast<int32>(glFormat), width, height, layers, 0, usrFormat, GL_FLOAT, data);
-}
-
-void akr::setTextureData3D(TexFormat format, int32 width, int32 height, int32 depth, const fpSingle* data, int32 level) {
-	auto [glFormat, usrFormat] = texFormatToGLFormats(format);
-	glTexImage3D(GL_TEXTURE_3D, level, static_cast<int32>(glFormat), width, height, depth, 0, usrFormat, GL_FLOAT, data);
-}
-
 
 
 void akr::replaceTextureData1D(TexFormat format, int32 xOff, int32 width, const fpSingle* data, int32 level) {
@@ -216,4 +193,23 @@ void akr::replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 l
 void akr::replaceTextureData3D(TexFormat format, int32 xOff, int32 yOff, int32 zOff, int32 width, int32 height, int32 depth, const fpSingle* data, int32 level) {
 	glTexSubImage3D(GL_TEXTURE_3D, level, xOff, yOff, zOff, width, height, depth, texFormatToGLFormats(format).second, GL_FLOAT, data);
 }
+
+static GLenum cubemapTargetToGlTarget(CubemapTarget akTarget) {
+	switch(akTarget) {
+		case CubemapTarget::PosX: return GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+		case CubemapTarget::PosY: return GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
+		case CubemapTarget::PosZ: return GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
+		case CubemapTarget::NegX: return GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
+		case CubemapTarget::NegY: return GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
+		case CubemapTarget::NegZ: return GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
+	}
+	throw std::runtime_error("Invalid cubemap target");
+}
+
+void akr::replaceTextureDataCubemap(CubemapTarget cubemap, TexFormat format, int32 xOff, int32 yOff, int32 width, int32 height, const fpSingle* data, int32 level) {
+	glTexSubImage2D(cubemapTargetToGlTarget(cubemap), level, xOff, yOff, width, height, texFormatToGLFormats(format).second, GL_FLOAT, data);
+}
+
+
+
 

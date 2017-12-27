@@ -216,20 +216,22 @@ size_t Image2D::componentCount() const {
 	return m_componentCount;
 }
 
-void Image2D::setComponentCount(size_t targetFormat) {
-	std::vector<fpSingle> newData;
-	newData.resize(m_w*targetFormat, 0);
+void Image2D::setComponentCount(size_t nComponentCount) {
+	auto minComp = akm::min(nComponentCount, m_componentCount);
 
+	std::vector<fpSingle> newData;
+	newData.resize(m_w*m_h*nComponentCount, 0);
 	for(auto i = 0u; i < m_w; i++) {
+		auto nXOff = i*nComponentCount, oXOff = i*m_componentCount;
 		for(auto j = 0u; j < m_h; j++) {
-			auto minCount = akm::min(targetFormat, m_componentCount);
-			for(auto c = 0u; c < minCount; c++) newData[i*targetFormat + j*m_w*targetFormat + c] = newData[i*m_componentCount + j*m_w*m_componentCount + c];
-			if ((targetFormat == 4) && (m_componentCount < 4)) newData[i*targetFormat + 3] = 1;
+			auto nYOff = j*m_w*nComponentCount, oYOff = j*m_w*m_componentCount;
+			for(auto comp = 0u; comp < minComp; comp++) newData[nXOff + nYOff + comp] = m_imageData[oXOff + oYOff + comp];
+			if (nComponentCount == 4) newData[nXOff + nYOff + 3] = 1;
 		}
 	}
 
 	m_imageData = std::move(newData);
-	m_componentCount = targetFormat;
+	m_componentCount = nComponentCount;
 }
 
 const fpSingle* Image2D::data() const {

@@ -14,20 +14,16 @@
  * limitations under the License.
  **/
 
-#ifndef AK_FILESYSTEM_IMAGELOADER_HPP_
-#define AK_FILESYSTEM_IMAGELOADER_HPP_
+#ifndef AK_DATA_MSGPACKPARSER_HPP_
+#define AK_DATA_MSGPACKPARSER_HPP_
 
-#include <vector>
-#include <ak/filesystem/Filesystem.hpp>
-#include <ak/data/Image.hpp>
-#include <ak/PrimitiveTypes.hpp>
+#include <ak/data/PValue.hpp>
+#include <iostream>
+#include <string>
 
-namespace akfs {
-
-	akd::Image1D load1DImage(SystemFolder folder, const stx::filesystem::path& path, uint32 layer = 0, bool bottomUp = true);
-	akd::Image2D load2DImage(SystemFolder folder, const stx::filesystem::path& path, bool bottomUp = true);
-	akd::Image3D load3DImage(SystemFolder folder, const std::vector<stx::filesystem::path>& path, bool bottomUp = true);
-
+namespace akd {
+	std::string serializeMsgPack(const akd::PValue& src);
+	bool deserializeMsgPack(akd::PValue& dest, const std::vector<uint8>& msgPackStream);
 }
 
 #endif

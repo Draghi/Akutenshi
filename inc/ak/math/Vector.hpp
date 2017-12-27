@@ -18,8 +18,11 @@
 #define AK_MATH_VECTOR_HPP_
 
 #include <ak/PrimitiveTypes.hpp>
-
-#include <glm/glm.hpp>
+#include <glm/detail/func_common.hpp>
+#include <glm/detail/func_geometric.hpp>
+#include <glm/detail/precision.hpp>
+#include <glm/detail/type_vec2.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 namespace akm {
 
@@ -29,6 +32,7 @@ namespace akm {
 	using Vec3 = Vec<3, fpSingle>;
 	using Vec4 = Vec<4, fpSingle>;
 
+	using glm::mix;
 	using glm::cross;
 	using glm::dot;
 	using glm::distance;

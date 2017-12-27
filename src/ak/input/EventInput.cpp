@@ -15,6 +15,10 @@
  **/
 
 #include <ak/input/EventInput.hpp>
+#include <ak/Log.hpp>
+#include <ak/math/Vector.hpp>
+#include <ak/PrimitiveTypes.hpp>
+#include <glm/detail/type_vec2.hpp>
 
 using namespace akin;
 
@@ -38,9 +42,11 @@ void EventKeyboard::update() {
 	for(auto iter = m_keyStates.begin(); iter != m_keyStates.end(); iter++) iter->first = Action::None;
 
 	m_keyEventBuffer.iterate([this](size_t, KeyEventData& eventData) {
-		KeyEvent event(eventData);
-		m_keyEventDispatcher.send(event);
-		if ((eventData.action == Action::Pressed) || (eventData.action == Action::Released) || (eventData.action == Action::Bumped)) {
+		if (eventData.key >= Key::KEY_LAST_NORMAL) {
+			akl::Logger("EventKeyboard").warn("Unknown key pressed - ", static_cast<size_t>(eventData.key));
+		} else if ((eventData.action == Action::Pressed) || (eventData.action == Action::Released) || (eventData.action == Action::Bumped)) {
+			KeyEvent event(eventData);
+			m_keyEventDispatcher.send(event);
 			m_keyStates[static_cast<size_t>(eventData.key)] = std::make_pair(eventData.action, eventData.action == Action::Pressed ? State::Down : State::Up);
 		}
 	});
@@ -88,13 +94,13 @@ void EventMouse::update() {
 	m_eventBuffer.iterate([this](size_t, EventRecord& eventData) {
 		switch(eventData.eventType) {
 			case ButtonType: {
-
 				auto& eData = eventData.eventData.button;
 
-				ButtonEvent event(eData);
-				m_buttonEventDispatcher.send(event);
-
-				if ((eData.action == Action::Pressed) || (eData.action == Action::Released) || (eData.action == Action::Bumped)) {
+				if (eData.button >= Button::BUTTON_LAST) {
+					akl::Logger("EventMouse").warn("Unknown button pressed - ", static_cast<size_t>(eData.button));
+				} else if ((eData.action == Action::Pressed) || (eData.action == Action::Released) || (eData.action == Action::Bumped)) {
+					ButtonEvent event(eData);
+					m_buttonEventDispatcher.send(event);
 					m_buttonStates[static_cast<size_t>(eData.button)] = std::make_pair(eData.action, eData.action == Action::Pressed ? State::Down : State::Up);
 				}
 
