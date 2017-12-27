@@ -14,15 +14,16 @@
  * limitations under the License.
  **/
 
-#ifndef AK_DATA_JSON_PVALUEPARSER_HPP_
-#define AK_DATA_JSON_PVALUEPARSER_HPP_
+#ifndef AK_DATA_MPAC_HPP_
+#define AK_DATA_MPAC_HPP_
 
 #include <ak/data/PValue.hpp>
+#include <iostream>
 #include <string>
 
 namespace akd {
-	std::string serializeJson(const akd::PValue& src, bool pretty = false);
-	bool deserializeJson(akd::PValue& dest, std::istream& jsonStream);
+	std::string serializeAsMPac(const akd::PValue& src);
+	bool deserializeFromMPac(akd::PValue& dest, const std::vector<uint8>& msgPackStream);
 }
 
 #endif

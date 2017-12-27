@@ -16,17 +16,22 @@ Mesh File
         [s,t],
         [s,t]
     ],
-    "faces":[
+    "bones":[
         {
-            "vFace":[1, 2, 3],
-            "nFace":[1, 2, 3],
-            "tFace":[1, 2, 3],
-            "bones":[
-                ["leg_left_upper", 0.75],
-                ["leg_left_lower", 0.25],
-            ]
-        }
-    }
+            "leg_left_upper": 0.75,
+            "leg_left_lower": 0.25
+        },
+        {
+            "leg_right_upper": 0.75,
+            "leg_right_lower": 0.25
+        },
+    ],
+    "faces":[
+        [[v1,v2,v3],[n1,n2,n3],[t1,t2,t3]],
+        [[v1,v2,v3],[n1,n2,n3],[t1,t2,t3]],
+        [[v1,v2,v3],[n1,n2,n3],[t1,t2,t3]],
+        [[v1,v2,v3],[n1,n2,n3],[t1,t2,t3]],
+    ]
 }
 
 Skeleton File

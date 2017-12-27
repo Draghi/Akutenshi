@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-#include "ak/data/MsgPackParser.hpp"
+#include <ak/data/MPac.hpp>
 
 using namespace akd;
 
@@ -138,11 +138,11 @@ struct MSGPackVistor : public msgpack::v2::null_visitor {
     void insufficient_bytes(size_t /*parsed_offset*/, size_t /*error_offset*/) {}
 };
 
-std::string akd::serializeMsgPack(const akd::PValue& /*src*/) {
+std::string akd::serializeAsMPac(const akd::PValue& /*src*/) {
 	throw std::logic_error("compressBrotli: Not implemented");
 }
 
-bool akd::deserializeMsgPack(akd::PValue& dest, const std::vector<uint8>& msgPackStream) {
+bool akd::deserializeFromMPac(akd::PValue& dest, const std::vector<uint8>& msgPackStream) {
 	MSGPackVistor vistor;
 	std::size_t off = 0;
 	if (!msgpack::v2::parse(reinterpret_cast<const char*>(msgPackStream.data()), msgPackStream.size(), off, vistor)) return false;

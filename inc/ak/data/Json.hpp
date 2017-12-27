@@ -14,16 +14,28 @@
  * limitations under the License.
  **/
 
-#ifndef AK_DATA_MSGPACKPARSER_HPP_
-#define AK_DATA_MSGPACKPARSER_HPP_
+#ifndef AK_DATA_JSON_PVALUEPARSER_HPP_
+#define AK_DATA_JSON_PVALUEPARSER_HPP_
 
 #include <ak/data/PValue.hpp>
-#include <iostream>
 #include <string>
 
 namespace akd {
-	std::string serializeMsgPack(const akd::PValue& src);
-	bool deserializeMsgPack(akd::PValue& dest, const std::vector<uint8>& msgPackStream);
+	/**
+	 * Attempts to serialize a PValue tree as a JSON string
+	 * @param src The source PValue tree
+	 * @param pretty Should the output be pretty (ie. new lines, tabs etc.)
+	 * @return The completed string
+	 */
+	std::string serializeAsJson(const akd::PValue& src, bool pretty = false);
+
+	/**
+	 * Attempts to deserialize a JSON string to a PValue tree
+	 * @param dest The target PValue to to deserialize to
+	 * @param jsonStr The json string to parse
+	 * @return If the JSON string was deserialized
+	 */
+	bool deserializeFromJson(akd::PValue& dest, const std::string& jsonStr);
 }
 
 #endif

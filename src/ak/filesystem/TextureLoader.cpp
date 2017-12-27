@@ -15,7 +15,7 @@
  **/
 
 #include <ak/data/Image.hpp>
-#include <ak/data/JsonParser.hpp>
+#include <ak/data/Json.hpp>
 #include <ak/data/PValue.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/ImageLoader.hpp>
@@ -110,8 +110,7 @@ static stx::filesystem::path loadResourceConfig(akd::PValue& dest, SystemFolder 
 	if (!cfgFile.readLine(cfgFileContents, false, {})) throw std::runtime_error("Failed to read texture resource config");
 
 	// Parse Config
-	std::istringstream cfgFileStream(cfgFileContents);
-	if (!akd::deserializeJson(dest, cfgFileStream)) throw std::runtime_error("Failed to parse texture resource config");
+	if (!akd::deserializeFromJson(dest, cfgFileContents)) throw std::runtime_error("Failed to parse texture resource config");
 
 	return resolveFolder(folder).value()/path.parent_path();
 }

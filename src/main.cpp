@@ -1,10 +1,11 @@
-#include <ak/data/BrotliCompression.hpp>
-#include <ak/data/JsonParser.hpp>
-#include <ak/data/MsgPackParser.hpp>
+#include <ak/data/Brotli.hpp>
+#include <ak/data/Json.hpp>
+#include <ak/data/MPac.hpp>
 #include <ak/data/PValue.hpp>
 #include <ak/engine/Camera.hpp>
 #include <ak/engine/Config.hpp>
 #include <ak/event/Dispatcher.hpp>
+#include <ak/event/Subscription.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Filesystem.hpp>
 #include <ak/filesystem/TextureLoader.hpp>
@@ -80,17 +81,25 @@ int main() {
 		akw::open(defaultWindowOptions);
 	}
 
-	auto file = akfs::open(akfs::SystemFolder::appData, "test.mpac.br", akfs::OpenFlags::In);
+	aka::Mesh mesh;
+
+	auto file = akfs::open(akfs::SystemFolder::appData, "meshes/TestMesh.mpac.br", akfs::OpenFlags::In);
 	if (file) {
 		std::vector<uint8> compressedData;
 		compressedData.resize(file.sizeOnDisk());
 		file.read(compressedData.data(), compressedData.size());
 
-		auto data = akd::decompressBrotli(compressedData);
+		auto data = akd::decompressFromBrotli(compressedData);
 
 		akd::PValue dTree;
-		akd::deserializeMsgPack(dTree, data);
-		log.info("Json Parse: ", akd::serializeJson(dTree, true));
+		akd::deserializeFromMPac(dTree, data);
+		log.info("Json Parse: ", akd::serializeAsJson(dTree, true));
+
+		akd::deserialize(mesh, dTree);
+		log.info("Verts: ", mesh.verts().size());
+		log.info("Norms: ", mesh.norms().size());
+		log.info("UVs: ", mesh.uvs().size());
+		log.info("Faces: ", mesh.faces().size());
 	}
 
 	akw::setCursorMode(akw::CursorMode::Captured);
@@ -115,7 +124,7 @@ int main() {
 		// VBO
 		akr::Buffer vBuf;
 		akr::bind(akr::BufferTarget::VARRYING, vBuf);
-		auto vData = akr::genCubeMesh();
+		auto vData = mesh.buildBuffer(true, true, true);//akr::genCubeMesh();
 		akr::setData(akr::BufferTarget::VARRYING, vData.data(), static_cast<uint32>(vData.size()));
 		akr::mapVertexBufferF(0, 3, akr::DataType::FPSingle, false,                  0, 8*sizeof(fpSingle));
 		akr::mapVertexBufferF(1, 3, akr::DataType::FPSingle, false, 3*sizeof(fpSingle), 8*sizeof(fpSingle));
@@ -250,8 +259,6 @@ int main() {
 	fpSingle updateAccum = 0;
 	fpSingle updateDelta = 1/ake::config()["engine"]["ticksPerSecond"].asOrDef<fpSingle>(60.0f);
 	fpSingle renderDelta = 1/static_cast<fpSingle>(akw::currentMonitor().prefVideoMode.refreshRate);
-
-	log.info(updateDelta/renderDelta);
 
 	aku::Timer timer;
 	while(!akw::closeRequested()) {

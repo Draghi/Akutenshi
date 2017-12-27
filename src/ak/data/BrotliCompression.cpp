@@ -14,18 +14,18 @@
  * limitations under the License.
  **/
 
+#include <ak/data/Brotli.hpp>
 #include <ak/ScopeGuard.hpp>
 #include <brotli/decode.h>
 #include <stddef.h>
 #include <stdio.h>
-#include "ak/data/BrotliCompression.hpp"
 #include <stdexcept>
 
 using namespace akd;
 
-std::vector<uint8> akd::compressBrotli(const std::vector<uint8>& /*inData*/) { throw std::logic_error("compressBrotli: Not implemented"); }
+std::vector<uint8> akd::compressWithBrotli(const std::vector<uint8>& /*inData*/) { throw std::logic_error("compressBrotli: Not implemented"); }
 
-std::vector<uint8> akd::decompressBrotli(const std::vector<uint8>& inData) {
+std::vector<uint8> akd::decompressFromBrotli(const std::vector<uint8>& inData) {
 	BrotliDecoderState* state = BrotliDecoderCreateInstance(nullptr, nullptr, nullptr);
 	auto destroyBrotliInstance = ak::ScopeGuard([&]{BrotliDecoderDestroyInstance(state);});
 

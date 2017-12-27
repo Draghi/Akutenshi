@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-#include <ak/data/JsonParser.hpp>
+#include <ak/data/Json.hpp>
 #include <ak/engine/Config.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/Log.hpp>
@@ -75,8 +75,7 @@ ConfigLoadResult ake::loadConfig() {
 	if (configFile.readLine(configContents, false, {}) <= 0) return ConfigLoadResult::CannotRead;
 
 	akd::PValue newConfig;
-	std::istringstream sstrean(configContents);
-	if (!akd::deserializeJson(newConfig, sstrean)) return ConfigLoadResult::CannotParse;
+	if (!akd::deserializeFromJson(newConfig, configContents)) return ConfigLoadResult::CannotParse;
 
 	setConfig(newConfig);
 	return ConfigLoadResult::Success;
@@ -92,7 +91,7 @@ bool ake::saveConfig() {
 	SaveConfigEvent event(configSnapshot);
 	saveConfigDispatcher().send(event);
 
-	std::string contents = akd::serializeJson(configSnapshot, true);
+	std::string contents = akd::serializeAsJson(configSnapshot, true);
 
 	if (configFile.write(contents.data(), contents.size()) <= 0) {
 		configFile = akfs::CFile();
@@ -127,105 +126,4 @@ static bool restoreBackup() {
 	stx::filesystem::rename(BACKUP_PATH, CONFIG_PATH, err);
 	return !(err && stx::filesystem::exists(BACKUP_PATH));
 }
-
-
-/*static akev::Dispatcher<ConfigReloadEvent>& configReloadDispatcher();
-static akd::PValue currentConfig;
-
-static ak::log::Logger configLog("Config");
-static stx::filesystem::path configPath;
-
-void ake::setConfigFile(const stx::filesystem::path& cPath) {
-	configPath = cPath;
-}
-
-bool ake::reloadConfig() {
-	auto configFile = akfs::CFile(configPath, akfs::In);
-	if (!configFile) return false;
-
-	std::string configContents;
-	if (configFile.readLine(configContents, false, {}) <= 0) { configLog.warn("Failed to read global config contents"); return false; }
-
-	akd::PValue gConfig;
-	std::stringstream sstream(configContents);
-	if (!akd::deserializeJson(gConfig, sstream)) { configLog.warn("Failed to read global config contents"); return false; }
-
-	currentConfig = gConfig;
-
-	ConfigReloadEvent reloadEvent(currentConfig);
-	configReloadDispatcher().send(reloadEvent);
-
-	return true;
-}
-
-static stx::filesystem::path backupPath() { return stx::filesystem::path(configPath).replace_extension("akbak"); }
-
-static bool backupConfig() {
-	auto bPath = backupPath();
-
-	std::error_code err;
-	stx::filesystem::remove(bPath, err);
-
-	err.clear();
-	stx::filesystem::rename(configPath, bPath, err);
-	return !(err && stx::filesystem::exists(configPath));
-}
-
-static bool deleteBackup() {
-	auto bPath = backupPath();
-	std::error_code err;
-	stx::filesystem::remove(bPath, err);
-	return !stx::filesystem::exists(configPath);
-}
-
-static bool restoreBackup() {
-	auto bPath = backupPath();
-
-	std::error_code err;
-	stx::filesystem::remove(configPath, err);
-
-	err.clear();
-	stx::filesystem::rename(bPath, configPath, err);
-	return !(err && stx::filesystem::exists(bPath));
-}
-
-bool ake::saveConfig() {
-	backupConfig();
-
-	auto configFile = akfs::CFile(configPath, akfs::Out | akfs::Truncate);
-
-	if ((!configFile) || (configFile.writeLine(akd::serializeJson(config(), true)) <= 0)) {
-		restoreBackup();
-		return false;
-	}
-
-	deleteBackup();
-	return true;
-}
-
-akd::PValue& ake::config() {
-	return currentConfig;
-}
-
-const akev::DispatcherProxy<ConfigReloadEvent>& ake::reloadEvent() {
-	static akev::DispatcherProxy<ConfigReloadEvent> dispatchProxy(configReloadDispatcher());
-	return dispatchProxy;
-}
-
-static akev::Dispatcher<ConfigReloadEvent>& configReloadDispatcher() {
-	static akev::Dispatcher<ConfigReloadEvent> sConfigReloadDispatcher;
-	return sConfigReloadDispatcher;
-}*/
-
-/*void ake::subscribeConfigReload(akev::Subscription& subscriber, const std::function<void(ConfigReloadEvent&)>& callback) {
-	configReloadDispatcher.subscribe(subscriber, callback);
-}
-
-akev::SubscriberID ake::subscribeConfigReload(const std::function<void(ConfigReloadEvent&)>& callback) {
-	return configReloadDispatcher.subscribe(callback);
-}
-
-void ake::unsubscribeConfigReload(akev::Subscription& subscriber) {
-	configReloadDispatcher.unsubscribe(subscriber);
-}*/
 

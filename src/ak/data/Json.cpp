@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-#include <ak/data/JsonParser.hpp>
+#include <ak/data/Json.hpp>
 #include <ak/data/Path.hpp>
 #include <ak/Log.hpp>
 #include <ak/PrimitiveTypes.hpp>
@@ -135,11 +135,11 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 	    }
 };
 
-bool akd::deserializeJson(akd::PValue& dest, std::istream& jsonStream) {
+bool akd::deserializeFromJson(akd::PValue& dest, const std::string& jsonStr) {
 	dest = akd::PValue();
 	JSONParser handler(dest);
 	rj::Reader reader;
-	rj::IStreamWrapper stream(jsonStream);
+	rj::StringStream stream(jsonStr.c_str());
 	auto result = reader.Parse<rj::kParseTrailingCommasFlag | rj::kParseFullPrecisionFlag>(stream, handler);
 	if (result.IsError()) {
 		akl::Logger("Json").warn("JSON Parse error (Offset ", result.Offset(), "): ", rj::GetParseError_En(result.Code()));
@@ -148,7 +148,7 @@ bool akd::deserializeJson(akd::PValue& dest, std::istream& jsonStream) {
 	return true;
 }
 
-std::string akd::serializeJson(const akd::PValue& src, bool pretty) {
+std::string akd::serializeAsJson(const akd::PValue& src, bool pretty) {
     rj::StringBuffer s;
 
     rj::Writer<rj::StringBuffer> nWriter(s);
