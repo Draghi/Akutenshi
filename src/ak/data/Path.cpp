@@ -61,7 +61,7 @@ Path akd::parseObjectDotNotation(const std::string& path) {
 std::string akd::pathToObjectDotNotation(const Path& path) {
 	std::stringstream sstream;
 
-	for(size_t i = 0; i < path.size(); i++) {
+	for(akSize i = 0; i < path.size(); i++) {
 
 		if (path[i].isIndex) {
 			sstream << "[" << path[i].index << "]";

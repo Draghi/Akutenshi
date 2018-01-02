@@ -70,7 +70,7 @@ void ak::log::processMessageQueue() {
 	auto processLock = messageQueueProcessLock.lock();
 
 	logMessageBuffer.swap();
-	logMessageBuffer.iterate([&](size_t, const std::pair<Level, std::string>& record){
+	logMessageBuffer.iterate([&](akSize, const std::pair<Level, std::string>& record){
 		if (isConsoleFilterLevelEnabled(record.first)) {
 			if (isRedirrectingStd) {
 				//@todo Implement

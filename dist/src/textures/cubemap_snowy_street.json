@@ -1,12 +1,12 @@
 {
     "type":"cubemap",
     "layers":{
-        "pX":"TestCube/pX.jpg",
-        "pY":"TestCube/pY.jpg",
-        "pZ":"TestCube/pZ.jpg",
-        "nX":"TestCube/nX.jpg",
-        "nY":"TestCube/nY.jpg",
-        "nZ":"TestCube/nZ.jpg"
+        "pX":"cubemap_snowy_street/pX.jpg",
+        "pY":"cubemap_snowy_street/pY.jpg",
+        "pZ":"cubemap_snowy_street/pZ.jpg",
+        "nX":"cubemap_snowy_street/nX.jpg",
+        "nY":"cubemap_snowy_street/nY.jpg",
+        "nZ":"cubemap_snowy_street/nZ.jpg"
     },
     "mipFilter":"linear",
     "minFilter":"linear",

@@ -95,7 +95,7 @@ namespace ak {
 			 * @return If the ScopeGuard is empty or has been released
 			 */
 			bool empty() const {
-				return !static_cast<bool>(m_func);
+				return !m_func;
 			}
 
 			/**

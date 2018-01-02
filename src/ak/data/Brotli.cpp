@@ -14,18 +14,44 @@
  * limitations under the License.
  **/
 
+#include <ak/math/Scalar.hpp>
 #include <ak/data/Brotli.hpp>
+#include <ak/PrimitiveTypes.hpp>
 #include <ak/ScopeGuard.hpp>
 #include <brotli/decode.h>
-#include <stddef.h>
-#include <stdio.h>
+#include <brotli/encode.h>
+#include <cstddef>
 #include <stdexcept>
+#include <vector>
 
 using namespace akd;
 
-std::vector<uint8> akd::compressWithBrotli(const std::vector<uint8>& /*inData*/) { throw std::logic_error("compressBrotli: Not implemented"); }
+std::vector<uint8> akd::compressBrotli(const std::vector<uint8>& inData, uint8 compressionLevel) {
+	BrotliEncoderState* state = BrotliEncoderCreateInstance(nullptr, nullptr, nullptr);
+	auto destroyBrotliInstance = ak::ScopeGuard([&]{BrotliEncoderDestroyInstance(state);});
+	BrotliEncoderSetParameter(state, BROTLI_PARAM_QUALITY, akm::min<uint8>(compressionLevel, BROTLI_MAX_QUALITY));
+	BrotliEncoderSetParameter(state, BROTLI_PARAM_LGWIN,   BROTLI_MAX_WINDOW_BITS);
+	BrotliEncoderSetParameter(state, BROTLI_PARAM_LGBLOCK, BROTLI_MAX_INPUT_BLOCK_BITS);
+	BrotliEncoderSetParameter(state, BROTLI_PARAM_LGBLOCK, BROTLI_MAX_INPUT_BLOCK_BITS);
 
-std::vector<uint8> akd::decompressFromBrotli(const std::vector<uint8>& inData) {
+	std::vector<uint8> outData;
+	outData.resize(BrotliEncoderMaxCompressedSize(inData.size()), 0);
+
+	size_t inAvailable = inData.size();
+	const uint8_t* inNext = inData.data();
+	size_t outAvailable = outData.size();
+	uint8* outNext = outData.data();
+
+	while(true) {
+		if (!BrotliEncoderCompressStream(state, BROTLI_OPERATION_FINISH, &inAvailable, &inNext, &outAvailable, &outNext, nullptr)) throw std::runtime_error("Failed to perform compress with brotli");
+		if (BrotliEncoderIsFinished(state)) break;
+	}
+
+	outData.resize(outData.size() - outAvailable);
+	return outData;
+}
+
+std::vector<uint8> akd::decompressBrotli(const std::vector<uint8>& inData) {
 	BrotliDecoderState* state = BrotliDecoderCreateInstance(nullptr, nullptr, nullptr);
 	auto destroyBrotliInstance = ak::ScopeGuard([&]{BrotliDecoderDestroyInstance(state);});
 

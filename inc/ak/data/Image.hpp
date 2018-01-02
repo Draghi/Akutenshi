@@ -17,264 +17,187 @@
 #ifndef AK_DATA_IMAGE_HPP_
 #define AK_DATA_IMAGE_HPP_
 
-#include <ak/math/Vector.hpp>
+#include <ak/data/PValue.hpp>
+#include <ak/math/Scalar.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <cstddef>
+#include <glm/common.hpp>
 #include <vector>
 
 namespace akd {
 
-	/**
-	 * Base image class to facilitate generic handlers
-	 */
-	class Image {
-		Image(const Image&) = delete;
-		Image& operator=(const Image&) = delete;
-		public:
-			Image() = default;
-			virtual ~Image() = default;
-
-			/**
-			 * Returns the number of colour components in the image (1 - R, 2, RG, 3 RGB, 4 - RGBA etc.)
-			 * @return the number of colour components in the image
-			 */
-			virtual size_t componentCount() const = 0;
-
-			/**
-			 * Changes the number of components in the image
-			 * @param targetFormat The target number of components for the image
-			 * @remarks Setting to a target with 4 or more components will default the 4th component to 1
-			 */
-			virtual void setComponentCount(size_t targetFormat) = 0;
-
-			/**
-			 * Returns the underlying data
-			 * @return The underlying data
-			 * @remarks Stored left-right, bottom-top, front-back
-			 */
-			virtual const fpSingle* data() const = 0;
-
-			/**
-			 * The width of the image.
-			 * @return The width of the image.
-			 */
-			virtual size_t width()  const = 0;
-
-			/**
-			 * The height of the image.
-			 * @return The height of the image.
-			 * @remarks 1D images will return 0.
-			 */
-			virtual size_t height() const = 0;
-
-			/**
-			 * The depth of the image.
-			 * @return The depth of the image.
-			 * @remarks 1D and 2D images will return 0.
-			 */
-			virtual size_t depth()  const = 0;
-	};
-
-	/**
-	 * 1D Image
-	 */
-	class Image1D final : public Image {
+	template<typename type_t> class Image final {
 		private:
-			size_t m_componentCount;
-			std::vector<fpSingle> m_imageData;
-			size_t m_w;
+			std::vector<type_t> m_data;
+
+			akSize m_components;
+			akSize m_width, m_height, m_depth;
 
 		public:
-			Image1D(const fpSingle* data, size_t components, size_t width);
-			Image1D(const Image1D& other);
-			Image1D(Image1D&& other);
-			~Image1D() override;
+			Image() : m_data(), m_components(0), m_width(0), m_height(0), m_depth(0) {}
 
-			void set(uint32 x, fpSingle value);
-			void set(uint32 x, akm::Vec2 value);
-			void set(uint32 x, akm::Vec3 value);
-			void set(uint32 x, akm::Vec4 value);
+			Image(const std::vector<type_t>& data, akSize components, akSize width, akSize height, akSize depth) : m_data(data), m_components(components), m_width(width), m_height(akm::max(width ? 1u : 0u, height)), m_depth(akm::max(width ? 1u : 0u, depth)) {}
 
-			fpSingle asR(uint32 x) const;
-			akm::Vec2 asRG(uint32 x) const;
-			akm::Vec3 asRGB(uint32 x) const;
-			akm::Vec4 asRGBA(uint32 x) const;
+			Image(std::vector<type_t>&& data, akSize components, akSize width, akSize height, akSize depth) : m_data(data), m_components(components), m_width(width), m_height(akm::max(width ? 1u : 0u, height)), m_depth(akm::max(width ? 1u : 0u, depth)) {}
 
-			/**
-			 * Returns the number of colour components in the image (1 - R, 2, RG, 3 RGB, 4 - RGBA etc.)
-			 * @return the number of colour components in the image
-			 */
-			size_t componentCount() const override;
+			Image(const type_t* data, akSize components, akSize width, akSize height, akSize depth) : m_data(), m_components(components), m_width(width), m_height(akm::max(width ? 1u : 0u, height)), m_depth(akm::max(width ? 1u : 0u, depth)) {
+				if ((data == nullptr) || (m_width == 0) || (m_components == 0)) return;
+				m_data.resize(m_width*m_height*m_depth*m_components);
+				std::memcpy(m_data.data(), data, m_data.size()*sizeof(type_t));
+			}
 
-			/**
-			 * Changes the number of components in the image
-			 * @param targetFormat The target number of components for the image
-			 * @remarks Setting to a target with 4 or more components will default the 4th component to 1
-			 */
-			void setComponentCount(size_t targetFormat) override;
+			Image(const Image& other) : m_data(other.m_data), m_components(other.m_components), m_width(other.m_width), m_height(other.m_height), m_depth(other.m_depth) {}
+			Image(Image&& other) : m_data(std::move(other.m_data)), m_components(other.m_components), m_width(other.m_width), m_height(other.m_height), m_depth(other.m_depth) {}
 
-			/**
-			 * Returns the underlying data
-			 * @return The underlying data
-			 * @remarks Stored left-right, bottom-top, front-back
-			 */
-			const fpSingle* data() const override;
+			void setComponents(akSize newComponents) {
+				if ((m_width == 0) || (newComponents == m_components)) return;
+				if (newComponents == 0) {
+					m_data.clear();
+					m_width = 0; m_height = 0; m_depth = 0;
+					m_components = 0;
+					return;
+				}
 
-			/**
-			 * The width of the image.
-			 * @return The width of the image.
-			 */
-			size_t width()  const override;
+				akSize minComp = std::min(newComponents, m_components);
+				std::vector<type_t> newData;
+				newData.resize(m_width*m_height*m_depth*newComponents);
+				for(size_t i = 0; i < m_width*m_height*m_depth; i++) {
+					for(akSize j = 0; i < minComp; i++) {
+						newData[i*newComponents + j] = m_data[i*m_components + j];
 
-			/**
-			 * The height of the image.
-			 * @return The height of the image.
-			 * @remarks 1D images will return 0.
-			 */
-			size_t height() const override;
+					}
+					// @todo Add min/max value to template and fix this line
+					if ((newComponents < m_components) && (newComponents == 4)) newData[i*newComponents + 3] = 1;
+				}
 
-			/**
-			 * The depth of the image.
-			 * @return The depth of the image.
-			 * @remarks 1D and 2D images will return 0.
-			 */
-			size_t depth()  const override;
 
-			Image1D& operator=(const Image1D& other);
-			Image1D& operator=(Image1D&& other);
+			}
+
+			type_t* data() {
+				return m_data.data();
+			}
+
+			type_t* row(akSize row) {
+				if (row > m_height) return nullptr;
+				return m_data.data() + row*rowSize();
+			}
+
+			type_t* layer(akSize layer) {
+				if (layer > m_depth) return nullptr;
+				return m_data.data() + layer*layerSize();
+			}
+
+			const type_t* data() const {
+				return m_data.data();
+			}
+
+			const type_t* row(akSize row) const {
+				if (row > m_height) return nullptr;
+				return m_data.data() + row*rowSize();
+			}
+
+			const type_t* layer(akSize layer) const {
+				if (layer > m_depth) return nullptr;
+				return m_data.data() + layer*layerSize();
+			}
+
+			akSize components() const {
+				return m_components;
+			}
+
+			akSize width() const {
+				return m_width;
+			}
+
+			akSize height() const {
+				return m_height;
+			}
+
+			akSize depth() const {
+				return m_depth;
+			}
+
+			akSize size() const {
+				return static_cast<akSize>(m_data.size());
+			}
+
+			akSize rowSize() const {
+				return m_components*m_width;
+			}
+
+			akSize layerSize() const {
+				return m_components*m_width*m_height;
+			}
+
+			Image& operator=(const Image& other) {
+				m_data = other.m_data;
+				m_components = other.m_components;
+				m_width = other.m_width;
+				m_height = other.m_height;
+				m_depth = other.m_depth;
+				return *this;
+			}
+
+			Image& operator=(Image&& other) {
+				m_data = std::move(other.m_data);
+				m_components = other.m_components;
+				m_width = other.m_width;
+				m_height = other.m_height;
+				m_depth = other.m_depth;
+				return *this;
+			}
 	};
 
-	class Image2D final : public Image {
-		private:
-			size_t m_componentCount;
-			std::vector<fpSingle> m_imageData;
-			size_t m_w, m_h;
+	using ImageF32 = Image<fpSingle>;
+	using ImageU8  = Image<uint8>;
 
-		public:
-			Image2D(const fpSingle* data, size_t components, size_t width, size_t height);
-			Image2D(const Image2D& other);
-			Image2D(Image2D&& other);
-			~Image2D() override;
+	template<typename type_t> void serialize(const Image<type_t>& src, akd::PValue& dst) {
+		dst["size"][0].set<akSize>(src.width());
+		dst["size"][1].set<akSize>(src.height());
+		dst["size"][2].set<akSize>(src.depth());
+		dst["components"].set<akSize>(src.components());
 
-			void set(uint32 x, uint32 y, fpSingle value);
-			void set(uint32 x, uint32 y, akm::Vec2 value);
-			void set(uint32 x, uint32 y, akm::Vec3 value);
-			void set(uint32 x, uint32 y, akm::Vec4 value);
+		std::vector<uint8> binData;
+		binData.resize(src.size()*sizeof(type_t));
+		std::memcpy(binData.data(), src.data(), src.size()*sizeof(type_t));
+		dst["data"].set<akd::PValue::bin_t>(binData);
+	}
 
-			fpSingle asR(uint32 x, uint32 y) const;
-			akm::Vec2 asRG(uint32 x, uint32 y) const;
-			akm::Vec3 asRGB(uint32 x, uint32 y) const;
-			akm::Vec4 asRGBA(uint32 x, uint32 y) const;
+	template<typename type_t> bool deserialize(const akd::PValue& src, Image<type_t>& dst) {
+		try {
+			akSize width  = src["size"][0].as<akSize>();
+			akSize height = akm::max(width ? 1u : 0u, src["size"][1].as<akSize>());
+			akSize depth  = akm::max(width ? 1u : 0u, src["size"][2].as<akSize>());
+			akSize components = src["components"].as<akSize>();
 
-			/**
-			 * Returns the number of colour components in the image (1 - R, 2, RG, 3 RGB, 4 - RGBA etc.)
-			 * @return the number of colour components in the image
-			 */
-			size_t componentCount() const override;
+			if ((width == 0) || (components == 0)) return false;
 
-			/**
-			 * Changes the number of components in the image
-			 * @param targetFormat The target number of components for the image
-			 * @remarks Setting to a target with 4 or more components will default the 4th component to 1
-			 */
-			void setComponentCount(size_t targetFormat) override;
+			size_t dataSize = width*height*depth*components;
 
-			/**
-			 * Returns the underlying data
-			 * @return The underlying data
-			 * @remarks Stored left-right, bottom-top, front-back
-			 */
-			const fpSingle* data() const override;
+			std::vector<type_t> data;
+			data.resize(dataSize);
 
-			/**
-			 * The width of the image.
-			 * @return The width of the image.
-			 */
-			size_t width()  const override;
+			auto& srcData = src["data"].asBin();
+			dst = Image<type_t>(reinterpret_cast<const type_t*>(srcData.data()), components, width, height, depth);
 
-			/**
-			 * The height of the image.
-			 * @return The height of the image.
-			 * @remarks 1D images will return 0.
-			 */
-			size_t height() const override;
+			return true;
+		} catch(const std::logic_error&) {
+			return false;
+		}
+	}
 
-			/**
-			 * The depth of the image.
-			 * @return The depth of the image.
-			 * @remarks 1D and 2D images will return 0.
-			 */
-			size_t depth()  const override;
+	std::optional<ImageF32> loadImageF32(const uint8* data, akSize len, bool bottomUp = true);
+	std::optional<ImageF32> loadImageF32(const std::vector<std::pair<const uint8*, akSize>>& data, bool bottomUp = true);
+	std::optional<ImageU8> loadImageU8(const uint8* data, akSize len, bool bottomUp = true);
+	std::optional<ImageU8> loadImageU8(const std::vector<std::pair<const uint8*, akSize>>& data, bool bottomUp = true);
 
-			Image2D& operator=(const Image2D& other);
-			Image2D& operator=(Image2D&& other);
-	};
+	template<typename type_t> std::optional<Image<type_t>> loadImage(const uint8* data, akSize len, bool bottomUp = true);
+	template<typename type_t> std::optional<Image<type_t>> loadImage(const std::vector<std::pair<const uint8*, akSize>>& data, bool bottomUp = true);
 
-	class Image3D final : public Image {
-		private:
-			size_t m_componentCount;
-			std::vector<fpSingle> m_imageData;
-			size_t m_w, m_h, m_d;
+	template<> inline std::optional<Image<fpSingle>> loadImage<fpSingle>(const uint8* data, akSize len, bool bottomUp) { return loadImageF32(data, len, bottomUp); }
+	template<> inline std::optional<Image<fpSingle>> loadImage<fpSingle>(const std::vector<std::pair<const uint8*, akSize>>& data, bool bottomUp) { return loadImageF32(data, bottomUp); }
+	template<> inline std::optional<Image<uint8>> loadImage<uint8>(const uint8* data, akSize len, bool bottomUp) { return loadImageU8(data, len, bottomUp); }
+	template<> inline std::optional<Image<uint8>> loadImage<uint8>(const std::vector<std::pair<const uint8*, akSize>>& data, bool bottomUp) { return loadImageU8(data, bottomUp); }
 
-		public:
-			Image3D(const fpSingle* data, size_t components, size_t width, size_t height, size_t depth);
-			Image3D(const Image3D& other);
-			Image3D(Image3D&& other);
-			~Image3D() override;
-
-			void set(uint32 x, uint32 y, uint32 z, fpSingle value);
-			void set(uint32 x, uint32 y, uint32 z, akm::Vec2 value);
-			void set(uint32 x, uint32 y, uint32 z, akm::Vec3 value);
-			void set(uint32 x, uint32 y, uint32 z, akm::Vec4 value);
-
-			fpSingle asR(uint32 x, uint32 y, uint32 z) const;
-			akm::Vec2 asRG(uint32 x, uint32 y, uint32 z) const;
-			akm::Vec3 asRGB(uint32 x, uint32 y, uint32 z) const;
-			akm::Vec4 asRGBA(uint32 x, uint32 y, uint32 z) const;
-
-			/**
-			 * Returns the number of colour components in the image (1 - R, 2, RG, 3 RGB, 4 - RGBA etc.)
-			 * @return the number of colour components in the image
-			 */
-			size_t componentCount() const override;
-
-			/**
-			 * Changes the number of components in the image
-			 * @param targetFormat The target number of components for the image
-			 * @remarks Setting to a target with 4 or more components will default the 4th component to 1
-			 */
-			void setComponentCount(size_t targetFormat) override;
-
-			/**
-			 * Returns the underlying data
-			 * @return The underlying data
-			 * @remarks Stored left-right, bottom-top, front-back
-			 */
-			const fpSingle* data() const override;
-
-			/**
-			 * The width of the image.
-			 * @return The width of the image.
-			 */
-			size_t width()  const override;
-
-			/**
-			 * The height of the image.
-			 * @return The height of the image.
-			 * @remarks 1D images will return 0.
-			 */
-			size_t height() const override;
-
-			/**
-			 * The depth of the image.
-			 * @return The depth of the image.
-			 * @remarks 1D and 2D images will return 0.
-			 */
-			size_t depth()  const override;
-
-			Image3D& operator=(const Image3D& other);
-			Image3D& operator=(Image3D&& other);
-	};
 }
 
 #endif

@@ -39,7 +39,7 @@ namespace akev {
 	}
 
 	inline constexpr EventID calculateEventID(const std::string_view& eventName) {
-		return akd::calculateFNV1AHash(eventName.data(), eventName.size());
+		return akd::calculateFNV1AHash(eventName.data(), static_cast<akSize>(eventName.size()));
 	}
 
 }

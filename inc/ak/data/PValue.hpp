@@ -49,12 +49,12 @@ namespace akd {
 		Unsigned,
 		Decimal,
 		Boolean,
+		Binary,
 	};
 
 	void traversePValue(const PValue& cNode, const std::function<void(const Path& path, TraverseAction action, const PValue& value)>& callback);
 
 	template<typename type_t> type_t deserialize(const PValue& root);
-	template<typename type_t> void serialize(PValue& root, const type_t& val);
 
 	class PValue final {
 		public:
@@ -66,6 +66,7 @@ namespace akd {
 			using uint_t = uint64;
 			using dec_t = fpDouble;
 			using bool_t = bool;
+			using bin_t = std::vector<uint8>;
 
 			using traverse_f = std::function<bool(const Path&, const PValue&)>;
 
@@ -79,6 +80,8 @@ namespace akd {
 				int_t iVal;
 				dec_t dVal;
 				bool_t bVal;
+
+				bin_t binVal;
 
 				ValueContainer() : uVal(0) {}
 				~ValueContainer() {}
@@ -100,6 +103,7 @@ namespace akd {
 			PValue(const uint_t& val) : m_type(PType::Null) { setUInt(val); }
 			PValue(const dec_t& val) : m_type(PType::Null)  { setDec(val); }
 			PValue(const bool_t& val) : m_type(PType::Null) { setBool(val); }
+			PValue(const bin_t& val) : m_type(PType::Null) { setBin(val); }
 
 			template<typename type_t> static PValue from(const type_t& val) { PValue result; result.set<type_t>(val); return result; }
 
@@ -110,7 +114,7 @@ namespace akd {
 			// //////////////// //
 
 			PValue& at(const std::string& name) { return asObj().at(name); }
-			PValue& at(size_t id) { return asArr().at(id); }
+			PValue& at(akSize id) { return asArr().at(id); }
 
 			PValue& atOrSet(const std::string& name, const PValue& val = PValue()) {
 				return asObjOrSet().insert(std::make_pair(name, val)).first->second;
@@ -122,28 +126,28 @@ namespace akd {
 				return (iter == asObj().end()) ? val : iter->second;
 			}
 
-			PValue& atOrSet(size_t id, const PValue& val = PValue()) {
+			PValue& atOrSet(akSize id, const PValue& val = PValue()) {
 				if (isArr() && id < asArr().size()) return asArr()[id];
 				asArrOrSet().resize(id + 1);
 				return asArr()[id] = val;
 			}
 
-			const PValue& atOrDef(size_t id, const PValue& val = PValue()) const {
+			const PValue& atOrDef(akSize id, const PValue& val = PValue()) const {
 				if (!isArr()) return val;
 				return (id < asArr().size()) ? asArr()[id] : val;
 			}
 
 			PValue& operator[](const std::string& name) { return atOrSet(name); }
-			PValue& operator[](const size_t& id) { return atOrSet(id); }
+			PValue& operator[](const akSize& id) { return atOrSet(id); }
 
 			const PValue& at(const std::string& name) const { return asObj().at(name); }
-			const PValue& at(size_t id) const { return asArr().at(id); }
+			const PValue& at(akSize id) const { return asArr().at(id); }
 
 			bool exists(const std::string& name) const { return (isObj()) && (asObj().find(name) != asObj().end()); }
-			bool exists(size_t id) const { return (isArr()) && (id < asArr().size()); }
+			bool exists(akSize id) const { return (isArr()) && (id < asArr().size()); }
 
 			const PValue& operator[](const std::string& name) const { return atOrDef(name); }
-			const PValue& operator[](const size_t& id) const { return atOrDef(id); }
+			const PValue& operator[](const akSize& id) const { return atOrDef(id); }
 
 			// ///////////// //
 			// // Dirrect // //
@@ -163,6 +167,7 @@ namespace akd {
 			PValue& setUInt(const uint_t& val);
 			PValue& setDec(const dec_t& val);
 			PValue& setBool(const bool_t& val);
+			PValue& setBin(const bin_t& val);
 
 			obj_t& asObj();
 			arr_t& asArr();
@@ -171,6 +176,7 @@ namespace akd {
 			uint_t& asUInt();
 			dec_t& asDec();
 			bool_t& asBool();
+			bin_t& asBin();
 
 			obj_t& asObjOrSet(const obj_t& val = obj_t());
 			arr_t& asArrOrSet(const arr_t& val = arr_t());
@@ -179,6 +185,7 @@ namespace akd {
 			uint_t& asUIntOrSet(uint_t val);
 			dec_t& asDecOrSet(dec_t val);
 			bool_t& asBoolOrSet(bool_t val);
+			bin_t& asBinOrSet(const bin_t& val = bin_t());
 
 			const obj_t& asObj() const;
 			const arr_t& asArr() const;
@@ -187,6 +194,7 @@ namespace akd {
 			uint_t asUInt() const;
 			dec_t asDec() const;
 			bool_t asBool() const;
+			const bin_t& asBin() const;
 
 			const obj_t& asObjOrDef(const obj_t& val = obj_t()) const;
 			const arr_t& asArrOrDef(const arr_t& val = arr_t()) const;
@@ -195,6 +203,7 @@ namespace akd {
 			uint_t asUIntOrDef(uint_t val) const;
 			dec_t asDecOrDef(dec_t val) const;
 			bool_t asBoolOrDef(bool_t val) const;
+			const bin_t& asBinOrDef(const bin_t& val) const;
 
 
 			// //////////// //
@@ -240,12 +249,13 @@ namespace akd {
 			bool isUInt() const { return type() == PType::Unsigned; }
 			bool isDec()  const { return type() == PType::Decimal; }
 			bool isBool() const { return type() == PType::Boolean; }
+			bool isBin() const { return type() == PType::Binary; }
 
 			bool isInteger() const { return isSInt() || isUInt(); }
 			bool isNumber() const { return isSInt() || isUInt() || isDec(); }
 			bool isPrimitive() const { return isSInt() || isUInt() || isDec() || isBool(); }
 
-			size_t size() const { return asArr().size(); }
+			akSize size() const { return static_cast<akSize>(asArr().size()); }
 
 			// //////////////// //
 			// // Assignment // //
@@ -263,6 +273,7 @@ namespace akd {
 			template<typename type_t> PValue& set(const typename std::enable_if<std::is_floating_point<type_t>::value, type_t>::type& val) { return setDec(static_cast<dec_t>(val)); }
 			template<typename type_t> PValue& set(const typename std::enable_if<std::is_same<type_t, bool>::value, type_t>::type& val) { return setBool(static_cast<bool_t>(val)); }
 
+			template<typename type_t> PValue& set(const typename std::enable_if<std::is_same<type_t, bin_t>::value, type_t>::type& val) { return setBin(static_cast<bin_t>(val)); }
 
 			template<typename type_t> PValue& trySet(const std::optional<type_t>& val) {
 				if (val) return set<type_t>(*val);
@@ -286,6 +297,7 @@ namespace akd {
 			template<typename type_t> typename std::enable_if<std::is_same<type_t, obj_t>::value, type_t>::type as() const { return asObj(); }
 			template<typename type_t> typename std::enable_if<std::is_same<type_t, arr_t>::value, type_t>::type as() const { return asArr(); }
 			template<typename type_t> typename std::enable_if<std::is_same<type_t, str_t>::value || std::is_same<typename std::decay<type_t>::type, char*>::value, std::string>::type as() const { return asStr(); }
+			template<typename type_t> typename std::enable_if<std::is_same<type_t, bin_t>::value, type_t>::type as() const { return asBin(); }
 
 			template<typename type_t> typename std::enable_if<std::is_arithmetic<type_t>::value && !std::is_same<type_t, bool>::value, type_t>::type as() const {
 				if (isSInt()) return static_cast<type_t>(m_value.iVal);
@@ -313,6 +325,11 @@ namespace akd {
 			template<typename type_t> typename std::enable_if<std::is_same<type_t, arr_t>::value, type_t>::type asOrSet(const type_t& val)  {
 				if (!isArr()) setArr(val);
 				return m_value.aVal;
+			}
+
+			template<typename type_t> typename std::enable_if<std::is_same<type_t, bin_t>::value, type_t>::type asOrSet(const type_t& val)  {
+				if (!isBin()) setBin(val);
+				return m_value.binVal;
 			}
 
 			template<typename type_t> typename std::enable_if<std::is_same<type_t, str_t>::value || std::is_same<typename std::decay<type_t>::type, char*>::value, std::string>::type asOrSet(const type_t& val)  {
@@ -366,6 +383,11 @@ namespace akd {
 			template<typename type_t> typename std::enable_if<std::is_same<type_t, arr_t>::value, type_t>::type asOrDef(const type_t& val)  const {
 				if (!isArr()) return val;
 				return m_value.aVal;
+			}
+
+			template<typename type_t> typename std::enable_if<std::is_same<type_t, bin_t>::value, type_t>::type asOrDef(const type_t& val)  const {
+				if (!isBin()) return val;
+				return m_value.binVal;
 			}
 
 			template<typename type_t> typename std::enable_if<std::is_same<type_t, str_t>::value || std::is_same<typename std::decay<type_t>::type, char*>::value, std::string>::type asOrDef(const type_t& val)  const {

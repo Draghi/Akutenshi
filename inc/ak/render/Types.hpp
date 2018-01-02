@@ -108,9 +108,19 @@ namespace akr {
 		UInt16,
 		UInt32,
 
-		FPDouble,
-		FPSingle
+		Single,
+		Double,
 	};
+
+	template<typename type_t> DataType getDataTypeOf();
+	template<> inline DataType getDataTypeOf<uint8>() { return DataType::UInt8; }
+	template<> inline DataType getDataTypeOf<uint16>() { return DataType::UInt16; }
+	template<> inline DataType getDataTypeOf<uint32>() { return DataType::UInt32; }
+	template<> inline DataType getDataTypeOf<int8>() { return DataType::Int8; }
+	template<> inline DataType getDataTypeOf<int16>() { return DataType::Int16; }
+	template<> inline DataType getDataTypeOf<int32>() { return DataType::Int32; }
+	template<> inline DataType getDataTypeOf<fpSingle>() { return DataType::Single; }
+	template<> inline DataType getDataTypeOf<fpDouble>() { return DataType::Double; }
 }
 
 #endif

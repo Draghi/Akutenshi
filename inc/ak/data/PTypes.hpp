@@ -35,7 +35,9 @@ namespace akd {
 
 		PTREE_FP_SINGLE = 0x0040,
 		PTREE_FP_DOUBLE = 0x0080,
-		PTREE_STRING = 0x0100
+		PTREE_STRING = 0x0100,
+
+		PTREE_BINARY = 0x0200
 
 	};
 

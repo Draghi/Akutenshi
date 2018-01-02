@@ -78,7 +78,7 @@ namespace akd {
 			}
 
 			template<typename index_f, typename path_f> void forEach(index_f indexCB, path_f pathCB) const {
-				for(size_t i = 0; i < m_path.size(); i++) {
+				for(akSize i = 0; i < m_path.size(); i++) {
 					auto e = entry(i);
 					if (e.isIndex) {
 						indexCB(e.index);
@@ -103,7 +103,7 @@ namespace akd {
 			Path& operator<<(uint64 index) { return append(index); }
 			Path& operator<<(PathEntry entry) { return append(entry); }
 
-			size_t size() const { return m_path.size(); }
+			akSize size() const { return static_cast<akSize>(m_path.size()); }
 			bool empty() const { return m_path.size() <= 0; }
 
 	};

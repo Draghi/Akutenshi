@@ -18,10 +18,6 @@
 #define AK_MATH_VECTOR_HPP_
 
 #include <ak/PrimitiveTypes.hpp>
-#include <glm/detail/func_common.hpp>
-#include <glm/detail/func_geometric.hpp>
-#include <glm/detail/precision.hpp>
-#include <glm/detail/type_vec2.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 namespace akm {

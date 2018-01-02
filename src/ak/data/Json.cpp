@@ -18,29 +18,31 @@
 #include <ak/data/Path.hpp>
 #include <ak/Log.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <bits/stdint-intn.h>
-#include <bits/stdint-uintn.h>
+#include <ak/Macros.hpp>
 #include <algorithm>
 #include <deque>
-#include <iostream>
 #include <limits>
 #include <map>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
+#include "cppcodec/base64_rfc4648.hpp"
 #include "rapidjson/encodings.h"
+#include "rapidjson/error/en.h"
 #include "rapidjson/error/error.h"
-#include "rapidjson/istreamwrapper.h"
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/reader.h"
+#include "rapidjson/stream.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
-#include "rapidjson/error/en.h"
 
 using namespace akd;
 
 namespace rj = rapidjson;
+
+constexpr auto JSON_BASE64_IDENTIFIER = AK_STRING_VIEW("[$$BASE64$$]");
 
 struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 
@@ -105,7 +107,13 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 	    }
 
 	    bool String(const char* str, rj::SizeType length, bool) {
-	    	addPValue(akd::PValue(std::string(str, length)));
+	    	std::string inStr = std::string(str, length);
+	    	if (inStr.substr(0, JSON_BASE64_IDENTIFIER.size()) == JSON_BASE64_IDENTIFIER) {
+		    	addPValue(akd::PValue(cppcodec::base64_rfc4648::decode(inStr.substr(JSON_BASE64_IDENTIFIER.size()))));
+	    	} else {
+		    	addPValue(akd::PValue(inStr));
+	    	}
+
 	        return true;
 	    }
 
@@ -135,7 +143,7 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 	    }
 };
 
-bool akd::deserializeFromJson(akd::PValue& dest, const std::string& jsonStr) {
+bool akd::fromJson(akd::PValue& dest, const std::string& jsonStr) {
 	dest = akd::PValue();
 	JSONParser handler(dest);
 	rj::Reader reader;
@@ -148,7 +156,7 @@ bool akd::deserializeFromJson(akd::PValue& dest, const std::string& jsonStr) {
 	return true;
 }
 
-std::string akd::serializeAsJson(const akd::PValue& src, bool pretty) {
+std::string akd::toJson(const akd::PValue& src, bool pretty) {
     rj::StringBuffer s;
 
     rj::Writer<rj::StringBuffer> nWriter(s);
@@ -231,6 +239,12 @@ std::string akd::serializeAsJson(const akd::PValue& src, bool pretty) {
 						if (pretty) pWriter.String(value.as<std::string>().c_str(), static_cast<rj::SizeType>(value.as<std::string>().size()));
 						else nWriter.String(value.as<std::string>().c_str(), static_cast<rj::SizeType>(value.as<std::string>().size()));
 						break;
+
+					case akd::PType::Binary:
+						std::string binStr = std::string(JSON_BASE64_IDENTIFIER) + cppcodec::base64_rfc4648::encode(value.asBin().data(), value.asBin().size());
+						if (pretty) pWriter.String(binStr.c_str(), static_cast<rj::SizeType>(binStr.size()));
+						else nWriter.String(binStr.c_str(), static_cast<rj::SizeType>(binStr.size()));
+
 				}
 				break;
 			}

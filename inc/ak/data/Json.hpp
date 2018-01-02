@@ -27,7 +27,7 @@ namespace akd {
 	 * @param pretty Should the output be pretty (ie. new lines, tabs etc.)
 	 * @return The completed string
 	 */
-	std::string serializeAsJson(const akd::PValue& src, bool pretty = false);
+	std::string toJson(const akd::PValue& src, bool pretty = false);
 
 	/**
 	 * Attempts to deserialize a JSON string to a PValue tree
@@ -35,7 +35,7 @@ namespace akd {
 	 * @param jsonStr The json string to parse
 	 * @return If the JSON string was deserialized
 	 */
-	bool deserializeFromJson(akd::PValue& dest, const std::string& jsonStr);
+	bool fromJson(akd::PValue& dest, const std::string& jsonStr);
 }
 
 #endif

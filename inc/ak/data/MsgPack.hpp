@@ -14,16 +14,16 @@
  * limitations under the License.
  **/
 
-#ifndef AK_DATA_MPAC_HPP_
-#define AK_DATA_MPAC_HPP_
+#ifndef AK_DATA_MSGPACK_HPP_
+#define AK_DATA_MSGPACK_HPP_
 
 #include <ak/data/PValue.hpp>
 #include <iostream>
 #include <string>
 
 namespace akd {
-	std::string serializeAsMPac(const akd::PValue& src);
-	bool deserializeFromMPac(akd::PValue& dest, const std::vector<uint8>& msgPackStream);
+	std::vector<uint8> toMsgPack(const akd::PValue& src);
+	bool fromMsgPack(akd::PValue& dest, const std::vector<uint8>& msgPackStream);
 }
 
 #endif

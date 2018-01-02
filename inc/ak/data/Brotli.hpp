@@ -15,22 +15,18 @@
  **/
 
 #include <ak/PrimitiveTypes.hpp>
+#include <limits>
 #include <vector>
 
 namespace akd {
 
-	/**
-	 * =========== NOT IMPLEMENTED ===========
-	 * @param inData data to compress
-	 * @return The compressed data
-	 */
-	std::vector<uint8> compressWithBrotli(const std::vector<uint8>& inData);
+	std::vector<uint8> compressBrotli(const std::vector<uint8>& inData, uint8 compressionLevel = std::numeric_limits<uint8>::max());
 
 	/**
 	 * Decompresses a buffer fill with brotli data
 	 * @param inData The buffer with brotli compressed data
 	 * @return The uncompressed data
 	 */
-	std::vector<uint8> decompressFromBrotli(const std::vector<uint8>& inData);
+	std::vector<uint8> decompressBrotli(const std::vector<uint8>& inData);
 
 }

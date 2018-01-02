@@ -20,18 +20,18 @@
 #include <tuple>
 
 
-static bool containsString(const std::string& src, const std::string& substr, size_t start);
-static std::tuple<bool, size_t> searchForDelim(const std::string& src, const std::vector<std::string>& delims, size_t pos);
+static bool containsString(const std::string& src, const std::string& substr, akSize start);
+static std::tuple<bool, akSize> searchForDelim(const std::string& src, const std::vector<std::string>& delims, akSize pos);
 
 void ak::split(const std::string& src, const std::vector<std::string>& delims, std::function<void(const std::string&, const std::string&)> out) {
 	if (src.size() <= 0) return;
 
-	size_t pos = 0;
-	for(size_t i = 0; i < src.size(); i++) {
+	akSize pos = 0;
+	for(akSize i = 0; i < src.size(); i++) {
 		auto [foundDelim, delim] = searchForDelim(src, delims, i);
 
 		if (foundDelim) {
-			out(delims[static_cast<size_t>(delim)], src.substr(pos, i - pos));
+			out(delims[delim], src.substr(pos, i - pos));
 			pos = i + 1;
 		}
 	}
@@ -39,7 +39,7 @@ void ak::split(const std::string& src, const std::vector<std::string>& delims, s
 	out("", src.substr(pos));
 }
 
-static bool containsString(const std::string& src, const std::string& substr, size_t start) {
+static bool containsString(const std::string& src, const std::string& substr, akSize start) {
 	if (substr.empty()) return src.empty();
 
 	size_t i = 0;
@@ -52,11 +52,11 @@ static bool containsString(const std::string& src, const std::string& substr, si
 	return ((start + i) < src.size()) || ((src.size() - start) == substr.size());
 }
 
-static std::tuple<bool, size_t> searchForDelim(const std::string& src, const std::vector<std::string>& delims, size_t pos) {
+static std::tuple<bool, akSize> searchForDelim(const std::string& src, const std::vector<std::string>& delims, akSize pos) {
 	bool foundDelim = false;
-	size_t delim = 0;
+	akSize delim = 0;
 
-	for(size_t j = 0; j < delims.size(); j++) {
+	for(akSize j = 0; j < delims.size(); j++) {
 		auto replaceCurrentDelim = (!foundDelim) || (delims[j].size() < delims[delim].size());
 		if ((replaceCurrentDelim) && (containsString(src, delims[j], pos))) {
 			foundDelim = true;

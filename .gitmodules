@@ -1,30 +1,39 @@
 [submodule "cmake/sugar"]
 	path = cmake/sugar
-	url = https://github.com/ruslo/sugar.git
+	url = https://github.com/Draghi/sugar.git
 [submodule "cmake/glm"]
 	path = cmake/glm
-	url = https://github.com/g-truc/glm.git
+	url = https://github.com/Draghi/glm.git
 [submodule "cmake/ordered-map"]
 	path = cmake/ordered-map
-	url = https://github.com/Tessil/ordered-map.git
+	url = https://github.com/Draghi/ordered-map.git
 [submodule "cmake/rapidjson"]
 	path = cmake/rapidjson
-	url = https://github.com/miloyip/rapidjson
+	url = https://github.com/Draghi/rapidjson
 [submodule "cmake/backward-cpp"]
 	path = cmake/backward-cpp
-	url = https://github.com/bombela/backward-cpp.git
+	url = https://github.com/Draghi/backward-cpp.git
 [submodule "cmake/glfw"]
 	path = cmake/glfw
-	url = https://github.com/glfw/glfw.git
+	url = https://github.com/Draghi/glfw.git
 [submodule "cmake/GL4"]
 	path = cmake/GL4
 	url = https://github.com/Draghi/GL4.git
 [submodule "cmake/stb"]
 	path = cmake/stb
-	url = https://github.com/nothings/stb.git
+	url = https://github.com/Draghi/stb.git
 [submodule "cmake/msgpack-c"]
 	path = cmake/msgpack-c
-	url = https://github.com/msgpack/msgpack-c.git
+	url = https://github.com/Draghi/msgpack-c.git
 [submodule "cmake/brotli"]
 	path = cmake/brotli
 	url = https://github.com/Draghi/brotli.git
+[submodule "cmake/cxxopts"]
+	path = cmake/cxxopts
+	url = https://github.com/Draghi/cxxopts.git
+[submodule "cmake/cppcodec"]
+	path = cmake/cppcodec
+	url = https://github.com/tplgy/cppcodec.git
+[submodule "cmake/assimp"]
+	path = cmake/assimp
+	url = https://github.com/assimp/assimp.git

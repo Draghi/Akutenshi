@@ -167,7 +167,7 @@ akfs::CFile akfs::open(SystemFolder folder, const stx::filesystem::path& path, u
 
 			akfs::CFile file;
 			uint8 searchFlags = openFlags | OpenFlags::NoCreate;
-			for(size_t i = 0; i < 2; i++) {
+			for(akSize i = 0; i < 2; i++) {
 				file = akfs::CFile(resolveFolder(SystemFolder::localCache).value()/path, searchFlags);
 				if (file) return file;
 
@@ -184,7 +184,7 @@ akfs::CFile akfs::open(SystemFolder folder, const stx::filesystem::path& path, u
 
 			akfs::CFile file;
 			uint8 searchFlags = openFlags | OpenFlags::NoCreate;
-			for(size_t i = 0; i < 2; i++) {
+			for(akSize i = 0; i < 2; i++) {
 				file = akfs::CFile(resolveFolder(SystemFolder::userConfig).value()/path, searchFlags);
 				if (file) return file;
 
@@ -204,7 +204,7 @@ akfs::CFile akfs::open(SystemFolder folder, const stx::filesystem::path& path, u
 
 			akfs::CFile file;
 			uint8 searchFlags = openFlags | OpenFlags::NoCreate;
-			for(size_t i = 0; i < 2; i++) {
+			for(akSize i = 0; i < 2; i++) {
 				file = akfs::CFile(resolveFolder(SystemFolder::userData).value()/path, searchFlags);
 				if (file) return file;
 

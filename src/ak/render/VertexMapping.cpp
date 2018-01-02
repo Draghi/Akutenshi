@@ -34,25 +34,22 @@ bool akr::mapVertexBufferF(uint32 index, uint32 sizePerVert, DataType dType, boo
 		case DataType::UInt16: glVertexAttribPointer(index, sizePerVert, GL_UNSIGNED_SHORT, normalize, stride, static_cast<char*>(nullptr) + offset); break;
 		case DataType::UInt32: glVertexAttribPointer(index, sizePerVert, GL_UNSIGNED_INT, normalize, stride, static_cast<char*>(nullptr) + offset); break;
 
-		case DataType::FPDouble: glVertexAttribPointer(index, sizePerVert, GL_DOUBLE, normalize, stride, static_cast<char*>(nullptr) + offset); break;
-		case DataType::FPSingle: glVertexAttribPointer(index, sizePerVert, GL_FLOAT, normalize, stride, static_cast<char*>(nullptr) + offset); break;
+		case DataType::Double: glVertexAttribPointer(index, sizePerVert, GL_DOUBLE, normalize, stride, static_cast<char*>(nullptr) + offset); break;
+		case DataType::Single: glVertexAttribPointer(index, sizePerVert, GL_FLOAT, normalize, stride, static_cast<char*>(nullptr) + offset); break;
 	}
 	if (autoEnable) enableVertexMapping(index);
 	return true;
 }
 
-bool akr::mapVertexBufferI(uint32 index, uint32 sizePerVert, DataType dType, uint32 offset, uint32 stride, bool autoEnable) {
+bool akr::mapVertexBufferI(uint32 index, uint32 sizePerVert, IDataType dType, uint32 offset, uint32 stride, bool autoEnable) {
 	switch(dType) {
-		case DataType::Int8: glVertexAttribIPointer(index, sizePerVert, GL_BYTE, stride, static_cast<char*>(nullptr) + offset); break;
-		case DataType::Int16: glVertexAttribIPointer(index, sizePerVert, GL_SHORT, stride, static_cast<char*>(nullptr) + offset); break;
-		case DataType::Int32: glVertexAttribIPointer(index, sizePerVert, GL_INT, stride, static_cast<char*>(nullptr) + offset); break;
+		case IDataType::Int8: glVertexAttribIPointer(index, sizePerVert, GL_BYTE, stride, static_cast<char*>(nullptr) + offset); break;
+		case IDataType::Int16: glVertexAttribIPointer(index, sizePerVert, GL_SHORT, stride, static_cast<char*>(nullptr) + offset); break;
+		case IDataType::Int32: glVertexAttribIPointer(index, sizePerVert, GL_INT, stride, static_cast<char*>(nullptr) + offset); break;
 
-		case DataType::UInt8: glVertexAttribIPointer(index, sizePerVert, GL_UNSIGNED_BYTE, stride, static_cast<char*>(nullptr) + offset); break;
-		case DataType::UInt16: glVertexAttribIPointer(index, sizePerVert, GL_UNSIGNED_SHORT, stride, static_cast<char*>(nullptr) + offset); break;
-		case DataType::UInt32: glVertexAttribIPointer(index, sizePerVert, GL_UNSIGNED_INT, stride, static_cast<char*>(nullptr) + offset); break;
-
-		case DataType::FPDouble: return false;
-		case DataType::FPSingle: return false;
+		case IDataType::UInt8: glVertexAttribIPointer(index, sizePerVert, GL_UNSIGNED_BYTE, stride, static_cast<char*>(nullptr) + offset); break;
+		case IDataType::UInt16: glVertexAttribIPointer(index, sizePerVert, GL_UNSIGNED_SHORT, stride, static_cast<char*>(nullptr) + offset); break;
+		case IDataType::UInt32: glVertexAttribIPointer(index, sizePerVert, GL_UNSIGNED_INT, stride, static_cast<char*>(nullptr) + offset); break;
 	}
 	if (autoEnable) enableVertexMapping(index);
 	return true;

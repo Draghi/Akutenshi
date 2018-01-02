@@ -28,17 +28,17 @@ namespace akd {
 	 * @param count The number of elements in the data
 	 * @return The calculated FNV-1A hash of the array
 	 */
-	template<typename type_t> constexpr uint64 calculateFNV1AHash(const type_t* data, size_t count) {
+	template<typename type_t> constexpr uint64 calculateFNV1AHash(const type_t* data, akSize count) {
 		static_assert(std::is_fundamental<type_t>(), "Data array must be a fundamental type.");
 
 		constexpr uint64 offsetBasis = 0xcbf29ce484222325;
 		constexpr uint64 prime = 1099511628211;
 
-		size_t totalCount = sizeof(type_t)*count;
+		akSize totalCount = sizeof(type_t)*count;
 		const char* rawData = static_cast<const char*>(data);
 
 		uint64 hash = offsetBasis;
-		for(size_t i = 0; i < totalCount; i++) {
+		for(akSize i = 0; i < totalCount; i++) {
 			hash ^= static_cast<uint8>(rawData[i]);
 			hash *= prime;
 		}

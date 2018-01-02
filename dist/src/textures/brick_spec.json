@@ -1,0 +1,14 @@
+{
+    "type":"2D",
+    "filename":"brick_spec.png",
+    "mipFilter":"linear",
+    "minFilter":"linear",
+    "magFilter":"linear",
+    "wrap":{
+        "border":[1.0,1.0,1.0,1.0],
+        "s":"repeat",
+        "t":"repeat"
+    },
+    "hdr":true,
+    "anisotropy":16
+}

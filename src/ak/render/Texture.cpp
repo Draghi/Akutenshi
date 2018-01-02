@@ -14,57 +14,181 @@
  * limitations under the License.
  **/
 
-#include <ak/render/Texture.hpp>
+#include <ak/Log.hpp>
 #include <ak/math/Scalar.hpp>
+#include <ak/render/Texture.hpp>
+#include <ak/Traits.hpp>
+#include <ext/type_traits.h>
+#include <glm/common.hpp>
+#include <cmath>
+#include <optional>
 #include <stdexcept>
-#include <utility>
 
 #include "GL/gl4.h"
 
 using namespace akr;
 
-static GLenum akToGLTarget(akr::TexTarget target) {
-	switch(target) {
-		case TexTarget::Tex1D:       return GL_TEXTURE_1D;
-		case TexTarget::Tex1D_Array: return GL_TEXTURE_1D_ARRAY;
-		case TexTarget::Tex2D:       return GL_TEXTURE_2D;
-		case TexTarget::Tex2D_Array: return GL_TEXTURE_2D_ARRAY;
-		case TexTarget::Tex3D:       return GL_TEXTURE_3D;
-		case TexTarget::TexCubemap:  return GL_TEXTURE_CUBE_MAP;
-	}
-}
+// Helper fwd decl
+static GLenum akToGLTarget(akr::TexTarget target);
+static GLenum cubemapTargetToGlTarget(CubemapTarget akTarget);
+static akr::TexFormat glComponentsToFormat(akSize comp);
+static uint32 akToGLTexStorage(TexFormat format, TexStorage storage);
+static uint32 akToGLComponents(TexFormat format);
+static uint akToGLType(DataType dType);
+static akSize getDataTypeSize(DataType dType);
+
+// Texture object
 
 Texture::Texture() : m_id(0), m_type() {}
-
-Texture::Texture(TexTarget target) : m_id(0), m_type(target) {
-	glCreateTextures(akToGLTarget(target), 1, &m_id);
-}
-
-Texture::Texture(Texture&& other) : m_id(other.m_id), m_type(other.m_type) {
-	other.m_id = 0;
-}
-
-Texture::~Texture() {
-	if (m_id != 0) glDeleteTextures(1, &m_id);
-}
-
+Texture::Texture(TexTarget target) : m_id(0), m_type(target) { glCreateTextures(akToGLTarget(target), 1, &m_id); }
+Texture::Texture(Texture&& other) : m_id(other.m_id), m_type(other.m_type) { other.m_id = 0; }
+Texture::~Texture() { if (m_id != 0) glDeleteTextures(1, &m_id); }
 Texture& Texture::operator=(Texture&& other) {
 	if (m_id != 0) glDeleteTextures(1, &m_id);
-	m_id = other.m_id;
-	m_type = other.m_type;
-	other.m_id = 0;
+	m_id = other.m_id; other.m_id = 0; m_type = other.m_type;
 	return *this;
 }
 
-void akr::setActiveTextureUnit(uint32 unit) {
+// Create Texture
+
+std::optional<Texture> akr::createTex1D(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize maxMipmapLevels) {
+	if ((data == nullptr) || (width == 0)) return std::optional<Texture>();
+
+	auto mipmapLevels = akm::min(maxMipmapLevels, akr::calcTexMaxMipmaps(width));
+
+	Texture tex(TexTarget::Tex1D);
+	akr::bindTex(unit, tex);
+	akr::setActiveTexUnit(unit);
+	akr::newTexStorage1D(format, storageType, width, mipmapLevels);
+	akr::loadTexData1D(0, format, dataType, data, width);
+
+	return tex;
+}
+
+std::optional<Texture> akr::createTex2D(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize height, akSize maxMipmapLevels) {
+	if ((data == nullptr) || (width == 0) || (height == 0)) return std::optional<Texture>();
+
+	auto mipmapLevels = akm::min(maxMipmapLevels, akr::calcTexMaxMipmaps(width, height));
+
+	Texture tex(TexTarget::Tex2D);
+	akr::bindTex(unit, tex);
+	akr::setActiveTexUnit(unit);
+	akr::newTexStorage2D(format, storageType, width, height, mipmapLevels);
+	akr::loadTexData2D(0, format, dataType, data, width, height);
+
+	return tex;
+}
+
+std::optional<Texture> akr::createTex3D(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize height, akSize depth, akSize maxMipmapLevels) {
+	if ((data == nullptr) || (width == 0) || (height == 0) || (depth == 0)) return std::optional<Texture>();
+
+	auto mipmapLevels = akm::min(maxMipmapLevels, akr::calcTexMaxMipmaps(width, height, depth));
+
+	Texture tex(TexTarget::Tex3D);
+	akr::bindTex(unit, tex);
+	akr::setActiveTexUnit(unit);
+	akr::newTexStorage3D(format, storageType, width, height, depth, mipmapLevels);
+	akr::loadTexData3D(0, format, dataType, data, width, height, depth);
+
+	return tex;
+}
+
+std::optional<Texture> akr::createTexCubemap(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize height, akSize maxMipmapLevels) {
+	if ((data == nullptr) || (width == 0) || (height == 0)) return std::optional<Texture>();
+
+	auto mipmapLevels = akm::min(maxMipmapLevels, akr::calcTexMaxMipmaps(width, height));
+	akSize layerSize = width*height*getDataTypeSize(dataType)*getTexComponentsFromFormat(format);
+	mipmapLevels = akm::min<akSize>(1, mipmapLevels);
+
+	Texture tex(TexTarget::TexCubemap);
+	akr::bindTex(unit, tex);
+	akr::setActiveTexUnit(unit);
+	akr::newTexStorageCubemap(format, storageType, width, height, mipmapLevels);
+	akr::loadTexDataCubemap(akr::CubemapTarget::PosX, 0, format, dataType, reinterpret_cast<const uint8*>(data) + layerSize*0, width, height);
+	akr::loadTexDataCubemap(akr::CubemapTarget::PosY, 0, format, dataType, reinterpret_cast<const uint8*>(data) + layerSize*1, width, height);
+	akr::loadTexDataCubemap(akr::CubemapTarget::PosZ, 0, format, dataType, reinterpret_cast<const uint8*>(data) + layerSize*2, width, height);
+	akr::loadTexDataCubemap(akr::CubemapTarget::NegX, 0, format, dataType, reinterpret_cast<const uint8*>(data) + layerSize*3, width, height);
+	akr::loadTexDataCubemap(akr::CubemapTarget::NegY, 0, format, dataType, reinterpret_cast<const uint8*>(data) + layerSize*4, width, height);
+	akr::loadTexDataCubemap(akr::CubemapTarget::NegZ, 0, format, dataType, reinterpret_cast<const uint8*>(data) + layerSize*5, width, height);
+
+	if (mipmapLevels > 1) akr::genTexMipmaps(TexTarget::TexCubemap);
+
+	return tex;
+}
+
+std::optional<Texture> akr::createTex1DArray(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize layers, akSize maxMipmapLevels) {
+	throw std::logic_error("Not implemented");
+}
+
+std::optional<Texture> akr::createTex2DArray(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize height, akSize layers, akSize maxMipmapLevels) {
+	throw std::logic_error("Not implemented");
+}
+
+// State management
+
+void akr::setActiveTexUnit(uint32 unit) {
 	glActiveTexture(GL_TEXTURE0 + unit);
 }
 
-void akr::bind(uint32 unit, const Texture& texture) {
+void akr::bindTex(uint32 unit, const Texture& texture) {
 	glBindTextureUnit(unit, texture.id());
 }
 
-void akr::setTextureFilters(TexTarget target, FilterType minFilter, FilterType magFilter) {
+// Create storage
+
+void akr::newTexStorage1D(TexFormat format, TexStorage storage, akSize width, akSize mipLevels) {
+	glTexStorage1D(GL_TEXTURE_1D, mipLevels, akToGLTexStorage(format, storage), width);
+}
+
+void akr::newTexStorage2D(TexFormat format, TexStorage storage, akSize width, akSize height, akSize mipLevels) {
+	glTexStorage2D(GL_TEXTURE_2D, mipLevels, akToGLTexStorage(format, storage), width, height);
+}
+
+void akr::newTexStorage3D(TexFormat format, TexStorage storage, akSize width, akSize height, akSize depth, akSize mipLevels) {
+	glTexStorage3D(GL_TEXTURE_3D, mipLevels, akToGLTexStorage(format, storage), width, height, depth);
+}
+
+void akr::newTexStorageCubemap(TexFormat format, TexStorage storage, akSize width, akSize height, akSize mipLevels) {
+	glTexStorage2D(GL_TEXTURE_CUBE_MAP, mipLevels, akToGLTexStorage(format, storage), width, height);
+}
+
+void akr::newTexStorage1DArray(TexFormat format, TexStorage storage, akSize width, akSize layers, akSize mipLevels) {
+	glTexStorage2D(GL_TEXTURE_1D_ARRAY, mipLevels, akToGLTexStorage(format, storage), width, layers);
+}
+
+void akr::newTexStorage2DArray(TexFormat format, TexStorage storage, akSize width, akSize height, akSize layers, akSize mipLevels) {
+	glTexStorage3D(GL_TEXTURE_2D_ARRAY, mipLevels, akToGLTexStorage(format, storage), width, height, layers);
+}
+
+// Replace data
+
+void akr::loadTexData1D(akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize xOff) {
+	glTexSubImage1D(GL_TEXTURE_1D, miplevel, xOff, width, akToGLComponents(format), akToGLType(dataType), data);
+}
+
+void akr::loadTexData2D(akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize height, akSize xOff, akSize yOff) {
+	glTexSubImage2D(GL_TEXTURE_2D, miplevel, xOff, yOff, width, height, akToGLComponents(format), akToGLType(dataType), data);
+}
+
+void akr::loadTexData3D(akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize height, akSize depth, akSize xOff, akSize yOff, akSize zOff) {
+	glTexSubImage3D(GL_TEXTURE_3D, miplevel, xOff, yOff, zOff, width, height, depth, akToGLComponents(format), akToGLType(dataType), data);
+}
+
+void akr::loadTexDataCubemap(CubemapTarget cubemap, akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize height, akSize xOff, akSize yOff) {
+	glTexSubImage2D(cubemapTargetToGlTarget(cubemap), miplevel, xOff, yOff, width, height, akToGLComponents(format), akToGLType(dataType), data);
+}
+
+void akr::loadTexData1DArray(akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize layer, akSize layers, akSize xOff) {
+	glTexSubImage2D(GL_TEXTURE_1D_ARRAY, miplevel, xOff, layer, width, layers, akToGLComponents(format), akToGLType(dataType), data);
+}
+
+void akr::loadTexData2DArray(akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize height, akSize layer, akSize layers, akSize xOff, akSize yOff) {
+	glTexSubImage3D(GL_TEXTURE_2D_ARRAY, miplevel, xOff, yOff, layer, width, height, layers, akToGLComponents(format), akToGLType(dataType), data);
+}
+
+// Set properties
+
+void akr::setTexFilters(TexTarget target, FilterType minFilter, FilterType magFilter) {
 	int32 glMinFilter;
 	switch(minFilter) {
 		case FilterType::Nearest: glMinFilter = GL_NEAREST; break;
@@ -81,7 +205,7 @@ void akr::setTextureFilters(TexTarget target, FilterType minFilter, FilterType m
 	glTexParameteri(akToGLTarget(target), GL_TEXTURE_MAG_FILTER, glMagFilter);
 }
 
-void akr::setTextureFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter) {
+void akr::setTexFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter) {
 	int32 glMinFilter;
 	switch(minFilter) {
 		case FilterType::Nearest: glMinFilter = (minMipFilter == FilterType::Nearest) ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_LINEAR; break;
@@ -98,12 +222,12 @@ void akr::setTextureFilters(TexTarget target, FilterType minFilter, FilterType m
 	glTexParameteri(akToGLTarget(target), GL_TEXTURE_MAG_FILTER, glMagFilter);
 }
 
-void akr::setTextureClamping(TexTarget target, ClampDir clampDir, ClampType clampType) {
+void akr::setTexClamping(TexTarget target, ClampDir clampDir, ClampType clampType) {
 	uint32 glClampDir;
 	switch(clampDir) {
-		case ClampDir::S: glClampDir = GL_TEXTURE_WRAP_S; break;
-		case ClampDir::T: glClampDir = GL_TEXTURE_WRAP_T; break;
-		case ClampDir::R: glClampDir = GL_TEXTURE_WRAP_R; break;
+		case ClampDir::Horz: glClampDir = GL_TEXTURE_WRAP_S; break;
+		case ClampDir::Vert: glClampDir = GL_TEXTURE_WRAP_T; break;
+		case ClampDir::Depth: glClampDir = GL_TEXTURE_WRAP_R; break;
 	}
 
 	int32 glClampType;
@@ -117,19 +241,29 @@ void akr::setTextureClamping(TexTarget target, ClampDir clampDir, ClampType clam
 	glTexParameteri(akToGLTarget(target), glClampDir, glClampType);
 }
 
-void akr::setTextureBorder(TexTarget target, akm::Vec4 colour) {
+void akr::setTexBorder(TexTarget target, akm::Vec4 colour) {
 	glTexParameterfv(akToGLTarget(target), GL_TEXTURE_BORDER_COLOR, &colour[0]);
 }
 
-void akr::generateMipmaps(TexTarget target) {
+void akr::setTexAnisotropy(TexTarget target, fpSingle amount) {
+	glTexParameterf(akToGLTarget(target), GL_TEXTURE_MAX_ANISOTROPY_EXT, akm::min(getTexMaxAnsiotropy(), amount));
+}
+
+// Processes
+
+void akr::genTexMipmaps(TexTarget target) {
 	glGenerateMipmap(akToGLTarget(target));
 }
 
-void akr::setAnisotropy(TexTarget target, fpSingle amount) {
-	glTexParameterf(akToGLTarget(target), GL_TEXTURE_MAX_ANISOTROPY_EXT, akm::min(maxAnsiotropy(), amount));
+// Query
+
+akSize akr::calcTexMaxMipmaps(akSize width, akSize height, akSize depth) {
+	fpSingle maxDim = akm::max(akm::max(width, height), depth);
+	return static_cast<akSize>(std::floor(std::log2(maxDim))+1);
 }
 
-fpSingle akr::maxAnsiotropy() {
+
+fpSingle akr::getTexMaxAnsiotropy() {
 	static fpSingle maxAnsio = []() {
 		fpSingle fLargest;
 		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest);
@@ -138,60 +272,47 @@ fpSingle akr::maxAnsiotropy() {
 	return maxAnsio;
 }
 
-static std::pair<uint32, uint32> texFormatToGLFormats(TexFormat format) {
+akSize akr::getTexComponentsFromFormat(TexFormat format) {
 	switch(format) {
-		case TexFormat::R:    return {GL_R16F,    GL_RED };
-		case TexFormat::RG:   return {GL_RG16F,   GL_RG  };
-		case TexFormat::RGB:  return {GL_RGB16F,  GL_RGB };
-		case TexFormat::RGBA: return {GL_RGBA16F, GL_RGBA};
-		case TexFormat::BGR:  return {GL_RGB16F,  GL_BGR };
-		case TexFormat::BGRA: return {GL_RGBA16F, GL_BGRA};
+		case TexFormat::R: return 1;
+		case TexFormat::RG: return 2;
+		case TexFormat::RGB: return 3;
+		case TexFormat::RGBA: return 4;
 	}
 }
 
-void akr::createTextureStorage1D(TexFormat format, int32 width, int32 mipLevels) {
-	glTexStorage1D(GL_TEXTURE_1D, mipLevels, texFormatToGLFormats(format).first, width);
-}
-
-void akr::createTextureStorage1D(TexFormat format, int32 width, int32 layers, int32 mipLevels) {
-	glTexStorage2D(GL_TEXTURE_1D_ARRAY, mipLevels, texFormatToGLFormats(format).first, width, layers);
-}
-
-void akr::createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 mipLevels) {
-	glTexStorage2D(GL_TEXTURE_2D, mipLevels, texFormatToGLFormats(format).first, width, height);
-}
-
-void akr::createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 layers, int32 mipLevels) {
-	glTexStorage3D(GL_TEXTURE_2D_ARRAY, mipLevels, texFormatToGLFormats(format).first, width, height, layers);
-}
-
-void akr::createTextureStorage3D(TexFormat format, int32 width, int32 height, int32 depth, int32 mipLevels) {
-	glTexStorage3D(GL_TEXTURE_3D, mipLevels, texFormatToGLFormats(format).first, width, height, depth);
-}
-
-void akr::createTextureStorageCube(TexFormat format, int32 width, int32 height, int32 mipLevels) {
-	glTexStorage2D(GL_TEXTURE_CUBE_MAP, mipLevels, texFormatToGLFormats(format).first, width, height);
+TexFormat akr::getTexFormatFromComponents(akSize components) {
+	switch(components) {
+		default: throw std::runtime_error("Invalid image");
+		case 1: return akr::TexFormat::R;
+		case 2: return akr::TexFormat::RG;
+		case 3: return akr::TexFormat::RGB;
+		case 4: return akr::TexFormat::RGBA;
+	}
 }
 
 
-void akr::replaceTextureData1D(TexFormat format, int32 xOff, int32 width, const fpSingle* data, int32 level) {
-	glTexSubImage1D(GL_TEXTURE_1D, level, xOff, width, texFormatToGLFormats(format).second, GL_FLOAT, data);
-}
 
-void akr::replaceTextureData1D(TexFormat format, int32 xOff, int32 lOff, int32 width, int32 layers, const fpSingle* data, int32 level) {
-	glTexSubImage2D(GL_TEXTURE_1D_ARRAY, level, xOff, lOff, width, layers, texFormatToGLFormats(format).second, GL_FLOAT, data);
-}
 
-void akr::replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 width, int32 height, const fpSingle* data, int32 level) {
-	glTexSubImage2D(GL_TEXTURE_2D, level, xOff, yOff, width, height, texFormatToGLFormats(format).second, GL_FLOAT, data);
-}
 
-void akr::replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 lOff, int32 width, int32 height, int32 layers, const fpSingle* data, int32 level) {
-	glTexSubImage3D(GL_TEXTURE_2D_ARRAY, level, xOff, yOff, lOff, width, height, layers, texFormatToGLFormats(format).second, GL_FLOAT, data);
-}
 
-void akr::replaceTextureData3D(TexFormat format, int32 xOff, int32 yOff, int32 zOff, int32 width, int32 height, int32 depth, const fpSingle* data, int32 level) {
-	glTexSubImage3D(GL_TEXTURE_3D, level, xOff, yOff, zOff, width, height, depth, texFormatToGLFormats(format).second, GL_FLOAT, data);
+
+
+
+
+
+
+// Helper methods
+
+static GLenum akToGLTarget(akr::TexTarget target) {
+	switch(target) {
+		case TexTarget::Tex1D:       return GL_TEXTURE_1D;
+		case TexTarget::Tex1D_Array: return GL_TEXTURE_1D_ARRAY;
+		case TexTarget::Tex2D:       return GL_TEXTURE_2D;
+		case TexTarget::Tex2D_Array: return GL_TEXTURE_2D_ARRAY;
+		case TexTarget::Tex3D:       return GL_TEXTURE_3D;
+		case TexTarget::TexCubemap:  return GL_TEXTURE_CUBE_MAP;
+	}
 }
 
 static GLenum cubemapTargetToGlTarget(CubemapTarget akTarget) {
@@ -206,10 +327,77 @@ static GLenum cubemapTargetToGlTarget(CubemapTarget akTarget) {
 	throw std::runtime_error("Invalid cubemap target");
 }
 
-void akr::replaceTextureDataCubemap(CubemapTarget cubemap, TexFormat format, int32 xOff, int32 yOff, int32 width, int32 height, const fpSingle* data, int32 level) {
-	glTexSubImage2D(cubemapTargetToGlTarget(cubemap), level, xOff, yOff, width, height, texFormatToGLFormats(format).second, GL_FLOAT, data);
+static uint32 akToGLTexStorage(TexFormat format, TexStorage storage) {
+	switch(format) {
+		case TexFormat::R: {
+			switch(storage) {
+				case TexStorage::Byte:      return GL_R8;
+				case TexStorage::Byte_sRGB: throw std::logic_error("Texture storage format 'sR' is not supported.");
+				case TexStorage::Half:      return GL_R16F;
+				case TexStorage::Single:    return GL_R32F;
+			}
+		}
+
+		case TexFormat::RG: {
+			switch(storage) {
+				case TexStorage::Byte:      return GL_RG8;
+				case TexStorage::Byte_sRGB: throw std::logic_error("Texture storage format 'sRG' is not supported.");
+				case TexStorage::Half:      return GL_RG16F;
+				case TexStorage::Single:    return GL_RG32F;
+			}
+		}
+
+		case TexFormat::RGB: {
+			switch(storage) {
+				case TexStorage::Byte:      return GL_RGB8;
+				case TexStorage::Byte_sRGB: return GL_SRGB8;
+				case TexStorage::Half:      return GL_RGB16F;
+				case TexStorage::Single:    return GL_RGB32F;
+			}
+		}
+
+		case TexFormat::RGBA: {
+			switch(storage) {
+				case TexStorage::Byte:      return GL_RGBA8;
+				case TexStorage::Byte_sRGB: return GL_SRGB8_ALPHA8;
+				case TexStorage::Half:      return GL_RGBA16F;
+				case TexStorage::Single:    return GL_RGBA32F;
+			}
+		}
+	}
 }
 
+static uint32 akToGLComponents(TexFormat format) {
+	switch(format) {
+		case TexFormat::R:    return GL_RED;
+		case TexFormat::RG:   return GL_RG;
+		case TexFormat::RGB:  return GL_RGB;
+		case TexFormat::RGBA: return GL_RGBA;
+	}
+}
 
+static uint akToGLType(DataType dType) {
+	switch(dType) {
+		case DataType::Int8: return GL_BYTE;
+		case DataType::Int16: return GL_SHORT;
+		case DataType::Int32: return GL_INT;
+		case DataType::UInt8: return GL_UNSIGNED_BYTE;
+		case DataType::UInt16: return GL_UNSIGNED_SHORT;
+		case DataType::UInt32: return GL_UNSIGNED_INT;
+		case DataType::Single: return GL_FLOAT;
+		case DataType::Double: return GL_DOUBLE;
+	}
+}
 
-
+static akSize getDataTypeSize(DataType dType) {
+	switch(dType) {
+		case DataType::Int8: return 1;
+		case DataType::Int16: return 2;
+		case DataType::Int32: return 4;
+		case DataType::UInt8: return 1;
+		case DataType::UInt16: return 2;
+		case DataType::UInt32: return 4;
+		case DataType::Single: return 4;
+		case DataType::Double: return 8;
+	}
+}

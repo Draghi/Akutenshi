@@ -56,6 +56,10 @@ namespace akr {
 	void setUniform(uint32 bindingLocation, fpSingle x, fpSingle y, fpSingle z);
 	void setUniform(uint32 bindingLocation, fpSingle x, fpSingle y, fpSingle z, fpSingle w);
 
+	void setUniform(uint32 bindingLocation, akm::Vec4 vec);
+	void setUniform(uint32 bindingLocation, akm::Vec3 vec);
+	void setUniform(uint32 bindingLocation, akm::Vec2 vec);
+
 	void setUniform(uint32 bindingLocation, akm::Mat4 matrix);
 	void setUniform(uint32 bindingLocation, akm::Mat3 matrix);
 	void setUniform(uint32 bindingLocation, akm::Mat2 matrix);

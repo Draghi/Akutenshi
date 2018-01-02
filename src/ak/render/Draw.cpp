@@ -21,12 +21,7 @@
 
 #if defined(__linux)
 #define BACKWARD_HAS_BFD 1
-#include <signal.h>
-#ifndef SIGUNUSED
-#define SIGUNUSED 31
-#endif
 #include "backward.hpp"
-namespace backward { static backward::SignalHandling sh; }
 #endif
 
 using namespace akr;
@@ -58,11 +53,13 @@ static void APIENTRY ogl_logErrorCallback(GLenum source, GLenum type, GLuint id,
 
 	sstream << "[Error Code: " << id << "] " << std::string(message, static_cast<size_t>(length));
 
+#if defined(__linux)
 	if (severity == GL_DEBUG_SEVERITY_HIGH) {
 		sstream << std::endl;
 		backward::StackTrace st; st.load_here(32);
 		backward::Printer p; p.print(st, sstream);
 	}
+#endif
 
 	switch(severity) {
 		case GL_DEBUG_SEVERITY_HIGH:         glLog.error(sstream.str()); break;
@@ -88,6 +85,7 @@ void akr::init() {
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	//glEnable(GL_FRAMEBUFFER_SRGB);
 
 	if (!ogl_ext_EXT_texture_filter_anisotropic) log.warn("Failed to load EXT_texture_filter_anisotropic");
 
@@ -261,6 +259,18 @@ void akr::setUniform(uint32 bindingLocation, fpSingle x, fpSingle y, fpSingle z)
 
 void akr::setUniform(uint32 bindingLocation, fpSingle x, fpSingle y, fpSingle z, fpSingle w) {
 	glUniform4f(bindingLocation, x, y, z, w);
+}
+
+void akr::setUniform(uint32 bindingLocation, akm::Vec4 vec) {
+	setUniform(bindingLocation, vec.x, vec.y, vec.z, vec.w);
+}
+
+void akr::setUniform(uint32 bindingLocation, akm::Vec3 vec) {
+	setUniform(bindingLocation, vec.x, vec.y, vec.z);
+}
+
+void akr::setUniform(uint32 bindingLocation, akm::Vec2 vec) {
+	setUniform(bindingLocation, vec.x, vec.y);
 }
 
 

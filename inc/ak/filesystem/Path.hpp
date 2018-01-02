@@ -14,19 +14,22 @@
  * limitations under the License.
  **/
 
-#ifndef AK_FILESYSTEM_IMAGELOADER_HPP_
-#define AK_FILESYSTEM_IMAGELOADER_HPP_
+#ifndef AK_FILESYSTEM_PATH_HPP_
+#define AK_FILESYSTEM_PATH_HPP_
 
-#include <vector>
-#include <ak/filesystem/Filesystem.hpp>
-#include <ak/data/Image.hpp>
-#include <ak/PrimitiveTypes.hpp>
+#include <stddef.h>
+#include <experimental/filesystem>
+#include <optional>
+#include <string>
 
 namespace akfs {
 
-	akd::Image1D load1DImage(SystemFolder folder, const stx::filesystem::path& path, uint32 layer = 0, bool bottomUp = true);
-	akd::Image2D load2DImage(SystemFolder folder, const stx::filesystem::path& path, bool bottomUp = true);
-	akd::Image3D load3DImage(SystemFolder folder, const std::vector<stx::filesystem::path>& path, bool bottomUp = true);
+	inline std::optional<stx::filesystem::path> pathDifference(const stx::filesystem::path& left, const stx::filesystem::path& right) {
+		auto lStr = left.native(); auto rStr = right.native();
+		size_t pos = rStr.find_first_of(lStr);
+		if (pos == std::string::npos) return std::optional<stx::filesystem::path>();
+		return rStr.substr(pos + lStr.size());
+	}
 
 }
 

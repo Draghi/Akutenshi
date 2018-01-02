@@ -67,16 +67,16 @@ namespace akt {
 				return m_buffers[m_index ^ 0x01].back();
 			}
 
-			type_t& at(size_t index) {
+			type_t& at(akSize index) {
 				auto readLock = m_readLock.lock();
 				return m_buffers[m_index ^ 0x01][index];
 			}
 
-			template<typename func_t> void iterate(const func_t& callback, size_t startIndex = 0, ssize_t count = -1) {
+			template<typename func_t> void iterate(const func_t& callback, akSize startIndex = 0, akSize count = 0) {
 				auto readLock = m_readLock.lock();
 
-				size_t totalCount = (count < 0) ? m_buffers[m_index ^ 0x01].size() : static_cast<size_t>(count);
-				for(size_t i = startIndex; i < totalCount; i++) {
+				akSize totalCount = (count == 0) ? static_cast<akSize>(m_buffers[m_index ^ 0x01].size()) : count;
+				for(akSize i = startIndex; i < totalCount; i++) {
 					callback(i, m_buffers[m_index ^ 0x01][i]);
 				}
 			}
@@ -86,7 +86,7 @@ namespace akt {
 				m_buffers[m_index ^ 0x01] = std::vector<type_t>(m_buffers[m_index ^ 0x01].size());
 			}
 
-			size_t size() {
+			akSize size() {
 				auto readLock = m_readLock.lock();
 				return m_buffers[m_index ^ 0x01].size();
 			}

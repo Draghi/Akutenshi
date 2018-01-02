@@ -110,7 +110,7 @@ namespace akw {
 
 namespace akd {
 	template<> akw::WindowOptions deserialize<akw::WindowOptions>(const akd::PValue& root);
-	template<> void serialize<akw::WindowOptions>(akd::PValue& root, const akw::WindowOptions& val);
+	inline void serialize(akd::PValue& root, const akw::WindowOptions& val);
 }
 
 #endif

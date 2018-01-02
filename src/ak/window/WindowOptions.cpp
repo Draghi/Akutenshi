@@ -89,7 +89,7 @@ template<> akw::WindowOptions akd::deserialize<akw::WindowOptions>(const akd::PV
 		.glMSAA(root["glMSAA"].as<uint8>());
 }
 
-template<> void akd::serialize<akw::WindowOptions>(akd::PValue& root, const akw::WindowOptions& val) {
+void akd::serialize(akd::PValue& root, const akw::WindowOptions& val) {
 	root["position"]["x"].set<fpSingle>(val.position().x);
 	root["position"]["y"].set<fpSingle>(val.position().y);
 
@@ -132,5 +132,5 @@ template<> void akd::serialize<akw::WindowOptions>(akd::PValue& root, const akw:
 }
 
 static akev::SubscriberID windowSInitRegenerateConfigHook = ake::regenerateConfigDispatch().subscribe([](ake::RegenerateConfigEvent& event){
-	akd::serialize<akw::WindowOptions>(event.data()["window"], akw::WindowOptions());
+	akd::serialize(event.data()["window"], akw::WindowOptions());
 });

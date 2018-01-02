@@ -17,6 +17,8 @@
 #ifndef AK_COMMON_PRIMITIVETYPES_HPP_
 #define AK_COMMON_PRIMITIVETYPES_HPP_
 
+#include <string>
+
 /**
  * This header provides sized primitive data-types such as:
  *     Signed   integers: 8-bit, 16-bit, 32-bit and 64-bit
@@ -59,6 +61,34 @@ using uint64 = unsigned long long; /// Unsigned 64-bit integer
 
 using fpSingle = float;  /// 32-bit floating point number
 using fpDouble = double; /// 64-bit floating point number
+
+// ///////////////// //
+// // Other Types // //
+// ///////////////// //
+
+using akSize  = uint32;
+using akSSize =  int32;
+
+//
+// Util
+//
+
+namespace ak {
+	template<typename type_t> std::string getPrimitiveName();
+
+	template<> inline std::string getPrimitiveName<uint8>() { return "uint8"; }
+	template<> inline std::string getPrimitiveName<uint16>() { return "uint16"; }
+	template<> inline std::string getPrimitiveName<uint32>() { return "uint32"; }
+	template<> inline std::string getPrimitiveName<uint64>() { return "uint64"; }
+
+	template<> inline std::string getPrimitiveName<int8>() { return "int8"; }
+	template<> inline std::string getPrimitiveName<int16>() { return "int16"; }
+	template<> inline std::string getPrimitiveName<int32>() { return "int32"; }
+	template<> inline std::string getPrimitiveName<int64>() { return "int64"; }
+
+	template<> inline std::string getPrimitiveName<fpSingle>() { return "fpSingle"; }
+	template<> inline std::string getPrimitiveName<fpDouble>() { return "fpDouble"; }
+}
 
 #if defined(_MSC_VER)
 #include <type_traits>

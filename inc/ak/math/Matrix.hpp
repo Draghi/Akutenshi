@@ -20,8 +20,6 @@
 
 #include <ak/math/Vector.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <glm/detail/func_matrix.hpp>
-#include <glm/detail/precision.hpp>
 #include <glm/gtc/matrix_access.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -64,7 +62,7 @@ namespace akm {
 	using glm::inverse;
 	using glm::transpose;
 
-	//template<typename scalar_t> Mat<2, scalar_t> translate(const Vec<2, scalar_t>& offset) { return translate(Mat<2, scalar_t>(static_cast<scalar_t>(1)), offset); }
+	template<typename scalar_t> Mat<2, scalar_t> translate(const Vec<2, scalar_t>& offset) { return translate(Mat<2, scalar_t>(static_cast<scalar_t>(1)), offset); }
 	template<typename scalar_t> Mat<2, scalar_t> rotate(scalar_t angle) { return rotate(Mat<2, scalar_t>(static_cast<scalar_t>(1)), angle); }
 	template<typename scalar_t> Mat<2, scalar_t> scale(const Vec<2, scalar_t>& factor) { return scale(Mat<2, scalar_t>(static_cast<scalar_t>(1)), factor); }
 

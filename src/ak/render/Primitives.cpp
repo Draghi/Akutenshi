@@ -68,20 +68,20 @@ std::vector<fpSingle> akr::genCubeMesh(akm::Vec3 p1, akm::Vec3 p2, bool genNorms
 	std::vector<fpSingle> result;
 	result.reserve(36*8);
 
-	for(size_t i = 0; i < 36; i++) {
+	for(akSize i = 0; i < 36; i++) {
 		result.push_back(verts[indicies[i]].x);
 		result.push_back(verts[indicies[i]].y);
 		result.push_back(verts[indicies[i]].z);
 
 		if (genNorms) {
-			size_t index = i/6;
+			akSize index = i/6;
 			result.push_back(norms[index].x);
 			result.push_back(norms[index].y);
 			result.push_back(norms[index].z);
 		}
 
 		if (genTexcoord) {
-			size_t index = i%6;
+			akSize index = i%6;
 			result.push_back(texcoord[index].x);
 			result.push_back(texcoord[index].y);
 		}

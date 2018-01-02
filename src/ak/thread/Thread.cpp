@@ -66,7 +66,7 @@ bool Thread::update() {
 	if (lock.empty()) return false;
 
 	m_scheduledCallbacks.swap();
-	m_scheduledCallbacks.iterate([](size_t /*i*/, auto& callback){callback();});
+	m_scheduledCallbacks.iterate([](akSize /*i*/, auto& callback){callback();});
 	m_scheduledCallbacks.clear();
 
 	return true;

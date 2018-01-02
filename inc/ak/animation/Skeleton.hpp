@@ -38,12 +38,12 @@ namespace aka {
 	class Skeleton {
 		private:
 			std::vector<Bone> m_bones;
-			std::unordered_map<std::string, size_t> m_boneMapping;
+			std::unordered_map<std::string, akSize> m_boneMapping;
 
 		public:
 			Skeleton() {}
-			Skeleton(const std::vector<Bone>& bones, const std::unordered_map<std::string, size_t>& boneMapping) : m_bones(bones), m_boneMapping(boneMapping) {}
-			Skeleton(std::vector<Bone>&& bones, std::unordered_map<std::string, size_t>&& boneMapping) : m_bones(bones), m_boneMapping(boneMapping) {}
+			Skeleton(const std::vector<Bone>& bones, const std::unordered_map<std::string, akSize>& boneMapping) : m_bones(bones), m_boneMapping(boneMapping) {}
+			Skeleton(std::vector<Bone>&& bones, std::unordered_map<std::string, akSize>&& boneMapping) : m_bones(bones), m_boneMapping(boneMapping) {}
 
 			Skeleton(const Skeleton& other) : m_bones(other.m_bones), m_boneMapping(other.m_boneMapping) {}
 			Skeleton(Skeleton&& other) : m_bones(std::move(other.m_bones)), m_boneMapping(other.m_boneMapping) {}
@@ -65,7 +65,7 @@ namespace aka {
 			}
 
 			const std::vector<Bone>& bones() const { return m_bones; }
-			const std::unordered_map<std::string, size_t>& boneMapping() const { return m_boneMapping; }
+			const std::unordered_map<std::string, akSize>& boneMapping() const { return m_boneMapping; }
 
 			Skeleton& operator=(const Skeleton& other) { m_bones = other.m_bones; m_boneMapping = other.m_boneMapping; return *this; }
 			Skeleton& operator=(Skeleton&& other) { m_bones = std::move(other.m_bones); m_boneMapping = std::move(other.m_boneMapping); return *this; }

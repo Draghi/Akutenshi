@@ -36,7 +36,7 @@ namespace akin {
 			akev::Dispatcher<KeyEvent> m_keyEventDispatcher;
 			akev::DispatcherProxy<KeyEvent> m_keyEventProxy = m_keyEventDispatcher;
 
-			std::array<std::pair<Action, State>, static_cast<size_t>(Key::KEY_LAST_NORMAL)> m_keyStates;
+			std::array<std::pair<Action, State>, static_cast<akSize>(Key::KEY_LAST_NORMAL)> m_keyStates;
 
 			Action getKeyAction(Key key) const;
 			State getKeyState(Key key) const;
@@ -104,7 +104,7 @@ namespace akin {
 			akm::Vec2 m_mousePosition;
 			akm::Vec2 m_lastPosition;
 
-			std::array<std::pair<Action, State>, static_cast<size_t>(Button::BUTTON_LAST)> m_buttonStates;
+			std::array<std::pair<Action, State>, static_cast<akSize>(Button::BUTTON_LAST)> m_buttonStates;
 
 			int32 m_scrollUp;
 			int32 m_scrollDown;

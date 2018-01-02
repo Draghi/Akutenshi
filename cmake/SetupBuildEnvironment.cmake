@@ -75,11 +75,17 @@ set(BROTLI_BUNDLED_MODE ON)
 add_subdirectory("${CMAKE_SOURCE_DIR}/cmake/brotli")
 
 #################
+# Build ASSIMP  #
+#################
+
+add_subdirectory("${CMAKE_SOURCE_DIR}/cmake/assimp")
+
+#################
 # Library Paths #
 #################
 
 set(GLM_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/glm")
-set(ORDERED_MAP_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/ordered-map/src")
+set(ORDERED_MAP_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/ordered-map")
 set(RAPIDJSON_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/rapidjson/include")
 set(BACKWARD_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/backward-cpp")
 set(GLFW_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/glfw/include")
@@ -88,6 +94,9 @@ set(STB_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/stb")
 set(SMILE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/libsmile/include")
 set(MSGPACK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/msgpack-c/include")
 set(BROTLI_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/brotli/c/include")
+set(CXXOPTS_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/cxxopts/include")
+set(CPPCODEC_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/cppcodec")
+set(ASSIMP_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/assimp/code")
 
 ###############
 # CMake Setup #

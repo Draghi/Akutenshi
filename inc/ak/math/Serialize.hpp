@@ -159,9 +159,9 @@ namespace akd {
 	inline bool deserialize(akm::SphericalCoord& dest, const akd::PValue& val) {
 		try {
 			dest = akm::SphericalCoord();
-			dest.setRadius(val[0].as<typename akm::SphericalCoord::value_type>());
-			dest.rotateLR(val[1].as<typename akm::SphericalCoord::value_type>());
-			dest.rotateUD(val[2].as<typename akm::SphericalCoord::value_type>());
+			dest.setRadius(val[0].asOrDef<typename akm::SphericalCoord::value_type>(0));
+			dest.rotateLR(val[1].asOrDef<typename akm::SphericalCoord::value_type>(0));
+			dest.rotateUD(val[2].asOrDef<typename akm::SphericalCoord::value_type>(0));
 			return true;
 		} catch(const std::logic_error& /*e*/) {
 			return false;

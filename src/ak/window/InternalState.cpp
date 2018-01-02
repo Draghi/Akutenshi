@@ -70,7 +70,7 @@ void akw::internal::processEventBuffer() {
 	eventBuffer.swap();
 
 	WindowState newState = windowState;
-	eventBuffer.iterate([&](size_t /*index*/, const Action& action){
+	eventBuffer.iterate([&](akSize /*index*/, const Action& action){
 		switch(action.type) {
 			case ActionType::Title:
 				newState.title = action.title;
@@ -141,7 +141,7 @@ void akw::internal::processEventBuffer() {
 #pragma clang diagnostic ignored "-Wfloat-conversion"
 void akw::internal::processActionBuffer() {
 	actionBuffer.swap();
-	actionBuffer.iterate([&](size_t /*index*/, const Action& action){
+	actionBuffer.iterate([&](akSize /*index*/, const Action& action){
 		switch(action.type) {
 			case ActionType::Title:
 				glfwSetWindowTitle(windowHandle, action.title.c_str());

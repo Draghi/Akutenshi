@@ -21,15 +21,10 @@
 #include <stx/Filesystem.hpp>
 #include <stddef.h>
 #include <sys/types.h>
-#include <cstdint>
 #include <cstdio>
-#include <cstdlib>
-#include <locale>
-#include <sstream>
-#include <stdexcept>
+#include <cstring>
+#include <cstring>
 #include <string>
-#include <string_view>
-#include <system_error>
 #include <type_traits>
 #include <vector>
 
@@ -138,6 +133,26 @@ namespace akfs {
 			 * @remarks Does not include the seperator in the dest string, however, the return count includes it to differentiate a failed read from a zero-length delimiter
 			 */
 			size_t readLine(std::string& dest, bool whitespaceSeperator = true, std::vector<std::string> seperators = {"\r\n", "\r", "\n"});
+
+			/**
+			 * Attempts to read all lines of data in a file
+			 * @param dest The location to store the string in
+			 * @return The contents of the file from the current position forward.
+			 */
+			size_t readAllLines(std::string& dest) { return readLine(dest, false, {}); }
+
+			/**
+			 * Attempts to read all data in a file
+			 * @param dest The location to store the data in
+			 * @return The contents of the file from the current position forward.
+			 */
+			size_t readAll(std::vector<uint8>& dest) {
+				std::string dataStr;
+				auto result = readAllLines(dataStr);
+				dest.clear(); dest.resize(dataStr.size());
+				std::memcpy(dest.data(), dataStr.data(), dataStr.size());
+				return result;
+			}
 
 			/**
 			 * Attempts to write *count* entries in given src array as as type_t sized blocks of data

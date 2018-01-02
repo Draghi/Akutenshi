@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-#include <ak/data/MPac.hpp>
+#include <ak/data/MsgPack.hpp>
 
 using namespace akd;
 
@@ -65,7 +65,10 @@ struct MSGPackVistor : public msgpack::v2::null_visitor {
     }
 
     bool visit_bin(const char* v, uint32_t size) {
-    	nextValue.second = akd::PValue(std::string(v, size));
+    	std::vector<uint8> data;
+    	data.resize(size);
+    	std::memcpy(data.data(), v, size);
+    	nextValue.second = akd::PValue(data);
         return true;
     }
 
@@ -138,11 +141,47 @@ struct MSGPackVistor : public msgpack::v2::null_visitor {
     void insufficient_bytes(size_t /*parsed_offset*/, size_t /*error_offset*/) {}
 };
 
-std::string akd::serializeAsMPac(const akd::PValue& /*src*/) {
-	throw std::logic_error("compressBrotli: Not implemented");
+std::vector<uint8> akd::toMsgPack(const akd::PValue& src) {
+
+    msgpack::sbuffer buffer;
+    msgpack::packer<msgpack::sbuffer> pk(&buffer);
+
+	akd::traversePValue(src, [&pk](const akd::Path& path, const akd::TraverseAction traverseAction, const akd::PValue& value) {
+		if ((path.size() > 0) && (!path[path.size() - 1].isIndex) && (traverseAction != akd::TraverseAction::ObjectEnd) && (traverseAction != akd::TraverseAction::ArrayEnd)) {
+			pk.pack(path[path.size()-1].path);
+		}
+
+		switch(traverseAction) {
+			case akd::TraverseAction::ArrayStart: pk.pack_array(static_cast<uint32>(value.asArr().size())); break;
+			case akd::TraverseAction::ObjectStart: pk.pack_map(static_cast<uint32>(value.asObj().size())); break;
+
+			case akd::TraverseAction::Value: {
+				switch(value.type()) {
+					case akd::PType::Object: throw std::logic_error("Cannot serialize object directly.");
+					case akd::PType::Array:  throw std::logic_error("Cannot serialize array directly.");
+					case akd::PType::Null: pk.pack_nil(); break;
+					case akd::PType::Boolean: pk.pack(value.asBool()); break;
+					case akd::PType::Integer: pk.pack(value.asInt()); break;
+					case akd::PType::Unsigned: pk.pack(value.asUInt()); break;
+					case akd::PType::Decimal: pk.pack(value.asDec()); break;
+					case akd::PType::String: pk.pack(value.asStr()); break;
+					case akd::PType::Binary: pk.pack(value.asBin()); break;
+				}
+				break;
+			}
+
+			case akd::TraverseAction::ArrayEnd: break;
+			case akd::TraverseAction::ObjectEnd: break;
+		}
+	});
+
+	std::vector<uint8> result;
+	result.resize(buffer.size());
+	std::memcpy(result.data(), buffer.data(), buffer.size());
+	return result;
 }
 
-bool akd::deserializeFromMPac(akd::PValue& dest, const std::vector<uint8>& msgPackStream) {
+bool akd::fromMsgPack(akd::PValue& dest, const std::vector<uint8>& msgPackStream) {
 	MSGPackVistor vistor;
 	std::size_t off = 0;
 	if (!msgpack::v2::parse(reinterpret_cast<const char*>(msgPackStream.data()), msgPackStream.size(), off, vistor)) return false;

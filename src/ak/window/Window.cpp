@@ -26,8 +26,6 @@
 #include <ak/window/Monitor.hpp>
 #include <ak/window/Window.hpp>
 #include <ak/window/WindowOptions.hpp>
-#include <glm/detail/func_common.hpp>
-#include <glm/detail/type_vec2.hpp>
 #include <GLFW/glfw3.h>
 #include <atomic>
 

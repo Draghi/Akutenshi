@@ -21,7 +21,7 @@
 #include <ak/event/Util.hpp>
 #include <ak/thread/CurrentThread.hpp>
 #include <ak/thread/Thread.hpp>
-#include <ordered_map.h>
+#include <tsl/ordered_map.h>
 #include <stddef.h>
 #include <functional>
 #include <memory>
@@ -88,12 +88,12 @@ namespace akev {
 			EventID id() { return event_t::EVENT_ID; }
 			std::string_view name() { return event_t::EVENT_NAME; }
 
-			ssize_t send(event_t& event) {
+			akSize send(event_t& event) {
 				auto localCopy = m_callbacks;
 
 				event.m_canceled = false;
 
-				ssize_t dispatchCount = 0;
+				akSize dispatchCount = 0;
 				for(auto iter = localCopy.begin(); iter != localCopy.end(); iter++, dispatchCount++) {
 					iter->second(event);
 					if (event.isCanceled()) return dispatchCount;

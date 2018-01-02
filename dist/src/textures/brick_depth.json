@@ -1,6 +1,6 @@
 {
     "type":"2D",
-    "filename":"test.png",
+    "filename":"brick_depth.png",
     "mipFilter":"linear",
     "minFilter":"linear",
     "magFilter":"linear",
@@ -9,5 +9,6 @@
         "s":"repeat",
         "t":"repeat"
     },
+    "hdr":true,
     "anisotropy":16
 }

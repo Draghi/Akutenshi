@@ -35,7 +35,7 @@ namespace akr {
 	void bind(const VertexMapping& mapping);
 
 	bool mapVertexBufferF(uint32 index, uint32 sizePerVert, DataType dType, bool normalize = false, uint32 offset = 0, uint32 stride = 0, bool autoEnable = true);
-	bool mapVertexBufferI(uint32 index, uint32 sizePerVert, DataType dType, uint32 offset = 0, uint32 stride = 0, bool autoEnable = true);
+	bool mapVertexBufferI(uint32 index, uint32 sizePerVert, IDataType dType, uint32 offset = 0, uint32 stride = 0, bool autoEnable = true);
 
 	void enableVertexMapping(uint32 index);
 	void disableVertexMapping(uint32 index);

@@ -18,9 +18,11 @@
 #define AK_MATH_SCALAR_HPP_
 
 #include <ak/PrimitiveTypes.hpp>
-
+#include <ak/Traits.hpp>
+#include <glm/common.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/trigonometric.hpp>
 #include <cmath>
-#include <glm/glm.hpp>
 
 namespace akm {
 	constexpr fpDouble PI_d = 3.141592653589793238462643;
@@ -67,6 +69,9 @@ namespace akm {
 	using glm::atan;
 
 	using std::sqrt;
+
+	template<typename type_t> const type_t& max(const type_t& l, const typename ak::traits::Identity<type_t>::type& r) { return l > r ? l : r; }
+	template<typename type_t> const type_t& min(const type_t& l, const typename ak::traits::Identity<type_t>::type& r) { return l < r ? l : r; }
 
 	template<typename vec_t> vec_t cMin(vec_t x, vec_t y) {
 		vec_t result;

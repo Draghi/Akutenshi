@@ -17,14 +17,16 @@
 #ifndef AK_STRING_HPP_
 #define AK_STRING_HPP_
 
+#include <ak/PrimitiveTypes.hpp>
 #include <functional>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace ak {
 
-	template<size_t literalLength> constexpr size_t clen(const char(&)[literalLength]) { return literalLength - 1; }
+	template<akSize literalLength> constexpr akSize clen(const char(&)[literalLength]) { return literalLength - 1; }
 
 
 	void split(const std::string& src, const std::vector<std::string>& delims, std::function<void(const std::string&, const std::string&)> out);

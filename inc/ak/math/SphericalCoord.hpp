@@ -20,9 +20,6 @@
 #include <ak/math/Matrix.hpp>
 #include <ak/math/Scalar.hpp>
 #include <ak/math/Vector.hpp>
-#include <glm/detail/func_geometric.hpp>
-#include <glm/detail/type_vec3.hpp>
-#include <glm/detail/type_vec4.hpp>
 
 namespace akm {
 

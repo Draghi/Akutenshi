@@ -44,13 +44,13 @@ namespace aka {
 		private:
 			fpDouble m_frameRate;
 			LoopType m_loopType;
-			std::map<size_t, BonePose> m_keyFrames;
+			std::map<akSize, BonePose> m_keyFrames;
 
 		public:
 			Animation() : m_frameRate(60), m_loopType(LoopType::Repeat), m_keyFrames() {}
 
-			Animation(fpDouble frameRate, LoopType loopType, const std::map<size_t, BonePose>& keyFrames) : m_frameRate(frameRate), m_loopType(loopType), m_keyFrames(keyFrames) {}
-			Animation(fpDouble frameRate, LoopType loopType, std::map<size_t, BonePose>&& keyFrames) : m_frameRate(frameRate), m_loopType(loopType), m_keyFrames(keyFrames) {}
+			Animation(fpDouble frameRate, LoopType loopType, const std::map<akSize, BonePose>& keyFrames) : m_frameRate(frameRate), m_loopType(loopType), m_keyFrames(keyFrames) {}
+			Animation(fpDouble frameRate, LoopType loopType, std::map<akSize, BonePose>&& keyFrames) : m_frameRate(frameRate), m_loopType(loopType), m_keyFrames(keyFrames) {}
 
 			Animation(const Animation& other) : m_frameRate(other.m_frameRate), m_loopType(other.m_loopType), m_keyFrames(other.m_keyFrames) {}
 			Animation(Animation&& other) : m_frameRate(other.m_frameRate), m_loopType(other.m_loopType), m_keyFrames(std::move(other.m_keyFrames)) {}
@@ -58,11 +58,11 @@ namespace aka {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
 			BonePose resolveFrame(fpDouble frameTime) {
-				fpDouble frame = frameTime*m_frameRate;
+				fpSingle frame = frameTime*m_frameRate;
 
-				std::map<size_t, BonePose>::iterator previousFrame = m_keyFrames.end();
-				std::map<size_t, BonePose>::iterator currentFrame  = m_keyFrames.end();
-				std::map<size_t, BonePose>::iterator nextFrame     = m_keyFrames.end();
+				std::map<akSize, BonePose>::iterator previousFrame = m_keyFrames.end();
+				std::map<akSize, BonePose>::iterator currentFrame  = m_keyFrames.end();
+				std::map<akSize, BonePose>::iterator nextFrame     = m_keyFrames.end();
 
 				for(auto iter = m_keyFrames.begin(); iter != m_keyFrames.end(); iter++) {
 					if (frame == iter->first) {
@@ -112,7 +112,7 @@ namespace aka {
 
 			LoopType loopType() const { return m_loopType; }
 			fpDouble frameRate() const { return m_frameRate; }
-			const std::map<size_t, BonePose>& keyFrames() const { return m_keyFrames; }
+			const std::map<akSize, BonePose>& keyFrames() const { return m_keyFrames; }
 
 			Animation& operator=(const Animation&  other) { m_frameRate = other.m_frameRate; m_loopType = other.m_loopType; m_keyFrames = other.m_keyFrames; return *this; }
 			Animation& operator=(      Animation&& other) { m_frameRate = other.m_frameRate; m_loopType = other.m_loopType; m_keyFrames = std::move(other.m_keyFrames); return *this; }

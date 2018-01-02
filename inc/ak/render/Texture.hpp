@@ -17,8 +17,11 @@
 #ifndef AK_RENDER_TEXTURE_HPP_
 #define AK_RENDER_TEXTURE_HPP_
 
+#include <ak/data/Image.hpp>
 #include <ak/math/Vector.hpp>
 #include <ak/PrimitiveTypes.hpp>
+#include <ak/render/Types.hpp>
+#include <optional>
 
 namespace akr {
 
@@ -33,25 +36,25 @@ namespace akr {
 
 	enum class TexTarget {
 		Tex1D,
-		Tex1D_Array,
-
 		Tex2D,
-		Tex2D_Array,
-
 		Tex3D,
-
+		Tex1D_Array,
+		Tex2D_Array,
 		TexCubemap,
 	};
 
 	enum class TexFormat {
 		R,
 		RG,
-
 		RGB,
-		RGBA,
+		RGBA
+	};
 
-		BGR,
-		BGRA,
+	enum class TexStorage {
+		Byte,
+		Byte_sRGB,
+		Half,
+		Single,
 	};
 
 	enum class FilterType {
@@ -67,9 +70,9 @@ namespace akr {
 	};
 
 	enum class ClampDir {
-		S,
-		T,
-		R
+		Horz,
+		Vert,
+		Depth
 	};
 
 	class Texture final {
@@ -90,36 +93,82 @@ namespace akr {
 			bool isValid() { return m_id == 0; }
 
 			Texture& operator=(Texture&& other);
-
 	};
 
-	void setActiveTextureUnit(uint32 unit);
-	void bind(uint32 unit, const Texture& texture);
+	std::optional<Texture> createTex1D(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize maxMipmapLevels = std::numeric_limits<akSize>::max());
+	std::optional<Texture> createTex2D(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize height, akSize maxMipmapLevels = std::numeric_limits<akSize>::max());
+	std::optional<Texture> createTex3D(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize height, akSize depth, akSize maxMipmapLevels = std::numeric_limits<akSize>::max());
+	std::optional<Texture> createTexCubemap(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize height, akSize maxMipmapLevels = std::numeric_limits<akSize>::max());
+	std::optional<Texture> createTex1DArray(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize layers, akSize maxMipmapLevels = std::numeric_limits<akSize>::max());
+	std::optional<Texture> createTex2DArray(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize height, akSize layers, akSize maxMipmapLevels = std::numeric_limits<akSize>::max());
 
-	void setTextureFilters(TexTarget target, FilterType minFilter, FilterType magFilter);
-	void setTextureFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter);
-	void setTextureClamping(TexTarget target, ClampDir clampDir, ClampType clampType);
-	void setTextureBorder(TexTarget target, akm::Vec4 colour);
 
-	void generateMipmaps(TexTarget target);
+	void setActiveTexUnit(uint32 unit);
+	void bindTex(uint32 unit, const Texture& texture);
 
-	void setAnisotropy(TexTarget target, fpSingle amount);
-	fpSingle maxAnsiotropy();
+	void newTexStorage1D(TexFormat format, TexStorage storage, akSize width, akSize mipLevels);
+	void newTexStorage2D(TexFormat format, TexStorage storage, akSize width, akSize height, akSize mipLevels);
+	void newTexStorage3D(TexFormat format, TexStorage storage, akSize width, akSize height, akSize depth, akSize mipLevels);
+	void newTexStorageCubemap(TexFormat format, TexStorage storage, akSize width, akSize height, akSize mipLevels);
+	void newTexStorage1DArray(TexFormat format, TexStorage storage, akSize width, akSize layers, akSize mipLevels);
+	void newTexStorage2DArray(TexFormat format, TexStorage storage, akSize width, akSize height, akSize layers, akSize mipLevels);
 
-	void createTextureStorage1D(TexFormat format, int32 width, int32 mipLevels);
-	void createTextureStorage1D(TexFormat format, int32 width, int32 layers, int32 mipLevels);
-	void createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 mipLevels);
-	void createTextureStorage2D(TexFormat format, int32 width, int32 height, int32 layers, int32 mipLevels);
-	void createTextureStorage3D(TexFormat format, int32 width, int32 height, int32 depth,  int32 mipLevels);
-	void createTextureStorageCube(TexFormat format, int32 width, int32 height, int32 mipLevels);
+	void loadTexData1D(akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize xOff = 0);
+	void loadTexData2D(akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize height, akSize xOff = 0, akSize yOff = 0);
+	void loadTexData3D(akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize height, akSize depth, akSize xOff = 0, akSize yOff = 0, akSize zOff = 0);
+	void loadTexDataCubemap(CubemapTarget cubemap, akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize height, akSize xOff = 0, akSize yOff = 0);
+	void loadTexData1DArray(akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize layer, akSize layers = 0, akSize xOff = 0);
+	void loadTexData2DArray(akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize height, akSize layer, akSize layers = 0, akSize xOff = 0, akSize yOff = 0);
 
-	void replaceTextureData1D(TexFormat format, int32 xOff, int32 width, const fpSingle* data, int32 level = 0);
-	void replaceTextureData1D(TexFormat format, int32 xOff, int32 lOff, int32 width, int32 layers, const fpSingle* data, int32 level = 0);
-	void replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 width, int32 height, const fpSingle* data, int32 level = 0);
-	void replaceTextureData2D(TexFormat format, int32 xOff, int32 yOff, int32 lOff,  int32 width, int32 height, int32 layers, const fpSingle* data, int32 level = 0);
-	void replaceTextureData3D(TexFormat format, int32 xOff, int32 yOff, int32 zOff,  int32 width, int32 height, int32 depth,  const fpSingle* data, int32 level = 0);
-	void replaceTextureDataCubemap(CubemapTarget cubemap, TexFormat format, int32 xOff, int32 yOff, int32 width, int32 height, const fpSingle* data, int32 level = 0);
+	void setTexAnisotropy(TexTarget target, fpSingle amount);
+	void setTexFilters(TexTarget target, FilterType minFilter, FilterType magFilter);
+	void setTexFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter);
+	void setTexClamping(TexTarget target, ClampDir clampDir, ClampType clampType);
+	void setTexBorder(TexTarget target, akm::Vec4 colour);
 
+	void genTexMipmaps(TexTarget target);
+
+	akSize calcTexMaxMipmaps(akSize width, akSize height = 0, akSize depth = 0);
+
+	fpSingle getTexMaxAnsiotropy();
+	akSize getTexComponentsFromFormat(TexFormat format);
+	TexFormat getTexFormatFromComponents(akSize components);
+
+	template<typename type_t> std::optional<Texture> createTex1D(uint32 unit, TexStorage storageType, const akd::Image<type_t>& image, akSize maxMipmapLevels = std::numeric_limits<akSize>::max()) {
+		auto format = akr::getTexFormatFromComponents(image.components());
+		auto dataType = getDataTypeOf<type_t>();
+		return createTex1D(unit, format, storageType, dataType, image.data(), image.width(), maxMipmapLevels);
+	}
+
+	template<typename type_t> std::optional<Texture> createTex2D(uint32 unit, TexStorage storageType, const akd::Image<type_t>& image, akSize maxMipmapLevels = std::numeric_limits<akSize>::max()) {
+		auto format = akr::getTexFormatFromComponents(image.components());
+		auto dataType = getDataTypeOf<type_t>();
+		return createTex2D(unit, format, storageType, dataType, image.data(), image.width(), image.height(), maxMipmapLevels);
+	}
+
+	template<typename type_t> std::optional<Texture> createTex3D(uint32 unit, TexStorage storageType, const akd::Image<type_t>& image, akSize maxMipmapLevels = std::numeric_limits<akSize>::max()) {
+		auto format = akr::getTexFormatFromComponents(image.components());
+		auto dataType = getDataTypeOf<type_t>();
+		return createTex3D(unit, format, storageType, dataType, image.data(), image.width(), image.height(), image.depth(), maxMipmapLevels);
+	}
+
+	template<typename type_t> std::optional<Texture> createTexCubemap(uint32 unit, TexStorage storageType, const akd::Image<type_t>& image, akSize maxMipmapLevels = std::numeric_limits<akSize>::max()) {
+		auto format = akr::getTexFormatFromComponents(image.components());
+		auto dataType = getDataTypeOf<type_t>();
+		return createTexCubemap(unit, format, storageType, dataType, image.data(), image.width(), image.height(), maxMipmapLevels);
+	}
+
+	template<typename type_t> std::optional<Texture> createTex1DArray(uint32 unit, TexStorage storageType, const akd::Image<type_t>& image, akSize maxMipmapLevels = std::numeric_limits<akSize>::max()) {
+		auto format = akr::getTexFormatFromComponents(image.components());
+		auto dataType = getDataTypeOf<type_t>();
+		return createTex1DArray(unit, format, storageType, dataType, image.data(), image.width(), image.height(), maxMipmapLevels);
+	}
+
+	template<typename type_t> std::optional<Texture> createTex2DArray(uint32 unit, TexStorage storageType, const akd::Image<type_t>& image, akSize maxMipmapLevels = std::numeric_limits<akSize>::max()) {
+		auto format = akr::getTexFormatFromComponents(image.components());
+		auto dataType = getDataTypeOf<type_t>();
+		return createTex2DArray(unit, format, storageType, dataType, image.data(), image.width(), image.height(), image.depth(), maxMipmapLevels);
+	}
 }
 
 #endif

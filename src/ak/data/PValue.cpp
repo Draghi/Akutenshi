@@ -62,6 +62,11 @@ PValue::bool_t& PValue::asBool() {
 	throw std::logic_error("PValue does not contain a boolean.");
 }
 
+PValue::bin_t& PValue::asBin() {
+	if (isBin()) return m_value.binVal;
+	throw std::logic_error("PValue does not contain binary data.");
+}
+
 PValue::obj_t& PValue::asObjOrSet(const PValue::obj_t& val) {
 	if (!isObj()) setObj(val);
 	return m_value.oVal;
@@ -95,6 +100,11 @@ PValue::dec_t& PValue::asDecOrSet(PValue::dec_t val) {
 PValue::bool_t& PValue::asBoolOrSet(PValue::bool_t val) {
 	if (!isBool()) setBool(val);
 	return m_value.bVal;
+}
+
+PValue::bin_t& PValue::asBinOrSet(const PValue::bin_t& val) {
+	if (!isBin()) setBin(val);
+	return m_value.binVal;
 }
 
 
@@ -133,6 +143,11 @@ PValue::bool_t PValue::asBool() const {
 	throw std::logic_error("PValue does not contain a boolean.");
 }
 
+const PValue::bin_t& PValue::asBin() const {
+	if (isBin()) return m_value.binVal;
+	throw std::logic_error("PValue does not contain binary data.");
+}
+
 const PValue::obj_t& PValue::asObjOrDef(const PValue::obj_t& val) const {
 	if (isObj()) return m_value.oVal;
 	return val;
@@ -165,6 +180,11 @@ PValue::dec_t PValue::asDecOrDef(PValue::dec_t val) const {
 
 PValue::bool_t PValue::asBoolOrDef(PValue::bool_t val) const {
 	if (isBool()) return m_value.bVal;
+	return val;
+}
+
+const PValue::bin_t& PValue::asBinOrDef(const PValue::bin_t& val) const {
+	if (isBin()) return m_value.binVal;
 	return val;
 }
 
@@ -210,6 +230,8 @@ PValue& PValue::setPValue(const PValue& val) {
 		case PType::Unsigned:setUInt(val.m_value.uVal); break;
 		case PType::Decimal: setDec(val.m_value.dVal); break;
 		case PType::Boolean: setBool(val.m_value.bVal); break;
+
+		case PType::Binary: setBin(val.m_value.binVal); break;
 	}
 	return *this;
 }
@@ -270,6 +292,13 @@ PValue& PValue::setBool(const bool_t& val) {
 	if (!isBool()) setNull();
 	m_value.bVal = val;
 	m_type = PType::Boolean;
+	return *this;
+}
+
+PValue& PValue::setBin(const bin_t& val) {
+	if (!isBin()) setNull();
+	new(&m_value.binVal) bin_t(val);
+	m_type = PType::Binary;
 	return *this;
 }
 

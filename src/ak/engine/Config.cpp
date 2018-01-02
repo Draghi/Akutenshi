@@ -75,7 +75,7 @@ ConfigLoadResult ake::loadConfig() {
 	if (configFile.readLine(configContents, false, {}) <= 0) return ConfigLoadResult::CannotRead;
 
 	akd::PValue newConfig;
-	if (!akd::deserializeFromJson(newConfig, configContents)) return ConfigLoadResult::CannotParse;
+	if (!akd::fromJson(newConfig, configContents)) return ConfigLoadResult::CannotParse;
 
 	setConfig(newConfig);
 	return ConfigLoadResult::Success;
@@ -91,7 +91,7 @@ bool ake::saveConfig() {
 	SaveConfigEvent event(configSnapshot);
 	saveConfigDispatcher().send(event);
 
-	std::string contents = akd::serializeAsJson(configSnapshot, true);
+	std::string contents = akd::toJson(configSnapshot, true);
 
 	if (configFile.write(contents.data(), contents.size()) <= 0) {
 		configFile = akfs::CFile();
