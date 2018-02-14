@@ -69,6 +69,8 @@ namespace akfs {
 
 	void serializeFolders(akd::PValue& root);
 	void deserializeFolders(const akd::PValue& root);
+
+	std::optional<stx::filesystem::path> removeBasePath(const stx::filesystem::path& base, const stx::filesystem::path& val);
 }
 
 #endif

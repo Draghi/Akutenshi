@@ -28,6 +28,18 @@ namespace ak {
 
 	template<akSize literalLength> constexpr akSize clen(const char(&)[literalLength]) { return literalLength - 1; }
 
+	inline std::string replaceSubstrings(const std::string& src, const std::string& replaceStr, const std::vector<std::string>& substrings) {
+		// @todo Optimize this... Char buffer with memcpy+memmove?
+		std::string result = src;
+		for(auto& substr : substrings) {
+			std::string::size_type pos = std::string::npos;
+			while((pos = result.find_first_of(substr)) != std::string::npos) {
+				result = result.substr(0, pos) + replaceStr + result.substr(pos + substr.size());
+			}
+		}
+		return result;
+	}
+
 
 	void split(const std::string& src, const std::vector<std::string>& delims, std::function<void(const std::string&, const std::string&)> out);
 

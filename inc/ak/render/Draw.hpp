@@ -18,8 +18,13 @@
 #define AK_RENDER_DRAW_HPP_
 
 #include <ak/math/Matrix.hpp>
+#include <ak/math/Vector.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/Types.hpp>
+
+namespace akr {
+	class Buffer;
+}
 
 namespace akr {
 
@@ -40,29 +45,6 @@ namespace akr {
 
 	void setDepthTestMode(DepthMode depthMode);
 	void setCullFaceMode(CullMode cullMode);
-
-	void setUniform(uint32 bindingLocation, uint32 x);
-	void setUniform(uint32 bindingLocation, uint32 x, uint32 y);
-	void setUniform(uint32 bindingLocation, uint32 x, uint32 y, uint32 z);
-	void setUniform(uint32 bindingLocation, uint32 x, uint32 y, uint32 z, uint32 w);
-
-	void setUniform(uint32 bindingLocation, int32 x);
-	void setUniform(uint32 bindingLocation, int32 x, int32 y);
-	void setUniform(uint32 bindingLocation, int32 x, int32 y, int32 z);
-	void setUniform(uint32 bindingLocation, int32 x, int32 y, int32 z, int32 w);
-
-	void setUniform(uint32 bindingLocation, fpSingle x);
-	void setUniform(uint32 bindingLocation, fpSingle x, fpSingle y);
-	void setUniform(uint32 bindingLocation, fpSingle x, fpSingle y, fpSingle z);
-	void setUniform(uint32 bindingLocation, fpSingle x, fpSingle y, fpSingle z, fpSingle w);
-
-	void setUniform(uint32 bindingLocation, akm::Vec4 vec);
-	void setUniform(uint32 bindingLocation, akm::Vec3 vec);
-	void setUniform(uint32 bindingLocation, akm::Vec2 vec);
-
-	void setUniform(uint32 bindingLocation, akm::Mat4 matrix);
-	void setUniform(uint32 bindingLocation, akm::Mat3 matrix);
-	void setUniform(uint32 bindingLocation, akm::Mat2 matrix);
 }
 
 #endif

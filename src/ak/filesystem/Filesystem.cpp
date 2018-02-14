@@ -283,6 +283,13 @@ void akfs::deserializeFolders(const akd::PValue& root) {
 	root.atOrDef("localCache").tryAssign<std::string>(systemFolder(SystemFolder::localData));
 }
 
+std::optional<stx::filesystem::path> akfs::removeBasePath(const stx::filesystem::path& base, const stx::filesystem::path& val) {
+	auto lStr = base.native(); auto rStr = val.native();
+	size_t pos = rStr.find_first_of(lStr);
+	if (pos == std::string::npos) return std::optional<stx::filesystem::path>();
+	return rStr.substr(pos + lStr.size());
+}
+
 static akev::SubscriberID fsSInitRegenerateConfigHook = ake::regenerateConfigDispatch().subscribe([](ake::RegenerateConfigEvent& event){
 	serializeFolders(event.data()["systemFolders"]);
 });

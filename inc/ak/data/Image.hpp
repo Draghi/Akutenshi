@@ -156,6 +156,7 @@ namespace akd {
 		dst["size"][2].set<akSize>(src.depth());
 		dst["components"].set<akSize>(src.components());
 
+		// @todo Not portable across endianess... But it's way too slow otherwise...
 		std::vector<uint8> binData;
 		binData.resize(src.size()*sizeof(type_t));
 		std::memcpy(binData.data(), src.data(), src.size()*sizeof(type_t));

@@ -15,9 +15,17 @@
  **/
 
 #include <ak/Log.hpp>
+#include <ak/render/Buffers.hpp>
 #include <ak/render/Draw.hpp>
+#include <stddef.h>
+#include <sstream>
+#include <string>
 
 #include "GL/gl4.h"
+
+namespace akr {
+	class Buffer;
+}
 
 #if defined(__linux)
 #define BACKWARD_HAS_BFD 1
@@ -27,7 +35,7 @@
 using namespace akr;
 
 static void APIENTRY ogl_logErrorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* /*userParam​*/) {
-	akl::Logger glLog("OpenGL");
+	akl::Logger glLog("OGL");
 	std::stringstream sstream;
 
 	switch(type) {
@@ -211,77 +219,4 @@ void akr::setCullFaceMode(CullMode cullMode) {
 	}
 }
 
-void akr::setUniform(uint32 bindingLocation, uint32 x) {
-	glUniform1ui(bindingLocation, x);
-}
 
-void akr::setUniform(uint32 bindingLocation, uint32 x, uint32 y) {
-	glUniform2ui(bindingLocation, x, y);
-}
-
-void akr::setUniform(uint32 bindingLocation, uint32 x, uint32 y, uint32 z) {
-	glUniform3ui(bindingLocation, x, y, z);
-}
-
-void akr::setUniform(uint32 bindingLocation, uint32 x, uint32 y, uint32 z, uint32 w) {
-	glUniform4ui(bindingLocation, x, y, z, w);
-}
-
-
-void akr::setUniform(uint32 bindingLocation, int32 x) {
-	glUniform1i(bindingLocation, x);
-}
-
-void akr::setUniform(uint32 bindingLocation, int32 x, int32 y) {
-	glUniform2i(bindingLocation, x, y);
-}
-
-void akr::setUniform(uint32 bindingLocation, int32 x, int32 y, int32 z) {
-	glUniform3i(bindingLocation, x, y, z);
-}
-
-void akr::setUniform(uint32 bindingLocation, int32 x, int32 y, int32 z, int32 w) {
-	glUniform4i(bindingLocation, x, y, z, w);
-}
-
-
-void akr::setUniform(uint32 bindingLocation, fpSingle x) {
-	glUniform1f(bindingLocation, x);
-}
-
-void akr::setUniform(uint32 bindingLocation, fpSingle x, fpSingle y) {
-	glUniform2f(bindingLocation, x, y);
-}
-
-void akr::setUniform(uint32 bindingLocation, fpSingle x, fpSingle y, fpSingle z) {
-	glUniform3f(bindingLocation, x, y, z);
-}
-
-void akr::setUniform(uint32 bindingLocation, fpSingle x, fpSingle y, fpSingle z, fpSingle w) {
-	glUniform4f(bindingLocation, x, y, z, w);
-}
-
-void akr::setUniform(uint32 bindingLocation, akm::Vec4 vec) {
-	setUniform(bindingLocation, vec.x, vec.y, vec.z, vec.w);
-}
-
-void akr::setUniform(uint32 bindingLocation, akm::Vec3 vec) {
-	setUniform(bindingLocation, vec.x, vec.y, vec.z);
-}
-
-void akr::setUniform(uint32 bindingLocation, akm::Vec2 vec) {
-	setUniform(bindingLocation, vec.x, vec.y);
-}
-
-
-void akr::setUniform(uint32 bindingLocation, akm::Mat4 matrix) {
-	glUniformMatrix4fv(bindingLocation, 1, GL_FALSE, &matrix[0][0]);
-}
-
-void akr::setUniform(uint32 bindingLocation, akm::Mat3 matrix) {
-	glUniformMatrix3fv(bindingLocation, 1, GL_FALSE, &matrix[0][0]);
-}
-
-void akr::setUniform(uint32 bindingLocation, akm::Mat2 matrix) {
-	glUniformMatrix2fv(bindingLocation, 1, GL_FALSE, &matrix[0][0]);
-}

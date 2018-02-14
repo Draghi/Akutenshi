@@ -5,5 +5,6 @@ set(GUARD_AK_SRC 1)
 sugar_files(AK_SOURCE main.cpp game.cpp resource.cpp imp.cpp)
 
 sugar_include(ak)
+sugar_include(akres)
 
 endif()

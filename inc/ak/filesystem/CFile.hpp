@@ -284,7 +284,7 @@ namespace akfs {
 			}
 	};
 
-	inline CFile open(const stx::filesystem::path& path, OpenFlags flags) {
+	inline CFile open(const stx::filesystem::path& path, uint8 flags) {
 		return CFile(path, flags);
 	}
 

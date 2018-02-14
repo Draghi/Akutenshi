@@ -38,13 +38,13 @@ namespace akd {
 	}
 
 	inline void serialize(akd::PValue& dest, const akm::Vec3& val) {
-		for(auto i = 0u; i < 2; i++) {
+		for(auto i = 0u; i < 3; i++) {
 			dest[i].set<typename akm::Vec3::value_type>(val[static_cast<int>(i)]);
 		}
 	}
 
 	inline void serialize(akd::PValue& dest, const akm::Vec2& val) {
-		for(auto i = 0u; i < 1; i++) {
+		for(auto i = 0u; i < 2; i++) {
 			dest[i].set<typename akm::Vec2::value_type>(val[static_cast<int>(i)]);
 		}
 	}

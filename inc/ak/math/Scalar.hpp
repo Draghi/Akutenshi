@@ -70,6 +70,10 @@ namespace akm {
 
 	using std::sqrt;
 
+	template<typename type_t> type_t normScalar(const type_t& val, const type_t& min, const type_t& max) {
+		return (val - min)/(max - min);
+	}
+
 	template<typename type_t> const type_t& max(const type_t& l, const typename ak::traits::Identity<type_t>::type& r) { return l > r ? l : r; }
 	template<typename type_t> const type_t& min(const type_t& l, const typename ak::traits::Identity<type_t>::type& r) { return l < r ? l : r; }
 

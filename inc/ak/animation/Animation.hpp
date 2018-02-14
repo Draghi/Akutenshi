@@ -17,106 +17,154 @@
 #ifndef AK_ANIMATION_ANIMATION_HPP_
 #define AK_ANIMATION_ANIMATION_HPP_
 
+#include <ak/animation/Fwd.hpp>
+#include <ak/animation/Type.hpp>
+#include <ak/data/PValue.hpp>
+#include <ak/Iter.hpp>
 #include <ak/math/Matrix.hpp>
 #include <ak/math/Quaternion.hpp>
+#include <ak/math/Scalar.hpp>
+#include <ak/math/Serialize.hpp>
 #include <ak/math/Vector.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <stddef.h>
-#include <algorithm>
+#include <stdexcept>
+#include <deque>
 #include <map>
-#include <set>
 #include <string>
-#include <unordered_map>
 #include <utility>
+#include <vector>
 
 namespace aka {
 
-	enum class LoopType {
-		Stop,
-		Reset,
-		Repeat,
-		Reverse
-	};
+	inline Animation::Animation() = default;
+	inline Animation::Animation(fpSingle ticksPerSecond, fpSingle duration, std::vector<AnimNode>& animNodes) : m_ticksPerSecond(ticksPerSecond), m_duration(duration), m_animNodes(animNodes) {}
 
-	using BonePose = std::unordered_map<std::string, akm::Mat4>;
+	inline std::vector<PoseNode> Animation::calculatePose(fpSingle time) const {
+		std::vector<PoseNode> result;
+		result.reserve(m_animNodes.size());
+		for(auto& animNode : m_animNodes) {
+			result.push_back({
+				animNode.nodeName,
+				calculateFrame(animNode, time)
+			});
+		}
+		return result;
+	}
 
-	class Animation {
-		private:
-			fpDouble m_frameRate;
-			LoopType m_loopType;
-			std::map<akSize, BonePose> m_keyFrames;
+	inline std::vector<akm::Mat4> Animation::calculateIndexedPose(fpSingle time) const {
+		std::vector<akm::Mat4> result;
+		result.reserve(m_animNodes.size());
+		for(auto& animNode : m_animNodes) result.push_back(calculateFrame(animNode, time));
+		return result;
+	}
 
-		public:
-			Animation() : m_frameRate(60), m_loopType(LoopType::Repeat), m_keyFrames() {}
+	inline const std::vector<AnimNode>& Animation::nodes() const { return m_animNodes; }
 
-			Animation(fpDouble frameRate, LoopType loopType, const std::map<akSize, BonePose>& keyFrames) : m_frameRate(frameRate), m_loopType(loopType), m_keyFrames(keyFrames) {}
-			Animation(fpDouble frameRate, LoopType loopType, std::map<akSize, BonePose>&& keyFrames) : m_frameRate(frameRate), m_loopType(loopType), m_keyFrames(keyFrames) {}
+	inline fpSingle Animation::duration() const {
+		return (m_ticksPerSecond > 0) ? m_duration/m_ticksPerSecond : m_duration/25.0f;
+	}
 
-			Animation(const Animation& other) : m_frameRate(other.m_frameRate), m_loopType(other.m_loopType), m_keyFrames(other.m_keyFrames) {}
-			Animation(Animation&& other) : m_frameRate(other.m_frameRate), m_loopType(other.m_loopType), m_keyFrames(std::move(other.m_keyFrames)) {}
+	inline fpSingle Animation::ticksPerSecond() const {
+		return m_ticksPerSecond;
+	}
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wfloat-equal"
-			BonePose resolveFrame(fpDouble frameTime) {
-				fpSingle frame = frameTime*m_frameRate;
+	// ///////////// //
+	// // Private // //
+	// ///////////// //
 
-				std::map<akSize, BonePose>::iterator previousFrame = m_keyFrames.end();
-				std::map<akSize, BonePose>::iterator currentFrame  = m_keyFrames.end();
-				std::map<akSize, BonePose>::iterator nextFrame     = m_keyFrames.end();
+	template<typename container_t> struct AnimHelper {
+		using iter_t = typename container_t::const_iterator;
 
-				for(auto iter = m_keyFrames.begin(); iter != m_keyFrames.end(); iter++) {
-					if (frame == iter->first) {
-						currentFrame = iter;
-						nextFrame = iter++;
-						break;
-					} else if (frame < iter->first) {
-						currentFrame = previousFrame;
-						nextFrame = iter;
-						break;
-					}
-					previousFrame = iter;
+		iter_t startFrame;
+		iter_t endFrame;
+		fpSingle startTime;
+		fpSingle endTime;
+
+		AnimHelper(fpSingle animTime, fpSingle animDuration, const container_t& frames, TweenMode preAnim, TweenMode postAnim) {
+			endFrame = frames.lower_bound(animTime);
+
+			if (endFrame == frames.begin()) {
+
+				switch(preAnim) {
+					case TweenMode::None: {
+						startFrame = frames.end(); startTime = 0;
+						endFrame = frames.end(); endTime = 0;
+					} break;
+
+					case TweenMode::Linear: throw std::runtime_error("aka::Animation: Linear extrapolation is not supported."); //@todo Implement
+
+					case TweenMode::Nearest: {
+						startFrame = endFrame;
+						startTime = animTime; endTime = animTime;
+					} break;
+
+					case TweenMode::Repeat: throw std::logic_error("aka::Animation: Repeating with time less than 0, should be >0.");
 				}
 
-				if (currentFrame == m_keyFrames.end()) return m_keyFrames.begin()->second;
-				if (nextFrame == m_keyFrames.end()) return currentFrame->second;
+			} else if (endFrame == frames.end()) {
 
-				fpSingle frameDelta = static_cast<fpSingle>((frame - currentFrame->first)/(nextFrame->first - currentFrame->first));
+				switch(postAnim) {
+					case TweenMode::None: {
+						startFrame = frames.end(); endFrame = frames.end();
+						startTime = 0; endTime = 0;
+					} break;
 
-				std::set<std::string> bones;
-				for(auto iter = currentFrame->second.begin(); iter != currentFrame->second.end(); iter++) bones.insert(iter->first);
-				for(auto iter = nextFrame->second.begin();    iter != nextFrame->second.end();    iter++) bones.insert(iter->first);
+					case TweenMode::Linear: throw std::runtime_error("aka::Animation: Linear extrapolation is not supported."); //@todo Implement
 
-				BonePose result;
-				for(auto iter = bones.begin(); iter != bones.end(); iter++) {
-					auto currentPose = currentFrame->second.find(*iter);
-					auto nextPose = nextFrame->second.find(*iter);
+					case TweenMode::Nearest: {
+						startFrame = frames.rend().base(); endFrame = startFrame;
+						startTime = animDuration; endTime = animDuration;
+					} break;
 
-					if (currentPose == currentFrame->second.end()) result.insert(std::make_pair(*iter, nextPose->second));
-					if (nextPose == nextFrame->second.end()) result.insert(std::make_pair(*iter, currentPose->second));
-
-					akm::Vec3 cPos = currentPose->second[3];
-					akm::Quat cRot = currentPose->second;
-
-					akm::Vec3 nPos = nextPose->second[3];
-					akm::Quat nRot = nextPose->second;
-
-					akm::Mat4 fMat = akm::mat4_cast(akm::slerp(cRot, nRot, frameDelta));
-					fMat[3] = akm::Vec4(akm::mix(cPos, nPos, frameDelta), fMat[3][3]);
-
-					result.insert(std::make_pair(*iter, fMat));
+					case TweenMode::Repeat: {
+						startFrame = frames.rend().base(); endFrame = frames.begin();
+						startTime = startFrame->first; endTime = animDuration + endFrame->first;
+					} break;
 				}
 
-				return result;
+			} else {
+				startFrame = ak::prevIter(endFrame);
+				startTime = startFrame->first;
+				endTime = endFrame->first;
 			}
-#pragma clang diagnostic pop
-
-			LoopType loopType() const { return m_loopType; }
-			fpDouble frameRate() const { return m_frameRate; }
-			const std::map<akSize, BonePose>& keyFrames() const { return m_keyFrames; }
-
-			Animation& operator=(const Animation&  other) { m_frameRate = other.m_frameRate; m_loopType = other.m_loopType; m_keyFrames = other.m_keyFrames; return *this; }
-			Animation& operator=(      Animation&& other) { m_frameRate = other.m_frameRate; m_loopType = other.m_loopType; m_keyFrames = std::move(other.m_keyFrames); return *this; }
+		}
 	};
+
+	inline akm::Vec3 Animation::calculateFramePos(fpSingle animTime, const AnimNode& node) const {
+		AnimHelper<std::map<fpSingle, akm::Vec3>> frameInfo(animTime, m_duration, node.posFrames, node.preAnim, node.postAnim);
+		if (frameInfo.endFrame == node.posFrames.end()) throw std::runtime_error("aka::Animation: Default node extrapolation not supported"); //@todo Implement
+
+		return (frameInfo.startFrame == frameInfo.endFrame)
+			? frameInfo.startFrame->second
+			: akm::mix(frameInfo.startFrame->second, frameInfo.endFrame->second, akm::normScalar(animTime, frameInfo.startTime, frameInfo.endTime));
+	}
+
+	inline akm::Vec3 Animation::calculateFrameScl(fpSingle animTime, const AnimNode& node) const {
+		AnimHelper<std::map<fpSingle, akm::Vec3>> frameInfo(animTime, m_duration, node.sclFrames, node.preAnim, node.postAnim);
+		if (frameInfo.endFrame == node.sclFrames.end()) throw std::runtime_error("aka::Animation: Default node extrapolation not supported"); //@todo Implement
+
+		return (frameInfo.startFrame == frameInfo.endFrame)
+			? frameInfo.startFrame->second
+			: akm::mix(frameInfo.startFrame->second, frameInfo.endFrame->second, akm::normScalar(animTime, frameInfo.startTime, frameInfo.endTime));
+	}
+
+	inline akm::Quat Animation::calculateFrameRot(fpSingle animTime, const AnimNode& node) const {
+		AnimHelper<std::map<fpSingle, akm::Quat>> frameInfo(animTime, m_duration, node.rotFrames, node.preAnim, node.postAnim);
+		if (frameInfo.endFrame == node.rotFrames.end()) throw std::runtime_error("aka::Animation: Default node extrapolation not supported"); //@todo Implement
+
+		return (frameInfo.startFrame == frameInfo.endFrame)
+			? frameInfo.startFrame->second
+			: akm::slerp(frameInfo.startFrame->second, frameInfo.endFrame->second, akm::normScalar(animTime, frameInfo.startTime, frameInfo.endTime));
+	}
+
+	inline akm::Mat4 Animation::calculateFrame(const AnimNode& node, fpSingle time) const {
+		auto animTime = akm::mod((m_ticksPerSecond > 0) ? (time * m_ticksPerSecond) : (time * 25.0f), m_duration);
+		if (animTime < 0) animTime += m_duration;
+		akm::Vec3 framePos = calculateFramePos(animTime, node);
+		akm::Vec3 frameScl = calculateFrameScl(animTime, node);
+		akm::Quat frameRot = calculateFrameRot(animTime, node);
+		return akm::translate(framePos) * akm::mat4_cast(frameRot) * akm::scale(frameScl);
+	}
 
 }
 

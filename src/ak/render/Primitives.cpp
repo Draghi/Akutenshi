@@ -18,7 +18,7 @@
 
 using namespace akr;
 
-std::vector<fpSingle> akr::genCubeMesh(akm::Vec3 p1, akm::Vec3 p2, bool genNorms, bool genTexcoord) {
+/*std::vector<fpSingle> akr::genCubeMesh(akm::Vec3 p1, akm::Vec3 p2, bool genNorms, bool genTexcoord) {
 
 	const uint8 indicies[] = {
 		0, 1, 2, //  Front - Bottom
@@ -89,4 +89,4 @@ std::vector<fpSingle> akr::genCubeMesh(akm::Vec3 p1, akm::Vec3 p2, bool genNorms
 
 	result.shrink_to_fit();
 	return result;
-}
+}*/
