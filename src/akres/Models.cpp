@@ -292,7 +292,7 @@ static aka::Skeleton extractSkeleton(const aiScene& scene, const aiMesh& mesh) {
 	return aka::Skeleton(skeletonBones);
 }
 
-static std::vector<std::pair<std::string, aka::Animation>> extractAnimations(const aiScene& scene, const aka::Skeleton& skeleton) {
+static std::vector<std::pair<std::string, aka::Animation>> extractAnimations(const aiScene& scene, const aka::Skeleton& /*skeleton*/) {
 
 	std::vector<std::pair<std::string, aka::Animation>> result;
 	result.reserve(scene.mNumAnimations);

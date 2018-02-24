@@ -128,34 +128,30 @@ namespace akc {
 			// // Insert Element // //
 			// //////////////////// //
 
-			SlotID insert(const type_t& val) {
+			std::pair<SlotID, iterator> insert(const type_t& val) {
+				m_data.push_back(val);
 				if (m_freeList.empty()) {
-					m_data.push_back(val);
 					m_indicies.push_back(SlotID(static_cast<uint32>(m_data.size() - 1), 1));
 					m_indexLookup.push_back(static_cast<uint32>(m_indicies.size() - 1));
-					return SlotID(static_cast<uint32>(m_indicies.size() - 1), m_indicies.back().generation);
+				} else {
+					auto freeId = m_freeList.back(); m_freeList.pop_back();
+					m_indicies[freeId].index = static_cast<uint32>(m_data.size() - 1);
+					m_indexLookup.push_back(freeId);
 				}
-
-				auto freeId = m_freeList.back(); m_freeList.pop_back();
-				m_data.push_back(val);
-				m_indicies[freeId].index = static_cast<uint32>(m_data.size() - 1);
-				m_indexLookup.push_back(freeId);
-				return SlotID(freeId, m_indicies[freeId].generation);
+				return {slotIDFor(std::prev(m_data.end())), std::prev(m_data.end())};
 			}
 
-			SlotID insert(type_t&& val) {
+			std::pair<SlotID, iterator> insert(type_t&& val) {
+				m_data.push_back(std::move(val));
 				if (m_freeList.empty()) {
-					m_data.push_back(std::move(val));
 					m_indicies.push_back(SlotID(static_cast<uint32>(m_data.size() - 1), 1));
 					m_indexLookup.push_back(static_cast<uint32>(m_indicies.size() - 1));
-					return SlotID(static_cast<uint32>(m_indicies.size() - 1), m_indicies.back().generation);
+				} else {
+					auto freeId = m_freeList.back(); m_freeList.pop_back();
+					m_indicies[freeId].index = static_cast<uint32>(m_data.size() - 1);
+					m_indexLookup.push_back(freeId);
 				}
-
-				auto freeId = m_freeList.back(); m_freeList.pop_back();
-				m_data.push_back(std::move(val));
-				m_indicies[freeId].index = static_cast<uint32>(m_data.size() - 1);
-				m_indexLookup.push_back(freeId);
-				return SlotID(freeId, m_indicies[freeId].generation);
+				return {slotIDFor(std::prev(m_data.end())), std::prev(m_data.end())};
 			}
 
 			// ///////////////////// //
@@ -169,26 +165,26 @@ namespace akc {
 			}
 
 			bool erase(const iterator& iter) {
-				auto id = std::distance(m_data.begin(), iter);
-				removeEntry(m_indexLookup[id]);
+				auto id = static_cast<size_t>(std::distance(m_data.begin(), iter));
+				removeEntry(static_cast<uint32>(m_indexLookup[id]));
 				return true;
 			}
 
 			bool erase(const const_iterator& iter) {
-				auto id = std::distance(const_cast<const decltype(m_data)>(m_data).begin(), iter);
-				removeEntry(m_indexLookup[id]);
+				auto id = static_cast<size_t>(std::distance(m_data.cbegin(), iter));
+				removeEntry(static_cast<uint32>(m_indexLookup[id]));
 				return true;
 			}
 
 			bool erase(const reverse_iterator& iter) {
-				auto id = std::distance(m_data.rbegin(), iter);
-				removeEntry(m_indexLookup[id]);
+				auto id = static_cast<size_t>(std::distance(m_data.rbegin(), iter));
+				removeEntry(static_cast<uint32>(m_indexLookup[id]));
 				return true;
 			}
 
 			bool erase(const const_reverse_iterator& iter) {
-				auto id = std::distance(const_cast<const decltype(m_data)&>(m_data).rbegin(), iter);
-				removeEntry(m_indexLookup[id]);
+				auto id = static_cast<size_t>(std::distance(m_data.crbegin(), iter));
+				removeEntry(static_cast<uint32>(m_indexLookup[id]));
 				return true;
 			}
 
@@ -213,6 +209,16 @@ namespace akc {
 			// /////////// //
 
 			bool exists(SlotID id) const { return (id.index < m_indicies.size()) && (m_indicies[id.index].generation == id.generation); }
+
+			iterator find(SlotID id) {
+				if (!exists(id)) return m_data.end();
+				return m_data.begin() + m_indicies[id.index].index;
+			}
+
+			const_iterator find(SlotID id) const {
+				if (!exists(id)) return m_data.end();
+				return m_data.begin() + m_indicies[id.index].index;
+			}
 
 			// //////////// //
 			// // SlotID // //
@@ -331,6 +337,12 @@ namespace akc {
 			size_t capacity() const { return m_data.capacity(); }
 	};
 
+}
+
+namespace std {
+	template<> struct hash<akc::SlotID> {
+		size_t operator()(const akc::SlotID id) { return id.value(); }
+	};
 }
 
 #endif

@@ -20,6 +20,7 @@
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/Traits.hpp>
 #include <glm/common.hpp>
+#include <glm/exponential.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/trigonometric.hpp>
 #include <cmath>
@@ -46,6 +47,7 @@ namespace akm {
 	using glm::trunc;
 
 	using glm::mod;
+	using glm::pow;
 
 	using glm::isinf;
 	using glm::isnan;
@@ -74,8 +76,12 @@ namespace akm {
 		return (val - min)/(max - min);
 	}
 
-	template<typename type_t> const type_t& max(const type_t& l, const typename ak::traits::Identity<type_t>::type& r) { return l > r ? l : r; }
-	template<typename type_t> const type_t& min(const type_t& l, const typename ak::traits::Identity<type_t>::type& r) { return l < r ? l : r; }
+	inline fpSingle min(fpSingle x, fpSingle y) { return std::fmin(x, y); }
+	inline fpSingle max(fpSingle x, fpSingle y) { return std::fmax(x, y); }
+
+	inline fpDouble min(fpDouble x, fpDouble y) { return std::fmin(x, y); }
+	inline fpDouble max(fpDouble x, fpDouble y) { return std::fmax(x, y); }
+
 
 	template<typename vec_t> vec_t cMin(vec_t x, vec_t y) {
 		vec_t result;
@@ -89,7 +95,21 @@ namespace akm {
 		return result;
 	}
 
+	template<typename vec_t> vec_t cClamp(vec_t val, vec_t min, vec_t max) {
+		vec_t result;
+		for(int32 i = 0; i < val.length(); i++) result[i] = akm::clamp(val[i], min[i], max[i]);
+		return result;
+	}
+
 	template<typename scalar_t> scalar_t remainder(scalar_t x, scalar_t y) { return std::remainder(x, y); }
+
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+	template<typename scalar_t> bool isZero(scalar_t x) { return x == 0; }
+	template<typename scalar_t> bool isEqual(scalar_t x, scalar_t y) { return x == y; }
+#pragma clang diagnostic pop
+
 }
 
 

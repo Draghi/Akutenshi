@@ -47,7 +47,7 @@ static void APIENTRY ogl_logErrorCallback(GLenum source, GLenum type, GLuint id,
 		case GL_DEBUG_TYPE_MARKER:              sstream << "[Marker]"; break;
 		case GL_DEBUG_TYPE_PUSH_GROUP:          sstream << "[Push]"; break;
 		case GL_DEBUG_TYPE_POP_GROUP:           sstream << "[Pop]"; break;
-		case GL_DEBUG_TYPE_OTHER:               sstream << "[Other]"; break;
+		case GL_DEBUG_TYPE_OTHER:               return;
 	}
 
 	switch(source) {

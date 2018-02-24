@@ -221,7 +221,7 @@ namespace aka {
 	}
 
 	inline void Skeleton::recalculateBindPose() const {
-		m_finalTransform = calculateFinalTransform(m_rootID, m_bones);
+		m_finalTransform = calculateFinalTransform(static_cast<akSize>(m_rootID), m_bones);
 		m_finalTranformDirty = false;
 	}
 

@@ -8,6 +8,7 @@ sugar_files(AK_SOURCE
 	Shaders.cpp
 	Textures.cpp
 	VertexArrays.cpp 
+	IntermediateMode.cpp
 )
 
 endif()

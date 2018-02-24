@@ -178,6 +178,7 @@ set(BROTLI_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/brotli/c/include")
 set(CXXOPTS_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/cxxopts/include")
 set(CPPCODEC_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/cppcodec")
 set(ASSIMP_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/assimp/Include" "${CMAKE_BINARY_DIR}/cmake/assimp/Include")
+set(SPARSEPP_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/sparsepp")
 
 ###############
 # CMake Setup #

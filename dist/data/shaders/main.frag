@@ -15,7 +15,7 @@ layout(location = 6) uniform sampler2D uSpec;
 out vec4 fragColour;
 
 void main() {
-	vec3 wLightDir = normalize(vec3(0.66, 1.50, 0.75));
+	vec3 wLightDir = normalize(vec3(0.66, 1.50, -0.75));
 	vec3 lightDir = normalize(fMatTBN * wLightDir);
 	
 	vec3 norm = normalize(texture(uNorm, fTex).rgb*2 - 1);

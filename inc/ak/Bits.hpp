@@ -14,34 +14,16 @@
  * limitations under the License.
  **/
 
-#ifndef AK_EVENT_UTIL_HPP_
-#define AK_EVENT_UTIL_HPP_
+#ifndef AK_BITS_HPP_
+#define AK_BITS_HPP_
 
-#include <ak/data/Hash.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <string_view>
+#include <climits>
 
-namespace akev {
-
-	using EventID = uint64;
-	class Subscription;
-
-	namespace internal {
-		class IDispatcher {
-			IDispatcher(const IDispatcher&) = delete;
-			IDispatcher& operator=(const IDispatcher&) = delete;
-			public:
-				IDispatcher() = default;
-				virtual ~IDispatcher() = default;
-
-				virtual void unsubscribe(Subscription&) = 0;
-		};
+namespace ak {
+	template <typename type_t> inline constexpr type_t bitmask(uint64 count) {
+		return static_cast<type_t>(-(count != 0)) & (static_cast<type_t>(-1) >> ((sizeof(type_t) * CHAR_BIT) - count));
 	}
-
-	inline constexpr EventID calculateEventID(const std::string_view& eventName) {
-		return akd::hash64FNV1A(eventName.data(), static_cast<akSize>(eventName.size()));
-	}
-
 }
 
 #endif

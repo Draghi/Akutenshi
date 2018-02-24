@@ -23,6 +23,7 @@ target_include_directories(akutenshi SYSTEM PUBLIC ${BROTLI_INCLUDE_DIR})
 target_include_directories(akutenshi SYSTEM PUBLIC ${CXXOPTS_INCLUDE_DIR})
 target_include_directories(akutenshi SYSTEM PUBLIC ${CPPCODEC_INCLUDE_DIR})
 target_include_directories(akutenshi SYSTEM PUBLIC ${ASSIMP_INCLUDE_DIR})
+target_include_directories(akutenshi SYSTEM PUBLIC ${SPARSEPP_INCLUDE_DIR})
 
 target_compile_options(akutenshi PUBLIC ${AK_BUILD_CXX_WARNING_FLAGS})
 target_compile_options(akutenshi PUBLIC ${AK_BUILD_CXX_COMPILER_FLAGS})
