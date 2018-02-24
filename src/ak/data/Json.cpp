@@ -166,8 +166,8 @@ std::string akd::toJson(const akd::PValue& src, bool pretty) {
 
 
 		if ((path.size() > 0) && (!path[path.size() - 1].isIndex) && (traverseAction != akd::TraverseAction::ObjectEnd) && (traverseAction != akd::TraverseAction::ArrayEnd)) {
-			if (pretty) pWriter.Key(path[path.size()-1].path.c_str(), static_cast<rj::SizeType>(path[path.size()-1].path.size()));
-			else nWriter.Key(path[path.size()-1].path.c_str(), static_cast<rj::SizeType>(path[path.size()-1].path.size()));
+			if (pretty) pWriter.Key(path[path.size()-1].path.c_str(), path[path.size()-1].path.size());
+			else nWriter.Key(path[path.size()-1].path.c_str(), path[path.size()-1].path.size());
 		}
 
 		switch(traverseAction) {
@@ -178,8 +178,8 @@ std::string akd::toJson(const akd::PValue& src, bool pretty) {
 			}
 
 			case akd::TraverseAction::ArrayEnd: {
-				if (pretty) pWriter.EndArray(static_cast<rj::SizeType>(value.as<akd::PValue::arr_t>().size()));
-				else nWriter.EndArray(static_cast<rj::SizeType>(value.as<akd::PValue::arr_t>().size()));
+				if (pretty) pWriter.EndArray(value.as<akd::PValue::arr_t>().size());
+				else nWriter.EndArray(value.as<akd::PValue::arr_t>().size());
 				break;
 			}
 
@@ -190,8 +190,8 @@ std::string akd::toJson(const akd::PValue& src, bool pretty) {
 			}
 
 			case akd::TraverseAction::ObjectEnd: {
-				if (pretty) pWriter.EndObject(static_cast<rj::SizeType>(value.as<akd::PValue::obj_t>().size()));
-				else nWriter.EndObject(static_cast<rj::SizeType>(value.as<akd::PValue::obj_t>().size()));
+				if (pretty) pWriter.EndObject(value.as<akd::PValue::obj_t>().size());
+				else nWriter.EndObject(value.as<akd::PValue::obj_t>().size());
 				break;
 			}
 
@@ -222,8 +222,8 @@ std::string akd::toJson(const akd::PValue& src, bool pretty) {
 
 					case akd::PType::Unsigned:
 						if ((value.as<uint64>() <= std::numeric_limits<unsigned>::max())) {
-							if (pretty) pWriter.Uint(static_cast<unsigned>(value.as<uint>()));
-							else nWriter.Uint(static_cast<unsigned>(value.as<uint>()));
+							if (pretty) pWriter.Uint(value.as<uint>());
+							else nWriter.Uint(value.as<uint>());
 						} else {
 							if (pretty) pWriter.Uint64(value.as<uint64>());
 							else nWriter.Uint64(value.as<uint64>());
@@ -236,14 +236,14 @@ std::string akd::toJson(const akd::PValue& src, bool pretty) {
 						break;
 
 					case akd::PType::String:
-						if (pretty) pWriter.String(value.as<std::string>().c_str(), static_cast<rj::SizeType>(value.as<std::string>().size()));
-						else nWriter.String(value.as<std::string>().c_str(), static_cast<rj::SizeType>(value.as<std::string>().size()));
+						if (pretty) pWriter.String(value.as<std::string>().c_str(), value.as<std::string>().size());
+						else nWriter.String(value.as<std::string>().c_str(), value.as<std::string>().size());
 						break;
 
 					case akd::PType::Binary:
 						std::string binStr = std::string(JSON_BASE64_IDENTIFIER) + cppcodec::base64_rfc4648::encode(value.asBin().data(), value.asBin().size());
-						if (pretty) pWriter.String(binStr.c_str(), static_cast<rj::SizeType>(binStr.size()));
-						else nWriter.String(binStr.c_str(), static_cast<rj::SizeType>(binStr.size()));
+						if (pretty) pWriter.String(binStr.c_str(), binStr.size());
+						else nWriter.String(binStr.c_str(), binStr.size());
 
 				}
 				break;

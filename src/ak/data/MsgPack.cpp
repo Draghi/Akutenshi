@@ -152,8 +152,8 @@ std::vector<uint8> akd::toMsgPack(const akd::PValue& src) {
 		}
 
 		switch(traverseAction) {
-			case akd::TraverseAction::ArrayStart: pk.pack_array(static_cast<uint32>(value.asArr().size())); break;
-			case akd::TraverseAction::ObjectStart: pk.pack_map(static_cast<uint32>(value.asObj().size())); break;
+			case akd::TraverseAction::ArrayStart: pk.pack_array(value.asArr().size()); break;
+			case akd::TraverseAction::ObjectStart: pk.pack_map(value.asObj().size()); break;
 
 			case akd::TraverseAction::Value: {
 				switch(value.type()) {

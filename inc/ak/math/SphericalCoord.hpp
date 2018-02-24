@@ -38,9 +38,9 @@ namespace akm {
 		return result;
 	}
 
-	template<typename scalar_t> class SphericalCoord_t {
+	class SphericalCoord {
 		private:
-			using CartesianCoord = akm::Vec<3, scalar_t>;
+			using CartesianCoord = akm::Vec<3>;
 
 			scalar_t m_radius;
 			scalar_t m_polar;
@@ -49,7 +49,7 @@ namespace akm {
 		public:
 			using value_type = scalar_t;
 
-			SphericalCoord_t() : m_radius(1), m_polar(0), m_azimuth(akm::PI<scalar_t>/2) {}
+			SphericalCoord() : m_radius(1), m_polar(0), m_azimuth(akm::PI/2) {}
 
 			void setRadius(scalar_t radius) {
 				m_radius = radius;
@@ -60,7 +60,7 @@ namespace akm {
 			}
 
 			void rotateUD(scalar_t vAngle) {
-				m_azimuth = akm::remainder(m_azimuth + vAngle, 2*akm::PI<scalar_t>);
+				m_azimuth = akm::remainder(m_azimuth + vAngle, 2*akm::PI);
 			}
 
 			CartesianCoord toCartesianCoord() const {
@@ -75,7 +75,7 @@ namespace akm {
 			akm::Mat4 toOrientation() const {
 				if (m_azimuth == 0) {
 					return orientToward(akm::Vec3(0, 1, 0), akm::Vec3(-akm::sin(m_polar), 0, -akm::cos(m_polar)));
-				} else if (akm::mod(m_azimuth, akm::PI<scalar_t>) == 0) {
+				} else if (akm::mod(m_azimuth, akm::PI) == 0) {
 					return orientToward(akm::Vec3(0, -1, 0), akm::Vec3(akm::sin(m_polar), 0, akm::cos(m_polar)));
 				} else {
 					auto up = akm::Vec3(0, m_azimuth >= 0 ? 1 : -1, 0);
@@ -93,8 +93,6 @@ namespace akm {
 			scalar_t polar() const { return m_polar; }
 			scalar_t azimuth() const { return m_azimuth; }
 	};
-
-	using SphericalCoord = SphericalCoord_t<fpSingle>;
 
 }
 

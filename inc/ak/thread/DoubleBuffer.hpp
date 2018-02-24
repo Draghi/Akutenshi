@@ -75,7 +75,7 @@ namespace akt {
 			template<typename func_t> void iterate(const func_t& callback, akSize startIndex = 0, akSize count = 0) {
 				auto readLock = m_readLock.lock();
 
-				akSize totalCount = (count == 0) ? static_cast<akSize>(m_buffers[m_index ^ 0x01].size()) : count;
+				akSize totalCount = (count == 0) ? m_buffers[m_index ^ 0x01].size() : count;
 				for(akSize i = startIndex; i < totalCount; i++) {
 					callback(i, m_buffers[m_index ^ 0x01][i]);
 				}

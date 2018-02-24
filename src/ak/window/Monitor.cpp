@@ -59,9 +59,9 @@ std::vector<Monitor> akw::monitors() {
 	return result;
 }
 
-void akw::setGamma(const Monitor* monitor, fpDouble gamma) {
+void akw::setGamma(const Monitor* monitor, fpSingle gamma) {
 	if (!monitor) return;
-	glfwSetGamma(static_cast<GLFWmonitor*>(monitor->handle), static_cast<float>(gamma));
+	glfwSetGamma(static_cast<GLFWmonitor*>(monitor->handle), gamma);
 }
 
 static VideoMode createVideoModeFromGLFWVidMode(const GLFWvidmode* videoMode) {

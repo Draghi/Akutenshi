@@ -19,8 +19,10 @@ if ("${CMAKE_CXX_COMPILER}" MATCHES ".*clang")
 		"-Wno-c++98-compat-pedantic" "-Wno-c99-compat" "-Wno-c++98-compat"
 		"-Wno-padded" "-Wno-disabled-macro-expansion" "-Wno-covered-switch-default"
 		"-Wno-weak-vtables" "-Wno-exit-time-destructors" "-Wno-global-constructors"
-		"-Wno-double-promotion")
-    
+		"-Wno-double-promotion" "-Wno-float-equal" 
+		# Disable warnings about conversions between int sizes, but not between fp and int, or signs.
+		"-Wno-conversion" "-Wfloat-conversion")
+		
     SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
 		
 elseif(CMAKE_COMPILER_IS_GNUCXX)

@@ -103,7 +103,7 @@ namespace akd {
 			Path& operator<<(uint64 index) { return append(index); }
 			Path& operator<<(PathEntry entry) { return append(entry); }
 
-			akSize size() const { return static_cast<akSize>(m_path.size()); }
+			akSize size() const { return m_path.size(); }
 			bool empty() const { return m_path.size() <= 0; }
 
 	};

@@ -104,7 +104,7 @@ size_t CFile::readLine(std::string& dest, bool whitespaceSeperator, std::vector<
 		for(size_t i = 0; i < readCount; i++) {
 			if ((whitespaceSeperator) && (std::isspace(buffer[i], std::locale("C")))) {
 				sstream << std::string_view(buffer, i);
-				seek(cPos + static_cast<ssize_t>(i + 1), SeekDir::Start);
+				seek(cPos + i + 1, SeekDir::Start);
 				dest = sstream.str();
 				return dest.size() + 1;
 			}
@@ -113,7 +113,7 @@ size_t CFile::readLine(std::string& dest, bool whitespaceSeperator, std::vector<
 				if (i + seperators[j].size() >= readCount) continue;
 				if (std::string_view(buffer, seperators[j].size()) == seperators[j]) {
 					sstream << std::string_view(buffer, i);
-					seek(cPos + static_cast<ssize_t>(i + seperators[j].size()), SeekDir::Start);
+					seek(cPos + i + seperators[j].size(), SeekDir::Start);
 					dest = sstream.str();
 					return dest.size() + seperators[j].size();
 				}
@@ -140,5 +140,5 @@ size_t CFile::writeLines(const std::string* lines, size_t lineCount, const std::
 size_t CFile::sizeOnDisk() const {
 	std::error_code error_code;
 	auto size = stx::filesystem::file_size(m_path, error_code);
-	return error_code ? 0 : static_cast<size_t>(size);
+	return error_code ? 0 : size;
 }

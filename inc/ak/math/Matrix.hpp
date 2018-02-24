@@ -17,61 +17,48 @@
 #ifndef AK_MATH_MATRIX_HPP_
 #define AK_MATH_MATRIX_HPP_
 
-
+#include <ak/math/Types.hpp>
+#include <ak/math/Scalar.hpp>
 #include <ak/math/Vector.hpp>
-#include <ak/PrimitiveTypes.hpp>
-#include <glm/gtc/matrix_access.hpp>
+#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
-#include <glm/gtx/matrix_major_storage.hpp>
-#include <glm/gtx/matrix_transform_2d.hpp>
 #include <glm/gtx/transform.hpp>
+#include <cmath>
 
 namespace akm {
+	// //////////////// //
+	// // Projection // //
+	// //////////////// //
 
-	template<int size, typename scalar_t> using Mat = glm::mat<size, size, scalar_t, glm::highp>;
+	inline Mat4 frustum(scalar_t l, scalar_t r, scalar_t t, scalar_t b, scalar_t n, scalar_t f) { return glm::frustum<scalar_t>(l, r, t, b, n, f); }
 
-	using Mat2 = Mat<2, fpSingle>;
-	using Mat3 = Mat<3, fpSingle>;
-	using Mat4 = Mat<4, fpSingle>;
+	inline Mat4 orthographic(scalar_t width, scalar_t height, bool center) { scalar_t offX = center ? width/2 : 0, offY = center ? height/2 : 0; return glm::ortho<scalar_t>(-offX, -offY, width-offX, height-offY); }
+	inline Mat4 orthographic(scalar_t left, scalar_t right, scalar_t top, scalar_t bottom) { return glm::ortho<scalar_t>(left, right, top, bottom); }
+	inline Mat4 orthographic(scalar_t left, scalar_t right, scalar_t top, scalar_t bottom, scalar_t near, scalar_t far) { return glm::ortho<scalar_t>(left, right, top, bottom, near, far); }
 
-	using glm::colMajor2;
-	using glm::colMajor3;
-	using glm::colMajor4;
+	inline Mat4 perspectiveH(scalar_t fovX, scalar_t width, scalar_t height, scalar_t near, scalar_t far) { return glm::perspectiveFov(fovX, width, height, near, far); }
+	inline Mat4 perspectiveV(scalar_t fovY, scalar_t width, scalar_t height, scalar_t near, scalar_t far) { return glm::perspective(fovY, width/height, near, far); }
 
-	using glm::rowMajor2;
-	using glm::rowMajor3;
-	using glm::rowMajor4;
+	inline Mat4 perspectiveInfH(scalar_t fovX, scalar_t width, scalar_t height) { return glm::infinitePerspective(2.0f * akm::atan(akm::tan(fovX * .5f)/(width/height)), width, height); }
+	inline Mat4 perspectiveInfV(scalar_t fovY, scalar_t width, scalar_t height) { return glm::infinitePerspective(fovY, width, height); }
 
-	using glm::frustum;
-	using glm::ortho;
-	using glm::perspective;
-	using glm::perspectiveFov;
-	using glm::infinitePerspective;
+	inline Mat4 lookAt(const Vec3& eye, const Vec3& center, const Vec3& up) { return glm::lookAt(eye, center, up); }
 
-	using glm::lookAt;
-	using glm::rotate;
-	using glm::scale;
-	using glm::translate;
+	// //////////// //
+	// // Affine // //
+	// //////////// //
 
-	using glm::column;
-	using glm::row;
+	inline Mat4 scale(const akm::Vec3& scale) { return glm::scale(scale); }
+	inline Mat4 translate(const akm::Vec3& offset) { return glm::translate(offset); }
+	inline Mat4 rotate(scalar_t angle, const akm::Vec3& axis) { return glm::rotate(angle, axis); }
 
-	using glm::determinant;
-	using glm::inverse;
-	using glm::transpose;
+	template<glm::length_t l> scalar_t determinant(const Mat<l>& mat) { return glm::determinant(mat); }
+	template<glm::length_t l> Mat<l> inverse(const Mat<l>& mat) { return glm::inverse(mat); }
+	template<glm::length_t l> Mat<l> transpose(const Mat<l>& mat) { return glm::transpose(mat); }
 
-	template<typename scalar_t> Mat<2, scalar_t> translate(const Vec<2, scalar_t>& offset) { return translate(Mat<2, scalar_t>(static_cast<scalar_t>(1)), offset); }
-	template<typename scalar_t> Mat<2, scalar_t> rotate(scalar_t angle) { return rotate(Mat<2, scalar_t>(static_cast<scalar_t>(1)), angle); }
-	template<typename scalar_t> Mat<2, scalar_t> scale(const Vec<2, scalar_t>& factor) { return scale(Mat<2, scalar_t>(static_cast<scalar_t>(1)), factor); }
-
-	template<typename scalar_t> Mat<3, scalar_t> eulerOrient3(const Vec<3, scalar_t>& eulerAngles) { return glm::orientate3(eulerAngles); }
-	template<typename scalar_t> Mat<3, scalar_t> eulerOrient3(scalar_t x, scalar_t y, scalar_t z) { return eulerOrient3(Vec3(x, y, z)); }
-
-	template<typename scalar_t> Mat<4, scalar_t> eulerOrient4(const Vec<3, scalar_t>& eulerAngles) { return glm::orientate4(eulerAngles); }
-	template<typename scalar_t> Mat<4, scalar_t> eulerOrient4(scalar_t x, scalar_t y, scalar_t z) { return eulerOrient3(Vec3(x, y, z)); }
-
+	inline Mat3 eulerOrient3(const Vec3& eulerAngles) { return glm::orientate3(eulerAngles); }
+	inline Mat4 eulerOrient4(const Vec3& eulerAngles) { return glm::orientate4(eulerAngles); }
 }
 
 #endif

@@ -32,14 +32,13 @@ namespace akc {
 		uint32 generation;
 
 		SlotID() : index(0), generation(0) {}
-		SlotID(uint64 value) : index(static_cast<uint32>(value >> 32)), generation(static_cast<uint32>(value & 0xFFFFFFFF)) {}
+		SlotID(uint64 value) : index(value >> 32u), generation(value & 0xFFFFFFFFu) {}
 		SlotID(uint32 indexVal, uint32 generationVal) : index(indexVal), generation(generationVal) {}
 		SlotID(const SlotID& other) = default;
 		SlotID(SlotID&& other) = default;
 
 		uint64 value() const {
-			return static_cast<uint64>(index)      << 32
-				|  static_cast<uint64>(generation) << 0;
+			return static_cast<uint64>(index) << 32u | generation;
 		}
 
 		bool isValid() const { return generation != 0; }
@@ -131,11 +130,11 @@ namespace akc {
 			std::pair<SlotID, iterator> insert(const type_t& val) {
 				m_data.push_back(val);
 				if (m_freeList.empty()) {
-					m_indicies.push_back(SlotID(static_cast<uint32>(m_data.size() - 1), 1));
-					m_indexLookup.push_back(static_cast<uint32>(m_indicies.size() - 1));
+					m_indicies.push_back(SlotID(m_data.size() - 1, 1));
+					m_indexLookup.push_back(m_indicies.size() - 1);
 				} else {
 					auto freeId = m_freeList.back(); m_freeList.pop_back();
-					m_indicies[freeId].index = static_cast<uint32>(m_data.size() - 1);
+					m_indicies[freeId].index = m_data.size() - 1;
 					m_indexLookup.push_back(freeId);
 				}
 				return {slotIDFor(std::prev(m_data.end())), std::prev(m_data.end())};
@@ -144,11 +143,11 @@ namespace akc {
 			std::pair<SlotID, iterator> insert(type_t&& val) {
 				m_data.push_back(std::move(val));
 				if (m_freeList.empty()) {
-					m_indicies.push_back(SlotID(static_cast<uint32>(m_data.size() - 1), 1));
-					m_indexLookup.push_back(static_cast<uint32>(m_indicies.size() - 1));
+					m_indicies.push_back(SlotID(m_data.size() - 1, 1));
+					m_indexLookup.push_back(m_indicies.size() - 1);
 				} else {
 					auto freeId = m_freeList.back(); m_freeList.pop_back();
-					m_indicies[freeId].index = static_cast<uint32>(m_data.size() - 1);
+					m_indicies[freeId].index = m_data.size() - 1;
 					m_indexLookup.push_back(freeId);
 				}
 				return {slotIDFor(std::prev(m_data.end())), std::prev(m_data.end())};
@@ -165,26 +164,26 @@ namespace akc {
 			}
 
 			bool erase(const iterator& iter) {
-				auto id = static_cast<size_t>(std::distance(m_data.begin(), iter));
-				removeEntry(static_cast<uint32>(m_indexLookup[id]));
+				auto id = std::distance(m_data.begin(), iter);
+				removeEntry(m_indexLookup[id]);
 				return true;
 			}
 
 			bool erase(const const_iterator& iter) {
-				auto id = static_cast<size_t>(std::distance(m_data.cbegin(), iter));
-				removeEntry(static_cast<uint32>(m_indexLookup[id]));
+				auto id = std::distance(m_data.cbegin(), iter);
+				removeEntry(m_indexLookup[id]);
 				return true;
 			}
 
 			bool erase(const reverse_iterator& iter) {
-				auto id = static_cast<size_t>(std::distance(m_data.rbegin(), iter));
-				removeEntry(static_cast<uint32>(m_indexLookup[id]));
+				auto id = std::distance(m_data.rbegin(), iter);
+				removeEntry(m_indexLookup[id]);
 				return true;
 			}
 
 			bool erase(const const_reverse_iterator& iter) {
-				auto id = static_cast<size_t>(std::distance(m_data.crbegin(), iter));
-				removeEntry(static_cast<uint32>(m_indexLookup[id]));
+				auto id = std::distance(m_data.crbegin(), iter);
+				removeEntry(m_indexLookup[id]);
 				return true;
 			}
 
@@ -231,22 +230,22 @@ namespace akc {
 
 			SlotID slotIDFor(const iterator& iter) const {
 				if (iter == const_cast<container_type<type_t>&>(m_data).end()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
-				return slotIDFor(static_cast<size_t>(std::distance(const_cast<container_type<type_t>&>(m_data).begin(), iter)));
+				return slotIDFor(std::distance(const_cast<container_type<type_t>&>(m_data).begin(), iter));
 			}
 
 			SlotID slotIDFor(const const_iterator& iter) const {
 				if (iter == m_data.end()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
-				return slotIDFor(static_cast<size_t>(std::distance(m_data.begin(), iter)));
+				return slotIDFor(std::distance(m_data.begin(), iter));
 			}
 
 			SlotID slotIDFor(const reverse_iterator& iter) const {
 				if (iter == const_cast<container_type<type_t>&>(m_data).rend()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
-				return slotIDFor(static_cast<size_t>(std::distance(const_cast<container_type<type_t>&>(m_data).rbegin(), iter)));
+				return slotIDFor(std::distance(const_cast<container_type<type_t>&>(m_data).rbegin(), iter));
 			}
 
 			SlotID slotIDFor(const const_reverse_iterator& iter) const {
 				if (iter == m_data.rend()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
-				return slotIDFor(static_cast<size_t>(std::distance(m_data.rbegin(), iter)));
+				return slotIDFor(std::distance(m_data.rbegin(), iter));
 			}
 
 			// /////////// //
@@ -258,24 +257,24 @@ namespace akc {
 				return m_indicies[id].index;
 			}
 
-			SlotID entryIDFor(const iterator& iter) const {
+			size_t entryIDFor(const iterator& iter) const {
 				if (iter == const_cast<container_type<type_t>&>(m_data).end()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
-				return static_cast<size_t>(std::distance(const_cast<container_type<type_t>&>(m_data).begin(), iter));
+				return m_indicies[std::distance(const_cast<container_type<type_t>&>(m_data).begin(), iter)].index;
 			}
 
-			SlotID entryIDFor(const const_iterator& iter) const {
+			size_t entryIDFor(const const_iterator& iter) const {
 				if (iter == m_data.end()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
-				return static_cast<size_t>(std::distance(m_data.begin(), iter));
+				return m_indicies[std::distance(m_data.begin(), iter)].index;
 			}
 
-			SlotID entryIDFor(const reverse_iterator& iter) const {
+			size_t entryIDFor(const reverse_iterator& iter) const {
 				if (iter == const_cast<container_type<type_t>&>(m_data).rend()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
-				return static_cast<size_t>(std::distance(const_cast<container_type<type_t>&>(m_data).rbegin(), iter));
+				return m_indicies[std::distance(const_cast<container_type<type_t>&>(m_data).rbegin(), iter)].index;
 			}
 
-			SlotID entryIDFor(const const_reverse_iterator& iter) const {
+			size_t entryIDFor(const const_reverse_iterator& iter) const {
 				if (iter == m_data.rend()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
-				return static_cast<size_t>(std::distance(m_data.rbegin(), iter));
+				return m_indicies[std::distance(m_data.rbegin(), iter)].index;
 			}
 
 			// ////////////// //

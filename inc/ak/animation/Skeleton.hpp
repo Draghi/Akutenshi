@@ -57,7 +57,7 @@ namespace aka {
 
 			akSSize parentId = -1;
 			if (bone.parentName.empty()) setRootID(i);
-			else parentId = static_cast<akSSize>(findIDByName(bone.parentName));
+			else parentId =findIDByName(bone.parentName);
 
 			std::vector<akSize> childrenIDs;
 			childrenIDs.reserve(bone.childrenNames.size());
@@ -136,7 +136,7 @@ namespace aka {
 	inline akSSize Skeleton::tryFindIDByName(const std::string& name) const {
 		auto iter = m_indexLookup.find(name);
 		if (iter == m_indexLookup.end()) return -1;
-		return static_cast<akSSize>(iter->second);
+		return iter->second;
 	}
 
 	inline akSize Skeleton::findIDByName(const std::string& name) const {
@@ -173,7 +173,7 @@ namespace aka {
 		for(auto i = 0u; i < m_bones[id].childrenIDs.size(); i++) children[i] = findNameByID(m_bones[id].childrenIDs[i]);
 
 		return NamedBone{
-			m_bones[id].parentID < 0 ? "" : findNameByID(static_cast<akSize>(m_bones[id].parentID)),
+			m_bones[id].parentID < 0 ? "" : findNameByID(m_bones[id].parentID),
 			findNameByID(id),
 			std::move(children),
 			m_bones[id].data
@@ -186,11 +186,11 @@ namespace aka {
 	}
 
 	inline akSize Skeleton::rootID() const {
-		return static_cast<akSize>(m_rootID);
+		return m_rootID;
 	}
 
 	inline akSize Skeleton::boneCount() const {
-		return static_cast<akSize>(m_bones.size());
+		return m_bones.size();
 	}
 
 	// ///////////// //
@@ -204,7 +204,7 @@ namespace aka {
 		while(true) {
 			result.push_back(cBone->id);
 			if (cBone->parentID < 0) break;
-			cBone = &m_bones[static_cast<akSize>(cBone->parentID)];
+			cBone = &m_bones[cBone->parentID];
 		}
 
 		std::reverse(result.begin(), result.end());
@@ -217,11 +217,11 @@ namespace aka {
 
 	inline void Skeleton::setRootID(akSize newRootID) {
 		if (m_rootID >= 0) throw std::logic_error("aka::Skeleton: Root bone already exists");
-		m_rootID = static_cast<akSSize>(newRootID);
+		m_rootID = newRootID;
 	}
 
 	inline void Skeleton::recalculateBindPose() const {
-		m_finalTransform = calculateFinalTransform(static_cast<akSize>(m_rootID), m_bones);
+		m_finalTransform = calculateFinalTransform(m_rootID, m_bones);
 		m_finalTranformDirty = false;
 	}
 
@@ -276,7 +276,7 @@ namespace aka {
 		for(auto i = 0u; i < animMap.size(); i++) {
 			auto id = animMap[i];
 			if (id < 0) continue;
-			bones[static_cast<size_t>(id)].data.nodeMatrix = pose[i];
+			bones[id].data.nodeMatrix = pose[i];
 			affectedBones++;
 		}
 		return affectedBones;

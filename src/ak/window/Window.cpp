@@ -117,7 +117,7 @@ bool akw::open(const WindowOptions& options) {
 		if (options.centerOnMonitor()) {
 			auto monitor = options.targetMonitor().handle ? options.targetMonitor() : getMonitorsAt(pos)[0];
 
-			pos += monitor.position + akm::cMax(monitor.prefVideoMode.resolution/2.0f - options.videoMode().resolution/2.0f, akm::Vec2(0, 0));
+			pos += monitor.position + akm::max(monitor.prefVideoMode.resolution/2.0f - options.videoMode().resolution/2.0f, akm::Vec2(0, 0));
 		}
 		glfwSetWindowPos(windowHandle, static_cast<int>(pos.x), static_cast<int>(pos.y));
 	}
@@ -156,10 +156,10 @@ bool akw::open(const WindowOptions& options) {
 
 	glfwSetScrollCallback(windowHandle, [](GLFWwindow* /*window*/, double x, double y) {
 		mouseInst.onScrollEvent(akin::ScrollEventData{
-			static_cast<int32>(akm::max(0.0,  y)),
-			static_cast<int32>(akm::max(0.0, -y)),
-			static_cast<int32>(akm::max(0.0,  x)),
-			static_cast<int32>(akm::max(0.0, -x)),
+			std::max(0, static_cast<int32>( y)),
+			std::max(0, static_cast<int32>(-y)),
+			std::max(0, static_cast<int32>( x)),
+			std::max(0, static_cast<int32>(-x)),
 			&mouseInst
 		});
 	});

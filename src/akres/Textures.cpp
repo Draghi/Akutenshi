@@ -97,7 +97,7 @@ bool akres::doPackTexture(const stx::filesystem::path& srcPath, const stx::files
 	std::cout << "Processing texture data..." << std::endl;
 	std::string texType = config["type"].asOrDef<std::string>("Unset");
 
-	// @HACK Dirty hack for templated lambda. Param is only for type. Other option is to break this out into a template function or into a cascade of if statements.
+	// @HACK Dirty hack for templated lambda. Param is only for type. Other option is to break this out into a template function or into a cascade of if statements (ew).
 	auto loadTexFunc = [&](auto a) {
 		if (texType == "1D") return load1DTexture<decltype(a)>(srcPath, config);
 		else if (texType == "2D") return load2DTexture<decltype(a)>(srcPath, config);
@@ -144,7 +144,7 @@ template<typename type_t> static akd::Image<type_t> load1DTexture(const stx::fil
 	auto fileData = loadImageFile(filename);
 
 	akSize row = config["row"].asOrDef<akSize>(0);
-	auto result = akd::loadImage<type_t>(fileData.data(), static_cast<akSize>(fileData.size()));
+	auto result = akd::loadImage<type_t>(fileData.data(), fileData.size());
 	if (result) return akd::Image<type_t>(result->row(row), result->components(), result->width(), 1, 1);
 
 	std::stringstream sstream;
@@ -155,7 +155,7 @@ template<typename type_t> static akd::Image<type_t> load1DTexture(const stx::fil
 template<typename type_t> static akd::Image<type_t> load2DTexture(const stx::filesystem::path& srcPath, const akd::PValue& config) {
 	auto filename = srcPath/config["filename"].asStr();
 	auto fileData = loadImageFile(filename);
-	auto result = akd::loadImage<type_t>(fileData.data(), static_cast<akSize>(fileData.size()));
+	auto result = akd::loadImage<type_t>(fileData.data(), fileData.size());
 	if (result) return *result;
 
 	std::stringstream sstream;

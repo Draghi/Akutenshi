@@ -17,98 +17,64 @@
 #ifndef AK_MATH_SCALAR_HPP_
 #define AK_MATH_SCALAR_HPP_
 
-#include <ak/PrimitiveTypes.hpp>
-#include <ak/Traits.hpp>
+#include <ak/math/Types.hpp>
+#include <glm/glm.hpp>
 #include <glm/common.hpp>
 #include <glm/exponential.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/trigonometric.hpp>
 #include <cmath>
 
 namespace akm {
-	constexpr fpDouble PI_d = 3.141592653589793238462643;
-	template<typename scalar_t> constexpr scalar_t PI = static_cast<scalar_t>(PI_d);
+	constexpr scalar_t PI = static_cast<scalar_t>(3.141592653589793238462643);
 
-	template<typename scalar_t> scalar_t degToRad(scalar_t deg) {
-		constexpr scalar_t conversionFactor = PI<scalar_t>/180;
+	inline scalar_t degToRad(scalar_t deg) {
+		constexpr scalar_t conversionFactor = PI/180;
 		return deg * conversionFactor;
 	}
 
-	template<typename scalar_t> scalar_t radToDeg(scalar_t rad) {
-		constexpr scalar_t conversionFactor = 180/PI<scalar_t>;
+	inline scalar_t radToDeg(scalar_t rad) {
+		constexpr scalar_t conversionFactor = 180/PI;
 		return rad * conversionFactor;
 	}
 
-	using glm::abs;
+	inline scalar_t abs(scalar_t v) { return std::abs(v); }
 
-	using glm::ceil;
-	using glm::floor;
-	using glm::round;
-	using glm::trunc;
+	inline scalar_t log(scalar_t v) { return std::log(v); }
+	inline scalar_t log2(scalar_t v) { return std::log2(v); }
 
-	using glm::mod;
-	using glm::pow;
+	inline scalar_t ceil(scalar_t v) { return std::ceil(v); }
+	inline scalar_t floor(scalar_t v) { return std::floor(v); }
+	inline scalar_t round(scalar_t v) { return std::round(v); }
+	inline scalar_t trunc(scalar_t v) { return std::trunc(v); }
 
-	using glm::isinf;
-	using glm::isnan;
+	inline scalar_t mod(scalar_t v, scalar_t mag) { return std::fmod(v, mag); }
+	inline scalar_t pow(scalar_t v, scalar_t mag) { return std::pow(v, mag); }
 
-	using glm::max;
-	using glm::min;
-	using glm::clamp;
+	inline bool isinf(scalar_t val) { return std::isinf(val); }
+	inline bool isnan(scalar_t val) { return std::isnan(val); }
 
-	using glm::mix;
-	using glm::smoothstep;
-	using glm::step;
+	inline scalar_t mix(scalar_t x, scalar_t y, scalar_t a) { return glm::mix(x,y,a); }
 
-	using glm::sign;
+	inline scalar_t sign(scalar_t val) { return glm::sign(val); }
 
-	using glm::sin;
-	using glm::cos;
-	using glm::tan;
+	inline scalar_t sin(scalar_t val) { return std::sin(val); }
+	inline scalar_t cos(scalar_t val) { return std::cos(val); }
+	inline scalar_t tan(scalar_t val) { return std::tan(val); }
 
-	using glm::asin;
-	using glm::acos;
-	using glm::atan;
+	inline scalar_t asin(scalar_t val) { return std::asin(val); }
+	inline scalar_t acos(scalar_t val) { return std::acos(val); }
+	inline scalar_t atan(scalar_t val) { return std::atan(val); }
+	inline scalar_t atan2(scalar_t y, scalar_t x) { return std::atan2(y, x); }
+	inline scalar_t atan2(const Vec2& val) { return std::atan2(val.y, val.x); }
 
-	using std::sqrt;
+	inline scalar_t sqrt(scalar_t val) { return std::sqrt(val); }
 
-	template<typename type_t> type_t normScalar(const type_t& val, const type_t& min, const type_t& max) {
-		return (val - min)/(max - min);
-	}
+	inline scalar_t normalizeRange(scalar_t val, scalar_t min, scalar_t max) { return (val - min)/(max - min); }
 
-	inline fpSingle min(fpSingle x, fpSingle y) { return std::fmin(x, y); }
-	inline fpSingle max(fpSingle x, fpSingle y) { return std::fmax(x, y); }
+	inline scalar_t min(scalar_t x, scalar_t y) { return std::fmin(x, y); }
+	inline scalar_t max(scalar_t x, scalar_t y) { return std::fmax(x, y); }
+	inline scalar_t clamp(scalar_t val, scalar_t minVal, scalar_t maxVal) { return akm::max(akm::min(val, maxVal), minVal); }
 
-	inline fpDouble min(fpDouble x, fpDouble y) { return std::fmin(x, y); }
-	inline fpDouble max(fpDouble x, fpDouble y) { return std::fmax(x, y); }
-
-
-	template<typename vec_t> vec_t cMin(vec_t x, vec_t y) {
-		vec_t result;
-		for(int32 i = 0; i < x.length(); i++) result[i] = akm::min(x[i], y[i]);
-		return result;
-	}
-
-	template<typename vec_t> vec_t cMax(vec_t x, vec_t y) {
-		vec_t result;
-		for(int32 i = 0; i < x.length(); i++) result[i] = akm::max(x[i], y[i]);
-		return result;
-	}
-
-	template<typename vec_t> vec_t cClamp(vec_t val, vec_t min, vec_t max) {
-		vec_t result;
-		for(int32 i = 0; i < val.length(); i++) result[i] = akm::clamp(val[i], min[i], max[i]);
-		return result;
-	}
-
-	template<typename scalar_t> scalar_t remainder(scalar_t x, scalar_t y) { return std::remainder(x, y); }
-
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wfloat-equal"
-	template<typename scalar_t> bool isZero(scalar_t x) { return x == 0; }
-	template<typename scalar_t> bool isEqual(scalar_t x, scalar_t y) { return x == y; }
-#pragma clang diagnostic pop
+	inline scalar_t remainder(scalar_t x, scalar_t y) { return std::remainder(x, y); }
 
 }
 

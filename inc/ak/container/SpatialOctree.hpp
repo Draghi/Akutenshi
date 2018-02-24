@@ -58,8 +58,8 @@ namespace akc {
 		class Location {
 			public:
 				using data_t = uint8;
-				static constexpr size_t MAX_POS = std::numeric_limits<data_t>::max();
-				static constexpr size_t MAX_DEPTH = sizeof(data_t)*CHAR_BIT;
+				static constexpr akSize MAX_POS = std::numeric_limits<data_t>::max();
+				static constexpr akSize MAX_DEPTH = sizeof(data_t)*CHAR_BIT;
 
 			private:
 				data_t m_x;
@@ -75,7 +75,7 @@ namespace akc {
 
 				Location atDepth(uint8 depth) const { return Location(*this).setDepth(depth); }
 				Location& setDepth(uint8 depth) {
-					auto mask = ~ak::bitmask<data_t>(MAX_DEPTH - akm::min<data_t>(m_depth, depth));
+					auto mask = ~ak::bitmask<data_t>(MAX_DEPTH - std::min<data_t>(m_depth, depth));
 					m_x = m_x & mask; m_y = m_y & mask; m_z = m_z & mask; m_depth = depth;
 					return *this;
 				}
@@ -90,9 +90,9 @@ namespace akc {
 				Location& goToNode(NodeIndex node) {
 					if (m_depth == MAX_DEPTH) throw std::out_of_range("Location::goToNode: Attempt to index out of range");
 					m_depth++;
-					m_x |= static_cast<data_t>(((node >> 2u) & 0x01u) << (MAX_DEPTH - m_depth));
-					m_y |= static_cast<data_t>(((node >> 1u) & 0x01u) << (MAX_DEPTH - m_depth));
-					m_z |= static_cast<data_t>(((node >> 0u) & 0x01u) << (MAX_DEPTH - m_depth));
+					m_x |= ((node >> 2u) & 0x01u) << (MAX_DEPTH - m_depth);
+					m_y |= ((node >> 1u) & 0x01u) << (MAX_DEPTH - m_depth);
+					m_z |= ((node >> 0u) & 0x01u) << (MAX_DEPTH - m_depth);
 					return *this;
 				}
 
@@ -106,9 +106,8 @@ namespace akc {
 					static uint32* lookup = []{
 						static uint32 result[MAX_POS + 1] = {0};
 						for(uint32 i = 0u; i <= MAX_POS; i++) {
-							Location::data_t val = static_cast<data_t>(i);
 							for(uint8 j = 0u; j < MAX_DEPTH; j++) {
-								result[i] = (result[i] << 3) | ((val >> (MAX_DEPTH - (j + 1))) & 0x01);
+								result[i] = (result[i] << 3) | ((i >> (MAX_DEPTH - (j + 1))) & 0x01);
 							}
 						}
 						return result;
@@ -164,15 +163,15 @@ namespace akc {
 
 					if ((bboxMax.x <= 0) || (bboxMax.y <= 0) || (bboxMax.z <= 0)) return {};
 					if ((bboxMin.x > Location::MAX_POS) || (bboxMin.y > Location::MAX_POS) || (bboxMin.z > Location::MAX_POS)) return {};
-					for(auto i = 0; i < 3; i++) if (akm::isEqual(bboxMax[i], akm::floor(bboxMax[i]))) bboxMax[i] -= 1;
+					for(auto i = 0; i < 3; i++) if (bboxMax[i] == akm::floor(bboxMax[i])) bboxMax[i] -= 1;
 
-					Location::data_t minX = static_cast<Location::data_t>(akm::max<fpSingle>(0.f, akm::floor(bboxMin.x)));
-					Location::data_t minY = static_cast<Location::data_t>(akm::max<fpSingle>(0.f, akm::floor(bboxMin.y)));
-					Location::data_t minZ = static_cast<Location::data_t>(akm::max<fpSingle>(0.f, akm::floor(bboxMin.z)));
+					Location::data_t minX = std::max(0u, static_cast<akSize>(akm::floor(bboxMin.x)));
+					Location::data_t minY = std::max(0u, static_cast<akSize>(akm::floor(bboxMin.y)));
+					Location::data_t minZ = std::max(0u, static_cast<akSize>(akm::floor(bboxMin.z)));
 
-					Location::data_t maxX = static_cast<Location::data_t>(akm::min<fpSingle>(Location::MAX_POS, akm::floor(bboxMax.x)));
-					Location::data_t maxY = static_cast<Location::data_t>(akm::min<fpSingle>(Location::MAX_POS, akm::floor(bboxMax.y)));
-					Location::data_t maxZ = static_cast<Location::data_t>(akm::min<fpSingle>(Location::MAX_POS, akm::floor(bboxMax.z)));
+					Location::data_t maxX = std::min(Location::MAX_POS, static_cast<akSize>(akm::floor(bboxMax.x)));
+					Location::data_t maxY = std::min(Location::MAX_POS, static_cast<akSize>(akm::floor(bboxMax.y)));
+					Location::data_t maxZ = std::min(Location::MAX_POS, static_cast<akSize>(akm::floor(bboxMax.z)));
 
 					return {{
 						Location(minX, minY, minZ, Location::MAX_DEPTH),
@@ -189,10 +188,10 @@ namespace akc {
 
 					/* Update parent grid */ {
 						for(akSSize i = Location::MAX_DEPTH - 1; i >= 0; i--) {
-							auto cLocation = location.atDepth(static_cast<Location::data_t>(i));
+							auto cLocation = location.atDepth(i);
 
 							auto result = m_parentGrid.insert({cLocation, ParentNode{0}});
-							result.first->second.children = result.first->second.children | static_cast<Location::data_t>((0x0001u << location.indexAt(static_cast<Location::data_t>(i + 1))));
+							result.first->second.children = result.first->second.children | (0x0001u << location.indexAt(i + 1));
 
 							if (!result.second) return;
 						}
@@ -215,12 +214,12 @@ namespace akc {
 
 					/* Update parent grid */ {
 						for(akSSize i = Location::MAX_DEPTH - 1; i >= 0; i--) {
-							auto cLocation = location.atDepth(static_cast<Location::data_t>(i));
+							auto cLocation = location.atDepth(i);
 
 							auto iter = m_parentGrid.find(cLocation);
 							if (iter == m_parentGrid.end()) throw std::logic_error("Octree::removeEntryFrom: Could not find parent, however, it's existence is required.");
 
-							iter->second.children = iter->second.children & ~(0x0001 << (location.indexAt(static_cast<Location::data_t>(i + 1))));
+							iter->second.children = iter->second.children & ~(0x0001 << (location.indexAt(i + 1)));
 
 							if (iter->second.children != 0) return true;
 
@@ -263,7 +262,7 @@ namespace akc {
 					for(akSize x = range->first.x(); x <= range->second.x(); x++) {
 						for(akSize y = range->first.y(); y <= range->second.y(); y++) {
 							for(akSize z = range->first.z(); z <= range->second.z(); z++) {
-								insertEntryAt(Location(static_cast<Location::data_t>(x),static_cast<Location::data_t>(y),static_cast<Location::data_t>(z),Location::MAX_DEPTH), entryID);
+								insertEntryAt(Location(x, y, z, Location::MAX_DEPTH), entryID);
 							}
 						}
 					}
@@ -293,7 +292,7 @@ namespace akc {
 						for(akSize y = newRange->first.y(); y <= newRange->second.y(); y++) {
 							for(akSize z = newRange->first.z(); z <= newRange->second.z(); z++) {
 								if ((x >= oldRange.first.x()) && (x <= oldRange.second.x()) && (y >= oldRange.first.y()) && (y <= oldRange.second.y()) && (z >= oldRange.first.z()) && (z <= oldRange.second.z())) continue;
-								insertEntryAt(Location(static_cast<Location::data_t>(x), static_cast<Location::data_t>(y), static_cast<Location::data_t>(z), Location::MAX_DEPTH), entryID);
+								insertEntryAt(Location(x, y, z, Location::MAX_DEPTH), entryID);
 							}
 						}
 					}
@@ -303,7 +302,7 @@ namespace akc {
 						for(akSize y = oldRange.first.y(); y <= oldRange.second.y(); y++) {
 							for(akSize z = oldRange.first.z(); z <= oldRange.second.z(); z++) {
 								if ((x >= newRange->first.x()) && (x <= newRange->second.x()) && (y >= newRange->first.y()) && (y <= newRange->second.y()) && (z >= newRange->first.z()) && (z <= newRange->second.z())) continue;
-								removeEntryFrom(Location(static_cast<Location::data_t>(x), static_cast<Location::data_t>(y), static_cast<Location::data_t>(z), Location::MAX_DEPTH), entryID);
+								removeEntryFrom(Location(x, y, z, Location::MAX_DEPTH), entryID);
 							}
 						}
 					}
@@ -320,7 +319,7 @@ namespace akc {
 					for(akSize x = range.first.x(); x <= range.second.x(); x++) {
 						for(akSize y = range.first.y(); y <= range.second.y(); y++) {
 							for(akSize z = range.first.z(); z <= range.second.z(); z++) {
-								removeEntryFrom(Location(static_cast<Location::data_t>(x),static_cast<Location::data_t>(y),static_cast<Location::data_t>(z),Location::MAX_DEPTH), entryID);
+								removeEntryFrom(Location(x, y, z, Location::MAX_DEPTH), entryID);
 							}
 						}
 					}
@@ -344,7 +343,7 @@ namespace akc {
 					akm::Vec3 tileIncrement;
 
 					for(auto i = 0; i < 3; i++) {
-						if (akm::isZero(tileDelta[i])) {
+						if (tileDelta[i] == 0) {
 							tileIncrement[i] = 0;
 							tileOffset[i] = std::numeric_limits<fpSingle>::max();
 						} else if (p1[i] > p0[i]) {
@@ -365,9 +364,8 @@ namespace akc {
 						return minIndex;
 					};
 
-
 					for (; n > 0; --n) {
-						auto valIter = m_sparseGrid.find(Location(pos.x, pos.y, pos.z, Location::MAX_DEPTH));
+						auto valIter = m_sparseGrid.find(Location(static_cast<uint>(pos.x), static_cast<uint>(pos.y), static_cast<uint>(pos.z), Location::MAX_DEPTH));
 						if ((valIter != m_sparseGrid.end()) && (!visitFunc(pos, p0 + (tileDelta * t)))) return;
 
 						auto index = getAdvanceIndex(tileOffset);
@@ -385,7 +383,7 @@ namespace akc {
 
 				akm::Vec3 nodePosition(akm::Vec3 position, Location::data_t depth = Location::MAX_DEPTH) {
 					auto gridPos = worldToLocalSpace(position);
-					auto depthFactor = akm::pow<fpSingle>(2, Location::MAX_DEPTH - depth);
+					auto depthFactor = akm::pow(2, Location::MAX_DEPTH - depth);
 					auto depthDiv = 1/depthFactor;
 
 					return akm::Vec3{

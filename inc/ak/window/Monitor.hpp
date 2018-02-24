@@ -57,7 +57,7 @@ namespace akw {
 	Monitor primaryMonitor();
 	Monitor currentMonitor();
 
-	void setGamma(const Monitor* monitor, fpDouble gamma);
+	void setGamma(const Monitor* monitor, fpSingle gamma);
 
 }
 

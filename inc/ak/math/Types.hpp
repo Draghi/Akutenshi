@@ -14,34 +14,28 @@
  * limitations under the License.
  **/
 
-#ifndef AK_EVENT_UTIL_HPP_
-#define AK_EVENT_UTIL_HPP_
+#ifndef AK_MATH_TYPES_HPP_
+#define AK_MATH_TYPES_HPP_
 
-#include <ak/data/Hash.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <string_view>
+#include <glm/common.hpp>
+#include <glm/gtc/quaternion.hpp>
 
-namespace akev {
+namespace akm {
 
-	using EventID = uint64;
-	class Subscription;
+	using scalar_t = fpSingle;
 
-	namespace internal {
-		class IDispatcher {
-			IDispatcher(const IDispatcher&) = delete;
-			IDispatcher& operator=(const IDispatcher&) = delete;
-			public:
-				IDispatcher() = default;
-				virtual ~IDispatcher() = default;
+	template<glm::length_t l> using Vec = glm::vec<l, scalar_t, glm::highp>;
+	using Vec2 = Vec<2>;
+	using Vec3 = Vec<3>;
+	using Vec4 = Vec<4>;
 
-				virtual void unsubscribe(Subscription&) = 0;
-		};
-	}
+	template<glm::length_t l> using Mat = glm::mat<l, l, scalar_t, glm::highp>;
+	using Mat2 = Mat<2>;
+	using Mat3 = Mat<3>;
+	using Mat4 = Mat<4>;
 
-	inline constexpr EventID calculateEventID(const std::string_view& eventName) {
-		return akd::hash64FNV1A(eventName.data(), eventName.size());
-	}
-
+	using Quat = glm::tquat<fpSingle, glm::highp>;
 }
 
 #endif

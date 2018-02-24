@@ -17,30 +17,37 @@
 #ifndef AK_MATH_VECTOR_HPP_
 #define AK_MATH_VECTOR_HPP_
 
-#include <ak/PrimitiveTypes.hpp>
-#include <glm/gtc/quaternion.hpp>
+#include <ak/math/Types.hpp>
+#include <ak/math/Scalar.hpp>
+#include <glm/glm.hpp>
+#include <glm/geometric.hpp>
 
 namespace akm {
+	template<glm::length_t l> Vec<l> abs(const Vec<l>& v) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::abs(v[i]); return result; }
 
-	template<int size, typename scalar_t> using Vec = glm::vec<size, scalar_t, glm::highp>;
+	template<glm::length_t l> Vec<l> ceil(const Vec<l>& v) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::ceil(v[i]); return result; }
+	template<glm::length_t l> Vec<l> floor(const Vec<l>& v) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::floor(v[i]); return result; }
+	template<glm::length_t l> Vec<l> round(const Vec<l>& v) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::round(v[i]); return result; }
+	template<glm::length_t l> Vec<l> trunc(const Vec<l>& v) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::trunc(v[i]); return result; }
 
-	using Vec2 = Vec<2, fpSingle>;
-	using Vec3 = Vec<3, fpSingle>;
-	using Vec4 = Vec<4, fpSingle>;
+	template<glm::length_t l> Vec<l> min(const Vec<l>& x, const Vec<l>& y) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::min(x[i], y[i]); return result; }
+	template<glm::length_t l> Vec<l> max(const Vec<l>& x, const Vec<l>& y) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::max(x[i], y[i]); return result; }
+	template<glm::length_t l> Vec<l> clamp(const Vec<l>& v, const Vec<l>& minVal, const Vec<l>& maxVal) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::clamp(v[i], minVal[i], maxVal[i]); return result; }
 
-	using glm::mix;
-	using glm::cross;
-	using glm::dot;
-	using glm::distance;
-	using glm::length;
-	using glm::normalize;
-	using glm::reflect;
-	using glm::refract;
+	template<glm::length_t l> Vec<l> mix(const Vec<l>& x, const Vec<l>& y, scalar_t a) { return glm::mix(x, y, a); }
 
 	inline Vec2 perpendicular(const Vec2& vec) { return Vec2(-vec.y, vec.x); }
+	inline Vec3 cross(const Vec3& x, const Vec3& y) { return glm::cross(x, y); }
+	inline Vec4 cross(const Vec4& x, const Vec4& y) { return akm::Vec4(glm::cross(akm::Vec3(x), akm::Vec3(y)), 0); }
 
-	template<typename vec_t> typename vec_t::value_type sqrLength(const vec_t& vec) { return dot(vec, vec); }
+	template<glm::length_t l> Vec<l> normalize(const Vec<l>& x) { return glm::normalize<l, scalar_t, glm::highp>(x); }
+	template<glm::length_t l> Vec<l> reflect(const Vec<l>& x, const Vec<l>& n) { return glm::reflect<l, scalar_t, glm::highp>(x, n); }
+	template<glm::length_t l> Vec<l> refract(const Vec<l>& x, const Vec<l>& n, scalar_t eta) { return glm::refract<l, scalar_t, glm::highp>(x, n, eta); }
 
+	template<glm::length_t l> scalar_t dot(const Vec<l>& x, const Vec<l>& y) { return glm::dot(x, y); }
+	template<glm::length_t l> scalar_t distance(const Vec<l>& x, const Vec<l>& y) { return glm::distance(x, y); }
+	template<glm::length_t l> scalar_t magnitude(const Vec<l>& x) { return glm::length<l, scalar_t, glm::highp>(x); }
+	template<typename vec_t> typename vec_t::value_type sqrMagnitude(const vec_t& vec) { return glm::dot(vec, vec); }
 }
 
 #endif

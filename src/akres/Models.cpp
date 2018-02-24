@@ -210,9 +210,9 @@ static aka::Mesh extractMesh(const aiMesh& mesh) {
 			const aiFace& inFace = mesh.mFaces[faceIndex];
 			if (inFace.mNumIndices != 3) throw std::runtime_error("Invalid index count. Only triangles supported.");
 			indexData.push_back(aka::IndexData{{
-				static_cast<uint16>(inFace.mIndices[0]),
-				static_cast<uint16>(inFace.mIndices[1]),
-				static_cast<uint16>(inFace.mIndices[2])
+				inFace.mIndices[0],
+				inFace.mIndices[1],
+				inFace.mIndices[2]
 			}});
 		}
 

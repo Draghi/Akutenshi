@@ -21,7 +21,7 @@
 #include <climits>
 
 namespace ak {
-	template <typename type_t> inline constexpr type_t bitmask(uint64 count) {
+	template <typename type_t> inline constexpr type_t bitmask(akSize count) {
 		return static_cast<type_t>(-(count != 0)) & (static_cast<type_t>(-1) >> ((sizeof(type_t) * CHAR_BIT) - count));
 	}
 }

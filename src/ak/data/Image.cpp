@@ -30,11 +30,11 @@ template<typename type_t, auto load_f> static std::optional<akd::Image<type_t>> 
 	stbi_ldr_to_hdr_gamma(1.0f);
 
 	int w, h, comp;
-	auto* imgData = load_f(data, static_cast<int>(len), &w, &h, &comp, 0);
+	auto* imgData = load_f(data, len, &w, &h, &comp, 0);
 	if (!imgData) throw std::runtime_error("Failed to parse image file.");
 	auto imgGuard = ak::ScopeGuard([&]{stbi_image_free(imgData);});
 
-	return akd::Image<type_t>(imgData, static_cast<akSize>(comp), static_cast<akSize>(w), static_cast<akSize>(h), 0);
+	return akd::Image<type_t>(imgData, comp, w, h, 0);
 }
 
 std::optional<akd::ImageF32> akd::loadImageF32(const uint8* data, akSize len, bool bottomUp) {
@@ -49,7 +49,7 @@ std::optional<akd::ImageF32> akd::loadImageF32(const std::vector<std::pair<const
 	for(size_t i = 0; i < data.size(); i++) {
 		auto image = loadImageInternal<fpSingle, stbi_loadf_from_memory>(data[i].first, data[i].second, bottomUp);
 		if (!image) return std::optional<akd::ImageF32>();
-		if (width == 0) { width = image->width(); height = image->height(); comp = akm::max(comp, image->components()); }
+		if (width == 0) { width = image->width(); height = image->height(); comp = std::max(comp, image->components()); }
 		layers.push_back(*image);
 	}
 
@@ -61,7 +61,7 @@ std::optional<akd::ImageF32> akd::loadImageF32(const std::vector<std::pair<const
 		std::memcpy(imageData.data() + i*layerSize, layers[i].data(), layerSize*sizeof(fpSingle));
 	}
 
-	return akd::ImageF32(imageData.data(), comp, width, height, static_cast<akSize>(layers.size()));
+	return akd::ImageF32(imageData.data(), comp, width, height, layers.size());
 }
 
 std::optional<akd::ImageU8> akd::loadImageU8(const uint8* data, akSize len, bool bottomUp) {
@@ -76,7 +76,7 @@ std::optional<akd::ImageU8> akd::loadImageU8(const std::vector<std::pair<const u
 	for(size_t i = 0; i < data.size(); i++) {
 		auto image = loadImageInternal<uint8, stbi_load_from_memory>(data[i].first, data[i].second, bottomUp);
 		if (!image) return std::optional<akd::ImageU8>();
-		if (width == 0) { width = image->width(); height = image->height(); comp = akm::max(comp, image->components()); }
+		if (width == 0) { width = image->width(); height = image->height(); comp = std::max(comp, image->components()); }
 		layers.push_back(*image);
 	}
 
@@ -88,7 +88,7 @@ std::optional<akd::ImageU8> akd::loadImageU8(const std::vector<std::pair<const u
 		std::memcpy(imageData.data() + i*layerSize, layers[i].data(), layerSize*sizeof(uint8));
 	}
 
-	return akd::ImageU8(imageData.data(), comp, width, height, static_cast<akSize>(layers.size()));
+	return akd::ImageU8(imageData.data(), comp, width, height, layers.size());
 }
 
 

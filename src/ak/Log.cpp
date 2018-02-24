@@ -47,7 +47,7 @@ bool ak::log::startProcessing(uint64 delayUS) {
 	loggingThread.execute([=]{
 		while(!akt::current().isCloseRequested()) {
 			processMessageQueue();
-			akt::current().sleep(static_cast<int64>(delayUS));
+			akt::current().sleep(delayUS);
 		}
 	});
 
@@ -154,6 +154,7 @@ void Logger::printMessage(Level logLevel, const std::string& str) {
 
 
 static akev::SubscriberID logSInitRegenerateConfigHook = ake::regenerateConfigDispatch().subscribe([](ake::RegenerateConfigEvent& event){
+	// @todo replace indicies with names
 	event.data()["log"]["consoleFilterLevel"].set<uint8>(static_cast<int8>(ak::log::Level::DEBUG));
 	event.data()["log"]["fileFilterLevel"].set<uint8>(static_cast<int8>(ak::log::Level::DEBUG));
 });

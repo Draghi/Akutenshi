@@ -129,61 +129,30 @@ void akri::end() {
 	vaMesh.enableVAttribs({0, 1});
 	vaMesh.setVAttribFormats({0, 1}, 3, akr::DataType::Single);
 
-	akr::Buffer vbufMeshVerts(vertexData.data(), static_cast<akSize>(vertexData.size()*sizeof(VertexData)));
+	akr::Buffer vbufMeshVerts(vertexData.data(), vertexData.size()*sizeof(VertexData));
 	vaMesh.bindVertexBuffer(0, vbufMeshVerts, sizeof(VertexData), offsetof(VertexData, position));
 	vaMesh.bindVertexBuffer(1, vbufMeshVerts, sizeof(VertexData), offsetof(VertexData, colour));
 
 	akr::bindShaderProgram(shader());
 	akr::bindVertexArray(vaMesh);
 
-	switch(primitiveMode) {
-		case Primitive::Points: {
-			akr::draw(akr::DrawType::Points, vertexData.size(), 0);
-		} break;
+	akr::DrawType drawType = [&](){
+		switch(primitiveMode) {
+			case Primitive::Points:           return akr::DrawType::Points;
+			case Primitive::Lines:            return akr::DrawType::Lines;
+			case Primitive::LinesAdj:         return akr::DrawType::LinesAdj;
+			case Primitive::LineStrip:        return akr::DrawType::LineStrip;
+			case Primitive::LineStripAdj:     return akr::DrawType::LineStripAdj;
+			case Primitive::LineLoop:         return akr::DrawType::LineLoop;
+			case Primitive::Triangles:        return akr::DrawType::Triangles;
+			case Primitive::TrianglesAdj:     return akr::DrawType::TrianglesAdj;
+			case Primitive::TriangleStrip:    return akr::DrawType::TriangleStrip;
+			case Primitive::TriangleStripAdj: return akr::DrawType::TriangleStripAdj;
+			case Primitive::TriangleFan:      return akr::DrawType::TriangleFan;
+		}
+	}();
 
-
-		case Primitive::Lines: {
-			akr::draw(akr::DrawType::Lines, vertexData.size(), 0);
-		} break;
-
-		case Primitive::LinesAdj: {
-			akr::draw(akr::DrawType::LinesAdj, vertexData.size(), 0);
-		} break;
-
-		case Primitive::LineStrip: {
-			akr::draw(akr::DrawType::LineStrip, vertexData.size(), 0);
-		} break;
-
-		case Primitive::LineStripAdj: {
-			akr::draw(akr::DrawType::LineStripAdj, vertexData.size(), 0);
-		} break;
-
-		case Primitive::LineLoop: {
-			akr::draw(akr::DrawType::LineLoop, vertexData.size(), 0);
-		} break;
-
-
-		case Primitive::Triangles: {
-			akr::draw(akr::DrawType::Triangles, vertexData.size(), 0);
-		} break;
-
-		case Primitive::TrianglesAdj: {
-			akr::draw(akr::DrawType::TrianglesAdj, vertexData.size(), 0);
-		} break;
-
-		case Primitive::TriangleStrip: {
-			akr::draw(akr::DrawType::TriangleStrip, vertexData.size(), 0);
-		} break;
-
-		case Primitive::TriangleStripAdj: {
-			akr::draw(akr::DrawType::TriangleStripAdj, vertexData.size(), 0);
-		} break;
-
-		case Primitive::TriangleFan: {
-			akr::draw(akr::DrawType::TriangleFan, vertexData.size(), 0);
-		} break;
-	}
-
+	akr::draw(drawType, vertexData.size(), 0);
 }
 
 void akri::vertex3(const akm::Vec3& position) {

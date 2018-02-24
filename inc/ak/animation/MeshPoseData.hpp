@@ -39,9 +39,9 @@ namespace aka {
 				akSSize replaceID = -1;
 				for(auto j = 0u; j < validWeights.size(); j++) {
 					auto diff = iter->second - validWeights[j].second;
-					if (maxDiff < diff) { maxDiff = diff; replaceID = static_cast<akSSize>(j); }
+					if (maxDiff < diff) { maxDiff = diff; replaceID = j; }
 				}
-				if (replaceID >= 0) validWeights[static_cast<akSize>(replaceID)] = *iter;
+				if (replaceID >= 0) validWeights[replaceID] = *iter;
 			}
 
 			// Normalize Weights
@@ -54,8 +54,8 @@ namespace aka {
 			aka::PoseData poseData = {{0,0,0,0},{0,0,0,0}};
 			for(auto j = 0u; j < validWeights.size(); j++) {
 				auto boneID = skeleton.findIDByName(validWeights[j].first);
-				poseData.boneIndicies[j] = static_cast<uint16>(boneID);
-				poseData.boneWeights[static_cast<akSSize>(j)] = validWeights[j].second;
+				poseData.boneIndicies[j] = boneID;
+				poseData.boneWeights[j] = validWeights[j].second;
 			}
 			result[i] = poseData;
 		}

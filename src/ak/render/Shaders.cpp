@@ -50,7 +50,7 @@ bool ShaderStage::attach(const std::string& src) {
 	if (!isValid() || isCompiled()) return false;
 
 	auto* srcData = src.data();
-	GLint srcSize = static_cast<GLint>(src.size());
+	GLint srcSize = src.size();
 	glShaderSource(m_id, 1, &srcData, &srcSize);
 
 	return true;
@@ -240,10 +240,10 @@ static bool getOGLShaderLog(GLuint id, std::string& dst) {
 	glGetShaderiv(id, GL_INFO_LOG_LENGTH, &logLength);
 
 	if (logLength > 0) {
-		GLchar* log = new GLchar[static_cast<uint>(logLength)+1];
+		GLchar* log = new GLchar[logLength+1];
 		GLsizei logSize = 0;
 		glGetShaderInfoLog(id, logLength, &logSize, log);
-		dst = std::string(log, static_cast<akSize>(logSize));
+		dst = std::string(log, logSize);
 		return true;
 	} else {
 		dst.clear();
@@ -257,10 +257,10 @@ static bool getOGLProgramLog(GLuint id, std::string& dst) {
 	glGetProgramiv(id, GL_INFO_LOG_LENGTH, &logLength);
 
 	if (logLength > 0) {
-		GLchar* log = new GLchar[static_cast<uint>(logLength)+1];
+		GLchar* log = new GLchar[logLength+1];
 		GLsizei logSize = 0;
 		glGetProgramInfoLog(id, logLength, &logSize, log);
-		dst = std::string(log, static_cast<akSize>(logSize));
+		dst = std::string(log, logSize);
 		return true;
 	} else {
 		dst.clear();

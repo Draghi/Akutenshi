@@ -136,7 +136,7 @@ namespace aka {
 
 		return (frameInfo.startFrame == frameInfo.endFrame)
 			? frameInfo.startFrame->second
-			: akm::mix(frameInfo.startFrame->second, frameInfo.endFrame->second, akm::normScalar(animTime, frameInfo.startTime, frameInfo.endTime));
+			: akm::mix(frameInfo.startFrame->second, frameInfo.endFrame->second, akm::normalizeRange(animTime, frameInfo.startTime, frameInfo.endTime));
 	}
 
 	inline akm::Vec3 Animation::calculateFrameScl(fpSingle animTime, const AnimNode& node) const {
@@ -145,7 +145,7 @@ namespace aka {
 
 		return (frameInfo.startFrame == frameInfo.endFrame)
 			? frameInfo.startFrame->second
-			: akm::mix(frameInfo.startFrame->second, frameInfo.endFrame->second, akm::normScalar(animTime, frameInfo.startTime, frameInfo.endTime));
+			: akm::mix(frameInfo.startFrame->second, frameInfo.endFrame->second, akm::normalizeRange(animTime, frameInfo.startTime, frameInfo.endTime));
 	}
 
 	inline akm::Quat Animation::calculateFrameRot(fpSingle animTime, const AnimNode& node) const {
@@ -154,7 +154,7 @@ namespace aka {
 
 		return (frameInfo.startFrame == frameInfo.endFrame)
 			? frameInfo.startFrame->second
-			: akm::slerp(frameInfo.startFrame->second, frameInfo.endFrame->second, akm::normScalar(animTime, frameInfo.startTime, frameInfo.endTime));
+			: akm::slerp(frameInfo.startFrame->second, frameInfo.endFrame->second, akm::normalizeRange(animTime, frameInfo.startTime, frameInfo.endTime));
 	}
 
 	inline akm::Mat4 Animation::calculateFrame(const AnimNode& node, fpSingle time) const {

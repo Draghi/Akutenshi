@@ -25,47 +25,14 @@
 #include <ak/math/Vector.hpp>
 
 namespace akd {
-	inline void serialize(akd::PValue& dest, const akm::Quat& val) {
-		for(auto i = 0u; i < 4; i++) {
-			dest[i].set<typename akm::Quat::value_type>(val[static_cast<int>(i)]);
-		}
-	}
+	inline void serialize(akd::PValue& dest, const akm::Quat& val) { for(auto i = 0u; i < 4; i++) dest[i].set<typename akm::Quat::value_type>(val[i]); }
+	inline void serialize(akd::PValue& dest, const akm::Vec4& val) { for(auto i = 0u; i < 4; i++) dest[i].set<typename akm::Vec4::value_type>(val[i]); }
+	inline void serialize(akd::PValue& dest, const akm::Vec3& val) { for(auto i = 0u; i < 3; i++) dest[i].set<typename akm::Vec3::value_type>(val[i]); }
+	inline void serialize(akd::PValue& dest, const akm::Vec2& val) { for(auto i = 0u; i < 2; i++) dest[i].set<typename akm::Vec2::value_type>(val[i]); }
 
-	inline void serialize(akd::PValue& dest, const akm::Vec4& val) {
-		for(auto i = 0u; i < 4; i++) {
-			dest[i].set<typename akm::Vec4::value_type>(val[static_cast<int>(i)]);
-		}
-	}
-
-	inline void serialize(akd::PValue& dest, const akm::Vec3& val) {
-		for(auto i = 0u; i < 3; i++) {
-			dest[i].set<typename akm::Vec3::value_type>(val[static_cast<int>(i)]);
-		}
-	}
-
-	inline void serialize(akd::PValue& dest, const akm::Vec2& val) {
-		for(auto i = 0u; i < 2; i++) {
-			dest[i].set<typename akm::Vec2::value_type>(val[static_cast<int>(i)]);
-		}
-	}
-
-	inline void serialize(akd::PValue& dest, const akm::Mat4& val) {
-		for(auto i = 0u; i < 4; i++) {
-			serialize(dest[i], val[static_cast<int>(i)]);
-		}
-	}
-
-	inline void serialize(akd::PValue& dest, const akm::Mat3& val) {
-		for(auto i = 0u; i < 3; i++) {
-			serialize(dest[i], val[static_cast<int>(i)]);
-		}
-	}
-
-	inline void serialize(akd::PValue& dest, const akm::Mat2& val) {
-		for(auto i = 0u; i < 2; i++) {
-			serialize(dest[i], val[static_cast<int>(i)]);
-		}
-	}
+	inline void serialize(akd::PValue& dest, const akm::Mat4& val) { for(auto i = 0u; i < 4; i++) serialize(dest[i], val[i]); }
+	inline void serialize(akd::PValue& dest, const akm::Mat3& val) { for(auto i = 0u; i < 3; i++) serialize(dest[i], val[i]); }
+	inline void serialize(akd::PValue& dest, const akm::Mat2& val) { for(auto i = 0u; i < 2; i++) serialize(dest[i], val[i]); }
 
 	inline void serialize(akd::PValue& dest, const akm::SphericalCoord& val) {
 		dest[0].setDec(val.radius());

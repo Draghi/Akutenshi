@@ -17,20 +17,6 @@
 #include <ak/PrimitiveTypes.hpp>
 #include <type_traits>
 
-namespace internal {
-	static inline constexpr unsigned long long CalculateCharBits() {
-		unsigned char c = 0x01;
-		unsigned long long count = 0;
-		do {
-			count++;
-		} while ((c = static_cast<unsigned char>(c << 1)));
-		return count;
-	}
-
-	// We-uh don't do strange architectures, sorry.
-	static_assert(::internal::CalculateCharBits() == 8, "Byte length isn't exactly 8 bits long!");
-}
-
 // //////////////////////////////////// //
 // // Signed Integer Primitive Types // //
 // //////////////////////////////////// //

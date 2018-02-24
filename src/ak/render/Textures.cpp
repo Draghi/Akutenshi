@@ -53,7 +53,7 @@ Texture& Texture::operator=(Texture&& other) {
 std::optional<Texture> akr::createTex1D(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize maxMipmapLevels) {
 	if ((data == nullptr) || (width == 0)) return std::optional<Texture>();
 
-	auto mipmapLevels = akm::min(maxMipmapLevels, akr::calcTexMaxMipmaps(width));
+	auto mipmapLevels = std::min(maxMipmapLevels, akr::calcTexMaxMipmaps(width));
 
 	Texture tex(TexTarget::Tex1D);
 	akr::bindTexture(unit, tex);
@@ -67,7 +67,7 @@ std::optional<Texture> akr::createTex1D(uint32 unit, TexFormat format, TexStorag
 std::optional<Texture> akr::createTex2D(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize height, akSize maxMipmapLevels) {
 	if ((data == nullptr) || (width == 0) || (height == 0)) return std::optional<Texture>();
 
-	auto mipmapLevels = akm::min(maxMipmapLevels, akr::calcTexMaxMipmaps(width, height));
+	auto mipmapLevels = std::min(maxMipmapLevels, akr::calcTexMaxMipmaps(width, height));
 
 	Texture tex(TexTarget::Tex2D);
 	akr::bindTexture(unit, tex);
@@ -81,7 +81,7 @@ std::optional<Texture> akr::createTex2D(uint32 unit, TexFormat format, TexStorag
 std::optional<Texture> akr::createTex3D(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize height, akSize depth, akSize maxMipmapLevels) {
 	if ((data == nullptr) || (width == 0) || (height == 0) || (depth == 0)) return std::optional<Texture>();
 
-	auto mipmapLevels = akm::min(maxMipmapLevels, akr::calcTexMaxMipmaps(width, height, depth));
+	auto mipmapLevels = std::min(maxMipmapLevels, akr::calcTexMaxMipmaps(width, height, depth));
 
 	Texture tex(TexTarget::Tex3D);
 	akr::bindTexture(unit, tex);
@@ -95,9 +95,9 @@ std::optional<Texture> akr::createTex3D(uint32 unit, TexFormat format, TexStorag
 std::optional<Texture> akr::createTexCubemap(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize height, akSize maxMipmapLevels) {
 	if ((data == nullptr) || (width == 0) || (height == 0)) return std::optional<Texture>();
 
-	auto mipmapLevels = akm::min(maxMipmapLevels, akr::calcTexMaxMipmaps(width, height));
+	auto mipmapLevels = std::min(maxMipmapLevels, akr::calcTexMaxMipmaps(width, height));
 	akSize layerSize = width*height*getDataTypeSize(dataType)*getTexComponentsFromFormat(format);
-	mipmapLevels = akm::min<akSize>(1, mipmapLevels);
+	mipmapLevels = std::min<akSize>(1, mipmapLevels);
 
 	Texture tex(TexTarget::TexCubemap);
 	akr::bindTexture(unit, tex);
@@ -258,7 +258,7 @@ void akr::genTexMipmaps(TexTarget target) {
 
 akSize akr::calcTexMaxMipmaps(akSize width, akSize height, akSize depth) {
 	fpSingle maxDim = akm::max(akm::max(width, height), depth);
-	return static_cast<akSize>(std::floor(std::log2(maxDim))+1);
+	return static_cast<akSize>(akm::floor(akm::log2(maxDim))+1);
 }
 
 

@@ -59,7 +59,7 @@ static void APIENTRY ogl_logErrorCallback(GLenum source, GLenum type, GLuint id,
 		case GL_DEBUG_SOURCE_OTHER:           sstream << "[Other]"; break;
 	}
 
-	sstream << "[Error Code: " << id << "] " << std::string(message, static_cast<size_t>(length));
+	sstream << "[Error Code: " << id << "] " << std::string(message, length);
 
 #if defined(__linux)
 	if (severity == GL_DEBUG_SEVERITY_HIGH) {

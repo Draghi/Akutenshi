@@ -35,11 +35,11 @@ namespace akd {
 		public:
 			Image() : m_data(), m_components(0), m_width(0), m_height(0), m_depth(0) {}
 
-			Image(const std::vector<type_t>& data, akSize components, akSize width, akSize height, akSize depth) : m_data(data), m_components(components), m_width(width), m_height(akm::max(width ? 1u : 0u, height)), m_depth(akm::max(width ? 1u : 0u, depth)) {}
+			Image(const std::vector<type_t>& data, akSize components, akSize width, akSize height, akSize depth) : m_data(data), m_components(components), m_width(width), m_height(std::max(width ? 1u : 0u, height)), m_depth(std::max(width ? 1u : 0u, depth)) {}
 
-			Image(std::vector<type_t>&& data, akSize components, akSize width, akSize height, akSize depth) : m_data(data), m_components(components), m_width(width), m_height(akm::max(width ? 1u : 0u, height)), m_depth(akm::max(width ? 1u : 0u, depth)) {}
+			Image(std::vector<type_t>&& data, akSize components, akSize width, akSize height, akSize depth) : m_data(data), m_components(components), m_width(width), m_height(std::max(width ? 1u : 0u, height)), m_depth(std::max(width ? 1u : 0u, depth)) {}
 
-			Image(const type_t* data, akSize components, akSize width, akSize height, akSize depth) : m_data(), m_components(components), m_width(width), m_height(akm::max(width ? 1u : 0u, height)), m_depth(akm::max(width ? 1u : 0u, depth)) {
+			Image(const type_t* data, akSize components, akSize width, akSize height, akSize depth) : m_data(), m_components(components), m_width(width), m_height(std::max(width ? 1u : 0u, height)), m_depth(std::max(width ? 1u : 0u, depth)) {
 				if ((data == nullptr) || (m_width == 0) || (m_components == 0)) return;
 				m_data.resize(m_width*m_height*m_depth*m_components);
 				std::memcpy(m_data.data(), data, m_data.size()*sizeof(type_t));
@@ -117,7 +117,7 @@ namespace akd {
 			}
 
 			akSize size() const {
-				return static_cast<akSize>(m_data.size());
+				return m_data.size();
 			}
 
 			akSize rowSize() const {
@@ -166,8 +166,8 @@ namespace akd {
 	template<typename type_t> bool deserialize(const akd::PValue& src, Image<type_t>& dst) {
 		try {
 			akSize width  = src["size"][0].as<akSize>();
-			akSize height = akm::max(width ? 1u : 0u, src["size"][1].as<akSize>());
-			akSize depth  = akm::max(width ? 1u : 0u, src["size"][2].as<akSize>());
+			akSize height = std::max(width ? 1u : 0u, src["size"][1].as<akSize>());
+			akSize depth  = std::max(width ? 1u : 0u, src["size"][2].as<akSize>());
 			akSize components = src["components"].as<akSize>();
 
 			if ((width == 0) || (components == 0)) return false;

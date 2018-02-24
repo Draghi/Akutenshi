@@ -17,19 +17,18 @@
 #ifndef AK_MATH_QUATERNION_HPP_
 #define AK_MATH_QUATERNION_HPP_
 
-#include <ak/PrimitiveTypes.hpp>
+#include <ak/math/Types.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/compatibility.hpp>
 
 namespace akm {
-	using Quat = glm::tquat<fpSingle, glm::highp>;
+	inline Quat lerp(const Quat& l, const Quat& r, scalar_t a) { return glm::lerp(l, r, a); }
+	inline Quat slerp(const Quat& l, const Quat& r, scalar_t a) { return glm::slerp(l, r, a); }
+	inline Quat conjugate(const Quat& x) { return glm::conjugate(x); }
 
-	using glm::lerp;
-	using glm::slerp;
-	using glm::conjugate;
-	using glm::quat_cast;
-	using glm::mat3_cast;
-	using glm::mat4_cast;
-
+	inline Quat quat_cast(const Mat3& x) { return glm::quat_cast(x); }
+	inline Mat3 mat3_cast(const Quat& x) { return glm::mat3_cast(x); }
+	inline Mat4 mat4_cast(const Quat& x) { return glm::mat4_cast(x); }
 }
 
 #endif

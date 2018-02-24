@@ -153,7 +153,7 @@ int akGameMain() {
 		aka::Mesh mesh = readMeshFile<aka::Mesh>("meshes/Human.akmesh");
 
 		// VBO
-		akr::Buffer vbufMeshVerts(mesh.vertexData().data(), static_cast<akSize>(mesh.vertexData().size()*sizeof(aka::VertexData)));
+		akr::Buffer vbufMeshVerts(mesh.vertexData().data(), mesh.vertexData().size()*sizeof(aka::VertexData));
 		vaMesh.bindVertexBuffer(0, vbufMeshVerts, sizeof(aka::VertexData), offsetof(aka::VertexData, position));
 		vaMesh.bindVertexBuffer(1, vbufMeshVerts, sizeof(aka::VertexData), offsetof(aka::VertexData, tangent));
 		vaMesh.bindVertexBuffer(2, vbufMeshVerts, sizeof(aka::VertexData), offsetof(aka::VertexData, bitangent));
@@ -162,14 +162,14 @@ int akGameMain() {
 
 		aka::Skeleton skele = readMeshFile<aka::Skeleton>("meshes/Human.akskel");
 		auto poseData = aka::createPoseData(skele, mesh);
-		akr::Buffer vbufMeshPose(poseData.data(), static_cast<akSize>(poseData.size()*sizeof(aka::PoseData)));
+		akr::Buffer vbufMeshPose(poseData.data(), poseData.size()*sizeof(aka::PoseData));
 		vaMesh.bindVertexBuffer(5, vbufMeshPose, sizeof(aka::PoseData), offsetof(aka::PoseData, boneIndicies));
 		vaMesh.bindVertexBuffer(6, vbufMeshPose, sizeof(aka::PoseData), offsetof(aka::PoseData, boneWeights));
 
-		akr::Buffer ibufMesh(mesh.indexData().data(), static_cast<akSize>(mesh.indexData().size()*sizeof(aka::IndexData)));
+		akr::Buffer ibufMesh(mesh.indexData().data(), mesh.indexData().size()*sizeof(aka::IndexData));
 		vaMesh.bindIndexBuffer(ibufMesh);
 
-		akr::Buffer ubufMeshBones(skele.finalTransform().data(), static_cast<akSize>(sizeof(akm::Mat4)*skele.finalTransform().size()), akr::BufferHint_Dynamic);
+		akr::Buffer ubufMeshBones(skele.finalTransform().data(), sizeof(akm::Mat4)*skele.finalTransform().size(), akr::BufferHint_Dynamic);
 
 		// Tex
 		auto texMeshAlbedo   = loadTexture(akfs::SystemFolder::appData, "textures/brick_albedo.aktex");
@@ -190,7 +190,7 @@ int akGameMain() {
 
 	ake::FPSCamera camera;
 
-	auto projMatrix = akm::perspective<fpSingle>(1.0472f, akw::size().x/static_cast<fpSingle>(akw::size().y), 0.1f, 65536.0f);
+	auto projMatrix = akm::perspectiveV(1.0472f, akw::size().x, akw::size().y, 0.1f, 65536.0f);
 	auto renderFunc = [&](fpSingle delta){
 		static aku::FPSCounter fps;
 		static fpSingle time = 0;
@@ -199,7 +199,7 @@ int akGameMain() {
 		auto skeleBones = skele.bones();
 		aka::applyPose(time*4, skeleBones, anim, poseMap);
 		auto skeleTransform = aka::calculateFinalTransform(skele.rootID(), skeleBones);
-		ubufMeshBones.writeData(skeleTransform.data(), static_cast<akSize>(sizeof(akm::Mat4)*skeleTransform.size()));
+		ubufMeshBones.writeData(skeleTransform.data(), sizeof(akm::Mat4)*skeleTransform.size());
 
 		auto lookPos = camera.position();
 		auto lookRot = akm::mat4_cast(camera.oritentation());
@@ -244,7 +244,7 @@ int akGameMain() {
 			akr::bindTexture(0, texMeshAlbedo);
 			akr::bindTexture(1, texMeshNormal);
 			akr::bindTexture(2, texMeshSpecular);
-			akr::drawIndexed(akr::DrawType::Triangles, akr::IDataType::UInt16, static_cast<akSize>(mesh.indexData().size()*3), 0);
+			akr::drawIndexed(akr::DrawType::Triangles, akr::IDataType::UInt16, mesh.indexData().size()*3, 0);
 
 		// Test
 			akr::enableDepthTest(false);
@@ -290,7 +290,7 @@ int akGameMain() {
 				akri::end();
 			};
 
-			octree.traverse([&](akm::Vec3 pos, uint8 depth, const std::vector<akc::SlotID>& values){
+			octree.traverse([&](akm::Vec3 pos, uint8 depth, const std::vector<akc::SlotID>& /*values*/){
 				akri::matSetMode(akri::MatrixMode::Projection);
 				akri::matSet(projMatrix);
 				akri::matSetMode(akri::MatrixMode::View);
@@ -409,7 +409,7 @@ int akGameMain() {
 			akr::enableCullFace(false);
 
 			akri::matSetMode(akri::MatrixMode::Projection);
-			akri::matSet(akm::ortho(-akw::size().x/2.f, akw::size().x/2.f, -akw::size().y/2.f, akw::size().y/2.f));
+			akri::matSet(akm::orthographic(-akw::size().x/2.f, akw::size().x/2.f, -akw::size().y/2.f, akw::size().y/2.f));
 			akri::matSetMode(akri::MatrixMode::View);
 			akri::matSetIdentity();
 			akri::matSetMode(akri::MatrixMode::Model);

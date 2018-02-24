@@ -255,7 +255,7 @@ namespace akd {
 			bool isNumber() const { return isSInt() || isUInt() || isDec(); }
 			bool isPrimitive() const { return isSInt() || isUInt() || isDec() || isBool(); }
 
-			akSize size() const { return static_cast<akSize>(asArr().size()); }
+			akSize size() const { return asArr().size(); }
 
 			// //////////////// //
 			// // Assignment // //
