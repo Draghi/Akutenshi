@@ -34,7 +34,6 @@
 #include <unordered_set>
 #include <utility>
 
-
 namespace akc {
 	namespace sparsegrid {
 
@@ -129,7 +128,6 @@ namespace akc {
 
 				void insertEntryAt(SlotID id, ILoc::index_type pos) { m_grid[pos].insert(id); }
 				void insertEntryAt(SlotID id, ILoc pos) { insertEntryAt(id, pos.toMortonIndex()); }
-
 
 				bool removeEntryFrom(SlotID id, ILoc::index_type pos) {
 					auto iter = m_grid.find(pos);
@@ -262,23 +260,6 @@ namespace akc {
 					}
 				}
 
-				template<typename func_t> void castRay(akm::Vec3 pos, const akm::Vec3& dir, const func_t& visitFunc) {
-					pos = worldToLocal(pos);
-
-					auto pInvDir = 1.f/dir;
-
-					akm::Vec3 bbMin{0,0,0}, bbMax{ILoc::val_max, ILoc::val_max, ILoc::val_max};
-					akm::Vec3 t1 = (bbMin - pos)*pInvDir, t2 = (bbMax - pos)*pInvDir;
-					fpSingle tmin = akm::max(akm::min(t1, t2)), tmax = akm::min(akm::max(t1, t2));
-
-				    if (tmax < tmin) return; // Outside bounds
-
-					auto startPos = (tmin <= 0) ? pos : pos + pInvDir*tmin;
-					auto   endPos = pos + pInvDir*tmax;
-
-					raycastInternal(startPos, endPos, visitFunc);
-				}
-
 				template<typename func_t> void castLine(akm::Vec3 p0, akm::Vec3 p1, const func_t& visitFunc) {
 					p0 = worldToLocal(p0);
 					p1 = worldToLocal(p1);
@@ -286,7 +267,7 @@ namespace akc {
 					auto pDelta = p1 - p0;
 					auto pInvDir = 1.f/pDelta;
 
-					akm::Vec3 bbMin{0,0,0}, bbMax{ILoc::val_max, ILoc::val_max, ILoc::val_max};
+					akm::Vec3 bbMin{0,0,0}, bbMax{ILoc::val_max + 1, ILoc::val_max + 1, ILoc::val_max + 1}; // +1 to bbox max due to it's volume
 					akm::Vec3 t1 = (bbMin - p0)*pInvDir, t2 = (bbMax - p0)*pInvDir;
 					fpSingle tmin = akm::max(akm::min(t1, t2)), tmax = akm::min(akm::max(t1, t2));
 
@@ -304,7 +285,7 @@ namespace akc {
 				}
 
 				akm::Vec3 cellBounds() const { return 1.f/m_unitScale; }
-				akm::Vec3 gridBounds() const { return static_cast<fpSingle>(ILoc::val_max)/m_unitScale; }
+				akm::Vec3 gridBounds() const { return (static_cast<fpSingle>(ILoc::val_max) + 1)/m_unitScale; }
 		};
 
 	}

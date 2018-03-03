@@ -112,7 +112,7 @@ int akGameMain() {
 	return 0;
 }
 
-static constexpr int moveCount = 100;
+static constexpr int moveCount = 1;
 
 static void startGame() {
 	constexpr ak::log::Logger log(AK_STRING_VIEW("Main"));
@@ -120,17 +120,7 @@ static void startGame() {
 	akc::sparsegrid::SparseGrid<int> octree(akm::Vec3(0,0,0), akm::Vec3(1,1,1));
 	octree.insert(0, akm::Vec3(1.5f, 20.5f, 1.5f), akm::Vec3(.5, .5, .5));
 	octree.insert(0, akm::Vec3(23.5f, 34.f, 23.f), akm::Vec3(.5,.5,.5));
-	auto id3 = octree.insert(0, akm::Vec3(23.5f, 255.5f, 12.5f), akm::Vec3(.5,.5,.5));
-
-    akc::SlotID ids[moveCount] = {akc::SlotID()};
-	std::srand(0);
-	for(auto i = 0; i < moveCount; i++) {
-		ids[i] = octree.insert(0, akm::Vec3(
-				128.5 + 62.5*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX)),
-				 64.5 + 62.5*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX)),
-				128.5 + 62.5*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX))
-			), akm::Vec3(.5,.5,.5));
-	}
+	octree.insert(0, akm::Vec3(23.5f, 255.5f, 12.5f), akm::Vec3(.5,.5,.5));
 
 	// Skybox
 		akr::ShaderProgram shaderSkybox = buildShaderProgram({
@@ -362,22 +352,6 @@ static void startGame() {
 
 		if (akw::keyboard().wasPressed(akin::Key::H)) updating = !updating;
 		if (akw::keyboard().wasPressed(akin::Key::B)) drawBoxes = !drawBoxes;
-
-		{
-			if (octree.move(id3, akm::Vec3(23.5f, 128.5f, 12.5f) + akm::Vec3{akm::sin(time*2)*5, akm::cos(time*2)*5, akm::sin(-time*2)*5}, {.25,.25,.25}) == akc::sparsegrid::MoveResult::Removed) log.warn("Removed");
-
-			//std::srand(0);
-			for(auto i = 0; i < moveCount; i++) {
-				octree.move(
-					ids[i],
-					akm::Vec3(
-						.5 + 255*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX)),
-						.5 + 255*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX)),
-						.5 + 255*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX))
-					),
-					akm::Vec3(.5,.5,.5));
-			}
-		}
 	};
 
 	fpSingle updateAccum = 0;
