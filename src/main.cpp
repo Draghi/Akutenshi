@@ -19,34 +19,35 @@
 extern int akGameMain();
 extern int akResourceMain();
 
-int main(int argc, char* argv[]) {
-	cxxopts::Options options("Akutenshi", "Akutenshi game engine");
-	options.add_options()
-		("h,help", "Display help", cxxopts::value<bool>())
-		("m,mode", "Select mode ('game' or 'resource')", cxxopts::value<std::string>()->default_value("game"));
+enum class ProgramMode {
+	Help,
+	Game,
+	Resource,
+};
 
+int main(int argc, char* argv[]) {
 	std::set_terminate(termHandler);
 
+	cxxopts::Options options("Akutenshi", "Akutenshi game engine");
+	options.add_options("Help")("h,help", "Display help", cxxopts::value<bool>());
+	options.add_options("General")("m,mode", "Select mode ('game' or 'resource')", cxxopts::value<std::string>()->default_value("game"));
+
+	ProgramMode mode = ProgramMode::Help;
 	try {
 		auto opts = options.parse(argc, argv);
-
-		if (opts.count("help")) {
-			std::cout << options.help() << std::endl;
-			return 0;
-		}
-
-		if (opts["m"].as<std::string>() == "game") {
-			return akGameMain();
-		} else if (opts["m"].as<std::string>() == "resource") {
-			return akResourceMain();
-		} else {
-			std::cout << "Invalid option selected for -m/--mode, use -h or --help for more inforamtion." << std::endl;
-			return -1;
-		}
-
+		if (opts.count("help")) mode = ProgramMode::Help;
+		else if (opts["m"].as<std::string>() == "game") mode = ProgramMode::Game;
+		else if (opts["m"].as<std::string>() == "resource") mode = ProgramMode::Resource;
+		else throw cxxopts::option_not_exists_exception("-m=<mode>");
 	} catch(const cxxopts::option_not_exists_exception&) {
 		std::cout << "Unrecognized option on command line, use -h or --help for more information on command line arguments" << std::endl;
 		return -1;
+	}
+
+	switch(mode) {
+		case ProgramMode::Help:     { std::cout << options.help() << std::endl; return 0; }
+		case ProgramMode::Game:     return akGameMain();
+		case ProgramMode::Resource: return akResourceMain();
 	}
 }
 

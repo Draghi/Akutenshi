@@ -112,8 +112,6 @@ int akGameMain() {
 	return 0;
 }
 
-static constexpr int moveCount = 1;
-
 static void startGame() {
 	constexpr ak::log::Logger log(AK_STRING_VIEW("Main"));
 
