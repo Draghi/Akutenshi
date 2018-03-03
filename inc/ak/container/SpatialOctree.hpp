@@ -21,15 +21,14 @@
 #include <ak/container/SlotMap.hpp>
 #include <ak/Log.hpp>
 #include <ak/math/Scalar.hpp>
+#include <ak/math/Types.hpp>
 #include <ak/math/Vector.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <glm/common.hpp>
 #include <glm/detail/type_vec3.hpp>
-#include <sparsepp/spp.h>
-#include <bitset>
+#include <algorithm>
 #include <climits>
 #include <cstddef>
-#include <initializer_list>
+#include <iterator>
 #include <limits>
 #include <optional>
 #include <stdexcept>
@@ -54,6 +53,19 @@ namespace akc {
 			ni_last = 0b111,
 			ni_size = ni_last + 1,
 		};
+
+		inline constexpr NodeIndex tileToNodeIndex(const akm::Vec3& pos) {
+			//@todo Remove eventually, maybe wrap in a debug flag
+			if ((pos.x < 0) || (pos.x > 1)) throw std::logic_error("Bad tile pos");
+			if ((pos.y < 0) || (pos.y > 1)) throw std::logic_error("Bad tile pos");
+			if ((pos.z < 0) || (pos.z > 1)) throw std::logic_error("Bad tile pos");
+
+			return static_cast<NodeIndex>(
+				((static_cast<uint8>(pos.x) & 0x01) << 2) |
+				((static_cast<uint8>(pos.y) & 0x01) << 1) |
+				((static_cast<uint8>(pos.z) & 0x01) << 0)
+			);
+		}
 
 		class Location {
 			public:
@@ -99,7 +111,9 @@ namespace akc {
 				NodeIndex indexAt(uint8 dVal) const {
 					if (dVal == 0) return lbn;
 					if (dVal > m_depth) throw std::out_of_range("Location::indexAt: Attempt to index out of range");
-					return static_cast<NodeIndex>((zOrder() >> ((MAX_DEPTH - dVal)*3)) & 0x07);
+					return static_cast<NodeIndex>(((m_x >> (MAX_DEPTH - dVal) & 0x01) << 2) | ((m_y >> (MAX_DEPTH - dVal) & 0x01) << 1) | ((m_z >> (MAX_DEPTH - dVal) & 0x01) << 0));
+
+					//return static_cast<NodeIndex>((zOrder() >> ((MAX_DEPTH - dVal)*3)) & 0x07);
 				}
 
 				uint32 zOrder() const {
@@ -112,6 +126,10 @@ namespace akc {
 						}
 						return result;
 					}();
+					/*return ((static_cast<uint32>(m_depth) << (MAX_DEPTH*3)) |
+						((m_x & 0x80) << 16) | ((m_x & 0x40) << 14) | ((m_x & 0x20) << 12) | ((m_x & 0x10) << 10) | ((m_x & 0x08) <<  8) | ((m_x & 0x04) <<  6) | ((m_x & 0x02) <<  4) | ((m_x & 0x01) <<  2) |
+						((m_y & 0x80) << 15) | ((m_y & 0x40) << 13) | ((m_y & 0x20) << 11) | ((m_y & 0x10) <<  9) | ((m_y & 0x08) <<  7) | ((m_y & 0x04) <<  5) | ((m_y & 0x02) <<  3) | ((m_y & 0x01) <<  1) |
+						((m_z & 0x80) << 14) | ((m_z & 0x40) << 12) | ((m_z & 0x20) << 10) | ((m_z & 0x10) <<  8) | ((m_z & 0x08) <<  6) | ((m_z & 0x04) <<  4) | ((m_z & 0x02) <<  2) | ((m_z & 0x01) <<  0));*/
 					return ((static_cast<uint32>(m_depth) << (MAX_DEPTH*3)) | (lookup[m_x] << 2ull) | (lookup[m_y] << 1ull) | (lookup[m_z] << 0ull));
 				}
 
@@ -119,6 +137,8 @@ namespace akc {
 				uint8 y() const { return m_y; }
 				uint8 z() const { return m_z; }
 				uint8 depth() const { return m_depth; }
+
+				akm::Vec3 toVec() const { return {m_x, m_y, m_z}; }
 
 				Location& operator=(const Location&) = default;
 				Location& operator=(Location&&) = default;
@@ -130,6 +150,19 @@ namespace akc {
 				bool operator> (const Location& v) const { return zOrder() >  v.zOrder(); }
 				bool operator>=(const Location& v) const { return zOrder() >= v.zOrder(); }
 		};
+	}
+}
+
+namespace std {
+	template<> struct hash<akc::internal::Location> {
+		size_t operator()(const akc::internal::Location& v) const {
+			return (v.depth() << 24) | (v.x() << 16) | (v.y() << 8) | (v.z());
+		}
+	};
+}
+
+namespace akc {
+	namespace internal {
 
 		enum class OctreeMove {
 			FAIL    = 0,
@@ -138,7 +171,7 @@ namespace akc {
 		};
 
 		struct ParentNode { uint8 children; };
-		struct ValueNode { std::vector<SlotID> values; };
+		struct ValueNode { std::deque<SlotID> values; };
 
 		template<typename type_t, typename alloc_t = std::allocator<type_t>> class SpatialOctree final {
 			private:
@@ -148,8 +181,10 @@ namespace akc {
 				};
 
 				SlotMap<DataRecord> m_data;
-				spp::sparse_hash_map<Location, ParentNode> m_parentGrid;
-				spp::sparse_hash_map<Location, ValueNode>  m_sparseGrid;
+				std::unordered_map<Location, ParentNode> m_parentGrid;
+				std::unordered_map<Location, ValueNode>  m_sparseGrid;
+				//spp::sparse_hash_map<Location, ParentNode> m_parentGrid;
+				//spp::sparse_hash_map<Location, ValueNode>  m_sparseGrid;
 
 				akm::Vec3 m_offset;
 				akm::Vec3 m_unitSize;
@@ -173,10 +208,7 @@ namespace akc {
 					Location::data_t maxY = std::min(Location::MAX_POS, static_cast<akSize>(akm::floor(bboxMax.y)));
 					Location::data_t maxZ = std::min(Location::MAX_POS, static_cast<akSize>(akm::floor(bboxMax.z)));
 
-					return {{
-						Location(minX, minY, minZ, Location::MAX_DEPTH),
-						Location(maxX, maxY, maxZ, Location::MAX_DEPTH)
-					}};
+					return {{Location(minX, minY, minZ, Location::MAX_DEPTH), Location(maxX, maxY, maxZ, Location::MAX_DEPTH)}};
 				}
 
 				void insertEntryAt(Location location, SlotID entryID) {
@@ -230,14 +262,14 @@ namespace akc {
 					return true;
 				}
 
-				template<typename func_t> void traverseInternal(const spp::sparse_hash_map<Location, ParentNode>::iterator& node, const func_t& visitFunc) {
-					visitFunc(localToWorldSpace(akm::Vec3(node->first.x(),node->first.y(),node->first.z())), node->first.depth(), std::vector<SlotID>());
+				template<typename func_t> void traverseInternal(const std::unordered_map<Location, ParentNode>::iterator& node, const func_t& visitFunc) {
+					visitFunc(localToWorldSpace(akm::Vec3(node->first.x(),node->first.y(),node->first.z())), node->first.depth()/*, std::vector<SlotID>()*/);
 
 					if (node->first.depth() == Location::MAX_DEPTH - 1) {
 						for(auto i = 0u; i < ni_size; i++) {
 							 if ((node->second.children & (0x0001 << i)) != 0) {
 								 auto loc = node->first.atNode(static_cast<NodeIndex>(i));
-								visitFunc(localToWorldSpace(akm::Vec3(loc.x(),loc.y(),loc.z())), loc.depth(), m_sparseGrid.at(loc).values);
+								visitFunc(localToWorldSpace(akm::Vec3(loc.x(),loc.y(),loc.z())), loc.depth());
 							 }
 						}
 					} else {
@@ -247,15 +279,68 @@ namespace akc {
 					}
 				}
 
+				template<typename func_t> bool raycastInternal(Location loc, const akm::Vec3& pStart, const akm::Vec3& pEnd, const func_t& visitFunc) {
+					auto& cNode = m_parentGrid.at(loc);
+
+					akSize   cellCount = 1;
+					fpSingle cellSize  = unscaledGridSize(loc.depth() + 1);
+
+					fpSingle  rayProgress = 0;
+					akm::Vec3 rayStart    = pStart;
+					akm::Vec3 rayEnd      = pEnd;
+					akm::Vec3 rayDelta    = rayEnd - rayStart;
+					akm::Vec3 rayInvDelta = 1.f/rayDelta;
+
+					akm::Vec3 tilePos    = akm::floor(rayStart/cellSize);
+					akm::Vec3 tileEndPos = akm::floor(rayEnd/cellSize);
+					akm::Vec3 tileOffsetIncrement = cellSize/akm::abs(rayDelta);
+					akm::Vec3 tileOffset;
+					akm::Vec3 tileIncrement;
+
+					for(auto i = 0; i < 3; i++) {
+						if (rayDelta[i] == 0) {
+							tileIncrement[i] = 0;
+							tileOffset[i] = std::numeric_limits<fpSingle>::max();
+						} else {
+							int cOff = rayEnd[i] > rayStart[i]; // false - 0, true - 1
+							tileIncrement[i] = cOff*2 - 1;
+							tileOffset[i] = ((tilePos[i]+cOff)*cellSize - rayStart[i])*rayInvDelta[i];
+							cellCount += static_cast<akSize>(akm::abs(tileEndPos[i] - tilePos[i]));
+						}
+					}
+
+					for (akSize i = 0; i < cellCount; i++) {
+						auto advIndex = 0;
+						if (tileOffset[1] < tileOffset[advIndex]) advIndex = 1;
+						if (tileOffset[2] < tileOffset[advIndex]) advIndex = 2;
+
+						Location nextLoc(static_cast<uint>(tilePos.x*cellSize), static_cast<uint>(tilePos.y*cellSize), static_cast<uint>(tilePos.z*cellSize), loc.depth() + 1);
+						if (nextLoc.above() == loc) {
+							if ((cNode.children & (0x0001u << static_cast<uint8>(nextLoc.indexAt(nextLoc.depth())))) != 0) {
+								auto curPos = rayStart + rayDelta*rayProgress;
+								auto nextPos =  (tileOffset[advIndex] > 1) ? rayEnd : rayStart + rayDelta*tileOffset[advIndex];
+								if (nextLoc.depth() < Location::MAX_DEPTH) {
+									if (!raycastInternal(nextLoc, curPos, nextPos, visitFunc)) return false;
+								} else {
+									if (!visitFunc(localToWorldSpace(nextLoc.toVec()), localToWorldSpace(curPos), localToWorldSpace(nextPos))) return false;
+								}
+							}
+						}
+
+						tilePos[advIndex] += tileIncrement[advIndex];
+						rayProgress = tileOffset[advIndex];
+						tileOffset[advIndex] += tileOffsetIncrement[advIndex];
+					}
+
+					return true;
+				}
+
 			public:
 				SpatialOctree(const akm::Vec3& position, const akm::Vec3& scale) : m_offset(-position), m_unitSize(1.f/scale) {}
 
 				SlotID insert(const type_t& val, const akm::Vec3& position, const akm::Vec3& halfSize) {
 					auto range = getNodeRange(position, halfSize);
-					if (!range) {
-						akl::Logger("O").info("No Range");
-						return SlotID();
-					}
+					if (!range) return SlotID();
 
 					auto entryID = m_data.insert(DataRecord{*range, val}).first;
 
@@ -327,52 +412,36 @@ namespace akc {
 					return true;
 				}
 
-				template<typename func_t> void castRay(akm::Vec3 pos, akm::Vec3 dir, fpSingle distance, const func_t& visitFunc) {
+				template<typename func_t> void castRay(const akm::Vec3& pos, const akm::Vec3& dir, fpSingle distance, const func_t& visitFunc) {
 					castRay(pos, pos + dir*distance, visitFunc);
 				}
 
-				template<typename func_t> void castRay(const akm::Vec3& p0, const akm::Vec3& p1, const func_t& visitFunc) {
+				template<typename func_t> void castRay(akm::Vec3 p0, akm::Vec3 p1, const func_t& visitFunc) {
 
-					fpSingle t = 0;
-					int n = 1;
+					p0 = worldToLocalSpace(p0);
+					p1 = worldToLocalSpace(p1);
 
-					akm::Vec3 pos = akm::floor(p0);
-					akm::Vec3 tileDelta = p1 - p0;
-					akm::Vec3 tileOffsetIncrement = 1.f/akm::abs(tileDelta);
-					akm::Vec3 tileOffset;
-					akm::Vec3 tileIncrement;
+					auto pDelta = p1 - p0;
+					auto pInvDir = 1.f/pDelta;
 
-					for(auto i = 0; i < 3; i++) {
-						if (tileDelta[i] == 0) {
-							tileIncrement[i] = 0;
-							tileOffset[i] = std::numeric_limits<fpSingle>::max();
-						} else if (p1[i] > p0[i]) {
-							tileIncrement[i] = 1;
-							n += int(akm::floor(p1[i]) - pos[i]);
-							tileOffset[i] = (akm::floor(p0[i]) + 1 - p0[i]) * tileOffsetIncrement[i];
-						} else {
-							tileIncrement[i] = -1;
-							n += int(pos[i] - akm::floor(p1[i]));
-							tileOffset[i] = (p0[i] - akm::floor(p0[i])) * tileOffsetIncrement[i];
-						}
-					}
+					fpSingle bMin = 0, bMax = unscaledGridSize(0);
 
-					auto getAdvanceIndex = [](akm::Vec3 val) {
-						akSSize minIndex = 0;
-						if (val[1] < val[minIndex]) minIndex = 1;
-						if (val[2] < val[minIndex]) minIndex = 2;
-						return minIndex;
-					};
+				    fpSingle tx1 = (bMin - p0.x)*pInvDir.x, tx2 = (bMax - p0.x)*pInvDir.x;
+				    fpSingle ty1 = (bMin - p0.y)*pInvDir.y, ty2 = (bMax - p0.y)*pInvDir.y;
+				    fpSingle tz1 = (bMin - p0.z)*pInvDir.z, tz2 = (bMax - p0.z)*pInvDir.z;
 
-					for (; n > 0; --n) {
-						auto valIter = m_sparseGrid.find(Location(static_cast<uint>(pos.x), static_cast<uint>(pos.y), static_cast<uint>(pos.z), Location::MAX_DEPTH));
-						if ((valIter != m_sparseGrid.end()) && (!visitFunc(pos, p0 + (tileDelta * t)))) return;
+				    fpSingle tmin = akm::max(akm::Vec3{akm::min(tx1, tx2), akm::min(ty1, ty2), akm::min(tz1, tz2)});
+				    fpSingle tmax = akm::min(akm::Vec3{akm::max(tx1, tx2), akm::max(ty1, ty2), akm::max(tz1, tz2)});
 
-						auto index = getAdvanceIndex(tileOffset);
-						pos[index] += tileIncrement[index];
-						t = tileOffset[index];
-						tileOffset[index] += tileOffsetIncrement[index];
-					}
+				    if (tmax < tmin) return; // Outside bounds
+				    if ((tmax < 0) || (tmin > 1)) return;
+
+					auto startPos = (tmin <= 0) ? p0 : p0 + pDelta*tmin;
+					auto   endPos = (tmax >= 1) ? p1 : p0 + pDelta*tmax;
+
+					visitFunc(localToWorldSpace(akm::Vec3(-100, -100, -100)), localToWorldSpace(startPos), localToWorldSpace(endPos));
+
+					raycastInternal(Location(0,0,0,0), startPos, endPos, visitFunc);
 				}
 
 				template<typename func_t> void traverse(const func_t& visitFunc) {
@@ -405,7 +474,6 @@ namespace akc {
 				akm::Vec3 center() const { return -m_offset; }
 				akm::Vec3 scale() const { return 1./m_unitSize; }
 				Location::data_t maxDepth() const { return Location::MAX_DEPTH; }
-
 		};
 	}
 
@@ -414,10 +482,5 @@ namespace akc {
 	using internal::OctreeMove;
 }
 
-namespace std {
-	template<> struct hash<akc::internal::Location> {
-		size_t operator()(const akc::internal::Location& v) { return v.zOrder(); }
-	};
-}
 
 #endif

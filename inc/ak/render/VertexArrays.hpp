@@ -25,6 +25,8 @@
 namespace akr {
 
 	class VertexArray final {
+		VertexArray(const VertexArray&) = delete;
+		VertexArray& operator=(const VertexArray&) = delete;
 		private:
 			uint32 m_id;
 		public:

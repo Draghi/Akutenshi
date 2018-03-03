@@ -71,9 +71,9 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/cmake/glfw")
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/cmake/GL4")
 
-#################
-# Build Brotli  #
-#################
+################
+# Build Brotli #
+################
 
 set(BROTLI_BUNDLED_MODE ON CACHE INTERNAL "" FORCE)
 # set(ENABLE_SANITIZER "undefined")
@@ -180,7 +180,6 @@ set(BROTLI_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/brotli/c/include")
 set(CXXOPTS_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/cxxopts/include")
 set(CPPCODEC_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/cppcodec")
 set(ASSIMP_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/assimp/Include" "${CMAKE_BINARY_DIR}/cmake/assimp/Include")
-set(SPARSEPP_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/sparsepp")
 
 ###############
 # CMake Setup #
@@ -193,7 +192,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${AK_OUTPUT_LIB}")
 
 # Set defaults for tweakble cmake variables
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 

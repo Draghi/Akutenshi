@@ -28,6 +28,24 @@ namespace ak {
 			using type = type_t;
 		};
 
+		template<uint64 max_val> struct RequiredBits {
+			static constexpr uint8 value =
+				max_val < 0xffull       ?  8 :
+				max_val < 0xffffull     ? 16 :
+				max_val < 0xffffffffull ? 32 : 64;
+
+		};
+
+		namespace internal {
+			template<uint64 max_val> struct SmallestIntegerFor;
+			template<> struct SmallestIntegerFor< 8> { using type = uint8; };
+			template<> struct SmallestIntegerFor<16> { using type = uint16; };
+			template<> struct SmallestIntegerFor<32> { using type = uint32; };
+			template<> struct SmallestIntegerFor<64> { using type = uint64; };
+		}
+
+		template<uint64 max_val> struct SmallestIntergerFor : internal::SmallestIntegerFor<RequiredBits<max_val>::value> {};
+
 	}
 }
 

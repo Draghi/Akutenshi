@@ -21,7 +21,7 @@
 #include <ak/animation/Type.hpp>
 #include <ak/animation/Serialize.hpp>
 #include <ak/container/SlotMap.hpp>
-#include <ak/container/SpatialOctree.hpp>
+#include <ak/container/SparseGrid.hpp>
 #include <ak/data/Brotli.hpp>
 #include <ak/data/Image.hpp>
 #include <ak/data/MsgPack.hpp>
@@ -29,6 +29,7 @@
 #include <ak/engine/Camera.hpp>
 #include <ak/engine/Config.hpp>
 #include <ak/event/Dispatcher.hpp>
+#include <ak/event/Subscription.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Filesystem.hpp>
 #include <ak/input/Keyboard.hpp>
@@ -36,13 +37,14 @@
 #include <ak/input/Mouse.hpp>
 #include <ak/Log.hpp>
 #include <ak/math/Matrix.hpp>
+#include <ak/math/Quaternion.hpp>
 #include <ak/math/Scalar.hpp>
-#include <ak/math/Vector.hpp>
+#include <ak/math/Types.hpp>
 #include <ak/Macros.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/Buffers.hpp>
+#include <ak/render/DebugDraw.hpp>
 #include <ak/render/Draw.hpp>
-#include <ak/render/IntermediateMode.hpp>
 #include <ak/render/Shaders.hpp>
 #include <ak/render/Textures.hpp>
 #include <ak/render/Types.hpp>
@@ -61,13 +63,9 @@
 #include <glm/detail/type_vec2.hpp>
 #include <glm/detail/type_vec3.hpp>
 #include <glm/detail/type_vec4.hpp>
-#include <glm/geometric.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/transform.hpp>
-#include <glm/matrix.hpp>
 #include <algorithm>
 #include <cstddef>
+#include <cstdlib>
 #include <experimental/filesystem>
 #include <iomanip>
 #include <optional>
@@ -88,21 +86,11 @@ static akr::Texture loadTextureCM(akfs::SystemFolder folder, const stx::filesyst
 
 template<typename type_t> static type_t readMeshFile(const std::string& filename);
 
+static void startGame();
+
 int akGameMain() {
 	constexpr ak::log::Logger log(AK_STRING_VIEW("Main"));
 	auto shutdownScope = startup();
-
-	akc::SpatialOctree<int> octree(akm::Vec3( 0, 0, 0), akm::Vec3(1, 1, 1));
-	auto id1 = octree.insert(0, akm::Vec3(1.5f, 20.5f, 1.5f), akm::Vec3(.5, .5, .5));
-	if (!id1) log.warn("Failure - 1");
-	auto id2 = octree.insert(0, akm::Vec3(23.5f, 34.f, 23.f), akm::Vec3(.5,.5,.5));
-	if (!id2) log.warn("Failure - 2");
-	auto id3 = octree.insert(0, akm::Vec3(23.5f, 255.5f, 12.5f), akm::Vec3(.5,.5,.5));
-	if (!id3) log.warn("Failure - 3");
-	/*if (!octree.remove(id3)) log.warn("Failure - 3");
-	if (!octree.remove(id2)) log.warn("Failure - 2");
-	if (!octree.remove(id1)) log.warn("Failure - 1");*/
-
 
 	log.info("Engine started.");
 	printLogHeader(log);
@@ -116,6 +104,37 @@ int akGameMain() {
 
 	akw::setCursorMode(akw::CursorMode::Captured);
 	akr::init();
+
+	startGame();
+
+	log.info("Exiting main function");
+
+	return 0;
+}
+
+static constexpr int moveCount = 100;
+
+static void startGame() {
+	constexpr ak::log::Logger log(AK_STRING_VIEW("Main"));
+
+	//akc::SpatialOctree<int> octree(akm::Vec3( 0, 0, 0), akm::Vec3(1,1,1));
+	akc::sparsegrid::SparseGrid<int> octree(akm::Vec3(0,0,0), akm::Vec3(1,1,1));
+	auto id1 = octree.insert(0, akm::Vec3(1.5f, 20.5f, 1.5f), akm::Vec3(.5, .5, .5));
+	if (!id1) log.warn("Failure - 1");
+	auto id2 = octree.insert(0, akm::Vec3(23.5f, 34.f, 23.f), akm::Vec3(.5,.5,.5));
+	if (!id2) log.warn("Failure - 2");
+	auto id3 = octree.insert(0, akm::Vec3(23.5f, 255.5f, 12.5f), akm::Vec3(.5,.5,.5));
+	if (!id3) log.warn("Failure - 3");
+
+    akc::SlotID ids[moveCount] = {akc::SlotID()};
+	std::srand(0);
+	for(auto i = 0; i < moveCount; i++) {
+		ids[i] = octree.insert(0, akm::Vec3(
+				128.5 + 62.5*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX)),
+				 64.5 + 62.5*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX)),
+				128.5 + 62.5*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX))
+			), akm::Vec3(.5,.5,.5));
+	}
 
 	// Skybox
 		akr::ShaderProgram shaderSkybox = buildShaderProgram({
@@ -179,20 +198,45 @@ int akGameMain() {
 		aka::Animation anim = readMeshFile<aka::Animation>("meshes/Human.akanim");
 		aka::AnimPoseMap poseMap(skele, anim);
 
-	// Line
-		// Pipeline
-		akr::ShaderProgram shaderLine = buildShaderProgram({
-			{akr::StageType::Vertex, "shaders/line.vert"},
-			{akr::StageType::Fragment, "shaders/line.frag"},
-		});
+	// Display Lists
+		akrd::DisplayList dlFilledCube;
+		akrd::DisplayList dlLineCube;
 
-		shaderLine.setUniform(0, akm::Vec3{1,1,1});
+		{
+			akm::Vec3 verts[] = {{-0.5, -0.5, -0.5},{-0.5, -0.5,  0.5},{-0.5,  0.5, -0.5},{-0.5,  0.5,  0.5},{ 0.5, -0.5, -0.5},{ 0.5, -0.5,  0.5},{ 0.5,  0.5, -0.5},{ 0.5,  0.5,  0.5}};
+			akm::Vec3 fv0[] = {verts[1], verts[3], verts[2], verts[0]};
+			akm::Vec3 fv1[] = {verts[0], verts[2], verts[6], verts[4]};
+			akm::Vec3 fv2[] = {verts[4], verts[6], verts[7], verts[5]};
+			akm::Vec3 fv3[] = {verts[5], verts[7], verts[3], verts[1]};
+			akm::Vec3 fv4[] = {verts[1], verts[0], verts[4], verts[5]};
+			akm::Vec3 fv5[] = {verts[2], verts[3], verts[7], verts[6]};
+
+			dlFilledCube.begin(akrd::Primitive::Triangles); {
+				dlFilledCube.addVertexPoly(4, fv0, {1, 0, 0});
+				dlFilledCube.addVertexPoly(4, fv1, {0, 0, 1});
+				dlFilledCube.addVertexPoly(4, fv2, {1, 0, 0});
+				dlFilledCube.addVertexPoly(4, fv3, {0, 0, 1});
+				dlFilledCube.addVertexPoly(4, fv4, {0, 1, 0});
+				dlFilledCube.addVertexPoly(4, fv5, {0, 1, 0});
+			} dlFilledCube.end();
+
+			dlLineCube.begin(akrd::Primitive::Lines); {
+				dlLineCube.addVertex(verts[1]); dlLineCube.addVertex(verts[3]);
+				dlLineCube.addVertex(verts[2]); dlLineCube.addVertex(verts[0]);
+				dlLineCube.addVertex(verts[4]); dlLineCube.addVertex(verts[6]);
+				dlLineCube.addVertex(verts[7]); dlLineCube.addVertex(verts[5]);
+
+				dlLineCube.addVertexPoly(4, fv4);
+				dlLineCube.addVertexPoly(4, fv5);
+			} dlLineCube.end();
+		}
 
 	ake::FPSCamera camera;
+	static bool updating = true;
+	static bool drawBoxes = true;
 
 	auto projMatrix = akm::perspectiveV(1.0472f, akw::size().x, akw::size().y, 0.1f, 65536.0f);
 	auto renderFunc = [&](fpSingle delta){
-		static aku::FPSCounter fps;
 		static fpSingle time = 0;
 		time += delta;
 
@@ -247,194 +291,87 @@ int akGameMain() {
 			akr::drawIndexed(akr::DrawType::Triangles, akr::IDataType::UInt16, mesh.indexData().size()*3, 0);
 
 		// Test
-			akr::enableDepthTest(false);
-			akr::enableCullFace(false);
-			auto drawCube = [&]{
-
-				akri::begin(akri::Primitive::Lines);
-					akri::vertex3({ 0, 0, 0});
-					akri::vertex3({ 0, 1, 0});
-					akri::vertex3({ 0, 1, 0});
-					akri::vertex3({ 1, 1, 0});
-					akri::vertex3({ 1, 1, 0});
-					akri::vertex3({ 1, 0, 0});
-					akri::vertex3({ 1, 0, 0});
-					akri::vertex3({ 0, 0, 0});
-
-					akri::vertex3({ 0, 0, 1});
-					akri::vertex3({ 0, 1, 1});
-					akri::vertex3({ 0, 1, 1});
-					akri::vertex3({ 1, 1, 1});
-					akri::vertex3({ 1, 1, 1});
-					akri::vertex3({ 1, 0, 1});
-					akri::vertex3({ 1, 0, 1});
-					akri::vertex3({ 0, 0, 1});
-
-					akri::vertex3({ 0, 0, 0});
-					akri::vertex3({ 0, 0, 1});
-					akri::vertex3({ 0, 0, 1});
-					akri::vertex3({ 0, 1, 1});
-					akri::vertex3({ 0, 1, 1});
-					akri::vertex3({ 0, 1, 0});
-					akri::vertex3({ 0, 1, 0});
-					akri::vertex3({ 0, 0, 0});
-
-					akri::vertex3({ 1, 0, 0});
-					akri::vertex3({ 1, 0, 1});
-					akri::vertex3({ 1, 0, 1});
-					akri::vertex3({ 1, 1, 1});
-					akri::vertex3({ 1, 1, 1});
-					akri::vertex3({ 1, 1, 0});
-					akri::vertex3({ 1, 1, 0});
-					akri::vertex3({ 1, 0, 0});
-				akri::end();
-			};
-
-			octree.traverse([&](akm::Vec3 pos, uint8 depth, const std::vector<akc::SlotID>& /*values*/){
-				akri::matSetMode(akri::MatrixMode::Projection);
-				akri::matSet(projMatrix);
-				akri::matSetMode(akri::MatrixMode::View);
-				akri::matSet(viewMatrix);
-				akri::matSetMode(akri::MatrixMode::Model);
-				akri::matPush();
-					akri::matSet(akm::translate(pos) * akm::scale(octree.gridSize(depth)));
-					switch(depth) {
-						case 0: akri::setColour(akm::Vec3( 0,  0,  0)); break;
-						case 1: akri::setColour(akm::Vec3(.5, .5, .5)); break;
-						case 2: akri::setColour(akm::Vec3( 0,  0,  1)); break;
-						case 3: akri::setColour(akm::Vec3( 0,  1,  0)); break;
-						case 4: akri::setColour(akm::Vec3( 0,  1,  1)); break;
-						case 5: akri::setColour(akm::Vec3( 1,  0,  0)); break;
-						case 6: akri::setColour(akm::Vec3( 1,  0,  1)); break;
-						case 7: akri::setColour(akm::Vec3( 1,  1,  0)); break;
-						case 8: akri::setColour(akm::Vec3( 1,  1,  1)); break;
-					}
-					drawCube();
-				akri::matSetMode(akri::MatrixMode::Model);
-				akri::matPop();
-				akri::setColour(akm::Vec3(1,1,1));
-			});
-
-
-
-			auto drawFilledCube = []{
-				auto drawQuad = [](akm::Vec3 col){
-					akri::begin(akri::Primitive::Triangles);
-						akri::vertex3({ -0.5, -0.5, 0.5});
-						akri::colour3(col);
-						akri::vertex3({ -0.5,  0.5, 0.5});
-						akri::colour3(col);
-						akri::vertex3({  0.5,  0.5, 0.5});
-						akri::colour3(col);
-						akri::vertex3({  0.5,  0.5, 0.5});
-						akri::colour3(col);
-						akri::vertex3({  0.5, -0.5, 0.5});
-						akri::colour3(col);
-						akri::vertex3({ -0.5, -0.5, 0.5});
-						akri::colour3(col);
-					akri::end();
-				};
-
-				akri::matPush();
-					akri::matOpPostMult(akm::rotate(akm::degToRad(  0.f), akm::Vec3(0,1,0)));
-					drawQuad(akm::Vec3( 0,  0,  1));
-				akri::matPop();
-
-				akri::matPush();
-					akri::matOpPostMult(akm::rotate(akm::degToRad( 90.f), akm::Vec3(0,1,0)));
-					drawQuad(akm::Vec3( 1,  0,  0));
-				akri::matPop();
-
-				akri::matPush();
-					akri::matOpPostMult(akm::rotate(akm::degToRad(180.f), akm::Vec3(0,1,0)));
-					drawQuad(akm::Vec3( 0,  0,  1));
-				akri::matPop();
-
-				akri::matPush();
-					akri::matOpPostMult(akm::rotate(akm::degToRad(270.f), akm::Vec3(0,1,0)));
-					drawQuad(akm::Vec3( 1,  0,  0));
-				akri::matPop();
-
-				akri::matPush();
-					akri::matOpPostMult(akm::rotate(akm::degToRad( 90.f), akm::Vec3(1,0,0)));
-					drawQuad(akm::Vec3( 0,  1,  0));
-				akri::matPop();
-
-				akri::matPush();
-					akri::matOpPostMult(akm::rotate(akm::degToRad(270.f), akm::Vec3(1,0,0)));
-					drawQuad(akm::Vec3( 0,  1,  0));
-				akri::matPop();
-			};
-
 			akr::enableDepthTest(true);
-			akr::enableCullFace(false);
-			octree.castRay(camera.position(), camera.forward(), 10, [&](akm::Vec3 pos, akm::Vec3 exactPos){
-				akri::matSetMode(akri::MatrixMode::Projection);
-				akri::matSet(projMatrix);
-				akri::matSetMode(akri::MatrixMode::View);
-				akri::matSet(viewMatrix);
-				akri::matSetMode(akri::MatrixMode::Model);
-				akri::matPush();
-					akri::matSet(akm::translate(akm::floor(pos) + akm::Vec3(.5,.5,.5)));
-					akri::setColour({1,1,1});
-					drawFilledCube();
-				akri::matSetMode(akri::MatrixMode::Model);
-				akri::matPop();
-				akri::matPush();
-					akri::matSet(akm::translate(exactPos) * akm::scale(akm::Vec3{0.1, 0.1, 0.1}));
-					akri::setColour({0.5,0.5,0.5});
-					drawFilledCube();
-				akri::matSetMode(akri::MatrixMode::Model);
-				akri::matPop();
+			akr::enableCullFace(true);
 
+			akrd::pushMatrix(akrd::Matrix::Projection, projMatrix);
+			akrd::pushMatrix(akrd::Matrix::View, viewMatrix);{
+				akm::Vec3 cubeColour(1,1,1);
+				akm::Vec3 boxSize = octree.gridSize();
+				akrd::pushMatrix(akrd::Matrix::Model, akm::translate(akm::Vec3(0,0,0)+boxSize/2.f) * akm::scale(boxSize));
+				akrd::pushColour(cubeColour);
+					akrd::draw(dlLineCube);
+				akrd::popColour();
+				akrd::popMatrix(akrd::Matrix::Model);
+			}
+				octree.iterate([&](akm::Vec3 pos, akm::Vec3 boxSize){
+					akm::Vec3 cubeColour(1,1,1);
+					akrd::pushMatrix(akrd::Matrix::Model, akm::translate(pos+boxSize/2.f) * akm::scale(boxSize));
+					akrd::pushColour(cubeColour);
+						akrd::draw(dlLineCube);
+					akrd::popColour();
+					akrd::popMatrix(akrd::Matrix::Model);
+				});
+			akrd::popMatrix(akrd::Matrix::View);
+			akrd::popMatrix(akrd::Matrix::Projection);
 
-				return true;
-			});
+			static akm::Vec3 cPos = camera.position();
+			static akm::Vec3 cDir = camera.forward();
 
-			if (akw::keyboard().isDown(akin::Key::C)) {
-				akri::matSetMode(akri::MatrixMode::Projection);
-				akri::matSet(projMatrix);
-				akri::matSetMode(akri::MatrixMode::View);
-				akri::matSetIdentity();
-				akri::matSetMode(akri::MatrixMode::Model);
-				akri::matPush();
-					akri::setColour(akm::Vec3( 1,  1,  1));
-					akri::matSet(akm::translate(akm::Vec3{0,0,5})*akm::scale(akm::Vec3{1,1,10}));
-					drawFilledCube();
-				akri::matSetMode(akri::MatrixMode::Model);
-				akri::matPop();
+			if (updating) {
+				cPos = camera.position();
+				cDir = camera.forward();
+			} else {
+				// Draw raycast line
+				akrd::pushColour({0,0,0});
+				akrd::pushMatrix(akrd::Matrix::Projection, projMatrix);
+				akrd::pushMatrix(akrd::Matrix::View, viewMatrix); {
+					akrd::DisplayList line;
+					line.begin(akrd::Primitive::Lines);
+						line.addVertex(cPos);
+						line.addVertex(cPos + cDir*32.f);
+					line.end();
+					akrd::draw(line);
+				}
+				akrd::popMatrix(akrd::Matrix::Projection);
+				akrd::popMatrix(akrd::Matrix::View);
+				akrd::popColour();
 			}
 
-			akr::enableDepthTest(false);
-			akr::enableCullFace(false);
+			akrd::pushMatrix(akrd::Matrix::Projection, projMatrix);
+			akrd::pushMatrix(akrd::Matrix::View, viewMatrix);
+			akrd::pushMatrix(akrd::Matrix::Model);
+				octree.traceLine(cPos, cDir, 32, [&](akc::sparsegrid::ILoc loc, akm::Vec3 pos, akm::Vec3 boxSize, akm::Vec3 enterPos, akm::Vec3 exitPos){
+						if (drawBoxes) {
+							akrd::setColour({1,1,1});
+							akrd::setMatrix(akrd::Matrix::Model, akm::translate(pos + boxSize/2.f) * akm::scale(boxSize));
+							akrd::draw(dlFilledCube);
+						}
 
-			akri::matSetMode(akri::MatrixMode::Projection);
-			akri::matSet(akm::orthographic(-akw::size().x/2.f, akw::size().x/2.f, -akw::size().y/2.f, akw::size().y/2.f));
-			akri::matSetMode(akri::MatrixMode::View);
-			akri::matSetIdentity();
-			akri::matSetMode(akri::MatrixMode::Model);
-			akri::matPush();
-				akri::matSet(akm::scale(akm::Vec3{1,1,1}));
-				akri::begin(akri::Primitive::Triangles);
-					akri::vertex3({ -0.5, -0.5, 0.5});
-					akri::vertex3({ -0.5,  0.5, 0.5});
-					akri::vertex3({  0.5,  0.5, 0.5});
+						akrd::setColour({0.5,0.25,1});
+						akrd::setMatrix(akrd::Matrix::Model, akm::Mat4(1)); {
+							akrd::DisplayList line;
+							line.begin(akrd::Primitive::Lines);
+								line.addVertex(enterPos);
+								line.addVertex(exitPos);
+							line.end();
+							akrd::draw(line);
+						}
+						akrd::setColour({0.25,0.25,1});
+						akrd::setMatrix(akrd::Matrix::Model, akm::translate(enterPos) * akm::scale(akm::Vec3{0.05, 0.05, 0.05}));
+						akrd::draw(dlFilledCube);
 
-					akri::vertex3({  0.5,  0.5, 0.5});
-					akri::vertex3({  0.5, -0.5, 0.5});
-					akri::vertex3({ -0.5, -0.5, 0.5});
-				akri::end();
-			akri::matSetMode(akri::MatrixMode::Model);
-			akri::matPop();
+						akrd::setColour({1,0.25,0.25});
+						akrd::setMatrix(akrd::Matrix::Model, akm::translate(exitPos) * akm::scale(akm::Vec3{0.05, 0.05, 0.05}));
+						akrd::draw(dlFilledCube);
+					return true;
+				});
+			akrd::popMatrix(akrd::Matrix::Model);
+			akrd::popMatrix(akrd::Matrix::Projection);
+			akrd::popMatrix(akrd::Matrix::View);
 
 		// Finish
 		akw::swapBuffer();
-
-		fps.update();
-		std::stringstream sstream;
-		sstream << fps.fps() << "fps";
-		akw::setTitle(sstream.str());
-
 	};
 
 	auto updateFunc = [&](fpSingle delta){
@@ -454,38 +391,62 @@ int akGameMain() {
 			camera.lookUD(akm::degToRad(-mPos.y)/20.0f);
 		}
 
-		if (akw::keyboard().isDown(akin::Key::W)) camera.moveForward( 10*delta);
-		if (akw::keyboard().isDown(akin::Key::S)) camera.moveForward(-10*delta);
-		if (akw::keyboard().isDown(akin::Key::D)) camera.moveRight( 10*delta);
-		if (akw::keyboard().isDown(akin::Key::A)) camera.moveRight(-10*delta);
-		if (akw::keyboard().isDown(akin::Key::R)) camera.moveUp( 10*delta);
-		if (akw::keyboard().isDown(akin::Key::F)) camera.moveUp(-10*delta);
+		fpSingle moveSpeed = (akw::keyboard().isDown(akin::Key::LSHIFT) ? 40 : 5)*delta;
 
-		if (octree.move(id3, akm::Vec3(23.5f, 128.5f, 12.5f) + akm::Vec3{akm::sin(time/2)*2, akm::cos(time/2)*2, akm::sin(-time/2)*2}, {.25,.25,.25}) == akc::OctreeMove::REMOVE) log.warn("Removed");
+		if (akw::keyboard().isDown(akin::Key::W)) camera.moveForward( moveSpeed);
+		if (akw::keyboard().isDown(akin::Key::S)) camera.moveForward(-moveSpeed);
+		if (akw::keyboard().isDown(akin::Key::D)) camera.moveRight( moveSpeed);
+		if (akw::keyboard().isDown(akin::Key::A)) camera.moveRight(-moveSpeed);
+		if (akw::keyboard().isDown(akin::Key::R)) camera.moveUp( moveSpeed);
+		if (akw::keyboard().isDown(akin::Key::F)) camera.moveUp(-moveSpeed);
+
+		if (akw::keyboard().wasPressed(akin::Key::H)) updating = !updating;
+		if (akw::keyboard().wasPressed(akin::Key::B)) drawBoxes = !drawBoxes;
+
+		{
+			if (octree.move(id3, akm::Vec3(23.5f, 128.5f, 12.5f) + akm::Vec3{akm::sin(time*2)*5, akm::cos(time*2)*5, akm::sin(-time*2)*5}, {.25,.25,.25}) == akc::sparsegrid::MoveResult::Removed) log.warn("Removed");
+
+			//std::srand(0);
+			for(auto i = 0; i < moveCount; i++) {
+				octree.move(ids[i], akm::Vec3(
+						128.5 + 62.5*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX)),
+						 64.5 + 62.5*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX)),
+						128.5 + 62.5*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX))
+					)+ akm::Vec3{akm::sin(time*2)*5, akm::cos(time*2)*5, akm::sin(-time*2)*5}, akm::Vec3(.5,.5,.5));
+			}
+		}
 	};
 
 	fpSingle updateAccum = 0;
 	fpSingle updateDelta = 1/ake::config()["engine"]["ticksPerSecond"].asOrDef<fpSingle>(60.0f);
 	fpSingle renderDelta = 1/static_cast<fpSingle>(akw::currentMonitor().prefVideoMode.refreshRate);
 
-	aku::Timer timer;
+	aku::FPSCounter fps;
+	aku::FPSCounter tps;
+	aku::Timer loopTimer;
 	while(!akw::closeRequested()) {
-		timer.mark();
-		updateAccum += timer.nsecs()*1.0e-9;
-		timer.reset();
+		loopTimer.reset();
 
 		while(updateAccum >= updateDelta) {
-			updateAccum -= updateDelta;
+			aku::Timer updateTimer;
+
 			updateFunc(updateDelta);
+			tps.update();
+
+			if (updateTimer.mark().secsf() > updateDelta) updateAccum = akm::mod(updateAccum, updateDelta);
+
+			updateAccum -= updateDelta;
 		}
 
 		renderFunc(renderDelta);
+		fps.update();
 
+		std::stringstream sstream;
+		sstream << fps.fps() << "fps | " << tps.fps() << "tps";
+		akw::setTitle(sstream.str());
+
+		updateAccum += loopTimer.mark().secsf();
 	}
-
-	log.info("Exiting main function");
-
-	return 0;
 }
 
 static void printLogHeader(const ak::log::Logger& logger) {

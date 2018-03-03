@@ -30,6 +30,9 @@ namespace akm {
 	template<glm::length_t l> Vec<l> round(const Vec<l>& v) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::round(v[i]); return result; }
 	template<glm::length_t l> Vec<l> trunc(const Vec<l>& v) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::trunc(v[i]); return result; }
 
+	template<glm::length_t l> scalar_t min(const Vec<l>& v) { scalar_t result = v[0]; for(akSSize i = 1; i < l; i++) result = akm::min(result, v[i]); return result; }
+	template<glm::length_t l> scalar_t max(const Vec<l>& v) { scalar_t result = v[0]; for(akSSize i = 1; i < l; i++) result = akm::max(result, v[i]); return result; }
+
 	template<glm::length_t l> Vec<l> min(const Vec<l>& x, const Vec<l>& y) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::min(x[i], y[i]); return result; }
 	template<glm::length_t l> Vec<l> max(const Vec<l>& x, const Vec<l>& y) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::max(x[i], y[i]); return result; }
 	template<glm::length_t l> Vec<l> clamp(const Vec<l>& v, const Vec<l>& minVal, const Vec<l>& maxVal) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::clamp(v[i], minVal[i], maxVal[i]); return result; }

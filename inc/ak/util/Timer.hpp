@@ -83,6 +83,8 @@ namespace aku {
 				return std::chrono::duration_cast<duration_type>(m_end - m_start).count();
 			}
 
+			fpSingle secsf()  { return (nano_t::num * static_cast<fpSingle>(nsecs()))/static_cast<fpSingle>(nano_t::den); }
+
 			/**
 			 * Returns the duration in nanoseconds
 			 * @return The duration in nanoseconds

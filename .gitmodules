@@ -40,6 +40,6 @@
 [submodule "cmake/zlib"]
 	path = cmake/zlib
 	url = https://github.com/Draghi/zlib.git
-[submodule "cmake/sparsepp"]
-	path = cmake/sparsepp
-	url = https://github.com/Draghi/sparsepp.git
+[submodule "cmake/memory"]
+	path = cmake/memory
+	url = https://github.com/foonathan/memory

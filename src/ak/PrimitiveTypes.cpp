@@ -68,3 +68,6 @@ static_assert(sizeof(fpDouble) == 8, "fpDouble isn't exactly 64-bits large!");
 
 static_assert(std::is_floating_point<fpSingle>::value, "fpSingle isn't a floating point!");
 static_assert(std::is_floating_point<fpDouble>::value, "fpDouble isn't a floating point!");
+
+static_assert(std::numeric_limits<fpSingle>::is_iec559, "fpSingle isn't a iec559 floating point!");
+static_assert(std::numeric_limits<fpDouble>::is_iec559, "fpDouble isn't a iec559 floating point!");

@@ -32,8 +32,8 @@ const akev::DispatcherProxy<KeyEvent>& EventKeyboard::keyEvent() { return m_keyE
 
 bool EventKeyboard::isDown(Key key) const { return getKeyState(key) == State::Down; }
 
-bool EventKeyboard::wasPressed(Key key) const { return (getKeyAction(key) == Action::Pressed) || (getKeyAction(key) == Action::Bumped); }
-bool EventKeyboard::wasReleased(Key key) const { return (getKeyAction(key) == Action::Released) || (getKeyAction(key) == Action::Bumped); }
+bool EventKeyboard::wasPressed(Key key) const { return (getKeyAction(key) == Action::Pressed) || wasBumped(key); }
+bool EventKeyboard::wasReleased(Key key) const { return (getKeyAction(key) == Action::Released) || wasBumped(key); }
 bool EventKeyboard::wasBumped(Key key) const { return getKeyAction(key) == Action::Bumped; }
 
 void EventKeyboard::update() {
@@ -47,7 +47,12 @@ void EventKeyboard::update() {
 		} else if ((eventData.action == Action::Pressed) || (eventData.action == Action::Released) || (eventData.action == Action::Bumped)) {
 			KeyEvent event(eventData);
 			m_keyEventDispatcher.send(event);
-			m_keyStates[static_cast<size_t>(eventData.key)] = std::make_pair(eventData.action, eventData.action == Action::Pressed ? State::Down : State::Up);
+			auto keyID = static_cast<size_t>(eventData.key);
+			if (m_keyStates[keyID].first != Action::None) {
+				m_keyStates[keyID] = std::make_pair(Action::Bumped, eventData.action == Action::Pressed ? State::Down : State::Up);
+			} else {
+				m_keyStates[keyID] = std::make_pair(eventData.action, eventData.action == Action::Pressed ? State::Down : State::Up);
+			}
 		}
 	});
 }

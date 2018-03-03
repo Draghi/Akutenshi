@@ -340,7 +340,7 @@ namespace akc {
 
 namespace std {
 	template<> struct hash<akc::SlotID> {
-		size_t operator()(const akc::SlotID id) { return id.value(); }
+		size_t operator()(const akc::SlotID id) const { return id.value(); }
 	};
 }
 
