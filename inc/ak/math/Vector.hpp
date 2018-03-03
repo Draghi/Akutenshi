@@ -23,6 +23,9 @@
 #include <glm/geometric.hpp>
 
 namespace akm {
+	template<glm::length_t l, typename func_t> Vec<l> forEachV(const Vec<l>& v0, const func_t& func) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = func(v0[i]); return result; }
+	template<glm::length_t l, typename func_t> Vec<l> forEachV(const Vec<l>& v0, const Vec<l>& v1, const func_t& func) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = func(v0[i], v1[i]); return result; }
+
 	template<glm::length_t l> Vec<l> abs(const Vec<l>& v) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::abs(v[i]); return result; }
 
 	template<glm::length_t l> Vec<l> ceil(const Vec<l>& v) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::ceil(v[i]); return result; }
@@ -32,6 +35,8 @@ namespace akm {
 
 	template<glm::length_t l> scalar_t min(const Vec<l>& v) { scalar_t result = v[0]; for(akSSize i = 1; i < l; i++) result = akm::min(result, v[i]); return result; }
 	template<glm::length_t l> scalar_t max(const Vec<l>& v) { scalar_t result = v[0]; for(akSSize i = 1; i < l; i++) result = akm::max(result, v[i]); return result; }
+
+	template<glm::length_t l> scalar_t sum(const Vec<l>& v) { scalar_t result = v[0]; for(akSSize i = 1; i < l; i++) result += v[i]; return result; }
 
 	template<glm::length_t l> Vec<l> min(const Vec<l>& x, const Vec<l>& y) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::min(x[i], y[i]); return result; }
 	template<glm::length_t l> Vec<l> max(const Vec<l>& x, const Vec<l>& y) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = akm::max(x[i], y[i]); return result; }

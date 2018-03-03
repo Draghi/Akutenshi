@@ -52,9 +52,6 @@ namespace akrd {
 	void setMatrix(Matrix mode, const akm::Mat4& mat = akm::Mat4(1));
 	const akm::Mat4& getMatrix(Matrix mode);
 
-	void pushColour(const akm::Vec3& colour);
-	void pushColour(const akm::Vec4& colour);
-	void popColour();
 	void setColour(const akm::Vec3& colour);
 	void setColour(const akm::Vec4& colour);
 	const akm::Vec4& getColour();
@@ -71,21 +68,23 @@ namespace akrd {
 		public:
 			DisplayList() = default;
 
-			void begin(Primitive primitive);
-			void end();
+			DisplayList& begin(Primitive primitive);
+			DisplayList& end();
 
-			void addVertex(const akm::Vec3& position,  const akm::Vec3& colour);
-			void addVertex(const akm::Vec3& position,  const akm::Vec4& colour = {1,1,1,1});
+			void draw() { akrd::draw(*this); }
 
-			void addVertexList(akSize count, const akm::Vec3* positions, const akm::Vec3& colour);
-			void addVertexList(akSize count, const akm::Vec3* positions, const akm::Vec4& colour = {1,1,1,1});
-			void addVertexList(akSize count, const akm::Vec3* positions, const akm::Vec3* colours);
-			void addVertexList(akSize count, const akm::Vec3* positions, const akm::Vec4* colours);
+			DisplayList& addVertex(const akm::Vec3& position,  const akm::Vec3& colour);
+			DisplayList& addVertex(const akm::Vec3& position,  const akm::Vec4& colour = {1,1,1,1});
 
-			void addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec3& colours);
-			void addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec4& colours = {1,1,1,1});
-			void addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec3* colours);
-			void addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec4* colours);
+			DisplayList& addVertexList(akSize count, const akm::Vec3* positions, const akm::Vec3& colour);
+			DisplayList& addVertexList(akSize count, const akm::Vec3* positions, const akm::Vec4& colour = {1,1,1,1});
+			DisplayList& addVertexList(akSize count, const akm::Vec3* positions, const akm::Vec3* colours);
+			DisplayList& addVertexList(akSize count, const akm::Vec3* positions, const akm::Vec4* colours);
+
+			DisplayList& addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec3& colours);
+			DisplayList& addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec4& colours = {1,1,1,1});
+			DisplayList& addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec3* colours);
+			DisplayList& addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec4* colours);
 	};
 
 }

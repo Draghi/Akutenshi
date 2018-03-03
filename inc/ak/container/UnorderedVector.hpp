@@ -22,6 +22,11 @@
 
 namespace akc {
 
+	// Insert: Front - O(n), Back - O(1) (+ time for realloc, if required)
+	// Remove: O(1)
+	// Ordering: None & Not-Preserved
+	// Seq  Access:  O(1)
+	// Rand Access:  O(1)
 	template<typename type_t, typename alloc_t = std::allocator<type_t>> class UnorderedVector final {
 		private:
 			using container_t = std::vector<type_t, alloc_t>;

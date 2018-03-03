@@ -70,7 +70,7 @@ static ShaderProgram& shader() {
 static std::deque<akm::Mat4> uMatProj  = {{akm::Mat4(1)}};
 static std::deque<akm::Mat4> uMatView  = {{akm::Mat4(1)}};
 static std::deque<akm::Mat4> uMatModel = {{akm::Mat4(1)}};
-static std::deque<akm::Vec4> uColour   = {{akm::Vec4(1,1,1,1)}};
+static akm::Vec4 uColour = {{akm::Vec4(1,1,1,1)}};
 
 static akm::Mat4 projViewCache = akm::Mat4(1);
 static bool isProjViewDirty = false;
@@ -82,7 +82,7 @@ void akrd::draw(const DisplayList& displayList) {
 	}
 
 	shader().setUniform(0, projViewCache * uMatModel.back());
-	shader().setUniform(1, uColour.back());
+	shader().setUniform(1, uColour);
 
 	akr::bindShaderProgram(shader());
 	akr::bindVertexArray(displayList.m_vao);
@@ -128,25 +128,24 @@ const akm::Mat4& akrd::getMatrix(Matrix mode) {
 	}
 }
 
-void akrd::pushColour(const akm::Vec3& colour) { pushColour(akm::Vec4(colour, 1)); }
-void akrd::pushColour(const akm::Vec4& colour) { uColour.push_back(colour); }
-void akrd::popColour() { uColour.pop_back(); if(uColour.empty()) pushColour(akm::Vec4(1,1,1,1)); }
-void akrd::setColour(const akm::Vec3& colour) { uColour.back() = akm::Vec4(colour, 1); }
-void akrd::setColour(const akm::Vec4& colour) { uColour.back() = colour; }
-const akm::Vec4& akrd::getColour() { return uColour.back(); }
+void akrd::setColour(const akm::Vec3& colour) { uColour = akm::Vec4(colour, 1); }
+void akrd::setColour(const akm::Vec4& colour) { uColour = colour; }
+const akm::Vec4& akrd::getColour() { return uColour; }
 
 // ///////////////// //
 // // DisplayList // //
 // ///////////////// //
 
-void DisplayList::begin(Primitive primitive) {
+DisplayList& DisplayList::begin(Primitive primitive) {
 	m_primitive = primitive;
 	m_buffer = Buffer();
 	m_vertexCount = 0;
 	m_vertexData.clear();
+
+	return *this;
 }
 
-void DisplayList::end() {
+DisplayList& DisplayList::end() {
 	if (m_buffer.isValid()) throw std::logic_error("akrd::DisplayList::addVertex: Cannot re-finalize a finalized displaylist.");
 
 	m_vertexCount = m_vertexData.size();
@@ -158,36 +157,43 @@ void DisplayList::end() {
 	m_vao.setVAttribFormat(1, 4, akr::DataType::Single);
 	m_vao.bindVertexBuffer(0, m_buffer, sizeof(akrd::internal::VertexData), offsetof(akrd::internal::VertexData, position));
 	m_vao.bindVertexBuffer(1, m_buffer, sizeof(akrd::internal::VertexData), offsetof(akrd::internal::VertexData, colour));
+
+	return *this;
 }
 
-void DisplayList::addVertex(const akm::Vec3& position, const akm::Vec3& colour) { addVertex(position, akm::Vec4(colour, 1)); }
-void DisplayList::addVertex(const akm::Vec3& position, const akm::Vec4& colour) {
+DisplayList& DisplayList::addVertex(const akm::Vec3& position, const akm::Vec3& colour) { return addVertex(position, akm::Vec4(colour, 1)); }
+DisplayList& DisplayList::addVertex(const akm::Vec3& position, const akm::Vec4& colour) {
 	if (m_buffer.isValid()) throw std::logic_error("akrd::DisplayList::addVertex: Cannot add vertex to finalized displaylist.");
 	m_vertexData.push_back({position, colour});
+	return *this;
 }
 
-void DisplayList::addVertexList(akSize count, const akm::Vec3* positions, const akm::Vec3& colour) {
+DisplayList& DisplayList::addVertexList(akSize count, const akm::Vec3* positions, const akm::Vec3& colour) {
 	if (m_buffer.isValid()) throw std::logic_error("akrd::DisplayList::addVertexList: Cannot add vertex to finalized displaylist.");
 	for(auto i = 0u; i < count; i++) addVertex(positions[i], akm::Vec4(colour, 1));
+	return *this;
 }
 
-void DisplayList::addVertexList(akSize count, const akm::Vec3* positions, const akm::Vec4& colour) {
+DisplayList& DisplayList::addVertexList(akSize count, const akm::Vec3* positions, const akm::Vec4& colour) {
 	if (m_buffer.isValid()) throw std::logic_error("akrd::DisplayList::addVertexList: Cannot add vertex to finalized displaylist.");
 	for(auto i = 0u; i < count; i++) addVertex(positions[i], colour);
+	return *this;
 }
 
-void DisplayList::addVertexList(akSize count, const akm::Vec3* positions, const akm::Vec3* colours) {
+DisplayList& DisplayList::addVertexList(akSize count, const akm::Vec3* positions, const akm::Vec3* colours) {
 	if (m_buffer.isValid()) throw std::logic_error("akrd::DisplayList::addVertexList: Cannot add vertex to finalized displaylist.");
 	for(auto i = 0u; i < count; i++) addVertex(positions[i], colours ? colours[i] : akm::Vec3(1,1,1));
+	return *this;
 }
 
-void DisplayList::addVertexList(akSize count, const akm::Vec3* positions, const akm::Vec4* colours) {
+DisplayList& DisplayList::addVertexList(akSize count, const akm::Vec3* positions, const akm::Vec4* colours) {
 	if (m_buffer.isValid()) throw std::logic_error("akrd::DisplayList::addVertexList: Cannot add vertex to finalized displaylist.");
 	for(auto i = 0u; i < count; i++) addVertex(positions[i], colours ? colours[i] : akm::Vec4(1,1,1,1));
+	return *this;
 }
 
 
-void DisplayList::addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec3& colour) {
+DisplayList& DisplayList::addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec3& colour) {
 	if (m_buffer.isValid()) throw std::logic_error("akrd::DisplayList::addVertexPoly: Cannot add vertex to finalized displaylist.");
 	if (count <= 2) throw std::logic_error("akrd::DisplayList::addVertexPoly: Cannot create polygon with 2 or fewer vertices");
 
@@ -209,9 +215,11 @@ void DisplayList::addVertexPoly(akSize count, const akm::Vec3* positions, const 
 			}
 		} break;
 	}
+
+	return *this;
 }
 
-void DisplayList::addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec4& colour) {
+DisplayList& DisplayList::addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec4& colour) {
 	if (m_buffer.isValid()) throw std::logic_error("akrd::DisplayList::addVertexPoly: Cannot add vertex to finalized displaylist.");
 	if (count <= 2) throw std::logic_error("akrd::DisplayList::addVertexPoly: Cannot create polygon with 2 or fewer vertices");
 
@@ -233,9 +241,11 @@ void DisplayList::addVertexPoly(akSize count, const akm::Vec3* positions, const 
 			}
 		} break;
 	}
+
+	return *this;
 }
 
-void DisplayList::addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec3* colours) {
+DisplayList& DisplayList::addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec3* colours) {
 	if (m_buffer.isValid()) throw std::logic_error("akrd::DisplayList::addVertexPoly: Cannot add vertex to finalized displaylist.");
 	if (count <= 2) throw std::logic_error("akrd::DisplayList::addVertexPoly: Cannot create polygon with 2 or fewer vertices");
 
@@ -257,9 +267,11 @@ void DisplayList::addVertexPoly(akSize count, const akm::Vec3* positions, const 
 			}
 		} break;
 	}
+
+	return *this;
 }
 
-void DisplayList::addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec4* colours) {
+DisplayList& DisplayList::addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec4* colours) {
 	if (m_buffer.isValid()) throw std::logic_error("akrd::DisplayList::addVertexPoly: Cannot add vertex to finalized displaylist.");
 	if (count <= 2) throw std::logic_error("akrd::DisplayList::addVertexPoly: Cannot create polygon with 2 or fewer vertices");
 
@@ -281,6 +293,8 @@ void DisplayList::addVertexPoly(akSize count, const akm::Vec3* positions, const 
 			}
 		} break;
 	}
+
+	return *this;
 }
 
 

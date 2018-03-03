@@ -117,14 +117,10 @@ static constexpr int moveCount = 100;
 static void startGame() {
 	constexpr ak::log::Logger log(AK_STRING_VIEW("Main"));
 
-	//akc::SpatialOctree<int> octree(akm::Vec3( 0, 0, 0), akm::Vec3(1,1,1));
 	akc::sparsegrid::SparseGrid<int> octree(akm::Vec3(0,0,0), akm::Vec3(1,1,1));
-	auto id1 = octree.insert(0, akm::Vec3(1.5f, 20.5f, 1.5f), akm::Vec3(.5, .5, .5));
-	if (!id1) log.warn("Failure - 1");
-	auto id2 = octree.insert(0, akm::Vec3(23.5f, 34.f, 23.f), akm::Vec3(.5,.5,.5));
-	if (!id2) log.warn("Failure - 2");
+	octree.insert(0, akm::Vec3(1.5f, 20.5f, 1.5f), akm::Vec3(.5, .5, .5));
+	octree.insert(0, akm::Vec3(23.5f, 34.f, 23.f), akm::Vec3(.5,.5,.5));
 	auto id3 = octree.insert(0, akm::Vec3(23.5f, 255.5f, 12.5f), akm::Vec3(.5,.5,.5));
-	if (!id3) log.warn("Failure - 3");
 
     akc::SlotID ids[moveCount] = {akc::SlotID()};
 	std::srand(0);
@@ -155,10 +151,7 @@ static void startGame() {
 
 	// Anim
 		// Pipeline
-		akr::ShaderProgram shaderMesh = buildShaderProgram({
-			{akr::StageType::Vertex, "shaders/main.vert"},
-			{akr::StageType::Fragment, "shaders/main.frag"},
-		});
+		akr::ShaderProgram shaderMesh = buildShaderProgram({{akr::StageType::Vertex, "shaders/main.vert"}, {akr::StageType::Fragment, "shaders/main.frag"}});
 
 		// VAO
 		akr::VertexArray vaMesh;
@@ -204,31 +197,27 @@ static void startGame() {
 
 		{
 			akm::Vec3 verts[] = {{-0.5, -0.5, -0.5},{-0.5, -0.5,  0.5},{-0.5,  0.5, -0.5},{-0.5,  0.5,  0.5},{ 0.5, -0.5, -0.5},{ 0.5, -0.5,  0.5},{ 0.5,  0.5, -0.5},{ 0.5,  0.5,  0.5}};
-			akm::Vec3 fv0[] = {verts[1], verts[3], verts[2], verts[0]};
-			akm::Vec3 fv1[] = {verts[0], verts[2], verts[6], verts[4]};
-			akm::Vec3 fv2[] = {verts[4], verts[6], verts[7], verts[5]};
-			akm::Vec3 fv3[] = {verts[5], verts[7], verts[3], verts[1]};
-			akm::Vec3 fv4[] = {verts[1], verts[0], verts[4], verts[5]};
-			akm::Vec3 fv5[] = {verts[2], verts[3], verts[7], verts[6]};
+			akm::Vec3 fv0[] = {verts[1], verts[3], verts[2], verts[0]}, fv1[] = {verts[0], verts[2], verts[6], verts[4]};
+			akm::Vec3 fv2[] = {verts[4], verts[6], verts[7], verts[5]}, fv3[] = {verts[5], verts[7], verts[3], verts[1]};
+			akm::Vec3 fv4[] = {verts[1], verts[0], verts[4], verts[5]}, fv5[] = {verts[2], verts[3], verts[7], verts[6]};
 
-			dlFilledCube.begin(akrd::Primitive::Triangles); {
-				dlFilledCube.addVertexPoly(4, fv0, {1, 0, 0});
-				dlFilledCube.addVertexPoly(4, fv1, {0, 0, 1});
-				dlFilledCube.addVertexPoly(4, fv2, {1, 0, 0});
-				dlFilledCube.addVertexPoly(4, fv3, {0, 0, 1});
-				dlFilledCube.addVertexPoly(4, fv4, {0, 1, 0});
-				dlFilledCube.addVertexPoly(4, fv5, {0, 1, 0});
-			} dlFilledCube.end();
+			dlFilledCube.begin(akrd::Primitive::Triangles)
+				.addVertexPoly(4, fv0, {1, 0, 0})
+				.addVertexPoly(4, fv1, {0, 0, 1})
+				.addVertexPoly(4, fv2, {1, 0, 0})
+				.addVertexPoly(4, fv3, {0, 0, 1})
+				.addVertexPoly(4, fv4, {0, 1, 0})
+				.addVertexPoly(4, fv5, {0, 1, 0})
+			.end();
 
-			dlLineCube.begin(akrd::Primitive::Lines); {
-				dlLineCube.addVertex(verts[1]); dlLineCube.addVertex(verts[3]);
-				dlLineCube.addVertex(verts[2]); dlLineCube.addVertex(verts[0]);
-				dlLineCube.addVertex(verts[4]); dlLineCube.addVertex(verts[6]);
-				dlLineCube.addVertex(verts[7]); dlLineCube.addVertex(verts[5]);
-
-				dlLineCube.addVertexPoly(4, fv4);
-				dlLineCube.addVertexPoly(4, fv5);
-			} dlLineCube.end();
+			dlLineCube.begin(akrd::Primitive::Lines)
+				.addVertex(verts[1]).addVertex(verts[3])
+				.addVertex(verts[2]).addVertex(verts[0])
+				.addVertex(verts[4]).addVertex(verts[6])
+				.addVertex(verts[7]).addVertex(verts[5])
+				.addVertexPoly(4, fv4)
+				.addVertexPoly(4, fv5)
+			.end();
 		}
 
 	ake::FPSCamera camera;
@@ -265,7 +254,7 @@ static void startGame() {
 			akr::bindShaderProgram(shaderSkybox);
 			akr::bindVertexArray(vaSkybox);
 			akr::bindTexture(0, texSkybox);
-			//akr::draw(akr::DrawType::Triangles, 6);
+			akr::draw(akr::DrawType::Triangles, 6);
 
 		// Scene
 			akr::enableDepthTest(true);
@@ -294,81 +283,52 @@ static void startGame() {
 			akr::enableDepthTest(true);
 			akr::enableCullFace(true);
 
-			akrd::pushMatrix(akrd::Matrix::Projection, projMatrix);
-			akrd::pushMatrix(akrd::Matrix::View, viewMatrix);{
-				akm::Vec3 cubeColour(1,1,1);
-				akm::Vec3 boxSize = octree.gridSize();
-				akrd::pushMatrix(akrd::Matrix::Model, akm::translate(akm::Vec3(0,0,0)+boxSize/2.f) * akm::scale(boxSize));
-				akrd::pushColour(cubeColour);
+			akrd::setMatrix(akrd::Matrix::Projection, projMatrix);
+			akrd::setMatrix(akrd::Matrix::View, viewMatrix);
+
+			// Sparse Grid
+				akrd::setColour({1,1,1});
+				akrd::pushMatrix(akrd::Matrix::Model, akm::translate(akm::Vec3(0,0,0)+octree.gridBounds()/2.f) * akm::scale(octree.gridBounds()));
 					akrd::draw(dlLineCube);
-				akrd::popColour();
 				akrd::popMatrix(akrd::Matrix::Model);
-			}
+
 				octree.iterate([&](akm::Vec3 pos, akm::Vec3 boxSize){
-					akm::Vec3 cubeColour(1,1,1);
 					akrd::pushMatrix(akrd::Matrix::Model, akm::translate(pos+boxSize/2.f) * akm::scale(boxSize));
-					akrd::pushColour(cubeColour);
 						akrd::draw(dlLineCube);
-					akrd::popColour();
 					akrd::popMatrix(akrd::Matrix::Model);
 				});
-			akrd::popMatrix(akrd::Matrix::View);
-			akrd::popMatrix(akrd::Matrix::Projection);
 
-			static akm::Vec3 cPos = camera.position();
-			static akm::Vec3 cDir = camera.forward();
-
-			if (updating) {
-				cPos = camera.position();
-				cDir = camera.forward();
-			} else {
-				// Draw raycast line
-				akrd::pushColour({0,0,0});
-				akrd::pushMatrix(akrd::Matrix::Projection, projMatrix);
-				akrd::pushMatrix(akrd::Matrix::View, viewMatrix); {
-					akrd::DisplayList line;
-					line.begin(akrd::Primitive::Lines);
-						line.addVertex(cPos);
-						line.addVertex(cPos + cDir*32.f);
-					line.end();
-					akrd::draw(line);
+			// Raycast
+				static akm::Vec3 rayPos = camera.position();
+				static akm::Vec3 rayDir = camera.forward();
+				if (updating) {
+					rayPos = camera.position();
+					rayDir = camera.forward();
+				} else {
+					akrd::setColour({0,0,0});
+					akrd::DisplayList().begin(akrd::Primitive::Lines)
+						.addVertex(rayPos).addVertex(rayPos + rayDir*32.f)
+					.end().draw();
 				}
-				akrd::popMatrix(akrd::Matrix::Projection);
-				akrd::popMatrix(akrd::Matrix::View);
-				akrd::popColour();
-			}
 
-			akrd::pushMatrix(akrd::Matrix::Projection, projMatrix);
-			akrd::pushMatrix(akrd::Matrix::View, viewMatrix);
-			akrd::pushMatrix(akrd::Matrix::Model);
-				octree.traceLine(cPos, cDir, 32, [&](akc::sparsegrid::ILoc loc, akm::Vec3 pos, akm::Vec3 boxSize, akm::Vec3 enterPos, akm::Vec3 exitPos){
-						if (drawBoxes) {
-							akrd::setColour({1,1,1});
-							akrd::setMatrix(akrd::Matrix::Model, akm::translate(pos + boxSize/2.f) * akm::scale(boxSize));
+				akrd::pushMatrix(akrd::Matrix::Model);
+					octree.castLine(rayPos, rayDir, 32, [&](akm::Vec3 pos, akm::Vec3 enterPos, akm::Vec3 exitPos){
+							if (drawBoxes) {
+								akrd::setColour({1,1,1});
+								akrd::setMatrix(akrd::Matrix::Model, akm::translate(pos + octree.cellBounds()/2.f) * akm::scale(octree.cellBounds()));
+								akrd::draw(dlFilledCube);
+							}
+
+							akrd::setColour({0.25,0.25,1});
+							akrd::setMatrix(akrd::Matrix::Model, akm::translate(enterPos) * akm::scale(akm::Vec3{0.05, 0.05, 0.05}));
 							akrd::draw(dlFilledCube);
-						}
 
-						akrd::setColour({0.5,0.25,1});
-						akrd::setMatrix(akrd::Matrix::Model, akm::Mat4(1)); {
-							akrd::DisplayList line;
-							line.begin(akrd::Primitive::Lines);
-								line.addVertex(enterPos);
-								line.addVertex(exitPos);
-							line.end();
-							akrd::draw(line);
-						}
-						akrd::setColour({0.25,0.25,1});
-						akrd::setMatrix(akrd::Matrix::Model, akm::translate(enterPos) * akm::scale(akm::Vec3{0.05, 0.05, 0.05}));
-						akrd::draw(dlFilledCube);
-
-						akrd::setColour({1,0.25,0.25});
-						akrd::setMatrix(akrd::Matrix::Model, akm::translate(exitPos) * akm::scale(akm::Vec3{0.05, 0.05, 0.05}));
-						akrd::draw(dlFilledCube);
-					return true;
-				});
-			akrd::popMatrix(akrd::Matrix::Model);
-			akrd::popMatrix(akrd::Matrix::Projection);
-			akrd::popMatrix(akrd::Matrix::View);
+							akrd::setColour({1,0.25,0.25});
+							akrd::setMatrix(akrd::Matrix::Model, akm::translate(exitPos) * akm::scale(akm::Vec3{0.05, 0.05, 0.05}));
+							akrd::draw(dlFilledCube);
+						return true;
+					});
+				akrd::popMatrix(akrd::Matrix::Model);
 
 		// Finish
 		akw::swapBuffer();
@@ -408,11 +368,14 @@ static void startGame() {
 
 			//std::srand(0);
 			for(auto i = 0; i < moveCount; i++) {
-				octree.move(ids[i], akm::Vec3(
-						128.5 + 62.5*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX)),
-						 64.5 + 62.5*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX)),
-						128.5 + 62.5*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX))
-					)+ akm::Vec3{akm::sin(time*2)*5, akm::cos(time*2)*5, akm::sin(-time*2)*5}, akm::Vec3(.5,.5,.5));
+				octree.move(
+					ids[i],
+					akm::Vec3(
+						.5 + 255*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX)),
+						.5 + 255*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX)),
+						.5 + 255*(static_cast<fpSingle>(std::rand())/static_cast<fpSingle>(RAND_MAX))
+					),
+					akm::Vec3(.5,.5,.5));
 			}
 		}
 	};

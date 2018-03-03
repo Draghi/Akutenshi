@@ -56,10 +56,10 @@ namespace akc {
 
 		operator bool() const { return isValid(); }
 	};
-
 	static_assert(sizeof(SlotID) == sizeof(uint64), "SlotMapIndex isn't the correct size");
 	static_assert(std::is_trivially_copyable<SlotID>(), "SlotMapIndex isn't trivially copyable");
 
+	// @todo Consider using the unordered vector class for the data. It'd just make the code a little cleaner.
 	template<typename type_t, typename alloc_t = std::allocator<type_t>> class SlotMap final {
 		public:
 			using value_type = type_t;
