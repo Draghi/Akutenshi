@@ -160,8 +160,8 @@ static akev::SubscriberID logSInitRegenerateConfigHook = ake::regenerateConfigDi
 });
 
 static akev::SubscriberID logSInitRegisterConfigHooks = ake::setConfigDispatch().subscribe([](ake::SetConfigEvent& event){
-	ak::log::setConsoleFilterLevel(static_cast<ak::log::Level>(event.data().atOrDef("log").atOrDef("consoleFilterLevel", static_cast<int64>(ak::log::Level::DEBUG)).as<uint8>()));
-	ak::log::setFileFilterLevel(static_cast<ak::log::Level>(event.data().atOrDef("log").atOrDef("fileFilterLevel", static_cast<int64>(ak::log::Level::DEBUG)).as<uint8>()));
+	ak::log::setConsoleFilterLevel(static_cast<ak::log::Level>(event.data().atOrDef("log").atOrDef("consoleFilterLevel", akd::PValue::from(static_cast<int8>(ak::log::Level::DEBUG))).as<uint8>()));
+	ak::log::setFileFilterLevel(static_cast<ak::log::Level>(event.data().atOrDef("log").atOrDef("fileFilterLevel", akd::PValue::from(static_cast<int8>(ak::log::Level::DEBUG))).as<uint8>()));
 });
 
 

@@ -60,7 +60,7 @@ struct MSGPackVistor : public msgpack::v2::null_visitor {
 
     bool visit_str(const char* v, uint32_t size) {
     	if (isKeyValue) nextValue.first = std::string(v, size);
-    	else nextValue.second = akd::PValue(std::string(v, size));
+    	else nextValue.second = akd::PValue::from(std::string(v, size));
         return true;
     }
 
@@ -68,12 +68,12 @@ struct MSGPackVistor : public msgpack::v2::null_visitor {
     	std::vector<uint8> data;
     	data.resize(size);
     	std::memcpy(data.data(), v, size);
-    	nextValue.second = akd::PValue(data);
+    	nextValue.second = akd::PValue::from(data);
         return true;
     }
 
     bool visit_ext(const char* v, uint32_t size) {
-    	nextValue.second = akd::PValue(std::string(v, size));
+    	nextValue.second = akd::PValue::from(std::string(v, size));
         return true;
     }
 

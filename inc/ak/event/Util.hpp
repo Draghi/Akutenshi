@@ -23,7 +23,7 @@
 
 namespace akev {
 
-	using EventID = uint64;
+	using EventID = uint32;
 	class Subscription;
 
 	namespace internal {
@@ -39,7 +39,7 @@ namespace akev {
 	}
 
 	inline constexpr EventID calculateEventID(const std::string_view& eventName) {
-		return akd::hash64FNV1A(eventName.data(), eventName.size());
+		return akd::hash32FNV1A(eventName.data(), eventName.size());
 	}
 
 }

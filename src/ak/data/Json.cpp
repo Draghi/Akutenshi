@@ -77,41 +77,41 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 	    }
 
 	    bool Bool(bool b) {
-	    	addPValue(akd::PValue(b));
+	    	addPValue(akd::PValue::from(b));
 	    	return true;
 	    }
 
 	    bool Int(int i) {
-	    	addPValue(akd::PValue(static_cast<akd::PValue::int_t>(i)));
+	    	addPValue(akd::PValue::from(static_cast<akd::PValue::int_t>(i)));
 	    	return true;
 	    }
 
 	    bool Uint(unsigned u) {
-	    	addPValue(akd::PValue(static_cast<akd::PValue::uint_t>(u)));
+	    	addPValue(akd::PValue::from(static_cast<akd::PValue::uint_t>(u)));
 	    	return true;
 	    }
 
 	    bool Int64(int64_t i) {
-	    	addPValue(akd::PValue(static_cast<akd::PValue::int_t>(i)));
+	    	addPValue(akd::PValue::from(static_cast<akd::PValue::int_t>(i)));
 	    	return true;
 	    }
 
 	    bool Uint64(uint64_t u) {
-	    	addPValue(akd::PValue(static_cast<akd::PValue::uint_t>(u)));
+	    	addPValue(akd::PValue::from(static_cast<akd::PValue::uint_t>(u)));
 	    	return true;
 	    }
 
 	    bool Double(double d) {
-	    	addPValue(akd::PValue(d));
+	    	addPValue(akd::PValue::from(d));
 	    	return true;
 	    }
 
 	    bool String(const char* str, rj::SizeType length, bool) {
 	    	std::string inStr = std::string(str, length);
 	    	if (inStr.substr(0, JSON_BASE64_IDENTIFIER.size()) == JSON_BASE64_IDENTIFIER) {
-		    	addPValue(akd::PValue(cppcodec::base64_rfc4648::decode(inStr.substr(JSON_BASE64_IDENTIFIER.size()))));
+		    	addPValue(akd::PValue::from(cppcodec::base64_rfc4648::decode(inStr.substr(JSON_BASE64_IDENTIFIER.size()))));
 	    	} else {
-		    	addPValue(akd::PValue(inStr));
+		    	addPValue(akd::PValue::from(inStr));
 	    	}
 
 	        return true;
@@ -123,7 +123,7 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 	    }
 
 	    bool StartObject() {
-	    	addPValue(akd::PValue(akd::PValue::obj_t()));
+	    	addPValue(akd::PValue::from(akd::PValue::obj_t()));
 	    	return true;
 	    }
 
@@ -133,7 +133,7 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 	    }
 
 	    bool StartArray() {
-	    	addPValue(akd::PValue(akd::PValue::arr_t()));
+	    	addPValue(akd::PValue::from(akd::PValue::arr_t()));
 	    	return true;
 	    }
 

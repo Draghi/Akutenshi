@@ -19,6 +19,7 @@
 
 #include <ak/data/Path.hpp>
 #include <ak/PrimitiveTypes.hpp>
+#include <any>
 #include <cstddef>
 #include <deque>
 #include <functional>
@@ -28,6 +29,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 namespace akd {
 	class PValue;
@@ -96,16 +98,17 @@ namespace akd {
 		public:
 			PValue() : m_type(PType::Null) {}
 			PValue(const PValue& val) : m_type(PType::Null) { setPValue(val); }
-			PValue(const obj_t& val) : m_type(PType::Null)  { setObj(val); }
+			/*PValue(const obj_t& val) : m_type(PType::Null)  { setObj(val); }
 			PValue(const arr_t& val) : m_type(PType::Null)  { setArr(val); }
 			PValue(const str_t& val) : m_type(PType::Null)  { setStr(val); }
 			PValue(const int_t& val) : m_type(PType::Null)  { setInt(val); }
 			PValue(const uint_t& val) : m_type(PType::Null) { setUInt(val); }
 			PValue(const dec_t& val) : m_type(PType::Null)  { setDec(val); }
 			PValue(const bool_t& val) : m_type(PType::Null) { setBool(val); }
-			PValue(const bin_t& val) : m_type(PType::Null) { setBin(val); }
+			PValue(const bin_t& val) : m_type(PType::Null) { setBin(val); }*/
 
 			template<typename type_t> static PValue from(const type_t& val) { PValue result; result.set<type_t>(val); return result; }
+			//template<typename dest_t, typename type_t> static PValue from(const type_t& val) { PValue result; result.set<dest_t>(static_cast<dest_t>(val)); return result; }
 
 			~PValue() { setNull(); }
 
@@ -431,6 +434,48 @@ namespace akd {
 				if (isNull()) return std::optional<type_t>();
 				return std::optional<type_t>(as<type_t>());
 			}
+	};
+
+	class PVBuilder final {
+		private:
+			PValue m_result;
+			std::deque<PValue*> m_stack;
+
+		public:
+			PVBuilder() : m_result(), m_stack({&m_result}) {}
+
+			PVBuilder& pushKey(const std::string& name) {
+				if (!m_stack.back()->isObj()) m_stack.back()->setObj();
+				m_stack.push_back(&((*m_stack.back())[name]));
+				return *this;
+			}
+
+			PVBuilder& pushIndex() {
+				if (!m_stack.back()->isArr()) m_stack.back()->setArr();
+				m_stack.back()->asArr().push_back(PValue());
+				m_stack.push_back(&(m_stack.back()->asArr().back()));
+				return *this;
+			}
+
+			PVBuilder& pop() {
+				m_stack.pop_back();
+				return *this;
+			}
+
+			template<typename type_t> PVBuilder& with(const std::string& keyName, const type_t& val) {
+				if (!m_stack.back()->isObj()) m_stack.back()->setObj();
+				(*m_stack.back())[keyName] = PValue::from<type_t>(val);
+				return *this;
+			}
+
+			template<typename type_t> PVBuilder& insert(const type_t& val) {
+				if (!m_stack.back()->isArr()) m_stack.back()->setArr();
+				m_stack.back()->asArr().push_back(PValue::from<type_t>(val));
+				return *this;
+			}
+
+			void mvBuild(PValue& dest) { dest = std::move(m_result); m_result = PValue(); m_stack.clear(); m_stack.push_back(&m_result); }
+			const PValue& build() const { return m_result; }
 	};
 }
 

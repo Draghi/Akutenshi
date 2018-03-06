@@ -7,7 +7,7 @@ project(akutenshi VERSION 1.0.0.0)
 sugar_include("src")
 add_executable(akutenshi ${AK_SOURCE})
 
-target_include_directories(akutenshi PUBLIC inc)
+target_include_directories(akutenshi PUBLIC  inc)
 target_include_directories(akutenshi PRIVATE src)
 
 target_include_directories(akutenshi SYSTEM PUBLIC ${GLM_INCLUDE_DIR})

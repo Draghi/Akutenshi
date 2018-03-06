@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
 		} catch (const std::string& e) {
 			akl::Logger("Term").fatal("Terminate called after throwing a 'std::string' with the value: ", e);
 		} catch (void* e) {
-			akl::Logger("Term").fatal("Terminate called after throwing a 'pointer' with the value: ", reinterpret_cast<ptrdiff_t>(e));
+			akl::Logger("Term").fatal("Terminate called after throwing a 'pointer' with the value: ", reinterpret_cast<intptr_t>(e));
 		} catch(...) {
 			akl::Logger("Term").fatal("Terminate called after throwing an unknown type.");
 		}

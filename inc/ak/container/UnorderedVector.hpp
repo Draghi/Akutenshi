@@ -95,7 +95,7 @@ namespace akc {
 			UnorderedVector& operator=(const UnorderedVector& other) = default;
 			UnorderedVector& operator=(UnorderedVector&& other) { m_vec = std::move(other.m_vec); return *this; }
 
-
+			const container_t& getContainer() const { return m_vec; }
 	};
 
 }

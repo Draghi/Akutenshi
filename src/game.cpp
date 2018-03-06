@@ -28,6 +28,7 @@
 #include <ak/data/PValue.hpp>
 #include <ak/engine/Camera.hpp>
 #include <ak/engine/Config.hpp>
+#include <ak/engine/ECS.hpp>
 #include <ak/event/Dispatcher.hpp>
 #include <ak/event/Subscription.hpp>
 #include <ak/filesystem/CFile.hpp>
@@ -65,7 +66,6 @@
 #include <glm/detail/type_vec4.hpp>
 #include <algorithm>
 #include <cstddef>
-#include <cstdlib>
 #include <experimental/filesystem>
 #include <iomanip>
 #include <optional>
@@ -74,6 +74,42 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+class CompTest : public ake::ComponentManager {
+	AKE_DEFINE_COMPONENT_MANAGER(CompTest)
+	public:
+		struct DataStruct {
+			int v;
+		};
+
+	private:
+		akc::SlotMap<DataStruct> m_data;
+		std::unordered_map<ake::InstanceID, ake::EntityID> m_entityLookup;
+
+	protected:
+		ake::InstanceID createComponentFor(ake::EntityID entityID, DataStruct val) {
+			auto result = m_data.insert(val).first;
+			m_entityLookup.emplace(result, entityID);
+			return result;
+		}
+
+		bool destroyComponent(ake::InstanceID instanceID) override {
+			m_data.erase(instanceID);
+			m_entityLookup.erase(instanceID);
+			return true;
+		}
+
+	public:
+		CompTest() {}
+		~CompTest() override {}
+
+		DataStruct& getInstance(ake::InstanceID id) { return m_data[id]; }
+
+};
+
+static const auto compTestRegistrationEv = ake::registerComponentManagersEventDispatch().subscribe([](ake::RegisterComponentManagersEvent& ev){
+	ev.data()(CompTest::COMPONENT_ID, [](){return std::make_unique<CompTest>();});
+});
 
 int akGameMain();
 
@@ -115,6 +151,17 @@ int akGameMain() {
 static void startGame() {
 	constexpr ak::log::Logger log(AK_STRING_VIEW("Main"));
 
+	auto ecs = ake::createEntityManager();
+	auto id = ecs.createEntity("Bomb");
+	if (!id) log.warn("Failed to create entity");
+	const auto& r = ecs.findAllEntitiesNamed("Bomb");
+	auto cID = ecs.addComponent<CompTest>(id, CompTest::DataStruct{10});
+	if (!cID.isValid()) log.warn("Failed to add component");
+	log.info("Component Value: ", ecs.getComponentManager<CompTest>().getInstance(cID).v);
+	if (!ecs.removeComponent<CompTest>(id, cID)) log.warn("Failed to remove component");
+	if (!r.size()) log.warn("Could not find named entity");
+	if (!ecs.destroyEntity(id)) log.warn("Failed to destroy entity");
+
 	akc::sparsegrid::SparseGrid<int> octree(akm::Vec3(0,0,0), akm::Vec3(1,1,1));
 	octree.insert(0, akm::Vec3(1.5f, 20.5f, 1.5f), akm::Vec3(.5, .5, .5));
 	octree.insert(0, akm::Vec3(23.5f, 34.f, 23.f), akm::Vec3(.5,.5,.5));
@@ -122,7 +169,7 @@ static void startGame() {
 
 	// Skybox
 		akr::ShaderProgram shaderSkybox = buildShaderProgram({
-			{akr::StageType::Vertex, "shaders/skybox.vert"},
+			{akr::StageType::Vertex,   "shaders/skybox.vert"},
 			{akr::StageType::Fragment, "shaders/skybox.frag"},
 		});
 
@@ -438,6 +485,9 @@ static ak::ScopeGuard startup() {
 	startLog.info("Starting log system.");
 	ak::log::startProcessing();
 	//ak::log::enableFileOutput();
+
+	startLog.info("Starting ECS system.");
+	if (!ake::initEntityComponentSystem()) throw std::logic_error("Failed to initialize entity component system.");
 
 	startLog.info("Starting window system.");
 	akw::init();

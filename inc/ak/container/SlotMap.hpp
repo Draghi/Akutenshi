@@ -37,10 +37,7 @@ namespace akc {
 		SlotID(const SlotID& other) = default;
 		SlotID(SlotID&& other) = default;
 
-		uint64 value() const {
-			return static_cast<uint64>(index) << 32u | generation;
-		}
-
+		uint64 value() const { return static_cast<uint64>(index) << 32u | generation; }
 		bool isValid() const { return generation != 0; }
 
 		bool operator<(const SlotID& other)  const { return value() <  other.value(); }
@@ -223,7 +220,7 @@ namespace akc {
 			// // SlotID // //
 			// /////////// //
 
-			SlotID slotIDFor(size_t id) const {
+			SlotID slotIDFor(akSize id) const {
 				if (id >= m_data.size()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
 				return SlotID(m_indexLookup[id], m_indicies[m_indexLookup[id]].generation);
 			}
@@ -252,27 +249,27 @@ namespace akc {
 			// // Entry // //
 			// ////////// //
 
-			size_t entryIDFor(SlotID id) const {
+			akSize entryIDFor(SlotID id) const {
 				if (!exists(id)) throw std::out_of_range("SlotMap: Attempt to index out of bounds.");
 				return m_indicies[id].index;
 			}
 
-			size_t entryIDFor(const iterator& iter) const {
+			akSize entryIDFor(const iterator& iter) const {
 				if (iter == const_cast<container_type<type_t>&>(m_data).end()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
 				return m_indicies[std::distance(const_cast<container_type<type_t>&>(m_data).begin(), iter)].index;
 			}
 
-			size_t entryIDFor(const const_iterator& iter) const {
+			akSize entryIDFor(const const_iterator& iter) const {
 				if (iter == m_data.end()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
 				return m_indicies[std::distance(m_data.begin(), iter)].index;
 			}
 
-			size_t entryIDFor(const reverse_iterator& iter) const {
+			akSize entryIDFor(const reverse_iterator& iter) const {
 				if (iter == const_cast<container_type<type_t>&>(m_data).rend()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
 				return m_indicies[std::distance(const_cast<container_type<type_t>&>(m_data).rbegin(), iter)].index;
 			}
 
-			size_t entryIDFor(const const_reverse_iterator& iter) const {
+			akSize entryIDFor(const const_reverse_iterator& iter) const {
 				if (iter == m_data.rend()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
 				return m_indicies[std::distance(m_data.rbegin(), iter)].index;
 			}
@@ -315,11 +312,11 @@ namespace akc {
 			// // Direct Indexing // //
 			// ///////////////////// //
 
-			type_t& at(size_t id) { return m_data[id]; }
-			const type_t& at(size_t id) const { return m_data[id]; }
+			type_t& at(akSize id) { return m_data[id]; }
+			const type_t& at(akSize id) const { return m_data[id]; }
 
-			type_t& operator[](size_t id) { return at(id); }
-			const type_t& operator[](size_t id) const { return at(id); }
+			type_t& operator[](akSize id) { return at(id); }
+			const type_t& operator[](akSize id) const { return at(id); }
 
 			// /////////////////// //
 			// // Direct Access // //
@@ -332,7 +329,8 @@ namespace akc {
 			// // Properties // //
 			// //////////////// //
 
-			size_t size() const { return m_data.size(); }
+			bool empty() const { return m_data.size() > 0; }
+			akSize size() const { return m_data.size(); }
 			size_t capacity() const { return m_data.capacity(); }
 	};
 

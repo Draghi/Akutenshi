@@ -105,7 +105,6 @@ namespace akc {
 				akm::Vec3 localToWorld(const akm::Vec3& localPos) { return localPos/m_unitScale-m_offset; }
 
 				std::optional<std::pair<ILoc, ILoc>> getNodeRange(const akm::Vec3& position, akm::Vec3 halfSize) {
-
 					halfSize = akm::abs(halfSize);
 					auto bboxMin = worldToLocal(position - halfSize);
 					auto bboxMax = worldToLocal(position + halfSize);
@@ -138,23 +137,19 @@ namespace akc {
 				}
 				bool removeEntryFrom(SlotID id, ILoc pos) { return removeEntryFrom(id, pos.toMortonIndex()); }
 
-				template<typename func_t> bool raycastInternal(const akm::Vec3& pStart, const akm::Vec3& pEnd, const func_t& visitFunc) {
+				template<typename func_t> bool raycastInternal(const akm::Vec3& rayStart, const akm::Vec3& rayEnd, const func_t& visitFunc) {
 					fpSingle  rayProgress = 0;
-					akm::Vec3 rayStart    = pStart;
-					akm::Vec3 rayEnd      = pEnd;
 					akm::Vec3 rayDelta    = rayEnd - rayStart;
 					akm::Vec3 rayInvDelta = 1.f/rayDelta;
+					akm::Vec3 rayStepSize = 1.f/akm::abs(rayDelta);
 
-					akm::Vec3 tilePos    = akm::floor(rayStart);
-					akm::Vec3 tileEndPos = akm::floor(rayEnd);
-					akm::Vec3 tileOffsetIncrement = 1.f/akm::abs(rayDelta);
-
+					akm::Vec3 tilePos = akm::floor(rayStart);
+					akm::Vec3 tileEnd = akm::floor(rayEnd);
 					akm::Vec3 tileIncrement = akm::forEachV(rayEnd, rayStart, [](auto start, auto end){ return start == end ? 0 : (start < end ? -1 : 1); });
-					akm::Vec3 dirOffset = akm::max(akm::Vec3{0,0,0}, tileIncrement);
-					akm::Vec3 tileOffset = (((tilePos+dirOffset) - rayStart)*rayInvDelta) * akm::abs(tileIncrement);
+					akm::Vec3 tileDirOffset = akm::max(akm::Vec3{0,0,0}, tileIncrement);
+					akm::Vec3 tileOffset = (((tilePos+tileDirOffset) - rayStart)*rayInvDelta) * akm::abs(tileIncrement);
 
-					akSize cellCount = 1 + static_cast<akSize>(akm::sum(akm::abs(tileEndPos - tilePos)));
-
+					akSize cellCount = 1 + static_cast<akSize>(akm::sum(akm::abs(tileEnd - tilePos)));
 					for (akSize i = 0; i < cellCount; i++) {
 						auto advIndex = 0;
 						if (tileOffset[1] < tileOffset[advIndex]) advIndex = 1;
@@ -170,7 +165,7 @@ namespace akc {
 
 						tilePos[advIndex] += tileIncrement[advIndex];
 						rayProgress = tileOffset[advIndex];
-						tileOffset[advIndex] += tileOffsetIncrement[advIndex];
+						tileOffset[advIndex] += rayStepSize[advIndex];
 					}
 
 					return true;
