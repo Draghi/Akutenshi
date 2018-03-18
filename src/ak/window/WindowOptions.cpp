@@ -16,7 +16,6 @@
 
 #include <ak/engine/Config.hpp>
 #include <ak/event/Dispatcher.hpp>
-#include <ak/event/Subscription.hpp>
 #include <ak/window/WindowOptions.hpp>
 #include <algorithm>
 #include <iterator>

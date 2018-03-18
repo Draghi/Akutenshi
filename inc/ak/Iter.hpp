@@ -29,6 +29,14 @@ namespace ak {
 		return ret;
 	}
 
+	template<typename container_t> typename container_t::iterator find(container_t& container, const typename container_t::value_type& val) {
+		return std::find(container.begin(), container.end(), val);
+	}
+
+	template<typename container_t> typename container_t::const_iterator find(const container_t& container, const typename container_t::value_type& val) {
+		return std::find(container.begin(), container.end(), val);
+	}
+
 }
 
 #endif

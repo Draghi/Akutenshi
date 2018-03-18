@@ -67,6 +67,9 @@ namespace akc {
 				m_vec.pop_back();
 			}
 
+			void pop_front() { m_vec.erase(begin()); }
+			void pop_back() { m_vec.pop_back(); }
+
 			iterator begin() { return m_vec.begin(); }
 			iterator end() { return m_vec.end(); }
 			const_iterator begin() const { return m_vec.cbegin(); }

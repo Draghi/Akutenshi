@@ -43,8 +43,23 @@ namespace ak {
 			template<> struct SmallestIntegerFor<32> { using type = uint32; };
 			template<> struct SmallestIntegerFor<64> { using type = uint64; };
 		}
-
 		template<uint64 max_val> struct SmallestIntergerFor : internal::SmallestIntegerFor<RequiredBits<max_val>::value> {};
+
+		namespace internal {
+			template<uint64 bit_val> struct SizedInteger;
+			template<> struct SizedInteger<1> { using type = uint8;  };
+
+			template<> struct SizedInteger<2> { using type = uint16; };
+
+			template<> struct SizedInteger<3> { using type = uint32; };
+			template<> struct SizedInteger<4> { using type = uint32; };
+
+			template<> struct SizedInteger<5> { using type = uint64; };
+			template<> struct SizedInteger<6> { using type = uint64; };
+			template<> struct SizedInteger<7> { using type = uint64; };
+			template<> struct SizedInteger<8> { using type = uint64; };
+		}
+		template<uint64 bit_val> struct IntegerMinBytes : internal::SizedInteger<bit_val> {};
 
 	}
 }

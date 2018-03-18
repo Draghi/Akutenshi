@@ -22,26 +22,10 @@
 #include <string_view>
 
 namespace akev {
-
 	using EventID = uint32;
-	class Subscription;
-
-	namespace internal {
-		class IDispatcher {
-			IDispatcher(const IDispatcher&) = delete;
-			IDispatcher& operator=(const IDispatcher&) = delete;
-			public:
-				IDispatcher() = default;
-				virtual ~IDispatcher() = default;
-
-				virtual void unsubscribe(Subscription&) = 0;
-		};
-	}
-
 	inline constexpr EventID calculateEventID(const std::string_view& eventName) {
 		return akd::hash32FNV1A(eventName.data(), eventName.size());
 	}
-
 }
 
 #endif

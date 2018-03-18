@@ -16,7 +16,6 @@
 
 #include <ak/engine/Config.hpp>
 #include <ak/event/Dispatcher.hpp>
-#include <ak/event/Subscription.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Filesystem.hpp>
 #include <stddef.h>

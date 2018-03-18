@@ -17,14 +17,14 @@
 #ifndef AK_MATH_MATRIX_HPP_
 #define AK_MATH_MATRIX_HPP_
 
-#include <ak/math/Types.hpp>
 #include <ak/math/Scalar.hpp>
-#include <ak/math/Vector.hpp>
-#include <glm/glm.hpp>
+#include <ak/math/Types.hpp>
+#include <ak/PrimitiveTypes.hpp>
+#include <glm/detail/setup.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_access.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/transform.hpp>
-#include <cmath>
 
 namespace akm {
 	// //////////////// //
@@ -48,6 +48,9 @@ namespace akm {
 	// //////////// //
 	// // Affine // //
 	// //////////// //
+
+	inline Vec4 row(const akm::Mat4& mat, akSize row) { return glm::row(mat, row); }
+	inline Vec4 column(const akm::Mat4& mat, akSize col) { return glm::column(mat, col); }
 
 	inline Mat4 scale(const akm::Vec3& scale) { return glm::scale(scale); }
 	inline Mat4 translate(const akm::Vec3& offset) { return glm::translate(offset); }

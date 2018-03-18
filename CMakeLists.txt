@@ -41,8 +41,9 @@ target_link_libraries(akutenshi brotlienc-static)
 target_link_libraries(akutenshi brotlidec-static)
 target_link_libraries(akutenshi assimp)
 
-if(WIN32)
 
+if(WIN32)
+	target_link_libraries(akutenshi c++experimental)
 else()
 	target_link_libraries(akutenshi stdc++fs)
 	target_link_libraries(akutenshi bfd)

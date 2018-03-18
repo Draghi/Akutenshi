@@ -17,113 +17,78 @@
 #ifndef AK_EVENT_DISPATCHER_HPP_
 #define AK_EVENT_DISPATCHER_HPP_
 
-#include <ak/event/Subscription.hpp>
+#include <ak/container/SlotMap.hpp>
 #include <ak/event/Util.hpp>
+#include <ak/ScopeGuard.hpp>
 #include <ak/thread/CurrentThread.hpp>
-#include <ak/thread/Thread.hpp>
-#include <tsl/ordered_map.h>
-#include <stddef.h>
 #include <functional>
 #include <memory>
-#include <stdexcept>
-#include <unordered_map>
+#include <string_view>
+#include <utility>
 
 namespace akev {
-	using SubscriberID = uint32;
+	using SubscriberID = akc::SlotID;
 
-	template<typename event_t> class Dispatcher final : public internal::IDispatcher {
+	template<typename event_t> class Dispatcher final {
+		Dispatcher(Dispatcher&) = delete;
+		Dispatcher& operator=(Dispatcher&) = delete;
 		public:
-			using callback_s = void(event_t&);
-			using callback_t = std::function<void(event_t&)>;
+			using event_type = event_t;
+			using callback_s = void(event_type&);
+			using callback_t = std::function<void(event_type&)>;
 
 		private:
-			SubscriberID m_id;
-			tsl::ordered_map<SubscriberID, callback_t> m_callbacks;
-			tsl::ordered_map<Subscription*, SubscriberID> m_subscriptions;
-
+			akc::SlotMap<callback_t> m_callbacks;
 			akt::CurrentThread& m_mediator;
 
-		public:
-			Dispatcher() : m_id(0), m_mediator(akt::current()) {}
+			std::atomic<int> m_sendCounter;
+			std::vector<SubscriberID> m_freelist;
 
-			virtual ~Dispatcher() {
-				auto localCopy = m_subscriptions;
-				for(auto iter = localCopy.begin(); iter != localCopy.end(); iter++) {
-					iter->first->Subscriber_RemoveDispatcher(this);
+		public:
+			Dispatcher() : m_mediator(akt::current()) {}
+			~Dispatcher() {}
+
+			SubscriberID subscribe(const callback_t& func) { return m_callbacks.insert(func).first; }
+			template<typename func_t> SubscriberID subscribe(const func_t& func) { return subscribe(callback_t(func)); }
+
+			void unsubscribe(SubscriberID subscriber) {
+				if (m_sendCounter) m_freelist.push_back(subscriber);
+				else m_callbacks.erase(subscriber);
+			}
+
+			void send(event_t& event) {
+				++m_sendCounter;
+				event.m_canceled = false;
+				for(const auto& callback : m_callbacks) { callback(event); if (event.isCanceled()) return; }
+				if (--m_sendCounter == 0) {
+					auto localCopy = std::move(m_freelist); // @todo Might be a race condition here... It'd be hard as hell to hit... Probably...
+					for(auto id : localCopy) unsubscribe(id);
 				}
 			}
 
-			SubscriberID subscribe(Subscription& subscriber, const callback_t& func) {
-				auto iter = m_subscriptions.find(&subscriber);
-				if (iter != m_subscriptions.end()) return 0;
-				if (!subscriber.Subscriber_AddDispatcher(this)) return 0;
-
-				auto id = ++m_id;
-				m_subscriptions.insert(std::make_pair(&subscriber, id));
-				m_callbacks.insert(std::make_pair(id, func));
-
-				return id;
-			}
-
-			virtual void unsubscribe(Subscription& subscriber) {
-				auto iter = m_subscriptions.find(&subscriber);
-				if (iter == m_subscriptions.end()) return;
-
-				m_callbacks.erase(iter->second);
-				m_subscriptions.erase(iter);
-
-				subscriber.Subscriber_RemoveDispatcher(this);
-			}
-
-			SubscriberID subscribe(const callback_t& func) {
-				auto id = ++m_id;
-				m_callbacks.insert(std::make_pair(id, func));
-				return id;
-			}
-
-			void unsubscribe(SubscriberID subscriber) {
-				m_callbacks.erase(subscriber);
-			}
+			void mediate(const std::shared_ptr<event_type>& event) { m_mediator.schedule([this, event](){send(*event);}); }
+			template<typename... vargs_t> void mediate(vargs_t... vargs) { mediate(std::make_shared<event_type>(std::forward(vargs)...)); }
 
 			EventID id() { return event_t::EVENT_ID; }
 			std::string_view name() { return event_t::EVENT_NAME; }
-
-			akSize send(event_t& event) {
-				auto localCopy = m_callbacks;
-
-				event.m_canceled = false;
-
-				akSize dispatchCount = 0;
-				for(auto iter = localCopy.begin(); iter != localCopy.end(); iter++, dispatchCount++) {
-					iter->second(event);
-					if (event.isCanceled()) return dispatchCount;
-				}
-
-				return dispatchCount;
-			}
-
-			void mediate(const std::shared_ptr<event_t>& event) { m_mediator.schedule([this, event](){send(*event);}); }
-
-			template<typename func_t> bool subscribe(Subscription& subscriber, const func_t& func) { return subscribe(subscriber, callback_t(func)); }
-			template<typename func_t> bool subscribe(const func_t& func) { return subscribe(callback_t(func)); }
-			template<typename... vargs_t> void mediate(vargs_t... vargs) { mediate(std::shared_ptr<event_t>(new event_t(vargs...))); }
 	};
 
 	template<typename event_t> class DispatcherProxy final {
-		private:
-			using callback_s = void(event_t&);
-			using callback_t = std::function<void(event_t&)>;
+		public:
+			using dispatcher_type = Dispatcher<event_t>;
+			using callback_s = typename dispatcher_type::callback_s;
+			using callback_t = typename dispatcher_type::callback_t;
 
-			Dispatcher<event_t>& m_dispatcher;
+		private:
+			dispatcher_type& m_dispatcher;
 
 		public:
-			DispatcherProxy(Dispatcher<event_t>& dispatcher) : m_dispatcher(dispatcher) {}
+			DispatcherProxy(dispatcher_type& dispatcher) : m_dispatcher(dispatcher) {}
 			~DispatcherProxy() = default;
 
-			SubscriberID subscribe(Subscription& subscriber, const callback_t& func) const { return m_dispatcher.subscribe(subscriber, func); }
 			SubscriberID subscribe(const callback_t& func) const { return m_dispatcher.subscribe(func); }
+			template<typename func_t> SubscriberID subscribe(const func_t& func) { return subscribe(callback_t(func)); }
 
-			void unsubscribe(Subscription& subscriber) const { return m_dispatcher.unsubscribe(subscriber); }
 			void unsubscribe(SubscriberID subscriber) const { return m_dispatcher.unsubscribe(subscriber); }
 
 			EventID id() const { return m_dispatcher.id(); }

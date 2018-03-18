@@ -19,18 +19,16 @@
 
 #include <ak/container/SlotMap.hpp>
 #include <ak/container/UnorderedVector.hpp>
-#include <ak/data/Hash.hpp>
 #include <ak/data/PValue.hpp>
+#include <ak/data/SUID.hpp>
 #include <ak/event/Dispatcher.hpp>
 #include <ak/event/Event.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/String.hpp>
-#include <algorithm>
 #include <functional>
-#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -38,23 +36,48 @@
 #define AKE_DEFINE_COMPONENT_MANAGER(componentName) \
 	private: friend class ::ake::EntityManager; \
 	public:  constexpr static ::std::string_view COMPONENT_NAME = std::string_view(#componentName, sizeof(#componentName) - 1); \
-	public:  constexpr static ::ake::ComponentID COMPONENT_ID = akd::hash32FNV1A<char>(#componentName, sizeof(#componentName) - 1); \
+	public:  constexpr static ::ake::ComponentTID COMPONENT_TID = akd::hash32FNV1A<char>(#componentName, sizeof(#componentName) - 1); \
 	public:  const ::std::string_view& name() const override { return COMPONENT_NAME; } \
-	public:  ::ake::ComponentID id() const override { return COMPONENT_ID; } \
+	public:  ::ake::ComponentTID tid() const override { return COMPONENT_TID; } \
 
 namespace ake {
+	class ComponentManager;
+	class EntityManager;
+	using    EntityID = akc::SlotID;
+	using   EntityUID = uint64;
+
+	using  ComponentID = akc::SlotID;
+	using ComponentUID = uint64;
+	using ComponentTID = uint32;
+
+	using EUIDGenerator_f = EntityUID(EntityManager&);
+	using CUIDGenerator_f = ComponentUID(EntityManager&);
+
+	struct CUIDRecord {
+		EntityID entityID;
+		ComponentTID componentTypeID;
+		ComponentID componentID;
+		bool isValid() const { return entityID && componentID; }
+		bool operator==(const CUIDRecord& o) const { return (entityID == o.entityID) && (componentTypeID == o.componentTypeID) && (componentID == o.componentID); }
+		operator bool() const { return isValid(); }
+	};
+
 	namespace internal {
 		struct ComponentManagerAccessor;
 	}
+}
 
-	class ComponentManager;
-	class EntityManager;
-	using ComponentID = uint32;
-	using    EntityID = akc::SlotID;
-	using  InstanceID = akc::SlotID;
+namespace std {
+	template<> struct hash<ake::CUIDRecord> {
+		size_t operator()(const ake::CUIDRecord& v) const {
+			return 281474976710656ull*v.componentID.index ^ 16777216ull*v.componentTypeID ^ v.entityID.index;
+		}
+	};
+}
 
+namespace ake {
 	bool initEntityComponentSystem();
-	EntityManager createEntityManager();
+	EntityManager createEntityManager(const std::function<EUIDGenerator_f>& euidGenerator, const std::function<CUIDGenerator_f>& cuidGenerator);
 
 	// When inheriting from component manager be sure to start
 	// the body definition with the AKE_DEFINE_COMPONENT_MANAGER macro.
@@ -63,151 +86,189 @@ namespace ake {
 		friend struct ::ake::internal::ComponentManagerAccessor;
 		friend class EntityManager;
 		protected:
-
 			// Components are created by a templated method that expects the following method to exist
 			// The first argument is the id of the entity and the remaining arguments can be anything you want
 			// Overload resolution should work fine here.
 			// Components may also be created by the deserialize method, which is virtual.
-			//InstanceID createComponentFor(EntityID entityID, ... args) = 0;
+			//ComponentID newComponent(EntityManager& manager, EntityID entityID, ... args) = 0;
 
-			virtual bool destroyComponent(InstanceID instanceID) = 0;
+			virtual bool deleteComponent(EntityManager& manager, EntityID entityID, ComponentID componentID) = 0;
 
-			//bool serialize(akd::PValue& dest, InstanceID instanceID) = 0;
+			virtual bool serialize(akd::PValue& /*dest*/, EntityManager& /*manager*/, EntityID /*entityID*/, ComponentID /*componentID*/) {
+				return false;
+			}
+
+			virtual ComponentID deserialize(EntityManager& /*manager*/, EntityID /*entityID*/, const akd::PValue& /*src*/) {
+				throw std::logic_error("ComponentManager::deserialize: Deserialize not implemented.");
+			}
+
+			//bool serialize(akd::PValue& dest, ComponentID componentID) = 0;
 			//InstanceID deserialize(EntityID entityID, const akd::PValue& src) = 0;
 
 		public:
 			virtual ~ComponentManager() = default;
 
 			virtual const std::string_view& name() const = 0;
-			virtual ComponentID id() const = 0;
+			virtual ComponentTID tid() const = 0;
 	};
 
+	/**
+	 * Temp Notes:
+	 * Create entity w/entityUID returns !isValid if entityUID exists
+	 * Create instance w/componentUID returns !isValid id componentUID exists
+	 *
+	 * Entity/Instance insert repeats until it gets a valid id.
+	 * This causes id reuse when loading, and is slow.
+	 *
+	 * Two options are:
+	 * - Integrate id generation and serialize info (Decent solution)
+	 * - Remap uuids (Better... ish... Condenses ids and frees up ids on save/load, dangling uids would be bad though...)
+	 */
 	class EntityManager final {
 		EntityManager(const EntityManager&) = delete;
 		EntityManager& operator=(const EntityManager&) = delete;
 		private:
-			using components_t = std::unordered_multimap<ComponentID, InstanceID>;
+			struct Entity {
+				EntityUID uid;
+				akc::SlotID name;
+				std::unordered_map<ComponentTID, std::vector<ComponentID>> components;
+			};
+
+			// Component Managers
+			std::unordered_map<ComponentTID, std::unique_ptr<ComponentManager>> m_componentTypes;
+
+			// 'Compact' Name Storage/Lookup
 			using names_t = std::pair<std::string, akc::UnorderedVector<EntityID>>;
-
-			std::unordered_map<ComponentID, std::unique_ptr<ComponentManager>> m_registry;
-
 			akc::SlotMap<names_t> m_names;
-			std::unordered_map<std::string, akc::SlotID> m_lookupEntitiesByName;
+			std::unordered_map<std::string, akc::SlotID> m_lookupNIDbyName;
+			std::unordered_map<EntityUID,   EntityID   > m_lookupEIDbyEUID;
+			std::unordered_map<ComponentUID, CUIDRecord> m_lookupCIDbyCUID;
+			std::unordered_map<CUIDRecord, ComponentUID> m_lookupCUIDByCID;
 
-			akc::SlotMap<akc::SlotID> m_entityNames;
-			akc::SlotMap<components_t> m_entityComponents;
+			// Entity Data
+			akc::SlotMap<Entity> m_entities;
 
+			std::function<EUIDGenerator_f> m_euidGenerator;
+			std::function<CUIDGenerator_f> m_cuidGenerator;
+
+			void associateCUID(ComponentUID componentUID, CUIDRecord cuidRecord);
+			void deassociateCUID(ComponentUID componentUID, CUIDRecord cuidRecord);
 
 		public:
-			EntityManager(std::unordered_map<ComponentID, std::unique_ptr<ComponentManager>>&& registry) : m_registry(std::move(registry)) {}
+			EntityManager(std::unordered_map<ComponentTID, std::unique_ptr<ComponentManager>>&& registry, const std::function<EUIDGenerator_f>& euidGenerator, const std::function<CUIDGenerator_f>& cuidGenerator);
+			EntityManager(EntityManager&& o) = default;
+			EntityManager& operator=(EntityManager&& o) = default;
 
 			// ////////////// //
 			// // Entities // //
 			// ////////////// //
+			EntityID newEntity(EntityUID uid, const akc::SlotID& nameID);
+			EntityID newEntity(const akc::SlotID& nameID);
 
-			akc::SlotID createEntity(const akc::SlotID& nameID) {
-				auto entityID = m_entityNames.insert(nameID).first;
-				if (entityID != m_entityComponents.insert({ }).first) throw std::logic_error("EntityManager::createEntity: Entity ID mismatch");
-				m_names[nameID].second.insert(entityID);
-				return entityID;
-			}
+			EntityID newEntity(EntityUID uid, const std::string& name);
+			EntityID newEntity(const std::string& name);
 
-			akc::SlotID createEntity(const std::string& name) {
-				auto iter = m_lookupEntitiesByName.find(name);
-				if (iter != m_lookupEntitiesByName.end()) return createEntity(iter->second);
-				return createEntity(m_lookupEntitiesByName.insert(std::make_pair(name, m_names.insert(names_t{name,{}}).first)).first->second);
-			}
+			bool deleteEntity(EntityID entityID);
+			void deleteAllEntities();
 
-			bool destroyEntity(EntityID entityID) {
-				// Remove Components
-				auto& components = m_entityComponents[entityID];
-				ComponentID       lastComponentID  = 0;
-				ComponentManager* componentManager = nullptr;
-				for(auto iter = components.begin(); iter != components.end(); iter++) {
-					if (std::exchange(lastComponentID, iter->first) != iter->first) componentManager = m_registry[lastComponentID].get();
-					componentManager->destroyComponent(iter->second);
-				}
+			std::string getEntityName(EntityID entityID) const;
+			EntityUID getEntityUID(EntityID entityID) const;
+			akSize getEntityCount() const;
 
-				// Cache Entity Name
-				auto name = m_entityNames[entityID];
-
-				// Erase Entity Data
-				m_entityNames.erase(entityID);
-				m_entityComponents.erase(entityID);
-
-				// Update Name Lookup
-				auto & namedEntities = m_names.at(name);
-				namedEntities.second.erase(std::find(namedEntities.second.begin(), namedEntities.second.end(), entityID));
-				if (namedEntities.second.size() == 0) {
-					m_lookupEntitiesByName.erase(namedEntities.first);
-					m_names.erase(name);
-				}
-
-				return true;
-			}
-
-			void destroyAllEntities() {
-				while(!m_entityNames.empty()) destroyEntity(m_entityNames.slotIDFor(m_entityNames.size() - 1));
-			}
+			std::vector<EntityID> findEntitiesNamed(const std::string& name) const;
 
 			// //////////////// //
 			// // Components // //
 			// //////////////// //
-			template<typename type_t, typename... vargs_t> InstanceID addComponent(EntityID entityID, const vargs_t&... vargs) {
-				if (!m_entityNames.exists(entityID)) throw std::out_of_range("EntityManager::addNewComponent: Attempt to index out of bounds");
-				auto instanceID = getComponentManager<type_t>().createComponentFor(entityID, std::forward<const vargs_t&>(vargs)...);
-				m_entityComponents[entityID].insert(std::make_pair(type_t::COMPONENT_ID, instanceID));
-				return instanceID;
-			}
+			template<typename type_t, typename... vargs_t> ComponentID addComponent(ComponentUID componentUID, EntityID entityID, const vargs_t&... vargs);
+			template<typename type_t, typename... vargs_t> ComponentID addComponent(EntityID entityID, const vargs_t&... vargs);
 
-			bool removeComponent(EntityID entityID, ComponentID componentID, const InstanceID& instanceID) {
-				if (!m_entityNames.exists(entityID)) throw std::out_of_range("EntityManager::removeComponentsFrom: Attempt to index out of bounds");
-				auto compRange = m_entityComponents[entityID].equal_range(componentID);
-				auto entryIter = std::find_if(compRange.first, compRange.second, [&](const auto& v){return v.second == instanceID; });
-				if (entryIter == compRange.second) return false;
-				if (!m_registry[componentID]->destroyComponent(instanceID)) throw std::logic_error(ak::buildString("EntityManager::removeComponentsFrom: Component Data Mismatch between EntityManager and ComponentManager '", m_registry[componentID]->name(), "'"));
-				m_entityComponents[entityID].erase(entryIter);
-				return true;
-			}
+			bool removeComponent(EntityID entityID, ComponentTID componentTID, ComponentID componentID);
+			template<typename type_t> bool removeComponent(EntityID entityID, ComponentID componentID);
 
-			template<typename type_t> bool removeComponent(EntityID entityID, const InstanceID& instanceID) {
-				return removeComponent(entityID, type_t::COMPONENT_ID, instanceID);
-			}
+			template<typename type_t> decltype(std::declval<type_t>().getInstance(ComponentID())) getComponent(EntityID entityID, ComponentID componentID);
+			template<typename type_t> decltype(std::declval<type_t>().getInstance(ComponentID())) getComponent(EntityID entityID);
+			template<typename type_t> ComponentID getComponentID(EntityID entityID) const;
 
-			// /////////// //
-			// // Query // //
-			// /////////// //
+			ComponentUID getInstanceUID(EntityID entityID, ComponentTID componentTID, ComponentID componentID) const;
+			CUIDRecord getInstanceID(ComponentUID componentID) const;
 
-			ComponentManager& getComponentManager(ComponentID componentID) {
-				return *m_registry.at(componentID);
-			}
+			std::vector<ComponentID> findComponentsOfTypeFor(ake::EntityID entityID, ake::ComponentTID componentID) const;
+			template<typename type_t> std::vector<ComponentID> findComponentsOfTypeFor(ake::EntityID entityID);
 
-			ComponentManager& getComponentManager(ComponentID componentID) const {
-				return *m_registry.at(componentID);
-			}
+			// ///////////////////// //
+			// // Component Types // //
+			// ///////////////////// //
+			ComponentManager& getComponentType(ComponentTID componentID);
+			const ComponentManager& getComponentType(ComponentTID componentID) const;
 
-			template<typename type_t> type_t& getComponentManager() {
-				return dynamic_cast<type_t&>(*m_registry.at(type_t::COMPONENT_ID));
-			}
+			template<typename type_t> type_t& getComponentType();
+			template<typename type_t> const type_t& getComponentType() const;
 
-			template<typename type_t> type_t& getComponentManager() const {
-				return dynamic_cast<type_t&>(*m_registry.at(type_t::COMPONENT_ID));
-			}
-
-			std::vector<EntityID> findAllEntitiesNamed(const std::string& name) const {
-				auto iter = m_lookupEntitiesByName.find(name);
-				if (iter == m_lookupEntitiesByName.end()) return {};
-				return m_names[iter->second].second.getContainer();
-			}
-
-			std::string nameFor(EntityID entityID) const { return m_names[m_entityNames[entityID]].first; }
-			akSize entityCount() const { return m_entityNames.size(); }
+			std::vector<ComponentTID> findComponentTypesFor(ake::EntityID entityID) const;
 	};
 
 	using ComponentManagerFactory_f  = std::unique_ptr<ComponentManager>();
-	using RegisterComponentManger_f = void(ComponentID id, const std::function<ComponentManagerFactory_f>& factoryFunc);
+	using RegisterComponentManger_f = void(ComponentTID id, const std::function<ComponentManagerFactory_f>& factoryFunc);
 	AK_DEFINE_EVENT(RegisterComponentManagersEvent, RegisterComponentManger_f*, false);
 	const akev::DispatcherProxy<RegisterComponentManagersEvent>& registerComponentManagersEventDispatch();
+}
+
+namespace ake {
+	template<typename type_t, typename... vargs_t> ComponentID EntityManager::addComponent(ComponentUID componentUID, EntityID entityID, const vargs_t&... vargs) {
+		if (!m_entities.exists(entityID)) throw std::out_of_range("EntityManager::addNewComponent: Attempt to index out of bounds");
+		if (getInstanceID(componentUID)) return {};
+
+		auto componentID = getComponentType<type_t>().newComponent(*this, entityID, std::forward<const vargs_t&>(vargs)...);
+		if (!componentID) throw std::runtime_error("EntityManager::addComponent: Failed to create component");
+
+		m_entities[entityID].components[type_t::COMPONENT_TID].push_back(componentID);
+		associateCUID(componentUID, CUIDRecord{entityID, type_t::COMPONENT_TID, componentID});
+
+		return componentID;
+	}
+
+	template<typename type_t, typename... vargs_t> ComponentID EntityManager::addComponent(EntityID entityID, const vargs_t&... vargs) {
+		ComponentID result;
+		while(!(result = addComponent<type_t, vargs_t...>(m_cuidGenerator(*this), entityID, std::forward<const vargs_t&>(vargs)...)));
+		return result;
+	}
+
+	template<typename type_t> bool EntityManager::removeComponent(EntityID entityID, ComponentID componentID) {
+		return removeComponent(entityID, type_t::COMPONENT_ID, componentID);
+	}
+
+	template<typename type_t> decltype(std::declval<type_t>().getInstance(ComponentID())) EntityManager::getComponent(EntityID entityID, ComponentID componentID) {
+		if (!m_entities.exists(entityID)) throw std::out_of_range("EntityManager::getComponent: Attempt to index entity out of bounds");
+		if (m_lookupCUIDByCID.find(CUIDRecord{entityID, type_t::COMPONENT_ID, componentID}) == m_lookupCUIDByCID.end()) throw std::out_of_range("EntityManager::getComponent: Attempt to index component out of bounds");
+		return getComponentType<type_t>().getInstance(componentID);
+	}
+
+	template<typename type_t> decltype(std::declval<type_t>().getInstance(ComponentID())) EntityManager::getComponent(EntityID entityID) {
+		return getComponentType<type_t>().getInstance(getComponentID<type_t>(entityID));
+	}
+
+	template<typename type_t> ComponentID EntityManager::getComponentID(EntityID entityID) const {
+		if (!m_entities.exists(entityID)) throw std::out_of_range("EntityManager::getComponentID: Attempt to index entity out of bounds");
+
+		auto componentIter = m_entities[entityID].components.find(type_t::COMPONENT_TID);
+		if (componentIter == m_entities[entityID].components.end()) throw std::out_of_range("EntityManager::getComponentID: Attempt to index component out of bounds");
+		if (componentIter->second.size() != 1) throw std::out_of_range("EntityManager::getComponentID: Attempt to index component out of bounds");
+
+		return componentIter->second.front();
+	}
+
+	template<typename type_t> type_t& EntityManager::getComponentType() {
+		return dynamic_cast<type_t&>(getComponentType(type_t::COMPONENT_TID));
+	}
+
+	template<typename type_t> const type_t& EntityManager::getComponentType() const {
+		return dynamic_cast<type_t&>(getComponentType(type_t::COMPONENT_TID));
+	}
+
+	template<typename type_t> std::vector<ComponentID> EntityManager::findComponentsOfTypeFor(ake::EntityID entityID) {
+		return findComponentsOfTypeFor(entityID, type_t::COMPONENT_ID);
+	}
 }
 
 #endif

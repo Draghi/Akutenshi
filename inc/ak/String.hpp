@@ -48,9 +48,7 @@ namespace ak {
 	}
 
 	namespace internal {
-		template<typename type_t> void buildString(std::stringstream& sstream, const typename std::enable_if<!(std::is_invocable<type_t>::value || std::is_function<type_t>::value), type_t>::type& val) { sstream << val; }
-		template<typename type_t> void buildString(std::stringstream& sstream, const typename std::enable_if<std::is_invocable<type_t>::value || std::is_function<type_t>::value, type_t>::type& val) { sstream << val(); }
-
+		template<typename type_t> void buildString(std::stringstream& sstream, const type_t& val) { sstream << val; }
 	}
 
 	template<typename type_t> std::stringstream& buildString(std::stringstream& sstream, const type_t& val) {

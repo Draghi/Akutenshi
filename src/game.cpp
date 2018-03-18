@@ -18,19 +18,19 @@
 #include <ak/animation/Mesh.hpp>
 #include <ak/animation/MeshPoseData.hpp>
 #include <ak/animation/Skeleton.hpp>
-#include <ak/animation/Type.hpp>
 #include <ak/animation/Serialize.hpp>
+#include <ak/animation/Type.hpp>
 #include <ak/container/SlotMap.hpp>
 #include <ak/container/SparseGrid.hpp>
 #include <ak/data/Brotli.hpp>
 #include <ak/data/Image.hpp>
 #include <ak/data/MsgPack.hpp>
 #include <ak/data/PValue.hpp>
+#include <ak/engine/components/Transform3D.hpp>
 #include <ak/engine/Camera.hpp>
 #include <ak/engine/Config.hpp>
 #include <ak/engine/ECS.hpp>
 #include <ak/event/Dispatcher.hpp>
-#include <ak/event/Subscription.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Filesystem.hpp>
 #include <ak/input/Keyboard.hpp>
@@ -68,47 +68,18 @@
 #include <cstddef>
 #include <experimental/filesystem>
 #include <iomanip>
+#include <iterator>
+#include <memory>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
-class CompTest : public ake::ComponentManager {
-	AKE_DEFINE_COMPONENT_MANAGER(CompTest)
-	public:
-		struct DataStruct {
-			int v;
-		};
-
-	private:
-		akc::SlotMap<DataStruct> m_data;
-		std::unordered_map<ake::InstanceID, ake::EntityID> m_entityLookup;
-
-	protected:
-		ake::InstanceID createComponentFor(ake::EntityID entityID, DataStruct val) {
-			auto result = m_data.insert(val).first;
-			m_entityLookup.emplace(result, entityID);
-			return result;
-		}
-
-		bool destroyComponent(ake::InstanceID instanceID) override {
-			m_data.erase(instanceID);
-			m_entityLookup.erase(instanceID);
-			return true;
-		}
-
-	public:
-		CompTest() {}
-		~CompTest() override {}
-
-		DataStruct& getInstance(ake::InstanceID id) { return m_data[id]; }
-
-};
-
 static const auto compTestRegistrationEv = ake::registerComponentManagersEventDispatch().subscribe([](ake::RegisterComponentManagersEvent& ev){
-	ev.data()(CompTest::COMPONENT_ID, [](){return std::make_unique<CompTest>();});
+	ev.data()(akec::Transform3D::COMPONENT_TID, [](){return std::make_unique<akec::Transform3D>();});
 });
 
 int akGameMain();
@@ -151,21 +122,23 @@ int akGameMain() {
 static void startGame() {
 	constexpr ak::log::Logger log(AK_STRING_VIEW("Main"));
 
-	auto ecs = ake::createEntityManager();
-	auto id = ecs.createEntity("Bomb");
-	if (!id) log.warn("Failed to create entity");
-	const auto& r = ecs.findAllEntitiesNamed("Bomb");
-	auto cID = ecs.addComponent<CompTest>(id, CompTest::DataStruct{10});
-	if (!cID.isValid()) log.warn("Failed to add component");
-	log.info("Component Value: ", ecs.getComponentManager<CompTest>().getInstance(cID).v);
-	if (!ecs.removeComponent<CompTest>(id, cID)) log.warn("Failed to remove component");
-	if (!r.size()) log.warn("Could not find named entity");
-	if (!ecs.destroyEntity(id)) log.warn("Failed to destroy entity");
+	auto ecs = ake::createEntityManager(
+		[](auto&) { static ake::EntityUID   uid = 0; return ++uid; },
+		[](auto&) { static ake::ComponentUID uid = 0; return ++uid; }
+	);
+
+	//auto objID  = ecs.newEntity("TestObject");
+	//auto instID = ecs.addComponent<akec::Transform3D>(objID, akm::Vec3(23.5f, 127.5f, 12.5f));
 
 	akc::sparsegrid::SparseGrid<int> octree(akm::Vec3(0,0,0), akm::Vec3(1,1,1));
-	octree.insert(0, akm::Vec3(1.5f, 20.5f, 1.5f), akm::Vec3(.5, .5, .5));
-	octree.insert(0, akm::Vec3(23.5f, 34.f, 23.f), akm::Vec3(.5,.5,.5));
-	octree.insert(0, akm::Vec3(23.5f, 255.5f, 12.5f), akm::Vec3(.5,.5,.5));
+	octree.insert(0, akm::Vec3(1.5f,    20.5f, 1.5f), akm::Vec3(.5,.5,.5));
+	octree.insert(0, akm::Vec3(23.5f,   34.f,  23.f), akm::Vec3(.5,.5,.5));
+	octree.insert(0, akm::Vec3(23.5f, 127.5f, 12.5f), akm::Vec3(.5,.5,.5));
+
+	auto baseEID = ecs.newEntity("Base");   ecs.addComponent<akec::Transform3D>(baseEID,  akm::Vec3{0,0,0}, akm::Quat{0,0,0,0}, akm::Vec3{1,1,1}, ake::ComponentID());
+	auto child1EID = ecs.newEntity("Child"); ecs.addComponent<akec::Transform3D>(child1EID, akm::Vec3{5,0,0}, akm::Quat{0,0,0,0}, akm::Vec3{1,1,1}, ecs.getComponentID<akec::Transform3D>(baseEID));
+	auto child2EID = ecs.newEntity("Child"); ecs.addComponent<akec::Transform3D>(child2EID, akm::Vec3{2.5,0,0}, akm::Quat{0,0,0,0}, akm::Vec3{1,1,1}, ecs.getComponentID<akec::Transform3D>(child1EID));
+
 
 	// Skybox
 		akr::ShaderProgram shaderSkybox = buildShaderProgram({
@@ -365,6 +338,25 @@ static void startGame() {
 					});
 				akrd::popMatrix(akrd::Matrix::Model);
 
+			// ECS Test
+			akrd::pushMatrix(akrd::Matrix::Model);
+				akrd::setColour({0.25, 0.25,   1});
+				akrd::setMatrix(akrd::Matrix::Model, ecs.getComponent<akec::Transform3D>(baseEID).worldTransform());
+				akrd::draw(dlFilledCube);
+
+				akrd::setColour({  1, 0.25, 0.25});
+				akrd::setMatrix(akrd::Matrix::Model, ecs.getComponent<akec::Transform3D>(child1EID).worldTransform());
+				akrd::draw(dlFilledCube);
+
+				/*akrd::setColour({0.25,   1, 0.25});
+				akrd::setMatrix(akrd::Matrix::Model, ecs.getComponent<akec::Transform3D>(child2EID).worldTransform());
+				akrd::draw(dlFilledCube);*/
+
+				akrd::setColour({0.25, 0.25, 0.25});
+				akrd::setMatrix(akrd::Matrix::Model, akm::translate(ecs.getComponent<akec::Transform3D>(child2EID).worldPosition()) * akm::mat4_cast(ecs.getComponent<akec::Transform3D>(child2EID).worldRotation()) * akm::scale(ecs.getComponent<akec::Transform3D>(child2EID).worldScale()));
+				akrd::draw(dlFilledCube);
+			akrd::popMatrix(akrd::Matrix::Model);
+
 		// Finish
 		akw::swapBuffer();
 	};
@@ -397,6 +389,13 @@ static void startGame() {
 
 		if (akw::keyboard().wasPressed(akin::Key::H)) updating = !updating;
 		if (akw::keyboard().wasPressed(akin::Key::B)) drawBoxes = !drawBoxes;
+
+		ecs.getComponent<akec::Transform3D>(baseEID).setLocalRotation(akm::rotateQ(time, akm::Vec3(0,0,1)));
+
+		ecs.getComponent<akec::Transform3D>(child1EID).setLocalScale({akm::abs(akm::sin(time)), akm::abs(akm::sin(time)), akm::abs(akm::sin(time))});
+		ecs.getComponent<akec::Transform3D>(child1EID).setLocalRotation(akm::rotateQ(time*4, akm::Vec3(0,0,1)));
+
+		ecs.getComponent<akec::Transform3D>(child2EID).setLocalPosition(akm::Vec3(2.5, 0, 0) + akm::Vec3(akm::sin(time)*1.5, 0, 0));
 	};
 
 	fpSingle updateAccum = 0;

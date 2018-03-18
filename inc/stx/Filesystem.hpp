@@ -19,10 +19,10 @@
 
 #if __has_include("filesystem")
 #	include <filesystem>
-#endif
-
-#if defined(AK_ECLIPSE_INDEXER_ENABLER) || __has_include("experimental/filesystem")
+#elif defined(AK_ECLIPSE_INDEXER_ENABLER) || __has_include("experimental/filesystem")
 #	include <experimental/filesystem>
+#else
+#	error "Unsupported environement. Missing filesystem"
 #endif
 
 namespace std {
