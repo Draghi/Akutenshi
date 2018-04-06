@@ -14,235 +14,162 @@
  * limitations under the License.
  **/
 
-#include <ak/container/SlotMap.hpp>
-#include <ak/container/UnorderedVector.hpp>
 #include <ak/engine/ECS.hpp>
-#include <ak/event/Dispatcher.hpp>
-#include <ak/Iter.hpp>
-#include <ak/PrimitiveTypes.hpp>
-#include <ak/String.hpp>
-#include <ext/type_traits.h>
-#include <algorithm>
-#include <functional>
-#include <iterator>
-#include <memory>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <utility>
-#include <vector>
 
 using namespace ake;
 
-// //////////// //
-// // Entity // //
-// //////////// //
+// /////////////////// //
+// // EntityManager // //
+// /////////////////// //
 
-struct Entity final {
-	std::string name;
-	std::unordered_multimap<ComponentTID, ComponentID> components;
-	bool persistant;
-	Entity(const std::string& nameVal) : name(nameVal), persistant(false) {}
-};
-
-// ///////// //
-// // Fwd // //
-// ///////// //
-
-namespace ake {
-	namespace internal {
-		struct ComponentManagerAccessor {
-			static void registerComponentManager(ComponentTID id, const std::function<ComponentManagerFactory_f>& factoryFunc);
-		};
-	}
+EntityManager::EntityManager(std::function<EntityUIDGenerator_f> entityUIDGenerator) : m_components(), m_entityUIDGenerator(entityUIDGenerator) {
+	for(auto& component : m_components) component.second->m_entityManager = this;
 }
 
-static akev::Dispatcher<RegisterComponentManagersEvent>& registerComponentManagersEventDispatcher();
-
-// ////////// //
-// // Data // //
-// ////////// //
-static std::unordered_map<ComponentTID, std::function<ComponentManagerFactory_f>>& registry() {
-	static std::unordered_map<ComponentTID, std::function<ComponentManagerFactory_f>> instance;
-	return instance;
+EntityManager::EntityManager(EntityManager&& other)
+	: m_components(std::move(other.m_components)), m_entityUIDGenerator(std::move(other.m_entityUIDGenerator)),
+	  m_nameStorage(std::move(other.m_nameStorage)), m_entityNameID(std::move(other.m_entityNameID)), m_lookupEntitiesByName(std::move(other.m_lookupEntitiesByName)),
+	  m_entityComponentIDs(std::move(other.m_entityComponentIDs)), m_entityUID(std::move(other.m_entityUID)), m_lookupEntityByUID(std::move(other.m_lookupEntityByUID)) {
+	for(auto& component : m_components) component.second->m_entityManager = this;
 }
 
-// //////////////////// //
-// // Implementation // //
-// //////////////////// //
+EntityManager& EntityManager::operator=(EntityManager&& other) {
+	m_components = std::move(other.m_components);
+	m_entityUIDGenerator = std::move(other.m_entityUIDGenerator);
 
-static bool& hasInit() { static bool hasInit = false; return hasInit; }
-static void assertHasInit() { if (!hasInit()) throw std::logic_error("Entity Component System is not initialized."); }
+	m_nameStorage = std::move(other.m_nameStorage);
+	m_entityNameID = std::move(other.m_entityNameID);
+	m_lookupEntitiesByName = std::move(other.m_lookupEntitiesByName);
 
-bool ake::initEntityComponentSystem() {
-	if (std::exchange(hasInit(), true)) return false;
-	RegisterComponentManagersEvent event(ake::internal::ComponentManagerAccessor::registerComponentManager);
-	registerComponentManagersEventDispatcher().send(event);
-	return true;
+	m_entityComponentIDs = std::move(other.m_entityComponentIDs);
+	m_entityUID = std::move(other.m_entityUID);
+	m_lookupEntityByUID = std::move(other.m_lookupEntityByUID);
+
+	for(auto& component : m_components) component.second->m_entityManager = this;
+
+	return *this;
 }
 
-EntityManager ake::createEntityManager(const std::function<EUIDGenerator_f>& euidGenerator, const std::function<CUIDGenerator_f>& cuidGenerator) {
-	assertHasInit();
-	std::unordered_map<ComponentTID, std::unique_ptr<ComponentManager>> componentRegistry;
-	for(auto& entry : registry()) componentRegistry.emplace(entry.first, entry.second());
-	return EntityManager(std::move(componentRegistry), euidGenerator, cuidGenerator);
+
+// ////////////// //
+// // Entities // //
+// ////////////// //
+EntityUID EntityManager::nextEntityUID() {
+	EntityUID uid;
+	while(m_lookupEntityByUID.find(uid = m_entityUIDGenerator(*this)) != m_lookupEntityByUID.end());
+	return uid;
 }
 
-// ////////////////////////////// //
-// // Controlled Functionality // //
-// ////////////////////////////// //
-
-inline void ake::internal::ComponentManagerAccessor::registerComponentManager(ComponentTID id, const std::function<ComponentManagerFactory_f>& factoryFunc) {
-	auto result = registry().insert(std::make_pair(id, factoryFunc));
-	if (!result.second) throw std::logic_error(ak::buildString("EntityManager: ID conflict occurred for '", id, "'"));
+EntityID EntityManager::newEntity(EntityUID targetUID, akc::SlotID nameID) {
+	auto entityID = m_entityNameID.insert(nameID).first;
+	if (m_entityComponentIDs.insert({}).first != entityID) throw std::logic_error("EntityManager: Corrupted data, entityID mismatch in storage.");
+	if (!m_lookupEntityByUID.emplace(targetUID, entityID).second) throw std::logic_error("EntityManager: Corrupted data, entityUID already in use.");
+	auto name = m_nameStorage[nameID];
+	m_lookupEntitiesByName[name].second.insert(entityID);
+	return entityID;
 }
 
-// //////////////////// //
-// // Entity Manager // //
-// //////////////////// //
-EntityManager::EntityManager(std::unordered_map<ComponentTID, std::unique_ptr<ComponentManager>>&& registry, const std::function<EUIDGenerator_f>& euidGenerator, const std::function<CUIDGenerator_f>& cuidGenerator) : m_componentTypes(std::move(registry)), m_euidGenerator(euidGenerator), m_cuidGenerator(cuidGenerator) {}
+EntityID EntityManager::newEntity(EntityUID targetUID, const std::string& name) {
+	// Ensure no conflict
+	if (m_lookupEntityByUID.find(targetUID) != m_lookupEntityByUID.end()) return EntityID();
 
-EntityID EntityManager::newEntity(EntityUID euid, const akc::SlotID& nameID) {
-	auto entityID = m_entities.insert(Entity{euid, nameID, {}}).first;
-	if (!entityID) throw std::runtime_error("EntityManager::createEntity: Failed to create new entity!");;
-	m_names[nameID].second.insert(entityID);
-	return m_lookupEIDbyEUID.emplace(euid, entityID).second ? entityID : EntityID{};
-}
+	// Create lookup record
+	auto nameRecord = m_lookupEntitiesByName.insert({name, {akc::SlotID(), {}}});
+	if (nameRecord.second) nameRecord.first->second.first = m_nameStorage.insert(name).first;
 
-EntityID EntityManager::newEntity(EntityUID euid, const std::string& name) {
-	auto nameResult = m_lookupNIDbyName.emplace(name, m_names.insert(names_t{name,{}}).first);
-	auto result = newEntity(euid, nameResult.first->second);
-	if ((!result) && (nameResult.second)) m_lookupNIDbyName.erase(name);
-	return result;
-}
-
-EntityID EntityManager::newEntity(const akc::SlotID& nameID) {
-	EntityID result;
-	while(!(result = newEntity(m_euidGenerator(*this), nameID)));
-	return result;
+	// Create entity
+	return newEntity(targetUID, nameRecord.first->second.first);
 }
 
 EntityID EntityManager::newEntity(const std::string& name) {
-	auto nameID = m_lookupNIDbyName.emplace(name, m_names.insert(names_t{name,{}}).first).first->second;
-	return newEntity(nameID);
+	return newEntity(nextEntityUID(), name);
 }
 
 bool EntityManager::deleteEntity(EntityID entityID) {
-	// Remove Components
-	auto& entity = m_entities[entityID];
-	for(auto& entry : entity.components) {
-		auto& componentType = getComponentType(entry.first);
-		for(auto componentID : entry.second) componentType.deleteComponent(*this, entityID, componentID);
-	}
+	auto componentIDs = m_entityComponentIDs[entityID];
+	for(auto componentID : componentIDs) destroyComponent(entityID, componentID);
+	m_entityComponentIDs.erase(entityID);
 
-	// Update Name Lookup
-	auto & namedEntities = m_names.at(entity.name);
-	namedEntities.second.erase(ak::find(namedEntities.second, entityID));
-	if (namedEntities.second.size() == 0) {
-		m_lookupNIDbyName.erase(namedEntities.first);
-		m_names.erase(entity.name);
+	auto& nameLookup = m_lookupEntitiesByName[m_nameStorage[m_entityNameID[entityID]]].second;
+	nameLookup.erase(ak::find(nameLookup, entityID));
+	if (nameLookup.size() == 0) {
+		m_lookupEntitiesByName.erase(m_nameStorage[m_entityNameID[entityID]]);
+		m_nameStorage.erase(m_entityNameID[entityID]);
 	}
+	m_entityNameID.erase(entityID);
 
-	m_lookupEIDbyEUID.erase(entity.uid);
-	m_entities.erase(entityID);
+	m_lookupEntityByUID.erase(m_entityUID[entityID]);
+	m_entityUID.erase(entityID);
 
 	return true;
 }
 
-void EntityManager::deleteAllEntities() {
-	while(!m_entities.empty()) deleteEntity(m_entities.slotIDFor(m_entities.rbegin()));
+std::string EntityManager::entityName(EntityID entityID) const {
+	return m_nameStorage[m_entityNameID[entityID]];
 }
 
-bool EntityManager::removeComponent(EntityID entityID, ComponentTID componentTID, ComponentID componentID) {
-	if (!m_entities.exists(entityID)) throw std::out_of_range("EntityManager::removeComponentsFrom: Attempt to index out of bounds");
+std::unordered_set<ComponentID> EntityManager::entityComponentIDs(EntityID entityID) const {
+	return m_entityComponentIDs[entityID];
+}
 
-	auto& components = m_entities[entityID].components;
-	auto& componentsOfType = components.at(componentTID);
+// ////////////// //
+// // Instance // //
+// ////////////// //
+bool EntityManager::destroyComponent(EntityID entityID, ComponentID componentID) {
+	auto& componentIDs = m_entityComponentIDs[entityID];
+	auto iter = componentIDs.find(componentID);
+	if (iter == componentIDs.end()) return true;
 
-	auto entryIter = ak::find(componentsOfType, componentID);
-	if (entryIter == componentsOfType.end()) return false;
-	if (!m_componentTypes[componentTID]->deleteComponent(*this, entityID, componentID)) throw std::logic_error(ak::buildString("EntityManager::removeComponentsFrom: Component Data Mismatch between EntityManager and ComponentManager '", m_componentTypes[componentTID]->name(), "'"));
-
-	componentsOfType.erase(entryIter);
-
-	CUIDRecord cuidRecord{entityID, componentTID, componentID};
-	deassociateCUID(m_lookupCUIDByCID.at(cuidRecord), cuidRecord);
+	if (!m_components.at(componentID)->destroyComponent(entityID)) return false;
+	componentIDs.erase(componentID);
 
 	return true;
 }
 
-void EntityManager::associateCUID(ComponentUID componentUID, CUIDRecord cuidRecord) {
-	m_lookupCIDbyCUID.emplace(componentUID, cuidRecord);
-	m_lookupCUIDByCID.emplace(cuidRecord, componentUID);
+bool EntityManager::serializeComponent(akd::PValue& dest, EntityID entityID, ComponentID componentID) {
+	auto& componentIDs = m_entityComponentIDs[entityID];
+	auto iter = componentIDs.find(componentID);
+	if (iter != componentIDs.end()) return false;
+
+	return m_components.at(componentID)->serializeComponent(dest, entityID);
 }
 
-void EntityManager::deassociateCUID(ComponentUID componentUID, CUIDRecord cuidRecord) {
-	m_lookupCIDbyCUID.erase(componentUID);
-	m_lookupCUIDByCID.erase(cuidRecord);
+bool EntityManager::deserializeComponent(EntityID entityID, ComponentID componentID, const akd::PValue& src) {
+	auto& componentIDs = m_entityComponentIDs[entityID];
+	auto iter = componentIDs.find(componentID);
+	if (iter != componentIDs.end()) return false;
+
+	if (!m_components.at(componentID)->deserializeComponent(entityID, src)) return false;
+	componentIDs.insert(componentID);
+	return true;
 }
 
-ComponentManager& EntityManager::getComponentType(ComponentTID componentTID) {
-	return *m_componentTypes.at(componentTID);
+bool EntityManager::hasComponent(EntityID entityID, ComponentID componentID) const {
+	return componentManager(componentID).hasComponent(entityID);
 }
 
-const ComponentManager& EntityManager::getComponentType(ComponentTID componentTID) const {
-	return *m_componentTypes.at(componentTID);
+// //////////////// //
+// // Components // //
+// //////////////// //
+
+bool EntityManager::registerComponentManager(std::unique_ptr<ComponentManager>&& component) {
+	auto result = m_components.emplace(component->id(), std::move(component));
+	if (!result.second) return false;
+	result.first->second->m_entityManager = this;
+	return true;
 }
 
-ComponentUID EntityManager::getInstanceUID(EntityID entityID, ComponentTID componentTID, ComponentID componentID) const {
-	auto iter = m_lookupCUIDByCID.find({entityID, componentTID, componentID});
-	return (iter != m_lookupCUIDByCID.end()) ? iter->second : 0;
+bool EntityManager::componentManagerExists(ComponentID componentID) {
+	return m_components.find(componentID) != m_components.end();
 }
 
-CUIDRecord EntityManager::getInstanceID(ComponentUID componentUID) const {
-	auto iter = m_lookupCIDbyCUID.find(componentUID);
-	return (iter != m_lookupCIDbyCUID.end()) ? iter->second : CUIDRecord{{},{},{}};
+ComponentManager& EntityManager::componentManager(ComponentID componentID) {
+	return *m_components.at(componentID);
 }
 
-std::vector<EntityID> EntityManager::findEntitiesNamed(const std::string& name) const {
-	auto iter = m_lookupNIDbyName.find(name);
-	return iter != m_lookupNIDbyName.end() ? m_names[iter->second].second.getContainer() : std::vector<EntityID>{};
+const ComponentManager& EntityManager::componentManager(ComponentID componentID) const {
+	return *m_components.at(componentID);
 }
 
-std::vector<ComponentID> EntityManager::findComponentsOfTypeFor(ake::EntityID entityID, ake::ComponentTID componentTID) const {
-	if (!m_entities.exists(entityID)) throw std::out_of_range("EntityManager::findAllComponentInstancesInEntity: Attempt to index out of bounds");
-	auto& components = m_entities[entityID].components;
-	auto iter = components.find(componentTID);
-	return (iter != components.end()) ? iter->second : std::vector<ComponentID>{};
-}
 
-std::vector<ComponentTID> EntityManager::findComponentTypesFor(ake::EntityID entityID) const {
-	if (!m_entities.exists(entityID)) throw std::out_of_range("EntityManager::findAllComponentIDsFor: Attempt to index out of bounds");
-	auto& components = m_entities[entityID].components;
-	if (components.size() == 0) return {};
-	std::vector<ComponentTID> result; result.reserve(components.size());
-	for(auto& kvPair : components) result.push_back(kvPair.first);
-	return result;
-}
-
-std::string EntityManager::getEntityName(EntityID entityID) const {
-	return m_names[m_entities[entityID].name].first;
-}
-
-EntityUID EntityManager::getEntityUID(EntityID entityID) const {
-	return m_entities[entityID].uid;
-}
-
-akSize EntityManager::getEntityCount() const {
-	return m_entities.size();
-}
-
-// /////////// //
-// // Event // //
-// /////////// //
-
-static akev::Dispatcher<RegisterComponentManagersEvent>& registerComponentManagersEventDispatcher() {
-	static akev::Dispatcher<RegisterComponentManagersEvent> instance;
-	return instance;
-}
-
-const akev::DispatcherProxy<RegisterComponentManagersEvent>& ake::registerComponentManagersEventDispatch() {
-	static akev::DispatcherProxy<RegisterComponentManagersEvent> instance(registerComponentManagersEventDispatcher());
-	return instance;
-}
 

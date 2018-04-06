@@ -49,7 +49,6 @@ namespace akev {
 
 	template<typename data_t, bool isCancelableVal, EventNameFuncSig name_f> class Event : public internal::IEvent {
 		template<typename> friend class Dispatcher;
-
 		public:
 			static constexpr const std::string_view EVENT_NAME = name_f();
 			static constexpr akev::EventID EVENT_ID = akev::calculateEventID(EVENT_NAME);
@@ -76,7 +75,6 @@ namespace akev {
 
 	template<bool isCancelableVal, EventNameFuncSig name_f> class Event<void, isCancelableVal, name_f> : public internal::IEvent {
 		template<typename> friend class Dispatcher;
-
 		public:
 			static constexpr const std::string_view EVENT_NAME = name_f();
 			static constexpr akev::EventID EVENT_ID = akev::calculateEventID(EVENT_NAME);

@@ -47,7 +47,10 @@ static void APIENTRY ogl_logErrorCallback(GLenum source, GLenum type, GLuint id,
 		case GL_DEBUG_TYPE_MARKER:              sstream << "[Marker]"; break;
 		case GL_DEBUG_TYPE_PUSH_GROUP:          sstream << "[Push]"; break;
 		case GL_DEBUG_TYPE_POP_GROUP:           sstream << "[Pop]"; break;
-		case GL_DEBUG_TYPE_OTHER:               return;
+
+		case GL_DEBUG_TYPE_OTHER:
+			//sstream << "[Other]"; break;
+			return;
 	}
 
 	switch(source) {
@@ -82,7 +85,7 @@ void akr::init() {
 
 	static bool hasInit = false;
 	if (hasInit) return;
-	if (ogl_LoadFunctions() == ogl_LoadStatus::ogl_LOAD_FAILED) return;
+	if (ogl_LoadFunctions() == ogl_LoadStatus::ogl_LOAD_FAILED) throw std::runtime_error("Failed to load OpenGL functions.");
 
 	glDebugMessageCallback(ogl_logErrorCallback, nullptr);
 	glEnable(GL_DEBUG_OUTPUT);
@@ -133,17 +136,17 @@ void akr::drawIndexed(DrawType mode, IDataType indexType, uint32 vertexCount, ui
 
 
 	switch(mode) {
-		case DrawType::Points:           glDrawElements(GL_POINTS,                   vertexCount, dataType, static_cast<char*>(nullptr) + offset); break;
-		case DrawType::Lines:            glDrawElements(GL_LINES,                    vertexCount, dataType, static_cast<char*>(nullptr) + offset); break;
-		case DrawType::LinesAdj:         glDrawElements(GL_LINES_ADJACENCY,          vertexCount, dataType, static_cast<char*>(nullptr) + offset); break;
-		case DrawType::LineStrip:        glDrawElements(GL_LINE_STRIP,               vertexCount, dataType, static_cast<char*>(nullptr) + offset); break;
-		case DrawType::LineStripAdj:     glDrawElements(GL_LINE_STRIP_ADJACENCY,     vertexCount, dataType, static_cast<char*>(nullptr) + offset); break;
-		case DrawType::LineLoop:         glDrawElements(GL_LINE_LOOP,                vertexCount, dataType, static_cast<char*>(nullptr) + offset); break;
-		case DrawType::Triangles:        glDrawElements(GL_TRIANGLES,                vertexCount, dataType, static_cast<char*>(nullptr) + offset); break;
-		case DrawType::TrianglesAdj:     glDrawElements(GL_TRIANGLES_ADJACENCY,      vertexCount, dataType, static_cast<char*>(nullptr) + offset); break;
-		case DrawType::TriangleStrip:    glDrawElements(GL_TRIANGLE_STRIP,           vertexCount, dataType, static_cast<char*>(nullptr) + offset); break;
-		case DrawType::TriangleStripAdj: glDrawElements(GL_TRIANGLE_STRIP_ADJACENCY, vertexCount, dataType, static_cast<char*>(nullptr) + offset); break;
-		case DrawType::TriangleFan:      glDrawElements(GL_TRIANGLE_FAN,             vertexCount, dataType, static_cast<char*>(nullptr) + offset); break;
+		case DrawType::Points:           glDrawElements(GL_POINTS,                   vertexCount, dataType, reinterpret_cast<char*>(offset)); break;
+		case DrawType::Lines:            glDrawElements(GL_LINES,                    vertexCount, dataType, reinterpret_cast<char*>(offset)); break;
+		case DrawType::LinesAdj:         glDrawElements(GL_LINES_ADJACENCY,          vertexCount, dataType, reinterpret_cast<char*>(offset)); break;
+		case DrawType::LineStrip:        glDrawElements(GL_LINE_STRIP,               vertexCount, dataType, reinterpret_cast<char*>(offset)); break;
+		case DrawType::LineStripAdj:     glDrawElements(GL_LINE_STRIP_ADJACENCY,     vertexCount, dataType, reinterpret_cast<char*>(offset)); break;
+		case DrawType::LineLoop:         glDrawElements(GL_LINE_LOOP,                vertexCount, dataType, reinterpret_cast<char*>(offset)); break;
+		case DrawType::Triangles:        glDrawElements(GL_TRIANGLES,                vertexCount, dataType, reinterpret_cast<char*>(offset)); break;
+		case DrawType::TrianglesAdj:     glDrawElements(GL_TRIANGLES_ADJACENCY,      vertexCount, dataType, reinterpret_cast<char*>(offset)); break;
+		case DrawType::TriangleStrip:    glDrawElements(GL_TRIANGLE_STRIP,           vertexCount, dataType, reinterpret_cast<char*>(offset)); break;
+		case DrawType::TriangleStripAdj: glDrawElements(GL_TRIANGLE_STRIP_ADJACENCY, vertexCount, dataType, reinterpret_cast<char*>(offset)); break;
+		case DrawType::TriangleFan:      glDrawElements(GL_TRIANGLE_FAN,             vertexCount, dataType, reinterpret_cast<char*>(offset)); break;
 	}
 }
 

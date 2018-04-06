@@ -84,6 +84,8 @@ namespace akc {
 			const_reverse_iterator crbegin() const { return m_vec.crbegin(); }
 			const_reverse_iterator crend() const { return m_vec.crend(); }
 
+			void reserve(size_type count) { m_vec.reserve(count); }
+
 			void shrink_to_fit() { m_vec.shrink_to_fit(); }
 			bool empty() const { return m_vec.empty(); }
 			size_type size() const { return m_vec.size(); }

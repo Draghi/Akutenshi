@@ -32,6 +32,30 @@ namespace akm {
 	inline Mat4 mat4_cast(const Quat& x) { return glm::mat4_cast(x); }
 
 	inline Quat rotateQ(scalar_t angle, const akm::Vec3& axis) { return glm::rotate(akm::Quat(1,0,0,0), angle, axis); }
+
+	inline Quat inverse(const Quat& q) { return glm::inverse(q); }
+	inline Quat normalize(const Quat& q) { return glm::normalize(q); }
+
+	inline Quat fromEuler(const akm::Vec3& euler) {
+		return rotateQ(euler.y, {0, 1, 0}) * rotateQ(euler.z, {0, 0, 1}) * rotateQ(euler.x, {1, 0, 0});
+	}
+
+	inline Vec3 toEuler(const Quat& q) {
+		double test = q.x*q.y + q.z*q.w;
+
+		if (test >  0.499) return {0,  2*akm::atan2(q.x,q.w),  akm::PI/2}; // singularity at north pole
+		if (test < -0.499) return {0, -2*akm::atan2(q.x,q.w), -akm::PI/2}; // singularity at south pole
+
+	    scalar_t sqx = q.x*q.x;
+	    scalar_t sqy = q.y*q.y;
+	    scalar_t sqz = q.z*q.z;
+
+	    return {
+	    	akm::atan2(2*q.x*q.w - 2*q.y*q.z, 1 - 2*sqx - 2*sqz),
+	    	akm::atan2(2*q.y*q.w - 2*q.x*q.z, 1 - 2*sqy - 2*sqz),
+			akm::asin(2*test)
+	    };
+	}
 }
 
 #endif

@@ -25,7 +25,7 @@
 
 namespace ake {
 
-	class Camera {
+	/*class Camera {
 		public:
 			Camera() = default;
 			virtual ~Camera() = default;
@@ -36,9 +36,9 @@ namespace ake {
 
 			virtual akm::Vec3 position() const = 0;
 			virtual akm::Quat oritentation() const = 0;
-	};
+	};*/
 
-	class FPSCamera : public Camera {
+	class FPSCamera {
 		private:
 			mutable bool m_isDirty;
 			mutable akm::Mat4 m_cache;
@@ -57,7 +57,7 @@ namespace ake {
 		public:
 			FPSCamera() : m_isDirty(true), m_cache(1), m_look(), m_pos(0,0,0) {}
 
-			~FPSCamera() override {}
+			~FPSCamera() {}
 
 			void lookLR(fpSingle angle) {
 				m_isDirty = true;
@@ -82,25 +82,25 @@ namespace ake {
 			void moveY(fpSingle dist) { m_pos += akm::Vec3(   0, dist,    0); }
 			void moveZ(fpSingle dist) { m_pos += akm::Vec3(   0,    0, dist); }
 
-			akm::Vec3 position() { return m_pos; }
+			akm::Vec3& position() { return m_pos; }
 
-			akm::Vec3 up() const override {
+			akm::Vec3 up() const {
 				return cacheMat()[1];
 			}
 
-			akm::Vec3 forward() const override {
+			akm::Vec3 forward() const {
 				return cacheMat()[2];
 			}
 
-			akm::Vec3 right() const override {
+			akm::Vec3 right() const {
 				return cacheMat()[0];
 			}
 
-			akm::Vec3 position() const override {
+			akm::Vec3 position() const {
 				return m_pos;
 			}
 
-			akm::Quat oritentation() const override {
+			akm::Quat oritentation() const {
 				return akm::quat_cast(cacheMat());
 			}
 	};

@@ -30,8 +30,8 @@ namespace akev {
 	using SubscriberID = akc::SlotID;
 
 	template<typename event_t> class Dispatcher final {
-		Dispatcher(Dispatcher&) = delete;
-		Dispatcher& operator=(Dispatcher&) = delete;
+		Dispatcher(const Dispatcher&) = delete;
+		Dispatcher& operator=(const Dispatcher&) = delete;
 		public:
 			using event_type = event_t;
 			using callback_s = void(event_type&);
@@ -46,10 +46,12 @@ namespace akev {
 
 		public:
 			Dispatcher() : m_mediator(akt::current()) {}
+			Dispatcher(Dispatcher&&) = default;
+			Dispatcher& operator=(Dispatcher&&) = default;
+
 			~Dispatcher() {}
 
-			SubscriberID subscribe(const callback_t& func) { return m_callbacks.insert(func).first; }
-			template<typename func_t> SubscriberID subscribe(const func_t& func) { return subscribe(callback_t(func)); }
+			template<typename func_t> SubscriberID subscribe(const func_t& func) { return m_callbacks.insert(callback_t(func)).first; }
 
 			void unsubscribe(SubscriberID subscriber) {
 				if (m_sendCounter) m_freelist.push_back(subscriber);
@@ -69,6 +71,8 @@ namespace akev {
 			void mediate(const std::shared_ptr<event_type>& event) { m_mediator.schedule([this, event](){send(*event);}); }
 			template<typename... vargs_t> void mediate(vargs_t... vargs) { mediate(std::make_shared<event_type>(std::forward(vargs)...)); }
 
+			akSize subscriberCount() const { return m_callbacks.size(); }
+
 			EventID id() { return event_t::EVENT_ID; }
 			std::string_view name() { return event_t::EVENT_NAME; }
 	};
@@ -86,9 +90,7 @@ namespace akev {
 			DispatcherProxy(dispatcher_type& dispatcher) : m_dispatcher(dispatcher) {}
 			~DispatcherProxy() = default;
 
-			SubscriberID subscribe(const callback_t& func) const { return m_dispatcher.subscribe(func); }
-			template<typename func_t> SubscriberID subscribe(const func_t& func) { return subscribe(callback_t(func)); }
-
+			template<typename func_t> SubscriberID subscribe(const func_t& func) const { return m_dispatcher.subscribe(func); }
 			void unsubscribe(SubscriberID subscriber) const { return m_dispatcher.unsubscribe(subscriber); }
 
 			EventID id() const { return m_dispatcher.id(); }
