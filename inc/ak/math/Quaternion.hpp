@@ -56,6 +56,39 @@ namespace akm {
 			akm::asin(2*test)
 	    };
 	}
+
+	inline Vec3 extractAxisX(const Quat& q) {
+		scalar_t qyy(q.y * q.y);
+		scalar_t qzz(q.z * q.z);
+		scalar_t qxz(q.x * q.z);
+		scalar_t qxy(q.x * q.y);
+		scalar_t qwy(q.w * q.y);
+		scalar_t qwz(q.w * q.z);
+
+		return {1 - 2 * (qyy +  qzz), 2 * (qxy + qwz), 2 * (qxz - qwy)};
+	}
+
+	inline Vec3 extractAxisY(const Quat& q) {
+		scalar_t qxx(q.x * q.x);
+		scalar_t qzz(q.z * q.z);
+		scalar_t qxy(q.x * q.y);
+		scalar_t qyz(q.y * q.z);
+		scalar_t qwx(q.w * q.x);
+		scalar_t qwz(q.w * q.z);
+
+		return {2 * (qxy - qwz), 1 - 2 * (qxx +  qzz), 2 * (qyz + qwx)};
+	}
+
+	inline Vec3 extractAxisZ(const Quat& q) {
+		scalar_t qxx(q.x * q.x);
+		scalar_t qyy(q.y * q.y);
+		scalar_t qxz(q.x * q.z);
+		scalar_t qyz(q.y * q.z);
+		scalar_t qwx(q.w * q.x);
+		scalar_t qwy(q.w * q.y);
+
+		return {2 * (qxz + qwy), 2 * (qyz - qwx), 1 - 2 * (qxx +  qyy)};
+	}
 }
 
 #endif

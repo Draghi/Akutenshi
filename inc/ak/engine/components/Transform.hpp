@@ -167,10 +167,17 @@ namespace ake {
 	class TransformManager final : public ComponentManager {
 		AKE_DEFINE_COMPONENT_MANAGER(TransformManager, Transform)
 		private:
-			struct TransformNode final {
+			struct LocalTransformNode final {
 				akm::Vec3 position;
 				akm::Quat rotation;
 				akm::scalar_t scale;
+			};
+
+			struct GlobalTransformNode final {
+				akm::Vec3 position;
+				akm::Quat rotation;
+				akm::scalar_t scale;
+				bool isDirty;
 			};
 
 			struct CacheNode final {
@@ -181,8 +188,10 @@ namespace ake {
 			};
 
 
-			std::unordered_map<EntityID, TransformNode> m_transform;
-			std::unordered_map<EntityID, CacheNode> m_cache;
+			std::unordered_map<EntityID, LocalTransformNode> m_transform;
+			mutable std::unordered_map<EntityID, GlobalTransformNode> m_globalTransform;
+
+			//std::unordered_map<EntityID, CacheNode> m_cache;
 
 			akev::SubscriberID m_entityGraphID;
 
@@ -194,12 +203,10 @@ namespace ake {
 			}
 
 			void markDirty(EntityID id) const {
-				m_cache.at(id).isLocalDirty = true;
-
 				std::deque<EntityID> dirtyList({id});
 				while(!dirtyList.empty()) {
 					// If the parent node is already dirty it's children should already be flagged.
-					if (!std::exchange(m_cache.at(dirtyList.front()).isGlobalDirty, true)) {
+					if (!std::exchange(m_globalTransform.at(dirtyList.front()).isDirty, true)) {
 						auto& children = entityManager().entityChildrenIDs(dirtyList.front());
 						dirtyList.insert(dirtyList.end(), children.begin(), children.end());
 					}
@@ -209,8 +216,8 @@ namespace ake {
 
 		protected:
 			bool createComponent(EntityID entityID, const akm::Vec3& position = {0,0,0}, const akm::Quat& rotation = {1,0,0,0}, const akm::scalar_t& scale = 1.f, bool worldSpace = false) {
-				if (!m_transform.emplace(entityID, TransformNode{position, rotation, scale}).second) return false;
-				if (!m_cache.emplace(entityID, CacheNode{true, akm::Mat4(1), true, akm::Mat4(1)}).second) throw std::logic_error("ake::TransformManager: Data corruption, cache data exists when transform exists");
+				if (!m_transform.emplace(entityID, LocalTransformNode{position, rotation, scale}).second) return false;
+				if (!m_globalTransform.emplace(entityID, GlobalTransformNode{akm::Vec3(0,0,0), akm::Quat(1,0,0,0), 1, true}).second) throw std::logic_error("ake::TransformManager: Data corruption, cache data exists when transform exists");
 
 				if (worldSpace) {
 					setPosition(entityID, position);
@@ -225,19 +232,34 @@ namespace ake {
 				auto iter = m_transform.find(entityID);
 				if (iter == m_transform.end()) throw std::logic_error("ake::Transform: Data corruption, tried to delete non-existent instance.");
 				m_transform.erase(entityID);
-				m_cache.erase(entityID);
+				m_globalTransform.erase(entityID);
 				return true;
 			}
 
 			//return akm::translate(node.position) * akm::mat4_cast(node.rotation) * akm::scale({node.scale,node.scale,node.scale});
-			akm::Mat4 calculateTransformMatrix(const TransformNode& node) const {
-				auto rotationMatrix = node.scale * akm::mat3_cast(node.rotation);
+			akm::Mat4 calculateTransformMatrix(const akm::Vec3& pos, const akm::Quat& rot, fpSingle scl) const {
+				auto rotationMatrix = scl * akm::mat3_cast(rot);
 				return akm::Mat4(
 					akm::Vec4(akm::column(rotationMatrix, 0), 0),
 					akm::Vec4(akm::column(rotationMatrix, 1), 0),
 					akm::Vec4(akm::column(rotationMatrix, 2), 0),
-					akm::Vec4(node.position, 1)
+					akm::Vec4(pos, 1)
 				);
+			}
+
+			GlobalTransformNode getWorldTransform(EntityID entityID) const {
+				if (!entityID) return GlobalTransformNode{akm::Vec3(0,0,0), akm::Quat(1,0,0,0), 1.f, false};
+				auto& globalNode = m_globalTransform.at(entityID);
+				if (!std::exchange(globalNode.isDirty, false)) return globalNode;
+
+				// TODO Experimental, matrix-less transforms. Should be about ~38 multiplications rather than 64.
+				auto& localNode = m_transform.at(entityID);
+				auto parentNode = getWorldTransform(entityManager().entityParentID(entityID));
+				globalNode.position = parentNode.position + parentNode.rotation * (parentNode.scale * localNode.position);
+				globalNode.rotation = parentNode.rotation * localNode.rotation;
+				globalNode.scale    = parentNode.scale * localNode.scale;
+
+				return globalNode;
 			}
 
 		public:
@@ -247,27 +269,27 @@ namespace ake {
 			// ///////// //
 
 			akm::Mat4 localToWorld(EntityID entityID) const {
-				auto cacheIter = m_cache.find(entityID);
-				if (cacheIter == m_cache.end()) return akm::Mat4(1);
-				if (std::exchange(cacheIter->second.isGlobalDirty, false)) cacheIter->second.globalTransform = localToWorld(entityManager().entityParentID(entityID)) * localToParent(entityID);
-				return cacheIter->second.globalTransform;
+				auto cacheIter = m_globalTransform.find(entityID);
+				if (cacheIter == m_globalTransform.end()) return akm::Mat4(1);
+				auto transform = getWorldTransform(entityID);
+				return calculateTransformMatrix(transform.position, transform.rotation, transform.scale);
 			}
 
 			akm::Mat4 worldToLocal(EntityID entityID) const { return akm::inverse(localToWorld(entityID)); }
 
-			akm::Vec3 position(EntityID entityID) const { return akm::column(localToWorld(entityID), 3); }
+			akm::Vec3 position(EntityID entityID) const { return getWorldTransform(entityID).position; }
 
-			akm::Mat4 rotationMatrix(EntityID entityID) const { return akm::Mat3(localToWorld(entityID))/scale(entityID); }
-			akm::Quat rotationQuat(  EntityID entityID) const { return akm::quat_cast(rotationMatrix(entityID)); }
+			akm::Mat4 rotationMatrix(EntityID entityID) const { return akm::mat3_cast(rotationQuat(entityID)); }
+			akm::Quat rotationQuat(  EntityID entityID) const { return getWorldTransform(entityID).rotation; }
 			akm::Vec3 rotationEuler( EntityID entityID) const { return akm::toEuler(rotationQuat(entityID)); }
 
-			fpSingle scale(EntityID entityID) const { return akm::magnitude(akm::column(localToWorld(entityID), 0)); }
+			fpSingle scale(EntityID entityID) const { return getWorldTransform(entityID).scale; }
 
-			akm::Vec3 rightward(EntityID entityID) const { return akm::column(rotationMatrix(entityID), 0); }
-			akm::Vec3 leftward( EntityID entityID) const { return -upward(entityID); }
-			akm::Vec3 upward(   EntityID entityID) const { return akm::column(rotationMatrix(entityID), 1); }
+			akm::Vec3 rightward(EntityID entityID) const { return akm::extractAxisX(getWorldTransform(entityID).rotation); } //akm::column(rotationMatrix(entityID), 0); }
+			akm::Vec3 upward(   EntityID entityID) const { return akm::extractAxisY(getWorldTransform(entityID).rotation); } //akm::column(rotationMatrix(entityID), 1); }
+			akm::Vec3 forward(  EntityID entityID) const { return akm::extractAxisZ(getWorldTransform(entityID).rotation); } //akm::column(rotationMatrix(entityID), 2); }
+			akm::Vec3 leftward( EntityID entityID) const { return -rightward(entityID); }
 			akm::Vec3 downward( EntityID entityID) const { return -upward(entityID); }
-			akm::Vec3 forward(  EntityID entityID) const { return akm::column(rotationMatrix(entityID), 2); }
 			akm::Vec3 backward( EntityID entityID) const { return -forward(entityID); }
 
 			// ///////// //
@@ -280,9 +302,8 @@ namespace ake {
 				setLocalPosition(entityID, parentInvTransform * akm::Vec4(p, 1));
 			}
 
-
 			void setRotation(EntityID entityID, const akm::Mat4& r) {
-				setRotation(entityID, akm::quat_cast(r));
+				setRotation(entityID, akm::normalize(akm::quat_cast(r)));
 			}
 
 			void setRotation(EntityID entityID, const akm::Quat& r) {
@@ -341,9 +362,8 @@ namespace ake {
 			// ///////// //
 
 			akm::Mat4 localToParent(EntityID entityID) const {
-				auto& cacheEntry = m_cache.at(entityID);
-				if (std::exchange(cacheEntry.isLocalDirty, false)) cacheEntry.localTransform = calculateTransformMatrix(m_transform.at(entityID));
-				return cacheEntry.localTransform;
+				auto transform = m_transform.at(entityID);
+				return calculateTransformMatrix(transform.position, transform.rotation, transform.scale);
 			}
 
 			akm::Mat4 parentToLocal(EntityID entityID) const { return akm::inverse(localToParent(entityID)); }
@@ -356,11 +376,11 @@ namespace ake {
 
 			fpSingle localScale(EntityID entityID) const { return m_transform.at(entityID).scale; }
 
-			akm::Vec3 localRightward(EntityID entityID) const { return akm::column(localRotationMatrix(entityID), 0); }
+			akm::Vec3 localRightward(EntityID entityID) const { return akm::extractAxisX(m_transform.at(entityID).rotation); }
+			akm::Vec3 localUpward(   EntityID entityID) const { return akm::extractAxisY(m_transform.at(entityID).rotation); }
+			akm::Vec3 localForward(  EntityID entityID) const { return akm::extractAxisZ(m_transform.at(entityID).rotation); }
 			akm::Vec3 localLeftward( EntityID entityID) const { return -localRightward(entityID); }
-			akm::Vec3 localUpward(   EntityID entityID) const { return akm::column(localRotationMatrix(entityID), 1); }
 			akm::Vec3 localDownward( EntityID entityID) const { return -localUpward(entityID); }
-			akm::Vec3 localForward(  EntityID entityID) const { return akm::column(localRotationMatrix(entityID), 2); }
 			akm::Vec3 localBackward( EntityID entityID) const { return -localForward(entityID); }
 
 			// ///////// //
