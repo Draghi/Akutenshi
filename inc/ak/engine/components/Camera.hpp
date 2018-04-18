@@ -18,7 +18,7 @@
 #define AK_ENGINE_COMPONENTS_CAMERA_HPP_
 
 #include <ak/engine/components/Transform.hpp>
-#include <ak/engine/ECS.hpp>
+#include <ak/engine/EntityManager.hpp>
 #include <ak/event/Dispatcher.hpp>
 #include <ak/math/Matrix.hpp>
 #include <ak/math/Types.hpp>
@@ -124,7 +124,7 @@ namespace ake {
 			// ////////// //
 			akm::Mat4 viewMatrix() const {
 				// @todo Remove when tracking implemented
-				if (std::exchange(m_cache.isViewDirty, false) || true) m_cache.viewMatrix = akm::inverse(m_eManager.component<Transform>(m_id).transform());
+				if (std::exchange(m_cache.isViewDirty, false) || true) m_cache.viewMatrix = m_eManager.component<Transform>(m_id).worldToLocal();
 				return m_cache.viewMatrix;
 			}
 	};

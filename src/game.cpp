@@ -26,11 +26,10 @@
 #include <ak/data/MsgPack.hpp>
 #include <ak/data/PValue.hpp>
 #include <ak/engine/components/Camera.hpp>
-#include <ak/engine/components/SceneGraph.hpp>
 #include <ak/engine/components/Transform.hpp>
 #include <ak/engine/Camera.hpp>
 #include <ak/engine/Config.hpp>
-#include <ak/engine/ECS.hpp>
+#include <ak/engine/EntityManager.hpp>
 #include <ak/event/Dispatcher.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Filesystem.hpp>
@@ -61,13 +60,8 @@
 #include <ak/window/Types.hpp>
 #include <ak/window/Window.hpp>
 #include <ak/window/WindowOptions.hpp>
-#include <glm/detail/type_mat4x4.hpp>
-#include <glm/detail/type_vec2.hpp>
-#include <glm/detail/type_vec3.hpp>
-#include <glm/detail/type_vec4.hpp>
 #include <algorithm>
 #include <cstddef>
-#include <experimental/filesystem>
 #include <iomanip>
 #include <memory>
 #include <optional>
@@ -118,27 +112,26 @@ static void startGame() {
 	//constexpr ak::log::Logger log(AK_STRING_VIEW("Main"));
 
 	auto ecs = ake::EntityManager([](ake::EntityManager&){ static ake::EntityUID uid = 0; return ++uid; });
-	if (!ecs.registerComponentManager(std::make_unique<ake::SceneGraphManager>())) throw std::runtime_error("Failed to register SceneGraphComponent.");
+	//if (!ecs.registerComponentManager(std::make_unique<ake::SceneGraphManager>())) throw std::runtime_error("Failed to register SceneGraphComponent.");
 	if (!ecs.registerComponentManager(std::make_unique<ake::TransformManager>())) throw std::runtime_error("Failed to register TransformComponent.");
 	if (!ecs.registerComponentManager(std::make_unique<ake::CameraManager>())) throw std::runtime_error("Failed to register CameraManager.");
 
 	auto objID  = ecs.newEntity("TestObject");
-	ecs.createComponent<ake::Transform>(objID, akm::Vec3(23.5f, 127.5f, 12.5f));
+	objID.createComponent<ake::Transform>(akm::Vec3(23.5f, 127.5f, 12.5f));
 
 	akc::sparsegrid::SparseGrid<int> octree(akm::Vec3(0,0,0), akm::Vec3(1,1,1));
 	octree.insert(0, akm::Vec3(1.5f,    20.5f, 1.5f), akm::Vec3(.5,.5,.5));
 	octree.insert(0, akm::Vec3(23.5f,   34.f,  23.f), akm::Vec3(.5,.5,.5));
 	octree.insert(0, akm::Vec3(23.5f, 127.5f, 12.5f), akm::Vec3(.5,.5,.5));
 
-	auto   baseEID = ecs.newEntity("Base");  ecs.createComponent<ake::SceneGraph>(baseEID);              ecs.createComponent<ake::Transform>(baseEID,   akm::Vec3{0,0,0});
-	auto child1EID = ecs.newEntity("Child"); ecs.createComponent<ake::SceneGraph>(child1EID, baseEID);   ecs.createComponent<ake::Transform>(child1EID, akm::Vec3{5,0,0});
-	auto child2EID = ecs.newEntity("Child"); ecs.createComponent<ake::SceneGraph>(child2EID, child1EID); ecs.createComponent<ake::Transform>(child2EID, akm::Vec3{2.5,0,0});
+	auto   baseEID = ecs.newEntity("Base");               baseEID.createComponent<ake::Transform>(akm::Vec3{0,0,0});
+	auto child1EID = ecs.newEntity("Child",   baseEID); child1EID.createComponent<ake::Transform>(akm::Vec3{5,0,0});
+	auto child2EID = ecs.newEntity("Child", child1EID); child2EID.createComponent<ake::Transform>(akm::Vec3{2.5,0,0});
 
 	auto cameraEID = ecs.newEntity("Camera");
-	ecs.createComponent<ake::SceneGraph>(cameraEID);
-	ecs.createComponent<ake::Transform>(cameraEID, akm::Vec3{0,0,0});
-	ecs.createComponent<ake::Camera>(cameraEID);
-	ecs.component<ake::Camera>(cameraEID).setPerspectiveH(akm::degToRad(90), akw::size(), {0.1f, 65525.0f});
+	cameraEID.createComponent<ake::Transform>(akm::Vec3{0,0,0});
+	cameraEID.createComponent<ake::Camera>();
+	cameraEID.component<ake::Camera>().setPerspectiveH(akm::degToRad(90), akw::size(), {0.1f, 65525.0f});
 
 	// Skybox
 		akr::ShaderProgram shaderSkybox = buildShaderProgram({
@@ -245,11 +238,11 @@ static void startGame() {
 		auto skeleTransform = aka::calculateFinalTransform(skele.rootID(), skeleBones);
 		ubufMeshBones.writeData(skeleTransform.data(), sizeof(akm::Mat4)*skeleTransform.size());
 
-		auto cameraTransform = ecs.component<ake::Transform>(cameraEID);
+		auto cameraTransform = cameraEID.component<ake::Transform>();
 
 		auto lookPos = cameraTransform.position();
-		auto projMatrix = ecs.component<ake::Camera>(cameraEID).projectionMatrix();//akm::perspectiveV(1.0472f, akw::size().x, akw::size().y, 0.1f, 65536.0f);
-		auto viewMatrix = ecs.component<ake::Camera>(cameraEID).viewMatrix();
+		auto projMatrix = cameraEID.component<ake::Camera>().projectionMatrix();//akm::perspectiveV(1.0472f, akw::size().x, akw::size().y, 0.1f, 65536.0f);
+		auto viewMatrix = cameraEID.component<ake::Camera>().viewMatrix();
 
 		// Prepare
 		akr::setClearColour(0.2f, 0.2f, 0.2f);
@@ -345,15 +338,15 @@ static void startGame() {
 			// ECS Test
 			akrd::pushMatrix(akrd::Matrix::Model);
 				akrd::setColour({0.25, 0.25,   1});
-				akrd::setMatrix(akrd::Matrix::Model, ecs.component<ake::Transform>(baseEID).transform());
+				akrd::setMatrix(akrd::Matrix::Model, baseEID.component<ake::Transform>().localToWorld());
 				akrd::draw(dlFilledCube);
 
 				akrd::setColour({  1, 0.25, 0.25});
-				akrd::setMatrix(akrd::Matrix::Model, ecs.component<ake::Transform>(child1EID).transform());
+				akrd::setMatrix(akrd::Matrix::Model, child1EID.component<ake::Transform>().localToWorld());
 				akrd::draw(dlFilledCube);
 
 				akrd::setColour({0.25,   1, 0.25});
-				akrd::setMatrix(akrd::Matrix::Model, ecs.component<ake::Transform>(child2EID).transform());
+				akrd::setMatrix(akrd::Matrix::Model, child2EID.component<ake::Transform>().localToWorld());
 				akrd::draw(dlFilledCube);
 			akrd::popMatrix(akrd::Matrix::Model);
 
@@ -371,7 +364,7 @@ static void startGame() {
 
 		if (akw::keyboard().wasPressed(akin::Key::LALT)) akw::setCursorMode(akw::cursorMode() == akw::CursorMode::Captured ? akw::CursorMode::Normal : akw::CursorMode::Captured);
 
-		auto cameraTransform = ecs.component<ake::Transform>(cameraEID);
+		auto cameraTransform = cameraEID.component<ake::Transform>();
 
 		if (akw::cursorMode() == akw::CursorMode::Captured) {
 			auto mPos = akw::mouse().deltaPosition();
@@ -379,46 +372,39 @@ static void startGame() {
 			auto rotY =  akm::degToRad(mPos.x)/20.0f;
 			auto rotX = -akm::degToRad(mPos.y)/20.0f;
 
-			auto eulerRot = akm::toEuler(cameraTransform.rotation());
+			auto eulerRot = cameraTransform.rotationEuler();
 
 			eulerRot.x += rotX;
 			eulerRot.y += rotY * (akm::abs(eulerRot.x) > akm::degToRad(90) ? -1 : 1);
 
 			cameraTransform.setRotation(akm::fromEuler(eulerRot));
-
-			/*cameraTransform.setRotation(
-				akm::rotateQ(rotY, cameraTransform.up())    *
-				akm::rotateQ(rotX, cameraTransform.right()) *
-				cameraTransform.rotation()
-			);
-			cameraTransform.lookAt(cameraTransform.forward(), {0,1,0});*/
 		}
 
 		fpSingle moveSpeed = (akw::keyboard().isDown(akin::Key::LSHIFT) ? 40 : 5)*delta;
 
 
-		if (akw::keyboard().isDown(akin::Key::W)) cameraTransform.setLocalPosition(cameraTransform.localPosition() + cameraTransform.localForward() *  moveSpeed);
-		if (akw::keyboard().isDown(akin::Key::S)) cameraTransform.setLocalPosition(cameraTransform.localPosition() + cameraTransform.localForward() * -moveSpeed);
-		if (akw::keyboard().isDown(akin::Key::D)) cameraTransform.setLocalPosition(cameraTransform.localPosition() + cameraTransform.localRight() *  moveSpeed);
-		if (akw::keyboard().isDown(akin::Key::A)) cameraTransform.setLocalPosition(cameraTransform.localPosition() + cameraTransform.localRight() * -moveSpeed);
-		if (akw::keyboard().isDown(akin::Key::R)) cameraTransform.setLocalPosition(cameraTransform.localPosition() + cameraTransform.localUp() *  moveSpeed);
-		if (akw::keyboard().isDown(akin::Key::F)) cameraTransform.setLocalPosition(cameraTransform.localPosition() + cameraTransform.localUp() * -moveSpeed);
+		if (akw::keyboard().isDown(akin::Key::W)) cameraTransform.moveLocalForward(moveSpeed);
+		if (akw::keyboard().isDown(akin::Key::S)) cameraTransform.moveLocalBackward(moveSpeed);
+		if (akw::keyboard().isDown(akin::Key::D)) cameraTransform.moveLocalRightward(moveSpeed);
+		if (akw::keyboard().isDown(akin::Key::A)) cameraTransform.moveLocalLeftward(moveSpeed);
+		if (akw::keyboard().isDown(akin::Key::R)) cameraTransform.moveLocalUpward(moveSpeed);
+		if (akw::keyboard().isDown(akin::Key::F)) cameraTransform.moveLocalDownward(moveSpeed);
 
 		if (akw::keyboard().wasPressed(akin::Key::H)) updating = !updating;
 		if (akw::keyboard().wasPressed(akin::Key::B)) drawBoxes = !drawBoxes;
 
-		if (drawBoxes) ecs.component<ake::Transform>(baseEID).setRotation(akm::rotateQ(time, akm::Vec3(0,0,1)));
+		if (drawBoxes) baseEID.component<ake::Transform>().setRotation(akm::rotateQ(time, akm::Vec3(0,0,1)));
 
-		if (drawBoxes) ecs.component<ake::Transform>(child1EID).setScale(akm::abs(akm::sin(time)));
-		if (drawBoxes) ecs.component<ake::Transform>(child1EID).setRotation(akm::rotateQ(time*4, akm::Vec3(0,0,1)));
+		if (drawBoxes) child1EID.component<ake::Transform>().setScale(akm::abs(akm::sin(time)));
+		if (drawBoxes) child1EID.component<ake::Transform>().setRotation(akm::rotateQ(time*4, akm::Vec3(0,0,1)));
 
-		if (!drawBoxes) ecs.component<ake::Transform>(child2EID).setPosition(cameraTransform.forward()*5.f + cameraTransform.position());(akm::Vec3(2.5, 0, 0) + akm::Vec3(akm::sin(time)*1.5, 0, 0));
-		if (!drawBoxes) ecs.component<ake::Transform>(child2EID).setRotation(cameraTransform.rotation());
+		if (!drawBoxes) child2EID.component<ake::Transform>().setPosition(cameraTransform.forward()*5.f + cameraTransform.position()); //(akm::Vec3(2.5, 0, 0) + akm::Vec3(akm::sin(time)*1.5, 0, 0));
+		if (!drawBoxes) child2EID.component<ake::Transform>().setRotation(cameraTransform.rotationQuat());
 
-		if (!drawBoxes) ecs.component<ake::Transform>(child2EID).setScale(1.f);
+		if (!drawBoxes) child2EID.component<ake::Transform>().setScale(1.f);
 
-		if (akw::keyboard().wasPressed(akin::Key::H)) ecs.component<ake::SceneGraph>(child2EID).setParent(baseEID);
-		if (akw::keyboard().wasPressed(akin::Key::J)) ecs.component<ake::SceneGraph>(child2EID).setParent(child1EID);
+		if (akw::keyboard().wasPressed(akin::Key::H)) child2EID.setParent(baseEID);
+		if (akw::keyboard().wasPressed(akin::Key::J)) child2EID.setParent(child1EID);
 	};
 
 	fpSingle updateAccum = 0.f;

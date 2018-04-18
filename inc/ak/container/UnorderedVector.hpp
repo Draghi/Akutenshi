@@ -46,6 +46,7 @@ namespace akc {
 			UnorderedVector(UnorderedVector&& other) : m_vec(std::move(other.m_vec)) {}
 			UnorderedVector(const std::vector<type_t, alloc_t>& other) : m_vec(other) {}
 			UnorderedVector(std::vector<type_t, alloc_t>&& other) : m_vec(std::move(other)) {}
+			template<typename iterator_t> UnorderedVector(iterator_t begin, iterator_t end) : m_vec(begin, end) {}
 
 			type_t& at(size_type index) { return m_vec.at(index); }
 			const type_t& at(size_type index) const { return m_vec.at(index); }

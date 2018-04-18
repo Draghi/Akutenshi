@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-#include <ak/engine/ECS.hpp>
+#include <ak/engine/EntityManager.hpp>
 
 using namespace ake;
 
@@ -28,24 +28,29 @@ EntityManager::EntityManager(std::function<EntityUIDGenerator_f> entityUIDGenera
 
 EntityManager::EntityManager(EntityManager&& other)
 	: m_components(std::move(other.m_components)), m_entityUIDGenerator(std::move(other.m_entityUIDGenerator)),
-	  m_nameStorage(std::move(other.m_nameStorage)), m_entityNameID(std::move(other.m_entityNameID)), m_lookupEntitiesByName(std::move(other.m_lookupEntitiesByName)),
-	  m_entityComponentIDs(std::move(other.m_entityComponentIDs)), m_entityUID(std::move(other.m_entityUID)), m_lookupEntityByUID(std::move(other.m_lookupEntityByUID)) {
-	for(auto& component : m_components) component.second->m_entityManager = this;
+	  //m_nameStorage(std::move(other.m_nameStorage)), m_entityNameID(std::move(other.m_entityNameID)), m_lookupEntitiesByName(std::move(other.m_lookupEntitiesByName)),
+	  m_entityNameStorage(std::move(other.m_entityNameStorage)), m_entityComponentIDs(std::move(other.m_entityComponentIDs)), m_entityUID(std::move(other.m_entityUID)),
+	  m_lookupEntityByUID(std::move(other.m_lookupEntityByUID)) {
+	for(auto& component : m_components) {
+		component.second->m_entityManager = this;
+		component.second->registerHooks();
+	}
 }
 
 EntityManager& EntityManager::operator=(EntityManager&& other) {
 	m_components = std::move(other.m_components);
 	m_entityUIDGenerator = std::move(other.m_entityUIDGenerator);
 
-	m_nameStorage = std::move(other.m_nameStorage);
-	m_entityNameID = std::move(other.m_entityNameID);
-	m_lookupEntitiesByName = std::move(other.m_lookupEntitiesByName);
-
+	m_entityNameStorage = std::move(other.m_entityNameStorage);
 	m_entityComponentIDs = std::move(other.m_entityComponentIDs);
 	m_entityUID = std::move(other.m_entityUID);
+
 	m_lookupEntityByUID = std::move(other.m_lookupEntityByUID);
 
-	for(auto& component : m_components) component.second->m_entityManager = this;
+	for(auto& component : m_components) {
+		component.second->m_entityManager = this;
+		component.second->registerHooks();
+	}
 
 	return *this;
 }
@@ -60,56 +65,70 @@ EntityUID EntityManager::nextEntityUID() {
 	return uid;
 }
 
-EntityID EntityManager::newEntity(EntityUID targetUID, akc::SlotID nameID) {
-	auto entityID = m_entityNameID.insert(nameID).first;
-	if (m_entityComponentIDs.insert({}).first != entityID) throw std::logic_error("EntityManager: Corrupted data, entityID mismatch in storage.");
-	if (!m_lookupEntityByUID.emplace(targetUID, entityID).second) throw std::logic_error("EntityManager: Corrupted data, entityUID already in use.");
-	auto name = m_nameStorage[nameID];
-	m_lookupEntitiesByName[name].second.insert(entityID);
-	return entityID;
-}
+Entity EntityManager::newEntity(const std::string& name, EntityID parentID, EntityUID targetUID) {
+	// Validation
+	if (targetUID == 0) targetUID = nextEntityUID();
+	if (m_lookupEntityByUID.find(targetUID) != m_lookupEntityByUID.end()) throw std::logic_error("EntityManager: Entity with given UID already exists.");
 
-EntityID EntityManager::newEntity(EntityUID targetUID, const std::string& name) {
-	// Ensure no conflict
-	if (m_lookupEntityByUID.find(targetUID) != m_lookupEntityByUID.end()) return EntityID();
+	// Create Entity
+	auto entityID = m_entityComponentIDs.insert({}).first;
+	m_entityNameStorage.registerEntity(entityID, name);
+	m_entityGraph.registerEntity(entityID, parentID);
+	m_entityUID.insert(targetUID);
 
-	// Create lookup record
-	auto nameRecord = m_lookupEntitiesByName.insert({name, {akc::SlotID(), {}}});
-	if (nameRecord.second) nameRecord.first->second.first = m_nameStorage.insert(name).first;
+	m_lookupEntityByUID.emplace(targetUID, entityID);
 
-	// Create entity
-	return newEntity(targetUID, nameRecord.first->second.first);
-}
-
-EntityID EntityManager::newEntity(const std::string& name) {
-	return newEntity(nextEntityUID(), name);
+	return Entity(*this, entityID);
 }
 
 bool EntityManager::deleteEntity(EntityID entityID) {
 	auto componentIDs = m_entityComponentIDs[entityID];
 	for(auto componentID : componentIDs) destroyComponent(entityID, componentID);
-	m_entityComponentIDs.erase(entityID);
 
-	auto& nameLookup = m_lookupEntitiesByName[m_nameStorage[m_entityNameID[entityID]]].second;
-	nameLookup.erase(ak::find(nameLookup, entityID));
-	if (nameLookup.size() == 0) {
-		m_lookupEntitiesByName.erase(m_nameStorage[m_entityNameID[entityID]]);
-		m_nameStorage.erase(m_entityNameID[entityID]);
-	}
-	m_entityNameID.erase(entityID);
+	m_entityNameStorage.deregisterEntity(entityID);
+	m_entityComponentIDs.erase(entityID);
+	m_entityUID.erase(entityID);
+	m_entityGraph.deregisterEntity(entityID);
 
 	m_lookupEntityByUID.erase(m_entityUID[entityID]);
-	m_entityUID.erase(entityID);
 
 	return true;
 }
 
-std::string EntityManager::entityName(EntityID entityID) const {
-	return m_nameStorage[m_entityNameID[entityID]];
+const std::string& EntityManager::entityName(EntityID entityID) const {
+	return m_entityNameStorage.getNameByEntity(entityID);
 }
 
-std::unordered_set<ComponentID> EntityManager::entityComponentIDs(EntityID entityID) const {
+std::unordered_set<ComponentID> EntityManager::entityComponents(EntityID entityID) const {
 	return m_entityComponentIDs[entityID];
+}
+
+EntityUID EntityManager::entityUID(EntityID entityID) const {
+	return m_lookupEntityByUID.at(entityID);
+}
+
+bool EntityManager::setEntityParentID(EntityID entityID, EntityID parentID) {
+	return m_entityGraph.setParent(entityID, parentID);
+}
+
+EntityID EntityManager::entityParentID(EntityID entityID) const {
+	return m_entityGraph.parent(entityID);
+}
+
+const akc::UnorderedVector<EntityID>& EntityManager::entityChildrenIDs(EntityID entityID) const {
+	return m_entityGraph.children(entityID);
+}
+
+EntityID EntityManager::entityFindFirstChildNamed(EntityID entityID, const std::string& name) const {
+	return m_entityGraph.findFirstNamed(entityID, name);
+}
+
+akc::UnorderedVector<EntityID> EntityManager::entityFindAllChildrenNamed(EntityID entityID, const std::string& name) const {
+	return m_entityGraph.findAllNamed(entityID, name);
+}
+
+const std::unordered_set<EntityID>& EntityManager::entityGraphRoot() const {
+	return m_entityGraph.root();
 }
 
 // ////////////// //
@@ -170,6 +189,22 @@ ComponentManager& EntityManager::componentManager(ComponentID componentID) {
 const ComponentManager& EntityManager::componentManager(ComponentID componentID) const {
 	return *m_components.at(componentID);
 }
+
+
+// //////////////// //
+// // SceneGraph // //
+// //////////////// //
+
+const akev::DispatcherProxy<EntityParentChangedEvent> EntityManager::entityParentChanged() const {
+	return m_entityGraph.entityGraphChanged();
+}
+
+const akev::DispatcherProxy<EntityParentChangedEvent> EntityManager::entityParentChanged(EntityID entityID) const {
+	return m_entityGraph.entityGraphChanged(entityID);
+}
+
+
+
 
 
 

@@ -17,11 +17,10 @@
 #ifndef AK_ENGINE_COMPONENTS_TRANSFORM_HPP_
 #define AK_ENGINE_COMPONENTS_TRANSFORM_HPP_
 
+
 #include <ak/container/SlotMap.hpp>
-#include <ak/container/UnorderedVector.hpp>
-#include <ak/engine/components/SceneGraph.hpp>
-#include <ak/engine/ECS.hpp>
-#include <ak/event/Dispatcher.hpp>
+#include <ak/engine/EntityManager.hpp>
+#include <ak/engine/Type.hpp>
 #include <ak/math/Matrix.hpp>
 #include <ak/math/Quaternion.hpp>
 #include <ak/math/Types.hpp>
@@ -32,6 +31,7 @@
 #include <glm/detail/type_vec4.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <deque>
+#include <initializer_list>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
@@ -43,58 +43,123 @@ namespace ake {
 	class Transform {
 		AKE_DEFINE_COMPONENT(TransformManager, Transform)
 		private:
-			TransformManager& m_manager;
+			TransformManager* m_manager;
 			EntityID m_id;
 
 		public:
 			Transform(TransformManager& manager, EntityID id);
 
-			// /////////// //
-			// // World // //
-			// /////////// //
-			akm::Mat4 transform() const;
+			// ///////// //
+			// // Get // //
+			// ///////// //
 
-			akm::Vec3  position() const;
-			akm::Quat  rotation() const;
-			akm::scalar_t scale() const;
+			akm::Mat4 localToWorld() const;
+			akm::Mat4 worldToLocal() const;
 
-			akm::Mat4 translationMatrix() const;
-			akm::Mat3    rotationMatrix() const;
-			akm::Mat3       scaleMatrix() const;
+			akm::Vec3 position() const;
 
-			akm::Vec3      up() const;
-			akm::Vec3   right() const;
+			akm::Mat4 rotationMatrix() const;
+			akm::Quat rotationQuat() const;
+			akm::Vec3 rotationEuler() const;
+
+			fpSingle scale() const;
+
+			akm::Vec3 rightward() const;
+			akm::Vec3 leftward() const;
+			akm::Vec3 upward() const;
+			akm::Vec3 downward() const;
 			akm::Vec3 forward() const;
+			akm::Vec3 backward() const;
 
-			void setPosition(const akm::Vec3& pos);
-			void setRotation(const akm::Quat& rot);
-			void setScale(const akm::scalar_t& scl);
+			// ///////// //
+			// // Set // //
+			// ///////// //
+
+			Transform& setPosition(const akm::Vec3& p);
+
+			Transform& setRotation(const akm::Mat4& r);
+			Transform& setRotation(const akm::Quat& r);
+			Transform& setRotation(const akm::Vec3& r);
+			Transform& setRotation(const akm::Vec3& forward, const akm::Vec3& upward);
+
+			Transform& setScale(fpSingle s);
 
 			// /////////// //
-			// // Local // //
+			// // Apply // //
 			// /////////// //
-			akm::Mat4 localTransform() const;
 
-			akm::Vec3  localPosition() const;
-			akm::Quat  localRotation() const;
-			akm::scalar_t localScale() const;
+			Transform& move(const akm::Vec3& p);
+			Transform& moveForward(fpSingle dist);
+			Transform& moveBackward(fpSingle dist);
+			Transform& moveUpward(fpSingle dist);
+			Transform& moveDownward(fpSingle dist);
+			Transform& moveRightward(fpSingle dist);
+			Transform& moveLeftward(fpSingle dist);
 
-			akm::Mat4 localTranslationMatrix() const;
-			akm::Mat3    localRotationMatrix() const;
-			akm::Mat3       localScaleMatrix() const;
+			Transform& rotate(fpSingle angle, const akm::Vec3& axis);
+			Transform& rotate(const akm::Mat4& r);
+			Transform& rotate(const akm::Quat& r);
+			Transform& rotate(const akm::Vec3& r);
 
-			akm::Vec3      localUp() const;
-			akm::Vec3   localRight() const;
+			Transform& scaleByFactor(fpSingle s);
+
+			// ///////// //
+			// // Get // //
+			// ///////// //
+
+			akm::Mat4 localToParent() const;
+			akm::Mat4 parentToLocal() const;
+
+			akm::Vec3 localPosition() const;
+
+			akm::Mat4 localRotationMatrix() const;
+			akm::Quat localRotationQuat() const;
+			akm::Vec3 localRotationEuler() const;
+
+			fpSingle localScale() const;
+
+			akm::Vec3 localRightward() const;
+			akm::Vec3 localLeftward() const;
+			akm::Vec3 localUpward() const;
+			akm::Vec3 localDownward() const;
 			akm::Vec3 localForward() const;
+			akm::Vec3 localBackward() const;
 
-			void setLocalPosition(const akm::Vec3& pos);
-			void setLocalRotation(const akm::Quat& rot);
-			void setLocalScale(const akm::scalar_t& scl);
+			// ///////// //
+			// // Set // //
+			// ///////// //
+
+			Transform& setLocalPosition(const akm::Vec3& p);
+
+			Transform& setLocalRotation(const akm::Mat4& r);
+			Transform& setLocalRotation(const akm::Quat& r);
+			Transform& setLocalRotation(const akm::Vec3& r);
+			Transform& setLocalRotation(const akm::Vec3& forward, const akm::Vec3& upward);
+
+			Transform& setLocalScale(fpSingle s);
 
 			// /////////// //
-			// // Other // //
+			// // Apply // //
 			// /////////// //
-			void lookAt(const akm::Vec3& forward, const akm::Vec3& up);
+
+			Transform& moveLocal(const akm::Vec3& p);
+			Transform& moveLocalForward(fpSingle dist);
+			Transform& moveLocalBackward(fpSingle dist);
+			Transform& moveLocalUpward(fpSingle dist);
+			Transform& moveLocalDownward(fpSingle dist);
+			Transform& moveLocalRightward(fpSingle dist);
+			Transform& moveLocalLeftward(fpSingle dist);
+
+			Transform& rotateLocal(fpSingle angle, const akm::Vec3& axis);
+			Transform& rotateLocal(const akm::Mat4& r);
+			Transform& rotateLocal(const akm::Quat& r);
+			Transform& rotateLocal(const akm::Vec3& r);
+
+			Transform& scaleLocalByFactor(fpSingle s);
+
+			// //////////////// //
+			// // Components // //
+			// //////////////// //
 
 			EntityID id() const;
 	};
@@ -119,15 +184,13 @@ namespace ake {
 			std::unordered_map<EntityID, TransformNode> m_transform;
 			std::unordered_map<EntityID, CacheNode> m_cache;
 
-			mutable const SceneGraphManager* m_sceneGraph = nullptr;
-			const SceneGraphManager& sceneGraph() const {
-				if (!m_sceneGraph) {
-					m_sceneGraph = &entityManager().componentManager<SceneGraph>();
-					m_sceneGraph->sceneGraphChanged().subscribe([&](const auto& ev){
-						if (hasComponent(ev.data().modifiedEntity().id())) markDirty(ev.data().modifiedEntity().id());
-					});
-				}
-				return *m_sceneGraph;
+			akev::SubscriberID m_entityGraphID;
+
+			void registerHooks() override {
+				if (!m_entityGraphID) return;
+				m_entityGraphID = entityManager().entityParentChanged().subscribe([&](const auto& ev){
+					if (hasComponent(ev.data().modifiedEntity())) markDirty(ev.data().modifiedEntity());
+				});
 			}
 
 			void markDirty(EntityID id) const {
@@ -137,7 +200,7 @@ namespace ake {
 				while(!dirtyList.empty()) {
 					// If the parent node is already dirty it's children should already be flagged.
 					if (!std::exchange(m_cache.at(dirtyList.front()).isGlobalDirty, true)) {
-						auto& children = sceneGraph().children(dirtyList.front());
+						auto& children = entityManager().entityChildrenIDs(dirtyList.front());
 						dirtyList.insert(dirtyList.end(), children.begin(), children.end());
 					}
 					dirtyList.pop_front();
@@ -179,96 +242,172 @@ namespace ake {
 
 		public:
 
-			// /////////// //
-			// // World // //
-			// /////////// //
+			// ///////// //
+			// // Get // //
+			// ///////// //
 
-			akm::Mat4 transform(EntityID id) const {
-				auto cacheIter = m_cache.find(id);
+			akm::Mat4 localToWorld(EntityID entityID) const {
+				auto cacheIter = m_cache.find(entityID);
 				if (cacheIter == m_cache.end()) return akm::Mat4(1);
-				if (std::exchange(cacheIter->second.isGlobalDirty, false)) cacheIter->second.globalTransform = transform(sceneGraph().parent(id)) * localTransform(id);
+				if (std::exchange(cacheIter->second.isGlobalDirty, false)) cacheIter->second.globalTransform = localToWorld(entityManager().entityParentID(entityID)) * localToParent(entityID);
 				return cacheIter->second.globalTransform;
 			}
 
-			akm::Vec3  position(EntityID id) const { return akm::Vec3(akm::column(transform(id), 3)); }
-			akm::Quat  rotation(EntityID id) const { return akm::quat_cast(rotationMatrix(id)); }
-			akm::scalar_t scale(EntityID id) const { return akm::magnitude(akm::column(transform(id), 0)); }
+			akm::Mat4 worldToLocal(EntityID entityID) const { return akm::inverse(localToWorld(entityID)); }
 
-			akm::Mat4 translationMatrix(EntityID id) const { return akm::translate(position(id)); }
-			akm::Mat3    rotationMatrix(EntityID id) const { return akm::Mat3(transform(id))/scale(id); }
-			akm::Mat3       scaleMatrix(EntityID id) const { auto scl = scale(id); return akm::scale3({scl, scl, scl}); }
+			akm::Vec3 position(EntityID entityID) const { return akm::column(localToWorld(entityID), 3); }
 
-			akm::Vec3   right(EntityID id) const { return akm::column(rotationMatrix(id), 0); }
-			akm::Vec3      up(EntityID id) const { return akm::column(rotationMatrix(id), 1); }
-			akm::Vec3 forward(EntityID id) const { return akm::column(rotationMatrix(id), 2); }
+			akm::Mat4 rotationMatrix(EntityID entityID) const { return akm::Mat3(localToWorld(entityID))/scale(entityID); }
+			akm::Quat rotationQuat(  EntityID entityID) const { return akm::quat_cast(rotationMatrix(entityID)); }
+			akm::Vec3 rotationEuler( EntityID entityID) const { return akm::toEuler(rotationQuat(entityID)); }
 
-			void setPosition(EntityID id, const akm::Vec3& pos) {
-				auto parentID = sceneGraph().parent(id);
-				auto parentInvTransform = hasComponent(parentID) ? akm::inverse(transform(parentID)) : akm::Mat4(1);
-				setLocalPosition(id, parentInvTransform * akm::Vec4(pos, 1));
+			fpSingle scale(EntityID entityID) const { return akm::magnitude(akm::column(localToWorld(entityID), 0)); }
+
+			akm::Vec3 rightward(EntityID entityID) const { return akm::column(rotationMatrix(entityID), 0); }
+			akm::Vec3 leftward( EntityID entityID) const { return -upward(entityID); }
+			akm::Vec3 upward(   EntityID entityID) const { return akm::column(rotationMatrix(entityID), 1); }
+			akm::Vec3 downward( EntityID entityID) const { return -upward(entityID); }
+			akm::Vec3 forward(  EntityID entityID) const { return akm::column(rotationMatrix(entityID), 2); }
+			akm::Vec3 backward( EntityID entityID) const { return -forward(entityID); }
+
+			// ///////// //
+			// // Set // //
+			// ///////// //
+
+			void setPosition(EntityID entityID, const akm::Vec3& p) {
+				auto parentID = entityManager().entityParentID(entityID);
+				auto parentInvTransform = worldToLocal(parentID);
+				setLocalPosition(entityID, parentInvTransform * akm::Vec4(p, 1));
 			}
 
-			void setRotation(EntityID id, const akm::Quat& rot) {
-				auto parentID = sceneGraph().parent(id);
-				auto parentRot = hasComponent(parentID) ? rotation(parentID) : akm::Quat(1,0,0,0);
-				setLocalRotation(id, akm::inverse(parentRot) * rot);
+
+			void setRotation(EntityID entityID, const akm::Mat4& r) {
+				setRotation(entityID, akm::quat_cast(r));
 			}
 
-			void setScale(EntityID id, const akm::scalar_t& scl) {
-				auto parentID = sceneGraph().parent(id);
-				auto parentScl = hasComponent(parentID) ? scale(parentID) : 1.f;
-				setLocalScale(id, scl/parentScl);
+			void setRotation(EntityID entityID, const akm::Quat& r) {
+				auto parentID = entityManager().entityParentID(entityID);
+				auto parentRot = hasComponent(parentID) ? rotationQuat(parentID) : akm::Quat(1,0,0,0);
+				setLocalRotation(entityID, akm::inverse(parentRot) * r);
 			}
 
-			// /////////// //
-			// // Local // //
-			// /////////// //
-
-			akm::Mat4 localTransform(EntityID id) const {
-				auto& cacheEntry = m_cache.at(id);
-				if (std::exchange(cacheEntry.isLocalDirty, false)) cacheEntry.localTransform = calculateTransformMatrix(m_transform.at(id));
-				return cacheEntry.localTransform;
+			void setRotation(EntityID entityID, const akm::Vec3& r) {
+				setRotation(entityID, akm::fromEuler(r));
 			}
 
-			akm::Vec3  localPosition(EntityID id) const { return m_transform.at(id).position; }
-			akm::Quat  localRotation(EntityID id) const { return m_transform.at(id).rotation; }
-			akm::scalar_t localScale(EntityID id) const { return m_transform.at(id).scale; }
-
-			akm::Mat4 localTranslationMatrix(EntityID id) const { return akm::translate(localPosition(id)); }
-			akm::Mat3    localRotationMatrix(EntityID id) const { auto invScl = 1.f/m_transform.at(id).scale; return akm::scale({invScl,invScl,invScl}) * localTransform(id); }
-			akm::Mat3       localScaleMatrix(EntityID id) const { auto scl = m_transform.at(id).scale; return akm::scale({scl,scl,scl}); }
-
-			akm::Vec3   localRight(EntityID id) const { return akm::column(rotationMatrix(id), 0); }
-			akm::Vec3      localUp(EntityID id) const { return akm::column(rotationMatrix(id), 1); }
-			akm::Vec3 localForward(EntityID id) const { return akm::column(rotationMatrix(id), 2); }
-
-			void setLocalPosition(EntityID id, const akm::Vec3& pos) {
-				m_transform.at(id).position = pos;
-				markDirty(id);
-			}
-
-			void setLocalRotation(EntityID id, const akm::Quat& rot) {
-				m_transform.at(id).rotation = rot;
-				markDirty(id);
-			}
-
-			void setLocalScale(EntityID id, const akm::scalar_t& scl) {
-				m_transform.at(id).scale = scl;
-				markDirty(id);
-			}
-
-			// /////////// //
-			// // Other // //
-			// /////////// //
-
-			void lookAt(EntityID id, const akm::Vec3& forward, const akm::Vec3& up) {
-				auto rForward = akm::normalize(forward);
-				auto rUp = akm::normalize(up);
+			void setRotation(EntityID entityID, const akm::Vec3& f, const akm::Vec3& u) {
+				auto rForward = akm::normalize(f);
+				auto rUp = akm::normalize(u);
 				auto rRight = akm::normalize(akm::cross(rUp, rForward));
 				rUp = akm::normalize(akm::cross(rForward, rRight));
 
-				setRotation(id, akm::quat_cast(akm::Mat3(rRight, rUp, rForward)));
+				setRotation(entityID, akm::quat_cast(akm::Mat3(rRight, rUp, rForward)));
 			}
+
+
+			void setScale(EntityID entityID, fpSingle s) {
+				auto parentID = entityManager().entityParentID(entityID);
+				auto parentScl = hasComponent(parentID) ? scale(parentID) : 1.f;
+				setLocalScale(entityID, s/parentScl);
+			}
+
+			// /////////// //
+			// // Apply // //
+			// /////////// //
+
+			void move(EntityID entityID, const akm::Vec3& p) { setPosition(entityID, position(entityID) + p); }
+
+			void moveForward(  EntityID entityID, fpSingle dist) { move(entityID,   forward(entityID)*dist); }
+			void moveBackward( EntityID entityID, fpSingle dist) { move(entityID,  backward(entityID)*dist); }
+			void moveUpward(   EntityID entityID, fpSingle dist) { move(entityID,    upward(entityID)*dist); }
+			void moveDownward( EntityID entityID, fpSingle dist) { move(entityID,  downward(entityID)*dist); }
+			void moveRightward(EntityID entityID, fpSingle dist) { move(entityID, rightward(entityID)*dist); }
+			void moveLeftward( EntityID entityID, fpSingle dist) { move(entityID,  leftward(entityID)*dist); }
+
+			void rotate(EntityID entityID, fpSingle angle, const akm::Vec3& axis) { rotate(entityID, akm::rotateQ(angle, axis)); }
+			void rotate(EntityID entityID, const akm::Mat4& r) { rotate(entityID, akm::quat_cast(r)); }
+			void rotate(EntityID entityID, const akm::Quat& r) { setRotation(entityID, rotationQuat(entityID) * r); }
+			void rotate(EntityID entityID, const akm::Vec3& r) { rotate(entityID, akm::fromEuler(r)); }
+
+			void rotatePre(EntityID entityID, fpSingle angle, const akm::Vec3& axis) { rotatePre(entityID, akm::rotateQ(angle, axis)); }
+			void rotatePre(EntityID entityID, const akm::Mat4& r) { rotatePre(entityID, akm::quat_cast(r)); }
+			void rotatePre(EntityID entityID, const akm::Quat& r) { setRotation(entityID, r * rotationQuat(entityID)); }
+			void rotatePre(EntityID entityID, const akm::Vec3& r) { rotatePre(entityID, akm::fromEuler(r)); }
+
+			void scaleByFactor(EntityID entityID, fpSingle s) { setScale(entityID, scale(entityID) * s); }
+
+			// ///////// //
+			// // Get // //
+			// ///////// //
+
+			akm::Mat4 localToParent(EntityID entityID) const {
+				auto& cacheEntry = m_cache.at(entityID);
+				if (std::exchange(cacheEntry.isLocalDirty, false)) cacheEntry.localTransform = calculateTransformMatrix(m_transform.at(entityID));
+				return cacheEntry.localTransform;
+			}
+
+			akm::Mat4 parentToLocal(EntityID entityID) const { return akm::inverse(localToParent(entityID)); }
+
+			akm::Vec3 localPosition(EntityID entityID) const { return m_transform.at(entityID).position; }
+
+			akm::Mat4 localRotationMatrix(EntityID entityID) const { return akm::mat4_cast(localRotationQuat(entityID)); }
+			akm::Quat localRotationQuat(  EntityID entityID) const { return m_transform.at(entityID).rotation; }
+			akm::Vec3 localRotationEuler( EntityID entityID) const { return akm::toEuler(localRotationQuat(entityID)); }
+
+			fpSingle localScale(EntityID entityID) const { return m_transform.at(entityID).scale; }
+
+			akm::Vec3 localRightward(EntityID entityID) const { return akm::column(localRotationMatrix(entityID), 0); }
+			akm::Vec3 localLeftward( EntityID entityID) const { return -localRightward(entityID); }
+			akm::Vec3 localUpward(   EntityID entityID) const { return akm::column(localRotationMatrix(entityID), 1); }
+			akm::Vec3 localDownward( EntityID entityID) const { return -localUpward(entityID); }
+			akm::Vec3 localForward(  EntityID entityID) const { return akm::column(localRotationMatrix(entityID), 2); }
+			akm::Vec3 localBackward( EntityID entityID) const { return -localForward(entityID); }
+
+			// ///////// //
+			// // Set // //
+			// ///////// //
+
+			void setLocalPosition(EntityID entityID, const akm::Vec3& p){
+				m_transform.at(entityID).position = p;
+				markDirty(entityID);
+			}
+
+			void setLocalRotation(EntityID entityID, const akm::Mat4& r) { setLocalRotation(entityID, akm::quat_cast(r)); }
+			void setLocalRotation(EntityID entityID, const akm::Quat& r) { m_transform.at(entityID).rotation = r; markDirty(entityID); }
+			void setLocalRotation(EntityID entityID, const akm::Vec3& r) { setLocalRotation(entityID, akm::fromEuler(r)); }
+			void setLocalRotation(EntityID entityID, const akm::Vec3& f, const akm::Vec3& u) {
+				auto rForward = akm::normalize(f);
+				auto rUp = akm::normalize(u);
+				auto rRight = akm::normalize(akm::cross(rUp, rForward));
+				rUp = akm::normalize(akm::cross(rForward, rRight));
+
+				setLocalRotation(entityID, akm::quat_cast(akm::Mat3(rRight, rUp, rForward)));
+			}
+
+			void setLocalScale(EntityID entityID, fpSingle s) {
+				m_transform.at(entityID).scale = s;
+				markDirty(entityID);
+			}
+
+			// /////////// //
+			// // Apply // //
+			// /////////// //
+
+			void moveLocal(EntityID entityID, const akm::Vec3& p) { setLocalPosition(entityID, localPosition(entityID) + p); }
+
+			void moveLocalForward(  EntityID entityID, fpSingle dist) { moveLocal(entityID,   localForward(entityID)*dist); }
+			void moveLocalBackward( EntityID entityID, fpSingle dist) { moveLocal(entityID,  localBackward(entityID)*dist); }
+			void moveLocalUpward(   EntityID entityID, fpSingle dist) { moveLocal(entityID,    localUpward(entityID)*dist); }
+			void moveLocalDownward( EntityID entityID, fpSingle dist) { moveLocal(entityID,  localDownward(entityID)*dist); }
+			void moveLocalRightward(EntityID entityID, fpSingle dist) { moveLocal(entityID, localRightward(entityID)*dist); }
+			void moveLocalLeftward( EntityID entityID, fpSingle dist) { moveLocal(entityID,  localLeftward(entityID)*dist); }
+
+			void rotateLocal(EntityID entityID, fpSingle angle, const akm::Vec3& axis) { rotateLocal(entityID, akm::rotateQ(angle, axis)); }
+			void rotateLocal(EntityID entityID, const akm::Mat4& r) { rotateLocal(entityID, akm::quat_cast(r)); }
+			void rotateLocal(EntityID entityID, const akm::Quat& r) { setLocalRotation(entityID, rotationQuat(entityID) * r); }
+			void rotateLocal(EntityID entityID, const akm::Vec3& r) { rotateLocal(entityID, akm::fromEuler(r)); }
+
+			void scaleLocalByFactor(EntityID entityID, fpSingle s) { setLocalScale(entityID, localScale(entityID) * s); }
 
 			// //////////////// //
 			// // Components // //
@@ -283,59 +422,121 @@ namespace ake {
 }
 
 namespace ake {
-	Transform::Transform(TransformManager& manager, EntityID id) : m_manager(manager), m_id(id) {}
+	inline Transform::Transform(TransformManager& manager, EntityID id) : m_manager(&manager), m_id(id) {}
+
+	// ///////// //
+	// // Get // //
+	// ///////// //
+
+	inline akm::Mat4 Transform::localToWorld() const { return m_manager->localToWorld(m_id); }
+	inline akm::Mat4 Transform::worldToLocal() const { return m_manager->worldToLocal(m_id); }
+
+	inline akm::Vec3 Transform::position() const { return m_manager->position(m_id); }
+
+	inline akm::Mat4 Transform::rotationMatrix() const { return m_manager->rotationMatrix(m_id); }
+	inline akm::Quat Transform::rotationQuat() const { return m_manager->rotationQuat(m_id); }
+	inline akm::Vec3 Transform::rotationEuler() const { return m_manager->rotationEuler(m_id); }
+
+	inline fpSingle Transform::scale() const { return m_manager->scale(m_id); }
+
+	inline akm::Vec3 Transform::rightward() const { return m_manager->rightward(m_id); }
+	inline akm::Vec3 Transform::leftward()  const { return m_manager->leftward(m_id);  }
+	inline akm::Vec3 Transform::upward()    const { return m_manager->upward(m_id);    }
+	inline akm::Vec3 Transform::downward()  const { return m_manager->downward(m_id);  }
+	inline akm::Vec3 Transform::forward()   const { return m_manager->forward(m_id);   }
+	inline akm::Vec3 Transform::backward()  const { return m_manager->backward(m_id);  }
+
+	// ///////// //
+	// // Set // //
+	// ///////// //
+
+	inline Transform& Transform::setPosition(const akm::Vec3& p) { m_manager->setPosition(m_id, p); return *this; }
+
+	inline Transform& Transform::setRotation(const akm::Mat4& r) { m_manager->setRotation(m_id, r); return *this; }
+	inline Transform& Transform::setRotation(const akm::Quat& r) { m_manager->setRotation(m_id, r); return *this; }
+	inline Transform& Transform::setRotation(const akm::Vec3& r) { m_manager->setRotation(m_id, r); return *this; }
+	inline Transform& Transform::setRotation(const akm::Vec3& f, const akm::Vec3& u) { m_manager->setRotation(m_id, f, u); return *this; }
+
+	inline Transform& Transform::setScale(fpSingle s) { m_manager->setScale(m_id, s); return *this; }
 
 	// /////////// //
-	// // World // //
+	// // Apply // //
 	// /////////// //
-	akm::Mat4 Transform::transform() const { return m_manager.transform(m_id); }
 
-	akm::Vec3 Transform::position() const { return m_manager.position(m_id); }
-	akm::Quat Transform::rotation() const { return m_manager.rotation(m_id); }
-	akm::scalar_t Transform::scale() const { return m_manager.scale(m_id); }
+	inline Transform& Transform::move(const akm::Vec3& p) { m_manager->move(m_id, p); return *this; }
+	inline Transform& Transform::moveForward(  fpSingle dist) { m_manager->moveForward(  m_id, dist); return *this; }
+	inline Transform& Transform::moveBackward( fpSingle dist) { m_manager->moveBackward( m_id, dist); return *this; }
+	inline Transform& Transform::moveUpward(   fpSingle dist) { m_manager->moveUpward(   m_id, dist); return *this; }
+	inline Transform& Transform::moveDownward( fpSingle dist) { m_manager->moveDownward( m_id, dist); return *this; }
+	inline Transform& Transform::moveRightward(fpSingle dist) { m_manager->moveRightward(m_id, dist); return *this; }
+	inline Transform& Transform::moveLeftward( fpSingle dist) { m_manager->moveLeftward( m_id, dist); return *this; }
 
-	akm::Mat4 Transform::translationMatrix() const { return m_manager.translationMatrix(m_id); }
-	akm::Mat3 Transform::rotationMatrix() const { return m_manager.rotationMatrix(m_id); }
-	akm::Mat3 Transform::scaleMatrix() const { return m_manager.scaleMatrix(m_id); }
+	inline Transform& Transform::rotate(fpSingle angle, const akm::Vec3& axis) { m_manager->rotate(m_id, angle, axis); return *this; }
+	inline Transform& Transform::rotate(const akm::Mat4& r) { m_manager->rotate(m_id, r); return *this; }
+	inline Transform& Transform::rotate(const akm::Quat& r) { m_manager->rotate(m_id, r); return *this; }
+	inline Transform& Transform::rotate(const akm::Vec3& r) { m_manager->rotate(m_id, r); return *this; }
 
-	akm::Vec3 Transform::up() const { return m_manager.up(m_id); }
-	akm::Vec3 Transform::right() const { return m_manager.right(m_id); }
-	akm::Vec3 Transform::forward() const { return m_manager.forward(m_id); }
+	inline Transform& Transform::scaleByFactor(fpSingle s) { m_manager->scaleByFactor(m_id, s); return *this; }
 
-	void Transform::setPosition(const akm::Vec3& pos)  { m_manager.setPosition(m_id, pos); }
-	void Transform::setRotation(const akm::Quat& rot)  { m_manager.setRotation(m_id, rot); }
-	void Transform::setScale(const akm::scalar_t& scl) { m_manager.setScale(m_id, scl); }
+	// ///////// //
+	// // Get // //
+	// ///////// //
+
+	inline akm::Mat4 Transform::localToParent() const { return m_manager->localToParent(m_id); }
+	inline akm::Mat4 Transform::parentToLocal() const { return m_manager->parentToLocal(m_id); }
+
+	inline akm::Vec3 Transform::localPosition() const { return m_manager->localPosition(m_id); }
+
+	inline akm::Mat4 Transform::localRotationMatrix() const { return m_manager->localRotationMatrix(m_id); }
+	inline akm::Quat Transform::localRotationQuat() const { return m_manager->localRotationQuat(m_id); }
+	inline akm::Vec3 Transform::localRotationEuler() const { return m_manager->localRotationEuler(m_id); }
+
+	inline fpSingle Transform::localScale() const { return m_manager->localScale(m_id); }
+
+	inline akm::Vec3 Transform::localRightward() const { return m_manager->localRightward(m_id); }
+	inline akm::Vec3 Transform::localLeftward()  const { return m_manager->localLeftward(m_id);  }
+	inline akm::Vec3 Transform::localUpward()    const { return m_manager->localUpward(m_id);    }
+	inline akm::Vec3 Transform::localDownward()  const { return m_manager->localDownward(m_id);  }
+	inline akm::Vec3 Transform::localForward()   const { return m_manager->localForward(m_id);   }
+	inline akm::Vec3 Transform::localBackward()  const { return m_manager->localBackward(m_id);  }
+
+	// ///////// //
+	// // Set // //
+	// ///////// //
+
+	inline Transform& Transform::setLocalPosition(const akm::Vec3& p) { m_manager->setPosition(m_id, p); return *this; }
+
+	inline Transform& Transform::setLocalRotation(const akm::Mat4& r) { m_manager->setLocalRotation(m_id, r); return *this; }
+	inline Transform& Transform::setLocalRotation(const akm::Quat& r) { m_manager->setLocalRotation(m_id, r); return *this; }
+	inline Transform& Transform::setLocalRotation(const akm::Vec3& r) { m_manager->setLocalRotation(m_id, r); return *this; }
+	inline Transform& Transform::setLocalRotation(const akm::Vec3& f, const akm::Vec3& u) { m_manager->setLocalRotation(m_id, f, u); return *this; }
+
+	inline Transform& Transform::setLocalScale(fpSingle s) { m_manager->setLocalScale(m_id, s); return *this; }
 
 	// /////////// //
-	// // Local // //
+	// // Apply // //
 	// /////////// //
-	akm::Mat4 Transform::localTransform() const { return m_manager.localTransform(m_id); }
 
-	akm::Vec3 Transform::localPosition() const { return m_manager.localPosition(m_id); }
-	akm::Quat Transform::localRotation() const { return m_manager.localRotation(m_id); }
-	akm::scalar_t Transform::localScale() const { return m_manager.localScale(m_id); }
+	inline Transform& Transform::moveLocal(const akm::Vec3& p) { m_manager->moveLocal(m_id, p); return *this; }
+	inline Transform& Transform::moveLocalForward(  fpSingle dist) { m_manager->moveLocalForward(  m_id, dist); return *this; }
+	inline Transform& Transform::moveLocalBackward( fpSingle dist) { m_manager->moveLocalBackward( m_id, dist); return *this; }
+	inline Transform& Transform::moveLocalUpward(   fpSingle dist) { m_manager->moveLocalUpward(   m_id, dist); return *this; }
+	inline Transform& Transform::moveLocalDownward( fpSingle dist) { m_manager->moveLocalDownward( m_id, dist); return *this; }
+	inline Transform& Transform::moveLocalRightward(fpSingle dist) { m_manager->moveLocalRightward(m_id, dist); return *this; }
+	inline Transform& Transform::moveLocalLeftward( fpSingle dist) { m_manager->moveLocalLeftward( m_id, dist); return *this; }
 
-	akm::Mat4 Transform::localTranslationMatrix() const { return m_manager.localTranslationMatrix(m_id); }
-	akm::Mat3 Transform::localRotationMatrix() const { return m_manager.localRotationMatrix(m_id); }
-	akm::Mat3 Transform::localScaleMatrix() const { return m_manager.localScaleMatrix(m_id); }
+	inline Transform& Transform::rotateLocal(fpSingle angle, const akm::Vec3& axis) { m_manager->rotateLocal(m_id, angle, axis); return *this; }
+	inline Transform& Transform::rotateLocal(const akm::Mat4& r) { m_manager->rotateLocal(m_id, r); return *this; }
+	inline Transform& Transform::rotateLocal(const akm::Quat& r) { m_manager->rotateLocal(m_id, r); return *this; }
+	inline Transform& Transform::rotateLocal(const akm::Vec3& r) { m_manager->rotateLocal(m_id, r); return *this; }
 
-	akm::Vec3 Transform::localUp() const { return m_manager.localUp(m_id); }
-	akm::Vec3 Transform::localRight() const { return m_manager.localRight(m_id); }
-	akm::Vec3 Transform::localForward() const { return m_manager.localForward(m_id); }
+	inline Transform& Transform::scaleLocalByFactor(fpSingle s) { m_manager->scaleLocalByFactor(m_id, s); return *this; }
 
-	void Transform::setLocalPosition(const akm::Vec3& pos)  { m_manager.setLocalPosition(m_id, pos); }
-	void Transform::setLocalRotation(const akm::Quat& rot)  { m_manager.setLocalRotation(m_id, rot); }
-	void Transform::setLocalScale(const akm::scalar_t& scl) { m_manager.setLocalScale(m_id, scl); }
+	// //////////////// //
+	// // Components // //
+	// //////////////// //
 
-	// /////////// //
-	// // Other // //
-	// /////////// //
-	void Transform::lookAt(const akm::Vec3& forward, const akm::Vec3& up)  { m_manager.lookAt(m_id, forward, up); }
-
-	// /////////// //
-	// // Other // //
-	// /////////// //
-	EntityID Transform::id() const { return m_id; }
+	inline EntityID Transform::id() const { return m_id; }
 }
 
 #endif
