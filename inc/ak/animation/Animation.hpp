@@ -85,6 +85,14 @@ namespace aka {
 
 			if (endFrame == frames.begin()) {
 
+				// @hack Maybe? Handle starting at 0 animTime
+				if (animTime >= endFrame->first) {
+					startFrame = frames.begin(); startTime = startFrame->first;
+					endFrame = frames.size() <= 1 ? frames.begin() : iter_t(frames.begin())++; endTime = endFrame->first;
+					return;
+				}
+
+				// @todo are these correct?
 				switch(preAnim) {
 					case TweenMode::None: {
 						startFrame = frames.end(); startTime = 0;

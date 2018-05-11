@@ -4,6 +4,7 @@ set(GUARD_AK_SRC_AK_ENGINE 1)
 
 sugar_files(AK_SOURCE Config.cpp EntityManager.cpp) 
 
+sugar_include(components)
 sugar_include(internal)
 
 endif()

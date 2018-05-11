@@ -411,12 +411,11 @@ static void startGame() {
 	fpSingle updateDelta = 1.f/ake::config()["engine"]["ticksPerSecond"].asOrDef<fpSingle>(60.f);
 	fpSingle renderDelta = 1.f/static_cast<fpSingle>(akw::currentMonitor().prefVideoMode.refreshRate);
 
-	aku::FPSCounter fps;
-	aku::FPSCounter tps;
+	aku::FPSCounter fps(10);
+	aku::FPSCounter tps(10);
 	aku::Timer loopTimer;
+	//aku::Timer renderTimer;
 	while(!akw::closeRequested()) {
-		loopTimer.reset();
-
 		while(updateAccum >= updateDelta) {
 			aku::Timer updateTimer;
 
@@ -428,14 +427,14 @@ static void startGame() {
 			updateAccum -= updateDelta;
 		}
 
-		renderFunc(renderDelta);
-		fps.update();
+		renderFunc(fps.update().avgTickDelta());
 
 		std::stringstream sstream;
-		sstream << fps.fps() << "fps | " << tps.fps() << "tps";
+		sstream << fps.avgTicksPerSecond() << "fps | " << tps.avgTicksPerSecond() << "tps";
 		akw::setTitle(sstream.str());
 
 		updateAccum += loopTimer.mark().secsf();
+		loopTimer.reset();
 	}
 }
 

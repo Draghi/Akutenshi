@@ -34,24 +34,34 @@ namespace aku {
 		public:
 			FPSCounter(uint64 maxSamples = 6) : m_maxSamples(maxSamples), m_samples() {}
 
-			void update() {
+			FPSCounter& update() {
 				m_counter++;
 				m_timer.mark();
 
-				if (m_timer.msecs() < 1000) return;
+				if (m_timer.msecs() < 1000) return *this;
 
-				while(m_samples.size() >= m_maxSamples) m_samples.pop_front();
 				m_samples.push_back((m_counter*1.0e9)/m_timer.nsecs());
+				while(m_samples.size() > m_maxSamples) m_samples.pop_front();
 
 				m_timer.reset();
 				m_counter = 0;
+
+				return *this;
 			}
 
-			fpDouble fps() {
+			fpDouble lastTicksPerSecond() const { return m_samples.empty() ? 0.f :     m_samples.back(); }
+			fpDouble lastTickDelta()      const { return m_samples.empty() ? 0.f : 1.f/m_samples.back(); }
+
+			fpDouble avgTicksPerSecond() const {
 				if (m_samples.size() == 0) return 0;
 				fpDouble totalFPS = 0;
 				for(auto iter = m_samples.begin(); iter != m_samples.end(); iter++) totalFPS += *iter;
 				return totalFPS/m_samples.size();
+			}
+
+			fpDouble avgTickDelta() const {
+				auto rate = avgTicksPerSecond();
+				return rate == 0 ? 0 : 1.f/rate;
 			}
 	};
 
