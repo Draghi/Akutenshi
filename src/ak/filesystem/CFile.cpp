@@ -14,7 +14,20 @@
  * limitations under the License.
  **/
 
-#include "ak/filesystem/CFile.hpp"
+#include <ak/filesystem/CFile.hpp>
+#include <ak/filesystem/Filesystem.hpp>
+#include <ak/Log.hpp>
+#include <ak/PrimitiveTypes.hpp>
+#include <stddef.h>
+#include <algorithm>
+#include <cstdio>
+#include <locale>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <system_error>
+#include <vector>
 
 using namespace akfs;
 
@@ -44,27 +57,27 @@ std::string CFile::openFlagsToCOpenFlags(uint8 openFlags) {
 
 CFile::CFile() : m_handle(nullptr), m_openFlags(None), m_path("") {}
 
-CFile::CFile(const stx::filesystem::path& path, uint8 openFlags) : m_handle(nullptr), m_openFlags(openFlags), m_path(stx::filesystem::absolute(path)) {
+CFile::CFile(const akfs::Path& path, uint8 openFlags) : m_handle(nullptr), m_openFlags(openFlags), m_path(path) {
 	bool hasNoCreateFlag = (openFlags & OpenFlags::NoCreate) == OpenFlags::NoCreate;
 	bool hasTruncateFlag = (openFlags & OpenFlags::Truncate) == OpenFlags::Truncate;
 	bool hasOutFlag      = (openFlags & OpenFlags::Out     ) == OpenFlags::Out;
 
 	if (hasOutFlag && hasNoCreateFlag && hasTruncateFlag) return;
-	if (hasNoCreateFlag && !stx::filesystem::exists(m_path)) return;
+	if (hasNoCreateFlag && !akfs::exists(m_path)) return;
 
 	/// @HACK Race Condition - Filesystem
 	/// Should only cause issues in rare circumstances (IE. another thread/process creates and writes to a file by the time we call fopen)
 	/// Spitball repercussions: dataloss, a failed fopen or invalid file pointer in another thread/program.
 	/// This is to support opening a file for non-appending write (+read) without truncating
-	if (hasOutFlag && !hasTruncateFlag && !stx::filesystem::exists(m_path)) openFlags |= OpenFlags::Truncate;
+	if (hasOutFlag && !hasTruncateFlag && !akfs::exists(m_path)) openFlags |= OpenFlags::Truncate;
 
 	auto cFlags = openFlagsToCOpenFlags(openFlags);
 	if (cFlags.empty()) throw std::invalid_argument("CFile::CFile - openFlags parameter is invalid.");
 
-	std::error_code errorCode;
-	if (hasOutFlag && !hasNoCreateFlag) stx::filesystem::create_directories(stx::filesystem::path(path).remove_filename(), errorCode);
+	if (hasOutFlag && !hasNoCreateFlag) akfs::makeDirectory(path.parent(), true);
 
-	m_handle = std::fopen(m_path.string().c_str(), cFlags.c_str());
+	m_handle = std::fopen(akfs::toSystemPath(m_path).c_str(), cFlags.c_str());
+	if (!m_handle) akl::Logger("").warn(akfs::toSystemPath(m_path));
 }
 
 CFile::CFile(CFile&& other) : m_handle(std::move(other.m_handle)), m_openFlags(std::move(other.m_openFlags)), m_path(std::move(other.m_path)) {
@@ -138,7 +151,5 @@ size_t CFile::writeLines(const std::string* lines, size_t lineCount, const std::
 }
 
 size_t CFile::sizeOnDisk() const {
-	std::error_code error_code;
-	auto size = stx::filesystem::file_size(m_path, error_code);
-	return error_code ? 0 : size;
+	return akfs::size(m_path);
 }

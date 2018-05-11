@@ -17,6 +17,8 @@
 #include <typeinfo>
 #include <vector>
 
+#include <ak/filesystem/Path.hpp>
+
 [[noreturn]] static void termHandler();
 
 extern int akGameMain();

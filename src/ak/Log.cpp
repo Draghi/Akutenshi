@@ -14,17 +14,26 @@
  * limitations under the License.
  **/
 
-#include <ak/thread/DoubleBuffer.hpp>
+#include <ak/data/PValue.hpp>
 #include <ak/engine/Config.hpp>
 #include <ak/event/Dispatcher.hpp>
-#include <ak/filesystem/Filesystem.hpp>
+#include <ak/filesystem/CFile.hpp>
+#include <ak/filesystem/Path.hpp>
 #include <ak/Log.hpp>
+#include <ak/PrimitiveTypes.hpp>
 #include <ak/ScopeGuard.hpp>
+#include <ak/thread/CurrentThread.hpp>
+#include <ak/thread/DoubleBuffer.hpp>
 #include <ak/thread/Spinlock.hpp>
-#include <stddef.h>
+#include <ak/thread/Thread.hpp>
+#include <ak/util/Time.hpp>
 #include <algorithm>
 #include <atomic>
+#include <deque>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
+#include <string>
 #include <utility>
 
 using namespace ak::log;
@@ -95,9 +104,9 @@ bool ak::log::enableFileOutput() {
 
 	auto utc = aku::utcTimestamp();
 	std::stringstream filename;
-	filename << "logs/log_" << std::put_time(&utc.ctime, "%Y%m%d_%H%M%S") << ".txt";
+	filename << "data/logs/log_" << std::put_time(&utc.ctime, "%Y%m%d_%H%M%S") << ".txt";
 
-	auto newLogFile = akfs::open(akfs::SystemFolder::appData, filename.str(), akfs::OpenFlags::Out | akfs::OpenFlags::Truncate);
+	auto newLogFile = akfs::CFile(filename.str(), akfs::OpenFlags::Out | akfs::OpenFlags::Truncate);
 	if (!newLogFile) return false;
 	logFile = std::move(newLogFile);
 

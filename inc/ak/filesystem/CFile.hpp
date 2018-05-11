@@ -17,12 +17,12 @@
 #ifndef AK_FILESYSTEM_CFILE_HPP_
 #define AK_FILESYSTEM_CFILE_HPP_
 
+#include <ak/filesystem/Path.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <stx/Filesystem.hpp>
+#include <bits/types/FILE.h>
 #include <stddef.h>
 #include <sys/types.h>
 #include <cstdio>
-#include <cstring>
 #include <cstring>
 #include <string>
 #include <type_traits>
@@ -61,7 +61,7 @@ namespace akfs {
 		private:
 			FILE* m_handle;
 			uint8 m_openFlags;
-			stx::filesystem::path m_path;
+			akfs::Path m_path;
 
 			/**
 			 * Converts the constructed open flags to the equivalent fopen flags
@@ -81,7 +81,7 @@ namespace akfs {
 			 * @param path The path to open
 			 * @param openFlags The OpenFlags flags (bitwise-or'd) to open the file with
 			 */
-			CFile(const stx::filesystem::path& path, uint8 openFlags);
+			CFile(const akfs::Path& path, uint8 openFlags);
 
 			/**
 			 * Move constructs a file
@@ -253,7 +253,7 @@ namespace akfs {
 			 * Returns the path of the file that was opened
 			 * @return The path of the file that was opened
 			 */
-			stx::filesystem::path path() const {
+			akfs::Path path() const {
 				return m_path;
 			}
 
@@ -283,11 +283,6 @@ namespace akfs {
 				return isOpen();
 			}
 	};
-
-	inline CFile open(const stx::filesystem::path& path, uint8 flags) {
-		return CFile(path, flags);
-	}
-
 }
 
 #endif

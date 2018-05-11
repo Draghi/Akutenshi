@@ -27,12 +27,12 @@
 #include <ak/data/PValue.hpp>
 #include <ak/engine/components/Camera.hpp>
 #include <ak/engine/components/Transform.hpp>
-#include <ak/engine/Camera.hpp>
 #include <ak/engine/Config.hpp>
 #include <ak/engine/EntityManager.hpp>
+#include <ak/engine/Type.hpp>
 #include <ak/event/Dispatcher.hpp>
 #include <ak/filesystem/CFile.hpp>
-#include <ak/filesystem/Filesystem.hpp>
+#include <ak/filesystem/Path.hpp>
 #include <ak/input/Keyboard.hpp>
 #include <ak/input/Keys.hpp>
 #include <ak/input/Mouse.hpp>
@@ -77,10 +77,10 @@ static void printLogHeader(const ak::log::Logger& logger);
 static ak::ScopeGuard startup();
 
 static akr::ShaderProgram buildShaderProgram(const std::vector<std::pair<akr::StageType, std::string>>& stages);
-static akr::Texture loadTexture(akfs::SystemFolder folderType, const stx::filesystem::path& path);
-static akr::Texture loadTextureCM(akfs::SystemFolder folder, const stx::filesystem::path& path);
+static akr::Texture loadTexture(const akfs::Path& path);
+static akr::Texture loadTextureCM(const akfs::Path& path);
 
-template<typename type_t> static type_t readMeshFile(const std::string& filename);
+template<typename type_t> static type_t readMeshFile(const akfs::Path& filename);
 
 static void startGame();
 
@@ -135,11 +135,11 @@ static void startGame() {
 
 	// Skybox
 		akr::ShaderProgram shaderSkybox = buildShaderProgram({
-			{akr::StageType::Vertex,   "shaders/skybox.vert"},
-			{akr::StageType::Fragment, "shaders/skybox.frag"},
+			{akr::StageType::Vertex,   "data/shaders/skybox.vert"},
+			{akr::StageType::Fragment, "data/shaders/skybox.frag"},
 		});
 
-		akr::Texture texSkybox = loadTextureCM(akfs::SystemFolder::appData, "textures/cubemap_snowy_street.aktex");
+		akr::Texture texSkybox = loadTextureCM("data/textures/cubemap_snowy_street.aktex");
 
 		akr::VertexArray vaSkybox; {
 			vaSkybox.enableVAttrib(0);
@@ -152,7 +152,7 @@ static void startGame() {
 
 	// Anim
 		// Pipeline
-		akr::ShaderProgram shaderMesh = buildShaderProgram({{akr::StageType::Vertex, "shaders/main.vert"}, {akr::StageType::Fragment, "shaders/main.frag"}});
+		akr::ShaderProgram shaderMesh = buildShaderProgram({{akr::StageType::Vertex, "data/shaders/main.vert"}, {akr::StageType::Fragment, "data/shaders/main.frag"}});
 
 		// VAO
 		akr::VertexArray vaMesh;
@@ -163,7 +163,7 @@ static void startGame() {
 		vaMesh.setVAttribFormat(6, 4, akr::DataType::Single);
 
 		// Mesh
-		aka::Mesh mesh = readMeshFile<aka::Mesh>("meshes/Human.akmesh");
+		aka::Mesh mesh = readMeshFile<aka::Mesh>("data/meshes/Human.akmesh");
 
 		// VBO
 		akr::Buffer vbufMeshVerts(mesh.vertexData().data(), mesh.vertexData().size()*sizeof(aka::VertexData));
@@ -173,7 +173,7 @@ static void startGame() {
 		vaMesh.bindVertexBuffer(3, vbufMeshVerts, sizeof(aka::VertexData), offsetof(aka::VertexData, normal));
 		vaMesh.bindVertexBuffer(4, vbufMeshVerts, sizeof(aka::VertexData), offsetof(aka::VertexData, texCoord));
 
-		aka::Skeleton skele = readMeshFile<aka::Skeleton>("meshes/Human.akskel");
+		aka::Skeleton skele = readMeshFile<aka::Skeleton>("data/meshes/Human.akskel");
 		auto poseData = aka::createPoseData(skele, mesh);
 		akr::Buffer vbufMeshPose(poseData.data(), poseData.size()*sizeof(aka::PoseData));
 		vaMesh.bindVertexBuffer(5, vbufMeshPose, sizeof(aka::PoseData), offsetof(aka::PoseData, boneIndicies));
@@ -185,11 +185,11 @@ static void startGame() {
 		akr::Buffer ubufMeshBones(skele.finalTransform().data(), sizeof(akm::Mat4)*skele.finalTransform().size(), akr::BufferHint_Dynamic);
 
 		// Tex
-		auto texMeshAlbedo   = loadTexture(akfs::SystemFolder::appData, "textures/brick_albedo.aktex");
-		auto texMeshNormal   = loadTexture(akfs::SystemFolder::appData, "textures/brick_norm.aktex");
-		auto texMeshSpecular = loadTexture(akfs::SystemFolder::appData, "textures/brick_spec.aktex");
+		auto texMeshAlbedo   = loadTexture("data/textures/brick_albedo.aktex");
+		auto texMeshNormal   = loadTexture("data/textures/brick_norm.aktex");
+		auto texMeshSpecular = loadTexture("data/textures/brick_spec.aktex");
 
-		aka::Animation anim = readMeshFile<aka::Animation>("meshes/Human.akanim");
+		aka::Animation anim = readMeshFile<aka::Animation>("data/meshes/Human.akanim");
 		aka::AnimPoseMap poseMap(skele, anim);
 
 	// Display Lists
@@ -516,7 +516,7 @@ static akr::ShaderProgram buildShaderProgram(const std::vector<std::pair<akr::St
 	akr::ShaderProgram program;
 
 	for(auto& stageInfo : stages) {
-		auto shaderFile = akfs::open(akfs::SystemFolder::appData, stageInfo.second, akfs::OpenFlags::In);
+		auto shaderFile = akfs::CFile(stageInfo.second, akfs::OpenFlags::In);
 		if (!shaderFile) throw std::runtime_error(ak::buildString("buildShaderProgram: Could not open file: ", stageInfo.second));
 
 		std::string source;
@@ -533,27 +533,27 @@ static akr::ShaderProgram buildShaderProgram(const std::vector<std::pair<akr::St
 	return program;
 }
 
-static akr::Texture loadTexture(akfs::SystemFolder folder, const stx::filesystem::path& path) {
-	auto textureFile = akfs::open(folder, path, akfs::OpenFlags::In);
-	if (!textureFile) throw std::runtime_error("Could not open texture file.");
+static akr::Texture loadTexture(const akfs::Path& filename) {
+	auto textureFile = akfs::CFile(filename, akfs::OpenFlags::In);
+	if (!textureFile) throw std::runtime_error(ak::buildString("Failed to open texture: ", filename.str()));
 
 	std::vector<uint8> textureData;
-	if (!textureFile.readAll(textureData)) throw std::runtime_error("Could not read texture file.");
+	if (!textureFile.readAll(textureData)) throw std::runtime_error(ak::buildString("Failed to read texture: ", filename.str()));
 	textureData = akd::decompressBrotli(textureData);
 
 	akd::PValue textureConfig;
-	if (!akd::fromMsgPack(textureConfig, textureData)) throw std::runtime_error("Could not parse texture file.");
+	if (!akd::fromMsgPack(textureConfig, textureData)) throw std::runtime_error(ak::buildString("Failed to parse texture: ", filename.str()));
 
 	std::optional<akr::Texture> tex;
 
 	if (textureConfig["hdr"].asBool()) {
 		akd::ImageF32 image;
-		if (!akd::deserialize(textureConfig["image"], image)) throw std::runtime_error("Could not deserialize hdr image file");
+		if (!akd::deserialize(textureConfig["image"], image)) throw std::runtime_error(ak::buildString("Failed to deserialize texture: ", filename.str()));
 		tex = akr::createTex2D(0, akr::TexStorage::Single, image);
 		if (!tex) throw std::runtime_error("Could not create texture.");
 	} else {
 		akd::ImageU8 image;
-		if (!akd::deserialize(textureConfig["image"], image)) throw std::runtime_error("Could not deserialize ldr image file");
+		if (!akd::deserialize(textureConfig["image"], image)) throw std::runtime_error(ak::buildString("Failed to deserialize texture: ", filename.str()));
 		tex = akr::createTex2D(0, akr::TexStorage::Byte, image);
 		if (!tex) throw std::runtime_error("Could not create texture.");
 	}
@@ -564,27 +564,27 @@ static akr::Texture loadTexture(akfs::SystemFolder folder, const stx::filesystem
 	return std::move(*tex);
 }
 
-static akr::Texture loadTextureCM(akfs::SystemFolder folder, const stx::filesystem::path& path) {
-	auto textureFile = akfs::open(folder, path, akfs::OpenFlags::In);
-	if (!textureFile) throw std::runtime_error("Could not open texture file.");
+static akr::Texture loadTextureCM(const akfs::Path& filename) {
+	auto textureFile = akfs::CFile(filename, akfs::OpenFlags::In);
+	if (!textureFile) throw std::runtime_error(ak::buildString("Failed to open texture: ", filename.str()));
 
 	std::vector<uint8> textureData;
-	if (!textureFile.readAll(textureData)) throw std::runtime_error("Could not read texture file.");
+	if (!textureFile.readAll(textureData)) throw std::runtime_error(ak::buildString("Failed to read texture: ", filename.str()));
 	textureData = akd::decompressBrotli(textureData);
 
 	akd::PValue textureConfig;
-	if (!akd::fromMsgPack(textureConfig, textureData)) throw std::runtime_error("Could not parse texture file.");
+	if (!akd::fromMsgPack(textureConfig, textureData)) throw std::runtime_error(ak::buildString("Failed to parse texture: ", filename.str()));
 
 	std::optional<akr::Texture> tex;
 
 	if (textureConfig["hdr"].asBool()) {
 		akd::ImageF32 image;
-		if (!akd::deserialize(textureConfig["image"], image)) throw std::runtime_error("Could not deserialize image file");
+		if (!akd::deserialize(textureConfig["image"], image)) throw std::runtime_error(ak::buildString("Failed to deserialize texture: ", filename.str()));
 		tex = akr::createTexCubemap(0, akr::TexStorage::Single, image);
 		if (!tex) throw std::runtime_error("Could not create texture.");
 	} else {
 		akd::ImageU8 image;
-		if (!akd::deserialize(textureConfig["image"], image)) throw std::runtime_error("Could not deserialize image file");
+		if (!akd::deserialize(textureConfig["image"], image)) throw std::runtime_error(ak::buildString("Failed to deserialize texture: ", filename.str()));
 		tex = akr::createTexCubemap(0, akr::TexStorage::Byte, image);
 		if (!tex) throw std::runtime_error("Could not create texture.");
 	}
@@ -595,22 +595,20 @@ static akr::Texture loadTextureCM(akfs::SystemFolder folder, const stx::filesyst
 	return std::move(*tex);
 }
 
-template<typename type_t> static type_t readMeshFile(const std::string& filename) {
-	auto file = akfs::open(akfs::SystemFolder::appData, filename, akfs::OpenFlags::In);
-	if (file) {
-		std::vector<uint8> compressedData;
-		compressedData.resize(file.sizeOnDisk());
-		if (!file.read(compressedData.data(), compressedData.size())) throw std::runtime_error("Failed to read file.");
-		auto data = akd::decompressBrotli(compressedData);
-		akd::PValue dTree;
-		if (!akd::fromMsgPack(dTree, data)) throw std::runtime_error("Failed to parse file.");
+template<typename type_t> static type_t readMeshFile(const akfs::Path& filename) {
+	auto file = akfs::CFile(filename, akfs::OpenFlags::In);
+	if (!file) throw std::runtime_error(ak::buildString("Failed to open mesh: ", filename.str()));
 
-		type_t result;
-		if (!akd::deserialize(result, dTree)) throw std::runtime_error("Failed to deserialize file.");
-		return result;
-	} else {
-		throw std::runtime_error("Failed to load mesh.");
-	}
+	std::vector<uint8> compressedData;
+	compressedData.resize(file.sizeOnDisk());
+	if (!file.read(compressedData.data(), compressedData.size())) throw std::runtime_error(ak::buildString("Failed to read mesh: ", filename.str()));
+	auto data = akd::decompressBrotli(compressedData);
+	akd::PValue dTree;
+	if (!akd::fromMsgPack(dTree, data)) throw std::runtime_error(ak::buildString("Failed to parse mesh: ", filename.str()));
+
+	type_t result;
+	if (!akd::deserialize(result, dTree)) throw std::runtime_error(ak::buildString("Failed to deserialize mesh: ", filename.str()));
+	return result;
 }
 
 static const auto cb = ake::regenerateConfigDispatch().subscribe([](ake::RegenerateConfigEvent& ev){

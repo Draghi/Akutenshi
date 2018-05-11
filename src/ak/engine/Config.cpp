@@ -15,18 +15,18 @@
  **/
 
 #include <ak/data/Json.hpp>
+#include <ak/data/PValue.hpp>
 #include <ak/engine/Config.hpp>
+#include <ak/event/Dispatcher.hpp>
 #include <ak/filesystem/CFile.hpp>
-#include <ak/Log.hpp>
-#include <experimental/filesystem>
-#include <iostream>
+#include <ak/filesystem/Filesystem.hpp>
+#include <ak/filesystem/Path.hpp>
 #include <string>
-#include <system_error>
 
 using namespace ake;
 
-static const stx::filesystem::path CONFIG_PATH = "./akutenshi.config";
-static const stx::filesystem::path BACKUP_PATH = "./akutenshi.config.akbak";
+static const akfs::Path CONFIG_PATH("./akutenshi.config");
+static const akfs::Path BACKUP_PATH("./akutenshi.config.akbak");
 
 static bool backupConfig();
 static bool deleteBackup();
@@ -104,26 +104,14 @@ bool ake::saveConfig() {
 }
 
 static bool backupConfig() {
-	std::error_code err;
-	stx::filesystem::remove(BACKUP_PATH, err);
-
-	err.clear();
-	stx::filesystem::rename(CONFIG_PATH, BACKUP_PATH, err);
-	return !(err && stx::filesystem::exists(CONFIG_PATH));
+	return akfs::rename(CONFIG_PATH, BACKUP_PATH, true);
 }
 
 static bool deleteBackup() {
-	std::error_code err;
-	stx::filesystem::remove(BACKUP_PATH, err);
-	return !stx::filesystem::exists(CONFIG_PATH);
+	return akfs::remove(BACKUP_PATH);
 }
 
 static bool restoreBackup() {
-	std::error_code err;
-	stx::filesystem::remove(CONFIG_PATH, err);
-
-	err.clear();
-	stx::filesystem::rename(BACKUP_PATH, CONFIG_PATH, err);
-	return !(err && stx::filesystem::exists(BACKUP_PATH));
+	return akfs::rename(BACKUP_PATH, CONFIG_PATH, true);
 }
 

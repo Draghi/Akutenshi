@@ -17,11 +17,11 @@
 #ifndef AKRES_MODELS_HPP_
 #define AKRES_MODELS_HPP_
 
-#include <stx/Filesystem.hpp>
+#include <ak/filesystem/Path.hpp>
 #include <string>
 
 namespace akres {
-	bool doPackModel(const stx::filesystem::path& srcPath, const stx::filesystem::path& outPath, const std::string& cfgName);
+	bool doPackModel(const akfs::Path& srcPath, const akfs::Path& outPath, const std::string& cfgName);
 }
 
 #endif

@@ -14,287 +14,135 @@
  * limitations under the License.
  **/
 
-#include <ak/engine/Config.hpp>
-#include <ak/event/Dispatcher.hpp>
-#include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Filesystem.hpp>
-#include <stddef.h>
-#include <stx/Filesystem.hpp>
-#include <cstdlib>
-#include <experimental/filesystem>
+#include <ak/filesystem/Path.hpp>
+#include <ak/Log.hpp>
+#include <ak/PrimitiveTypes.hpp>
+#include <ak/ScopeGuard.hpp>
+#include <ak/String.hpp>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <cstdio>
+#include <functional>
+#include <stdexcept>
 #include <string>
+#include <unordered_map>
+#include <utility>
 
 using namespace akfs;
 
-#ifdef __linux__
+class VFSMounts final {
+	private:
+		std::unordered_map<std::string, std::string> m_vfsToSys = {
+			{"./", "./"},
+			{"data/", "./data/"},
+			{"config/", "./config/"},
+			{"cache/", "./cache/"}
 
-#include <unistd.h>
-#include <sys/types.h>
-#include <pwd.h>
+		};
+		std::unordered_map<std::string, std::string> m_sysToVfs;
 
-static stx::filesystem::path getHomeDirectory() {
-	char* homeEnv = getenv("HOME");
-	if ((homeEnv) && (homeEnv[0]!='\0')) return stx::filesystem::path(homeEnv);
+	public:
+		bool mount(std::string mountPoint, std::string systemPath) {
+			if (mountPoint.back() != '/') mountPoint += '/';
+			if (systemPath.back() != '/') systemPath += '/';
 
-	struct passwd *pw = getpwuid(getuid());
-	return stx::filesystem::path(pw->pw_dir);
+			if (!m_vfsToSys.insert({mountPoint, systemPath}).second) return false;
+			if (!m_sysToVfs.insert({systemPath, mountPoint}).second) {
+				m_vfsToSys.erase(mountPoint);
+				return false;
+			}
+			return true;
+		}
+
+		void unmount(std::string mountPoint) {
+			if (mountPoint.back() != '/') mountPoint += '/';
+
+			auto iter = m_vfsToSys.find(mountPoint);
+			if (iter == m_vfsToSys.end()) return;
+			m_sysToVfs.erase(iter->second);
+			m_vfsToSys.erase(iter);
+		}
+
+		std::string vfsToSys(std::string vfsPoint) const {
+			if (vfsPoint.back() != '/') vfsPoint += '/';
+
+			auto iter = m_vfsToSys.find(vfsPoint);
+			if (iter == m_vfsToSys.end()) throw std::logic_error(ak::buildString("Unable to resolve vfsMountPoint: ", vfsPoint));
+			return iter->second;
+		}
+};
+
+static VFSMounts& vfsMounts() {
+	static VFSMounts instance;
+	return instance;
 }
 
-static std::optional<stx::filesystem::path> resolveSystemPath(SystemFolder folder) {
-	switch(folder) {
-		case SystemFolder::none: return stx::filesystem::path();
-
-		case SystemFolder::appData: return stx::filesystem::path("./data");
-		case SystemFolder::appConfig: return stx::filesystem::path("./config");
-		case SystemFolder::appCache: return stx::filesystem::path("./cache");
-
-		case SystemFolder::userDesktop: {
-			char* envDir = getenv("XDG_DESKTOP_DIR");
-			if ((envDir) && (envDir[0]!='\0')) return stx::filesystem::path(envDir);
-			return getHomeDirectory()/"Desktop";
-		}
-
-		case SystemFolder::userDocuments: {
-			char* envDir = getenv("XDG_DOCUMENTS_DIR");
-			if ((envDir) && (envDir[0]!='\0')) return stx::filesystem::path(envDir);
-			return getHomeDirectory()/"Documents";
-		}
-
-		case SystemFolder::userDownloads: {
-			char* envDir = getenv("XDG_DOWNLOAD_DIR");
-			if ((envDir) && (envDir[0]!='\0')) return stx::filesystem::path(envDir);
-			return getHomeDirectory()/"Downloads";
-		}
-
-		case SystemFolder::userPictures: {
-			char* envDir = getenv("XDG_PICTURES_DIR");
-			if ((envDir) && (envDir[0]!='\0')) return stx::filesystem::path(envDir);
-			return getHomeDirectory()/"Pictures";
-		}
-
-		case SystemFolder::userVideos: {
-			char* envDir = getenv("XDG_VIDEOS_DIR");
-			if ((envDir) && (envDir[0]!='\0')) return stx::filesystem::path(envDir);
-			return getHomeDirectory()/"Videos";
-		}
-
-		case SystemFolder::userMusic: {
-			char* envDir = getenv("XDG_MUSIC_DIR");
-			if ((envDir) && (envDir[0]!='\0')) return stx::filesystem::path(envDir);
-			return getHomeDirectory()/"Music";
-		}
-
-
-		case SystemFolder::localData:
-		case SystemFolder::userSaveGames:
-		case SystemFolder::userData: {
-			char* envDir = getenv("XDG_DATA_HOME");
-			if ((envDir) && (envDir[0]!='\0')) return stx::filesystem::path(envDir);
-			return getHomeDirectory()/".local"/"share";
-		}
-
-		case SystemFolder::localConfig:
-		case SystemFolder::userConfig: {
-			char* envDir = getenv("XDG_CONFIG_HOME");
-			if ((envDir) && (envDir[0]!='\0')) return stx::filesystem::path(envDir);
-			return getHomeDirectory()/".config";
-		}
-
-		case SystemFolder::localCache: {
-			char* envDir = getenv("XDG_CACHE_HOME");
-			if ((envDir) && (envDir[0]!='\0')) return stx::filesystem::path(envDir);
-			return getHomeDirectory()/".cache";
-		}
-
-		case SystemFolder::searchCache:
-		case SystemFolder::searchConfig:
-		case SystemFolder::searchData:
-		default: {
-			return std::optional<stx::filesystem::path>();
-		}
+bool akfs::makeDirectory(const akfs::Path& path, bool recursive) {
+	if (!recursive) {
+		auto sysPath = toSystemPath(path);
+		::mkdir(sysPath.c_str(), 0777);
+		return exists(path);
 	}
-}
 
-#elif defined(_WIN32)
-
-static std::optional<stx::filesystem::path> resolveSystemPath(SystemFolder folder) {
-	return std::optional<stx::filesystem::path>();
-}
-
-#else
-#	warning "Timer unsupported"
-#endif
-
-static std::array<std::optional<stx::filesystem::path>, SYSTEM_FOLDER_ENUM_COUNT>& systemFolders() {
-	static std::array<std::optional<stx::filesystem::path>, SYSTEM_FOLDER_ENUM_COUNT>* systemFolders = []{
-		auto* ptr = new std::array<std::optional<stx::filesystem::path>, SYSTEM_FOLDER_ENUM_COUNT>();
-		for(size_t i = 0; i < ptr->size(); i++) (*ptr)[i] = resolveSystemPath(static_cast<SystemFolder>(i));
-		return ptr;
-	}();
-	return *systemFolders;
-}
-
-static std::optional<stx::filesystem::path>& systemFolder(SystemFolder folder) {
-	return systemFolders()[static_cast<size_t>(folder)];
-}
-
-
-void akfs::overrideFolder(SystemFolder folder, const stx::filesystem::path& path) {
-	auto index = static_cast<uint8>(folder);
-	if ((index >= systemFolders().size()) || (index <= 0)) return;
-	systemFolders()[index] = path;
-}
-
-void akfs::resetFolder(SystemFolder folder) {
-	auto index = static_cast<uint8>(folder);
-	if (index >= systemFolders().size()) return;
-	systemFolders()[index] = resolveSystemPath(folder);
-}
-
-std::optional<stx::filesystem::path> akfs::resolveFolder(SystemFolder folder) {
-	auto index = static_cast<uint8>(folder);
-	if (index >= systemFolders().size()) return std::optional<stx::filesystem::path>();
-	return systemFolders()[index];
-}
-
-akfs::CFile akfs::open(SystemFolder folder, const stx::filesystem::path& path, uint8 openFlags) {
-	auto index = static_cast<uint8>(folder);
-	if (index < systemFolders().size()) return akfs::CFile(resolveFolder(folder).value()/path, openFlags);
-
-	switch(folder) {
-		case SystemFolder::searchCache: {
-
-			akfs::CFile file;
-			uint8 searchFlags = openFlags | OpenFlags::NoCreate;
-			for(akSize i = 0; i < 2; i++) {
-				file = akfs::CFile(resolveFolder(SystemFolder::localCache).value()/path, searchFlags);
-				if (file) return file;
-
-				file = akfs::CFile(resolveFolder(SystemFolder::appCache).value()/path, searchFlags);
-				if (file) return file;
-
-				searchFlags = openFlags;
-			}
-
-			return akfs::CFile();
-		}
-
-		case SystemFolder::searchConfig: {
-
-			akfs::CFile file;
-			uint8 searchFlags = openFlags | OpenFlags::NoCreate;
-			for(akSize i = 0; i < 2; i++) {
-				file = akfs::CFile(resolveFolder(SystemFolder::userConfig).value()/path, searchFlags);
-				if (file) return file;
-
-				file = akfs::CFile(resolveFolder(SystemFolder::localConfig).value()/path, searchFlags);
-				if (file) return file;
-
-				file = akfs::CFile(resolveFolder(SystemFolder::appConfig).value()/path, searchFlags);
-				if (file) return file;
-
-				searchFlags = openFlags;
-			}
-
-			return akfs::CFile();
-		}
-
-		case SystemFolder::searchData: {
-
-			akfs::CFile file;
-			uint8 searchFlags = openFlags | OpenFlags::NoCreate;
-			for(akSize i = 0; i < 2; i++) {
-				file = akfs::CFile(resolveFolder(SystemFolder::userData).value()/path, searchFlags);
-				if (file) return file;
-
-				file = akfs::CFile(resolveFolder(SystemFolder::localData).value()/path, searchFlags);
-				if (file) return file;
-
-				file = akfs::CFile(resolveFolder(SystemFolder::appData).value()/path, searchFlags);
-				if (file) return file;
-
-				searchFlags = openFlags;
-			}
-
-			return akfs::CFile();
-		}
-
-		case SystemFolder::none:
-		case SystemFolder::appData:
-		case SystemFolder::appConfig:
-		case SystemFolder::appCache:
-		case SystemFolder::userDesktop:
-		case SystemFolder::userDocuments:
-		case SystemFolder::userDownloads:
-		case SystemFolder::userPictures:
-		case SystemFolder::userVideos:
-		case SystemFolder::userMusic:
-		case SystemFolder::userData:
-		case SystemFolder::userConfig:
-		case SystemFolder::userSaveGames:
-		case SystemFolder::localData:
-		case SystemFolder::localConfig:
-		case SystemFolder::localCache:
-		default:
-			return akfs::CFile();
+	auto cDir = vfsMounts().vfsToSys(path.front());
+	for(akSize i = 1; i < path.size(); i++) {
+		cDir.append(path.at(i));
+		::mkdir(cDir.c_str(), 0777);
 	}
+	return exists(path);
 }
 
-void akfs::serializeFolders(akd::PValue& root) {
-	root["appData"].trySet<std::string>(systemFolder(SystemFolder::appData));
-	root["appConfig"].trySet<std::string>(systemFolder(SystemFolder::appConfig));
-	root["appCache"].trySet<std::string>(systemFolder(SystemFolder::appCache));
-
-	root["userDesktop"].trySet<std::string>(systemFolder(SystemFolder::userDesktop));
-	root["userDocuments"].trySet<std::string>(systemFolder(SystemFolder::userDocuments));
-	root["userDownloads"].trySet<std::string>(systemFolder(SystemFolder::userDownloads));
-	root["userPictures"].trySet<std::string>(systemFolder(SystemFolder::userPictures));
-	root["userVideos"].trySet<std::string>(systemFolder(SystemFolder::userVideos));
-	root["userMusic"].trySet<std::string>(systemFolder(SystemFolder::userMusic));
-
-	root["userData"].trySet<std::string>(systemFolder(SystemFolder::userData));
-	root["userConfig"].trySet<std::string>(systemFolder(SystemFolder::userConfig));
-	root["userSaveGames"].trySet<std::string>(systemFolder(SystemFolder::userSaveGames));
-
-	root["localData"].trySet<std::string>(systemFolder(SystemFolder::localData));
-	root["localConfig"].trySet<std::string>(systemFolder(SystemFolder::localConfig));
-	root["localCache"].trySet<std::string>(systemFolder(SystemFolder::localCache));
+bool akfs::exists(const akfs::Path& path) {
+	auto sysPath = toSystemPath(path);
+	struct stat st;
+	return (stat(sysPath.c_str(), &st) != 0);
 }
 
-void akfs::deserializeFolders(const akd::PValue& root) {
-	root.atOrDef("appData").tryAssign<std::string>(systemFolder(SystemFolder::appData));
-	root.atOrDef("appConfig").tryAssign<std::string>(systemFolder(SystemFolder::appConfig));
-	root.atOrDef("appCache").tryAssign<std::string>(systemFolder(SystemFolder::appCache));
-
-	root.atOrDef("userDesktop").tryAssign<std::string>(systemFolder(SystemFolder::userDesktop));
-	root.atOrDef("userDocuments").tryAssign<std::string>(systemFolder(SystemFolder::userDocuments));
-	root.atOrDef("userDownloads").tryAssign<std::string>(systemFolder(SystemFolder::userDownloads));
-	root.atOrDef("userPictures").tryAssign<std::string>(systemFolder(SystemFolder::userPictures));
-	root.atOrDef("userVideos").tryAssign<std::string>(systemFolder(SystemFolder::userVideos));
-	root.atOrDef("userMusic").tryAssign<std::string>(systemFolder(SystemFolder::userMusic));
-
-	root.atOrDef("userData").tryAssign<std::string>(systemFolder(SystemFolder::userData));
-	root.atOrDef("userConfig").tryAssign<std::string>(systemFolder(SystemFolder::userConfig));
-	root.atOrDef("userSaveGames").tryAssign<std::string>(systemFolder(SystemFolder::userSaveGames));
-
-	root.atOrDef("localData").tryAssign<std::string>(systemFolder(SystemFolder::localData));
-	root.atOrDef("localConfig").tryAssign<std::string>(systemFolder(SystemFolder::localData));
-	root.atOrDef("localCache").tryAssign<std::string>(systemFolder(SystemFolder::localData));
+bool akfs::remove(const akfs::Path& path) {
+	auto sysPath = toSystemPath(path);
+	return ::remove(path.str().c_str()) != -1;
 }
 
-std::optional<stx::filesystem::path> akfs::removeBasePath(const stx::filesystem::path& base, const stx::filesystem::path& val) {
-	auto lStr = base.native(); auto rStr = val.native();
-	size_t pos = rStr.find_first_of(lStr);
-	if (pos == std::string::npos) return std::optional<stx::filesystem::path>();
-	return rStr.substr(pos + lStr.size());
+bool akfs::rename(const akfs::Path& src, const akfs::Path& dst, bool overwrite) {
+	auto srcSysPath = toSystemPath(src);
+	auto dstSysPath = toSystemPath(dst);
+	if (overwrite && exists(dst)) remove(dst);
+	return ::rename(srcSysPath.c_str(), dstSysPath.c_str()) != -1;
 }
 
-static akev::SubscriberID fsSInitRegenerateConfigHook = ake::regenerateConfigDispatch().subscribe([](ake::RegenerateConfigEvent& event){
-	serializeFolders(event.data()["systemFolders"]);
-});
+akSize akfs::size(const akfs::Path& path) {
+	auto sysPath = toSystemPath(path);
+	struct stat st;
+	return stat(sysPath.c_str(), &st) == 0 ? static_cast<akSize>(st.st_size) : 0;
+}
 
-static akev::SubscriberID fsSInitSetConfigHook = ake::setConfigDispatch().subscribe([](ake::SetConfigEvent& event){
-	auto systemFolders = event.data().atOrDef("systemFolders");
-	akfs::deserializeFolders(systemFolders);
-});
+void akfs::iterateDirectory(const akfs::Path& path, const std::function<void(const akfs::Path&)> callback, bool recursive) {
+	auto sysPath = toSystemPath(path);
+
+	auto dir = ::opendir(sysPath.c_str());
+	if (!dir) return;
+	auto dirGuard = ak::ScopeGuard([&]{::closedir(dir);});
+
+	struct dirent* entry = nullptr;
+	while((entry = ::readdir(dir))) {
+		auto cPath = path/std::string(entry->d_name);
+
+		if (recursive) {
+			struct stat st;
+			if (stat(cPath.str().c_str(), &st) != 0) continue;
+			if (S_ISDIR(st.st_mode)) {
+				iterateDirectory(path/std::string(entry->d_name), callback, true);
+			}
+		}
+
+		callback(cPath);
+	}
+
+}
+
+std::string akfs::toSystemPath(const akfs::Path& path) {
+	if (path.empty()) return "";
+	return vfsMounts().vfsToSys(path.front()) + Path(path).pop_front().str();
+}
 

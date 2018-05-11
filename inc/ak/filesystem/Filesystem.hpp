@@ -17,60 +17,22 @@
 #ifndef AK_FILESYSTEM_FILESYSTEM_HPP_
 #define AK_FILESYSTEM_FILESYSTEM_HPP_
 
-#include <ak/data/PValue.hpp>
-#include <ak/PrimitiveTypes.hpp>
-#include <stx/Filesystem.hpp>
-#include <array>
-#include <optional>
-
-namespace akfs {
-	class CFile;
-}
+#include <ak/filesystem/Path.hpp>
 
 namespace akfs {
 
-	enum class SystemFolder : uint8 {
-		none,
+	bool makeDirectory(const akfs::Path& path, bool recursive = true);
 
-		appData,
-		appConfig,
-		appCache,
+	bool exists(const akfs::Path& path);
+	bool remove(const akfs::Path& path);
+	bool rename(const akfs::Path& src, const akfs::Path& dst, bool overwrite = false);
 
-		userDesktop,
-		userDocuments,
-		userDownloads,
-		userPictures,
-		userVideos,
-		userMusic,
+	akSize size(const akfs::Path& path);
 
-		userData,
-		userConfig,
-		userSaveGames,
+	void iterateDirectory(const akfs::Path& path, const std::function<void(const akfs::Path&)> callback, bool recursive);
 
-		localData,
-		localConfig,
-		localCache,
+	std::string toSystemPath(const akfs::Path& path);
 
-		// ///////////////////////// //
-		// // Special Directories // //
-		// ///////////////////////// //
-		searchData,
-		searchConfig,
-		searchCache,
-	};
-
-	constexpr uint8 SYSTEM_FOLDER_ENUM_COUNT = static_cast<uint8>(SystemFolder::localCache) + 1;
-
-	void overrideFolder(SystemFolder folder, const stx::filesystem::path& path);
-	void resetFolder(SystemFolder folder);
-
-	std::optional<stx::filesystem::path> resolveFolder(SystemFolder folder);
-	akfs::CFile open(SystemFolder folder, const stx::filesystem::path& path, uint8 openFlags);
-
-	void serializeFolders(akd::PValue& root);
-	void deserializeFolders(const akd::PValue& root);
-
-	std::optional<stx::filesystem::path> removeBasePath(const stx::filesystem::path& base, const stx::filesystem::path& val);
 }
 
 #endif

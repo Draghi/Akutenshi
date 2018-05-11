@@ -70,12 +70,12 @@ template<typename type_t> static akm::Mat4 aiMatToAk(const aiMatrix4x4t<type_t>&
 	};
 }
 
-bool akres::doPackModel(const stx::filesystem::path& srcPath, const stx::filesystem::path& outPath, const std::string& modelName) {
+bool akres::doPackModel(const akfs::Path& srcPath, const akfs::Path& outPath, const std::string& modelName) {
 	aku::Timer modelTimer;
-	std::cout << "[Model] Start processing: " << (srcPath/modelName).string() << std::endl;
+	std::cout << "[Model] Start processing: " << (srcPath/modelName).str() << std::endl;
 
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile((srcPath/modelName).string(),
+	const aiScene* scene = importer.ReadFile((srcPath/modelName).str(),
 		  aiProcess_Triangulate
 		//| aiProcess_SortByPType
 		| aiProcess_CalcTangentSpace
@@ -99,9 +99,11 @@ bool akres::doPackModel(const stx::filesystem::path& srcPath, const stx::filesys
 		auto meshData = extractMesh(mesh);
 		std::cout << "[Mesh] Extraction complete." << std::endl;
 
-		auto oFile = akfs::open(outPath/stx::filesystem::path(modelName).replace_extension(".akmesh"), akfs::OpenFlags::Out | akfs::OpenFlags::Truncate);
-		if (oFile) std::cout << "[Mesh] Opened '"         << oFile.path().string() << "' for output." << std::endl;
-		else {     std::cout << "[Mesh] Failed to open '" << oFile.path().string() << "' for output." << std::endl; return false; }
+		auto tmpPath = outPath/modelName;
+		auto outFilename = akfs::Path(tmpPath.str().substr(tmpPath.str().size() - tmpPath.extension().size()) + ".akmesh");
+		auto oFile = akfs::CFile(outFilename, akfs::OpenFlags::Out | akfs::OpenFlags::Truncate);
+		if (oFile) std::cout << "[Mesh] Opened '"         << oFile.path().str() << "' for output." << std::endl;
+		else {     std::cout << "[Mesh] Failed to open '" << oFile.path().str() << "' for output." << std::endl; return false; }
 
 		std::cout << "[Mesh] Converting to generic data representation..." << std::endl;
 		akd::PValue meshCfg;
@@ -128,9 +130,11 @@ bool akres::doPackModel(const stx::filesystem::path& srcPath, const stx::filesys
 		std::cout << "[Skel] Extraction complete." << std::endl;
 
 		{
-			auto oFile = akfs::open(outPath/stx::filesystem::path(modelName).replace_extension(".akskel"), akfs::OpenFlags::Out | akfs::OpenFlags::Truncate);
-			if (oFile) std::cout << "[Skel] Opened '"         << oFile.path().string() << "' for output." << std::endl;
-			else {     std::cout << "[Skel] Failed to open '" << oFile.path().string() << "' for output." << std::endl; return false; }
+			auto tmpPath = outPath/modelName;
+			auto outFilename = akfs::Path(tmpPath.str().substr(tmpPath.str().size() - tmpPath.extension().size()) + ".akskel");
+			auto oFile = akfs::CFile(outFilename, akfs::OpenFlags::Out | akfs::OpenFlags::Truncate);
+			if (oFile) std::cout << "[Skel] Opened '"         << oFile.path().str() << "' for output." << std::endl;
+			else {     std::cout << "[Skel] Failed to open '" << oFile.path().str() << "' for output." << std::endl; return false; }
 
 			std::cout << "[Skel] Converting to generic data representation..." << std::endl;
 			akd::PValue skeletonCfg;
@@ -158,9 +162,11 @@ bool akres::doPackModel(const stx::filesystem::path& srcPath, const stx::filesys
 			for(auto& anim : animations) {
 				std::string animName = ak::replaceSubstrings(anim.first, "_", {"/", "<", ">", ":", "\"", "/", "|", "?", "*", "^", "-"});
 
-				auto oFile = akfs::open(outPath/stx::filesystem::path(modelName).replace_extension(animName + ".akanim"), akfs::OpenFlags::Out | akfs::OpenFlags::Truncate);
-				if (oFile) std::cout << "[Anim] Opened '"         << oFile.path().string() << "' for output." << std::endl;
-				else {     std::cout << "[Anim] Failed to open '" << oFile.path().string() << "' for output." << std::endl; return false; }
+				auto tmpPath = outPath/modelName;
+				auto outFilename = akfs::Path(tmpPath.str().substr(tmpPath.str().size() - tmpPath.extension().size()) + ".akanim");
+				auto oFile = akfs::CFile(outFilename, akfs::OpenFlags::Out | akfs::OpenFlags::Truncate);
+				if (oFile) std::cout << "[Anim] Opened '"         << oFile.path().str() << "' for output." << std::endl;
+				else {     std::cout << "[Anim] Failed to open '" << oFile.path().str() << "' for output." << std::endl; return false; }
 
 				std::cout << "[Anim] Converting to generic data representation..." << std::endl;
 				akd::PValue animCfg;

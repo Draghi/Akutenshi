@@ -40,43 +40,44 @@
 
 using namespace akres;
 
-template<typename type_t> static akd::Image<type_t> load1DTexture(const stx::filesystem::path& srcPath, const akd::PValue& config);
-template<typename type_t> static akd::Image<type_t> load2DTexture(const stx::filesystem::path& srcPath, const akd::PValue& config);
-template<typename type_t> static akd::Image<type_t> load3DTexture(const stx::filesystem::path& srcPath, const stx::filesystem::path& cfgName, const akd::PValue& config);
-template<typename type_t> static akd::Image<type_t> load1DArrayTexture(const stx::filesystem::path& srcPath, const stx::filesystem::path& cfgName, const akd::PValue& config);
-template<typename type_t> static akd::Image<type_t> load2DArrayTexture(const stx::filesystem::path& srcPath, const stx::filesystem::path& cfgName, const akd::PValue& config);
-template<typename type_t> static akd::Image<type_t> loadCubemapTexture(const stx::filesystem::path& srcPath, const stx::filesystem::path& cfgName, const akd::PValue& config);
+template<typename type_t> static akd::Image<type_t> load1DTexture(const akfs::Path& srcPath, const akd::PValue& config);
+template<typename type_t> static akd::Image<type_t> load2DTexture(const akfs::Path& srcPath, const akd::PValue& config);
+template<typename type_t> static akd::Image<type_t> load3DTexture(const akfs::Path& srcPath, const akfs::Path& cfgName, const akd::PValue& config);
+template<typename type_t> static akd::Image<type_t> load1DArrayTexture(const akfs::Path& srcPath, const akfs::Path& cfgName, const akd::PValue& config);
+template<typename type_t> static akd::Image<type_t> load2DArrayTexture(const akfs::Path& srcPath, const akfs::Path& cfgName, const akd::PValue& config);
+template<typename type_t> static akd::Image<type_t> loadCubemapTexture(const akfs::Path& srcPath, const akfs::Path& cfgName, const akd::PValue& config);
 
-bool akres::doPackTexture(const stx::filesystem::path& srcPath, const stx::filesystem::path& outPath, const std::string& cfgName) {
+bool akres::doPackTexture(const akfs::Path& srcPath, const akfs::Path& outPath, const std::string& cfgName) {
 
 	// Open Config
 	akfs::CFile cfgFile(srcPath/cfgName, akfs::OpenFlags::In);
 	if (!cfgFile) {
-		std::cout << "Failed to open '" << (srcPath/cfgName).string() << "' ensure that the file exists and that you have permission to access it." << std::endl;
+		std::cout << "Failed to open '" << (srcPath/cfgName).str() << "' ensure that the file exists and that you have permission to access it." << std::endl;
 		return false;
 	}
 
 	// Open output
-	auto outFilename = (outPath/cfgName).replace_extension(".aktex");
+	auto tmpPath = outPath/cfgName;
+	auto outFilename = akfs::Path(tmpPath.str().substr(tmpPath.str().size() - tmpPath.extension().size()) + ".aktex");
 	auto outputFile = akfs::CFile(outFilename, akfs::OpenFlags::Out | akfs::OpenFlags::Truncate);
 	if (!outputFile) {
-		std::cout << "Could not create output file as: " << outFilename.string() << std::endl;
+		std::cout << "Could not create output file as: " << outFilename.str() << std::endl;
 		return false;
 	} else {
-		std::cout << "Opened '" << outFilename.string() << "' for pack output." << std::endl;
+		std::cout << "Opened '" << outFilename.str() << "' for pack output." << std::endl;
 	}
 
 	// Load and parse config
 	std::cout << "Reading texture data..." << std::endl;
 	std::string cfgData;
 	if (!cfgFile.readLine(cfgData, false, {})) {
-		std::cout << "Failed to read data from '" << (srcPath/cfgName).string() << "' ensure that the file exists and that you have permission to access it." << std::endl;
+		std::cout << "Failed to read data from '" << (srcPath/cfgName).str() << "' ensure that the file exists and that you have permission to access it." << std::endl;
 		return false;
 	}
 
 	akd::PValue config;
 	if (!akd::fromJson(config, cfgData)) {
-		std::cout << "Failed to parse json in file '" << (srcPath/cfgName).string() << "' please ensure that it conforms to the JSON standard." << std::endl;
+		std::cout << "Failed to parse json in file '" << (srcPath/cfgName).str() << "' please ensure that it conforms to the JSON standard." << std::endl;
 		return false;
 	}
 
@@ -136,10 +137,10 @@ bool akres::doPackTexture(const stx::filesystem::path& srcPath, const stx::files
 	return true;
 }
 
-static std::vector<uint8> loadImageFile(const stx::filesystem::path& filename);
-static std::pair<std::deque<std::vector<uint8>>, std::vector<std::pair<const uint8*, akSize>>> loadImageFiles(const std::vector<stx::filesystem::path>& filenames);
+static std::vector<uint8> loadImageFile(const akfs::Path& filename);
+static std::pair<std::deque<std::vector<uint8>>, std::vector<std::pair<const uint8*, akSize>>> loadImageFiles(const std::vector<akfs::Path>& filenames);
 
-template<typename type_t> static akd::Image<type_t> load1DTexture(const stx::filesystem::path& srcPath, const akd::PValue& config) {
+template<typename type_t> static akd::Image<type_t> load1DTexture(const akfs::Path& srcPath, const akd::PValue& config) {
 	auto filename = srcPath/config["filename"].asStr();
 	auto fileData = loadImageFile(filename);
 
@@ -148,23 +149,23 @@ template<typename type_t> static akd::Image<type_t> load1DTexture(const stx::fil
 	if (result) return akd::Image<type_t>(result->row(row), result->components(), result->width(), 1, 1);
 
 	std::stringstream sstream;
-	sstream << "Could not parse as image file: " << filename.string();
+	sstream << "Could not parse as image file: " << filename.str();
 	throw std::runtime_error(sstream.str());
 }
 
-template<typename type_t> static akd::Image<type_t> load2DTexture(const stx::filesystem::path& srcPath, const akd::PValue& config) {
+template<typename type_t> static akd::Image<type_t> load2DTexture(const akfs::Path& srcPath, const akd::PValue& config) {
 	auto filename = srcPath/config["filename"].asStr();
 	auto fileData = loadImageFile(filename);
 	auto result = akd::loadImage<type_t>(fileData.data(), fileData.size());
 	if (result) return *result;
 
 	std::stringstream sstream;
-	sstream << "Could not parse as image file: " << filename.string();
+	sstream << "Could not parse as image file: " << filename.str();
 	throw std::runtime_error(sstream.str());
 }
 
-template<typename type_t> static akd::Image<type_t> load3DTexture(const stx::filesystem::path& srcPath, const stx::filesystem::path& cfgName, const akd::PValue& config) {
-	std::vector<stx::filesystem::path> filenames;
+template<typename type_t> static akd::Image<type_t> load3DTexture(const akfs::Path& srcPath, const akfs::Path& cfgName, const akd::PValue& config) {
+	std::vector<akfs::Path> filenames;
 	filenames.reserve(config["layers"].size());
 
 	for(auto iter = config["layers"].asArr().begin(); iter != config["layers"].asArr().end(); iter++) {
@@ -176,12 +177,12 @@ template<typename type_t> static akd::Image<type_t> load3DTexture(const stx::fil
 	if (result) return *result;
 
 	std::stringstream sstream;
-	sstream << "Could not parse as image file: " << (srcPath/cfgName).string();
+	sstream << "Could not parse as image file: " << (srcPath/cfgName).str();
 	throw std::runtime_error(sstream.str());
 }
 
-template<typename type_t> static akd::Image<type_t> load1DArrayTexture(const stx::filesystem::path& srcPath, const stx::filesystem::path& cfgName, const akd::PValue& config) {
-	std::vector<stx::filesystem::path> filenames;
+template<typename type_t> static akd::Image<type_t> load1DArrayTexture(const akfs::Path& srcPath, const akfs::Path& cfgName, const akd::PValue& config) {
+	std::vector<akfs::Path> filenames;
 	std::vector<akSize> layers;
 	filenames.reserve(config["layers"].size());
 	layers.reserve(config["layers"].size());
@@ -195,7 +196,7 @@ template<typename type_t> static akd::Image<type_t> load1DArrayTexture(const stx
 	auto result = akd::loadImage<type_t>(fileData.second);
 	if (!result) {
 		std::stringstream sstream;
-		sstream << "Could not parse as image file: " << (srcPath/cfgName).string();
+		sstream << "Could not parse as image file: " << (srcPath/cfgName).str();
 		throw std::runtime_error(sstream.str());
 	}
 
@@ -208,8 +209,8 @@ template<typename type_t> static akd::Image<type_t> load1DArrayTexture(const stx
 	return akd::Image<type_t>(processedData.data(), result->components(), result->width(), result->depth(), 1);
 }
 
-template<typename type_t> static akd::Image<type_t> load2DArrayTexture(const stx::filesystem::path& srcPath, const stx::filesystem::path& cfgName, const akd::PValue& config) {
-	std::vector<stx::filesystem::path> filenames;
+template<typename type_t> static akd::Image<type_t> load2DArrayTexture(const akfs::Path& srcPath, const akfs::Path& cfgName, const akd::PValue& config) {
+	std::vector<akfs::Path> filenames;
 	filenames.reserve(config["layers"].size());
 
 	for(auto iter = config["layers"].asArr().begin(); iter != config["layers"].asArr().end(); iter++) {
@@ -221,11 +222,11 @@ template<typename type_t> static akd::Image<type_t> load2DArrayTexture(const stx
 	if (result) return *result;
 
 	std::stringstream sstream;
-	sstream << "Could not parse as image file: " << (srcPath/cfgName).string();
+	sstream << "Could not parse as image file: " << (srcPath/cfgName).str();
 	throw std::runtime_error(sstream.str());
 }
 
-template<typename type_t> static akd::Image<type_t> loadCubemapTexture(const stx::filesystem::path& srcPath, const stx::filesystem::path& cfgName, const akd::PValue& config) {
+template<typename type_t> static akd::Image<type_t> loadCubemapTexture(const akfs::Path& srcPath, const akfs::Path& cfgName, const akd::PValue& config) {
 	auto fileData = loadImageFiles({
 		srcPath/config["layers"]["pX"].asStr(),
 		srcPath/config["layers"]["pY"].asStr(),
@@ -239,21 +240,21 @@ template<typename type_t> static akd::Image<type_t> loadCubemapTexture(const stx
 	if (result) return *result;
 
 	std::stringstream sstream;
-	sstream << "Could not parse as image file: " << (srcPath/cfgName).string();
+	sstream << "Could not parse as image file: " << (srcPath/cfgName).str();
 	throw std::runtime_error(sstream.str());
 }
 
-static std::vector<uint8> loadImageFile(const stx::filesystem::path& filename) {
-	auto imgFile = akfs::open(filename, akfs::OpenFlags::In);
-	if (!imgFile) { std::stringstream sstream; sstream << "Could not open image file: " << filename; throw std::runtime_error(sstream.str()); }
+static std::vector<uint8> loadImageFile(const akfs::Path& filename) {
+	auto imgFile = akfs::CFile(filename, akfs::OpenFlags::In);
+	if (!imgFile) { std::stringstream sstream; sstream << "Could not open image file: " << filename.str(); throw std::runtime_error(sstream.str()); }
 
 	std::vector<uint8> fileData;
-	if (!imgFile.readAll(fileData)) { std::stringstream sstream; sstream << "Could not read image file: " << filename; throw std::runtime_error(sstream.str()); }
+	if (!imgFile.readAll(fileData)) { std::stringstream sstream; sstream << "Could not read image file: " << filename.str(); throw std::runtime_error(sstream.str()); }
 
 	return fileData;
 }
 
-static std::pair<std::deque<std::vector<uint8>>, std::vector<std::pair<const uint8*, akSize>>> loadImageFiles(const std::vector<stx::filesystem::path>& filenames) {
+static std::pair<std::deque<std::vector<uint8>>, std::vector<std::pair<const uint8*, akSize>>> loadImageFiles(const std::vector<akfs::Path>& filenames) {
 	std::pair<std::deque<std::vector<uint8>>, std::vector<std::pair<const uint8*, akSize>>> fileData;
 	for(auto iter = filenames.begin(); iter != filenames.end(); iter++) {
 		fileData.first.push_back(loadImageFile(*iter));

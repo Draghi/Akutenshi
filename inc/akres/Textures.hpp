@@ -17,12 +17,12 @@
 #ifndef AKRES_TEXTURES_HPP_
 #define AKRES_TEXTURES_HPP_
 
-#include <stx/Filesystem.hpp>
+#include <ak/filesystem/Path.hpp>
 #include <string>
 
 namespace akres {
 
-	bool doPackTexture(const stx::filesystem::path& srcPath, const stx::filesystem::path& outPath, const std::string& cfgName);
+	bool doPackTexture(const akfs::Path& srcPath, const akfs::Path& outPath, const std::string& cfgName);
 
 }
 

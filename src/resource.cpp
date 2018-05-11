@@ -15,13 +15,12 @@
  **/
 
 #include <ak/filesystem/Filesystem.hpp>
+#include <ak/filesystem/Path.hpp>
 #include <akres/Models.hpp>
 #include <akres/Textures.hpp>
-#include <experimental/filesystem>
 #include <iostream>
 #include <stdexcept>
 #include <string>
-#include <system_error>
 
 int akResourceMain();
 
@@ -81,10 +80,10 @@ static void packTexture() {
 
 		if (filenameIn == "/\\") return;
 
-		stx::filesystem::path filename(filenameIn);
+		akfs::Path filename(filenameIn);
 
 		try {
-			if (!akres::doPackTexture(filename.parent_path(), filename.parent_path(), filename.filename())) {
+			if (!akres::doPackTexture(filename.parent(), filename.parent(), filename.filename())) {
 				std::cout << "Operation failed. Returning to menu." << std::endl;
 			}
 		} catch(const std::runtime_error& ex) {
@@ -107,7 +106,7 @@ static void packTextureDirectory() {
 		std::cout << std::endl << "Please enter 'Y' or 'N'";
 	}
 
-	stx::filesystem::path srcDir;
+	akfs::Path srcDir;
 	while(true) {
 		std::cout << "Type directory to pack (enter '/\\' to exit): ";
 
@@ -118,13 +117,12 @@ static void packTextureDirectory() {
 
 		srcDir = directoryIn;
 
-		std::error_code e;
-		if (stx::filesystem::exists(srcDir, e)) break;
+		if (akfs::exists(srcDir)) break;
 
-		std::cout << "Directory does not exist: " << srcDir.string() << std::endl;
+		std::cout << "Directory does not exist: " << srcDir.str() << std::endl;
 	}
 
-	stx::filesystem::path dstDir;
+	akfs::Path dstDir;
 	while(true) {
 		std::cout << "Type directory to output packed textures (enter '/\\' to exit): ";
 
@@ -135,40 +133,30 @@ static void packTextureDirectory() {
 
 		dstDir = directoryOut;
 
-		std::error_code e;
-		if (stx::filesystem::exists(dstDir, e)) break;
-		if (stx::filesystem::create_directories(dstDir, e)) break;
+		if (akfs::exists(dstDir)) break;
+		if (akfs::makeDirectory(dstDir)) break;
 
-		std::cout << "Directory does not exist and could not be created: " << dstDir.string() << std::endl;
+		std::cout << "Directory does not exist and could not be created: " << dstDir.str() << std::endl;
 	}
 
 	std::cout << std::endl << "Starting directory operation." << std::endl << std::endl;
 
-	auto processDirectory = [&](auto iterator) {
-		for(auto& iter : iterator) {
-			if (stx::filesystem::is_directory(iter)) continue;
-			if (iter.path().extension() == ".json") {
-				try {
-					std::cout << "Processing: " << iter.path() << std::endl;
-
-					auto pathDiff = akfs::removeBasePath(srcDir, iter.path().parent_path());
-					if (pathDiff) {
-						akres::doPackTexture(srcDir, dstDir/(*pathDiff), iter.path().filename());
-					} else {
-						akres::doPackTexture(srcDir, dstDir, iter.path().filename());
-					}
-				} catch(const std::runtime_error& ex) {
-					std::cout << "Operation aborted. Attempting to continue. Message: " << ex.what() << std::endl;
-				}
-				std::cout << std::endl;
-			} else {
-				std::cout << "Skipped: " << iter.path() << std::endl;
+	auto processDirectory = [&](auto path) {
+		if (path.isDirectory()) return;
+		if (path.extension() == ".json") {
+			try {
+				std::cout << "Processing: " << path.str() << std::endl;
+				akres::doPackTexture(srcDir, dstDir/path.parent().relativeTo(srcDir), path.filename());
+			} catch(const std::runtime_error& ex) {
+				std::cout << "Operation aborted. Attempting to continue. Message: " << ex.what() << std::endl;
 			}
+			std::cout << std::endl;
+		} else {
+			std::cout << "Skipped: " << path.str() << std::endl;
 		}
 	};
 
-	if (recursive) processDirectory(stx::filesystem::recursive_directory_iterator(srcDir));
-	else processDirectory(stx::filesystem::directory_iterator(srcDir));
+	iterateDirectory(srcDir, processDirectory, recursive);
 }
 
 // //////////// //
@@ -184,10 +172,10 @@ static void packModel() {
 
 	if (filenameIn == "/\\") return;
 
-	stx::filesystem::path filename(filenameIn);
+	akfs::Path filename(filenameIn);
 
 	try {
-		if (!akres::doPackModel(filename.parent_path(), filename.parent_path(), filename.filename())) {
+		if (!akres::doPackModel(filename.parent(), filename.parent(), filename.filename())) {
 			std::cout << "Operation failed. Returning to menu." << std::endl;
 		}
 	} catch(const std::runtime_error& ex) {
