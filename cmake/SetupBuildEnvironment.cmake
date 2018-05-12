@@ -34,6 +34,25 @@ else()
 endif()
 
 ###############
+# CMake Setup #
+###############
+
+# Setup CMake variables
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${AK_OUTPUT_BIN}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${AK_OUTPUT_LIB}")
+set(BUILD_SHARED_LIBS ON CACHE INTERNAL "" FORCE)
+
+# Set defaults for tweakble cmake variables
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
+
+# Hide variables
+set(CMAKE_INSTALL_PREFIX "install/" CACHE INTERNAL "${AK_OUTPUT_ROOT}" FORCE)
+
+###############
 # Build Setup #
 ###############
  
@@ -59,7 +78,7 @@ set(GLFW_INSTALL OFF CACHE INTERNAL "" FORCE)
 set(GLFW_USE_MIR OFF CACHE INTERNAL "" FORCE)
 set(GLFW_USE_OSMESA OFF CACHE INTERNAL "" FORCE)
 set(GLFW_USE_WAYLAND OFF CACHE INTERNAL "" FORCE)
-set(GLFW_VULKAN_STATIC ON CACHE INTERNAL "" FORCE)
+set(GLFW_VULKAN_STATIC OFF CACHE INTERNAL "" FORCE)
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/cmake/glfw")
 
@@ -177,25 +196,7 @@ set(MSGPACK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/msgpack-c/include")
 set(BROTLI_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/brotli/c/include")
 set(CXXOPTS_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/cxxopts/include")
 set(CPPCODEC_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/cppcodec")
-set(ASSIMP_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/assimp/Include" "${CMAKE_BINARY_DIR}/cmake/assimp/Include")
-
-###############
-# CMake Setup #
-###############
-
-# Setup CMake variables
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${AK_OUTPUT_BIN}")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${AK_OUTPUT_LIB}")
-
-# Set defaults for tweakble cmake variables
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif()
-
-# Hide variables
-set(CMAKE_INSTALL_PREFIX "install/" CACHE INTERNAL "${AK_OUTPUT_ROOT}" FORCE)
+set(ASSIMP_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/assimp/include" "${CMAKE_BINARY_DIR}/cmake/assimp/include")
 
 
 
