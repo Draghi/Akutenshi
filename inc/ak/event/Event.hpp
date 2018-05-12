@@ -23,7 +23,12 @@
 #include <string_view>
 
 #define AK_DEFINE_EVENT(eventName, dataType, canCancel) \
-	namespace AK_DEFINE_EVENT_INTERNAL { using eventName = ::akev::Event<dataType, canCancel, []()constexpr{ return std::string_view(#eventName, sizeof(#eventName) - 1);} >; } \
+	namespace AK_DEFINE_EVENT_INTERNAL { \
+		static inline constexpr std::string_view getNameOf ## eventName () { \
+			return std::string_view(#eventName, sizeof(#eventName) - 1); \
+		} \
+		using eventName = ::akev::Event<dataType, canCancel, getNameOf ## eventName>; \
+	} \
 	class eventName final : public AK_DEFINE_EVENT_INTERNAL:: eventName { using AK_DEFINE_EVENT_INTERNAL:: eventName ::Event; }
 
 namespace akev {

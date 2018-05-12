@@ -61,7 +61,7 @@ std::optional<Texture> akr::createTex1D(uint32 unit, TexFormat format, TexStorag
 	akr::newTexStorage1D(format, storageType, width, mipmapLevels);
 	akr::loadTexData1D(0, format, dataType, data, width);
 
-	return tex;
+	return std::optional<Texture>{std::move(tex)};
 }
 
 std::optional<Texture> akr::createTex2D(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize height, akSize maxMipmapLevels) {
@@ -75,7 +75,7 @@ std::optional<Texture> akr::createTex2D(uint32 unit, TexFormat format, TexStorag
 	akr::newTexStorage2D(format, storageType, width, height, mipmapLevels);
 	akr::loadTexData2D(0, format, dataType, data, width, height);
 
-	return tex;
+	return std::optional<Texture>{std::move(tex)};
 }
 
 std::optional<Texture> akr::createTex3D(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize height, akSize depth, akSize maxMipmapLevels) {
@@ -89,7 +89,7 @@ std::optional<Texture> akr::createTex3D(uint32 unit, TexFormat format, TexStorag
 	akr::newTexStorage3D(format, storageType, width, height, depth, mipmapLevels);
 	akr::loadTexData3D(0, format, dataType, data, width, height, depth);
 
-	return tex;
+	return std::optional<Texture>{std::move(tex)};
 }
 
 std::optional<Texture> akr::createTexCubemap(uint32 unit, TexFormat format, TexStorage storageType, DataType dataType, const void* data, akSize width, akSize height, akSize maxMipmapLevels) {
@@ -112,7 +112,7 @@ std::optional<Texture> akr::createTexCubemap(uint32 unit, TexFormat format, TexS
 
 	if (mipmapLevels > 1) akr::genTexMipmaps(TexTarget::TexCubemap);
 
-	return tex;
+	return std::optional<Texture>{std::move(tex)};
 }
 
 std::optional<Texture> akr::createTex1DArray(uint32 /*unit*/, TexFormat /*format*/, TexStorage /*storageType*/, DataType /*dataType*/, const void* /*data*/, akSize /*width*/, akSize /*layers*/, akSize /*maxMipmapLevels*/) {

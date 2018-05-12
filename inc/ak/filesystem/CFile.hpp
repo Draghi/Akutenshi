@@ -19,7 +19,6 @@
 
 #include <ak/filesystem/Path.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <bits/types/FILE.h>
 #include <stddef.h>
 #include <sys/types.h>
 #include <cstdio>

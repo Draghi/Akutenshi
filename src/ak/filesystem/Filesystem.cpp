@@ -81,14 +81,22 @@ static VFSMounts& vfsMounts() {
 bool akfs::makeDirectory(const akfs::Path& path, bool recursive) {
 	if (!recursive) {
 		auto sysPath = toSystemPath(path);
-		::mkdir(sysPath.c_str(), 0777);
+		#ifdef __linux__
+			::mkdir(sysPath.c_str(), 0777);
+		#else
+			::mkdir(sysPath.c_str());
+		#endif
 		return exists(path);
 	}
 
 	auto cDir = vfsMounts().vfsToSys(path.front());
 	for(akSize i = 1; i < path.size(); i++) {
 		cDir.append(path.at(i));
-		::mkdir(cDir.c_str(), 0777);
+		#ifdef __linux__
+			::mkdir(cDir.c_str(), 0777);
+		#else
+			::mkdir(cDir.c_str());
+		#endif
 	}
 	return exists(path);
 }

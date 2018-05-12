@@ -29,7 +29,6 @@
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/window/WindowOptions.hpp>
 #include <deque>
-#include <experimental/filesystem>
 #include <iostream>
 #include <iterator>
 #include <sstream>

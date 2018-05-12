@@ -25,12 +25,10 @@ if ("${CMAKE_CXX_COMPILER}" MATCHES ".*clang")
 		
     SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
 		
-elseif(CMAKE_COMPILER_IS_GNUCXX)
+elseif("${CMAKE_CXX_COMPILER}" MATCHES ".*g\\+\\+")
 	list(APPEND AK_BUILD_CXX_WARNING_FLAGS 
 		"-Wall" "-Wextra" "-Wpedantic"
 		"-Wno-c++11-compat" "-Wno-padded")
-elseif(WIN32)
-	list(APPEND AK_BUILD_CXX_COMPILER_FLAGS "/std:c++17" "/EHsc")
 else()
 	message(WARNING "Unsupported compiler" ${CMAKE_CXX_COMPILER})
 endif()
@@ -38,7 +36,7 @@ endif()
 ###############
 # Build Setup #
 ###############
-
+ 
 # Setup Sugar
 set(SUGAR_ROOT "${CMAKE_SOURCE_DIR}/cmake/sugar/")
 include("${SUGAR_ROOT}/cmake/Sugar")
@@ -61,7 +59,7 @@ set(GLFW_INSTALL OFF CACHE INTERNAL "" FORCE)
 set(GLFW_USE_MIR OFF CACHE INTERNAL "" FORCE)
 set(GLFW_USE_OSMESA OFF CACHE INTERNAL "" FORCE)
 set(GLFW_USE_WAYLAND OFF CACHE INTERNAL "" FORCE)
-set(GLFW_VULKAN_STATIC OFF CACHE INTERNAL "" FORCE)
+set(GLFW_VULKAN_STATIC ON CACHE INTERNAL "" FORCE)
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/cmake/glfw")
 

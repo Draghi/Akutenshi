@@ -16,9 +16,8 @@
 
 #include <ak/util/Timer.hpp>
 
-#ifdef __linux__
+//#ifdef __linux__
 
-#include <bits/types/struct_timespec.h>
 #include <sys/time.h>
 #include <ctime>
 #include <iostream>
@@ -37,7 +36,7 @@ Timer::duration_t Timer::currentTime() {
 	return std::chrono::duration_cast<duration_t>(time);
 }
 
-#elif defined(_WIN32)
+/*#elif defined(_WIN32)
 
 #include <windows.h>
 
@@ -71,4 +70,4 @@ Timer::duration_t Timer::currentTime() {
 
 #else
 #	warning "Timer unsupported"
-#endif
+#endif*/
