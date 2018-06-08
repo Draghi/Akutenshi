@@ -38,7 +38,6 @@ class VFSMounts final {
 			{"data/", "./data/"},
 			{"config/", "./config/"},
 			{"cache/", "./cache/"}
-
 		};
 		std::unordered_map<std::string, std::string> m_sysToVfs;
 
@@ -78,26 +77,26 @@ static VFSMounts& vfsMounts() {
 	return instance;
 }
 
+static void makeDir(const std::string& path) {
+	#ifdef __linux__
+		::mkdir(path.c_str(), 0777);
+	#else
+		::mkdir(path.c_str());
+	#endif
+}
+
 bool akfs::makeDirectory(const akfs::Path& path, bool recursive) {
 	if (!recursive) {
-		auto sysPath = toSystemPath(path);
-		#ifdef __linux__
-			::mkdir(sysPath.c_str(), 0777);
-		#else
-			::mkdir(sysPath.c_str());
-		#endif
+		makeDir(toSystemPath(path));
 		return exists(path);
 	}
 
 	auto cDir = vfsMounts().vfsToSys(path.front());
 	for(akSize i = 1; i < path.size(); i++) {
 		cDir.append(path.at(i));
-		#ifdef __linux__
-			::mkdir(cDir.c_str(), 0777);
-		#else
-			::mkdir(cDir.c_str());
-		#endif
+		makeDir(cDir);
 	}
+
 	return exists(path);
 }
 
