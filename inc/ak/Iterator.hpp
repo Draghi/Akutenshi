@@ -14,8 +14,8 @@
  * limitations under the License.
  **/
 
-#ifndef AK_ITER_HPP_
-#define AK_ITER_HPP_
+#ifndef AK_ITERATOR_HPP_
+#define AK_ITERATOR_HPP_
 
 namespace ak {
 

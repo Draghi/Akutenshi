@@ -20,7 +20,7 @@
 #include <ak/animation/Fwd.hpp>
 #include <ak/animation/Type.hpp>
 #include <ak/data/PValue.hpp>
-#include <ak/Iter.hpp>
+#include <ak/Iterator.hpp>
 #include <ak/math/Matrix.hpp>
 #include <ak/math/Quaternion.hpp>
 #include <ak/math/Scalar.hpp>

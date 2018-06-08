@@ -20,7 +20,7 @@
 #include <ak/engine/internal/EntityGraph.hpp>
 #include <ak/engine/Type.hpp>
 #include <ak/event/Dispatcher.hpp>
-#include <ak/Iter.hpp>
+#include <ak/Iterator.hpp>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>

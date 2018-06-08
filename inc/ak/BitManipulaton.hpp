@@ -14,8 +14,8 @@
  * limitations under the License.
  **/
 
-#ifndef AK_BITS_HPP_
-#define AK_BITS_HPP_
+#ifndef AK_BITMANIPULATON_HPP_
+#define AK_BITMANIPULATON_HPP_
 
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/Traits.hpp>
