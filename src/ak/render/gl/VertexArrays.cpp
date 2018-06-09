@@ -14,11 +14,11 @@
  * limitations under the License.
  **/
 
-#include <ak/render/VertexArrays.hpp>
+#include <ak/render/gl/VertexArrays.hpp>
 #include <GL/gl4.h>
 #include <stdexcept>
 
-using namespace akr;
+using namespace akr::gl;
 
 static GLenum akDataTypeToOGL(DataType dataType) {
 	switch(dataType) {
@@ -74,11 +74,11 @@ void VertexArray::setVAttribFormats(const std::vector<uint32>& indicies, uint32 
 	for(auto index : indicies) this->setVAttribFormat(index, sizePerVert, dType, offset);
 }
 
-void VertexArray::bindVertexBuffer(uint32 index, const akr::Buffer& buffer, akSize stride, akSize offset) {
+void VertexArray::bindVertexBuffer(uint32 index, const Buffer& buffer, akSize stride, akSize offset) {
 	glVertexArrayVertexBuffer(m_id, index, buffer.id(), offset, stride);
 }
 
-void VertexArray::bindIndexBuffer(const akr::Buffer& buffer) {
+void VertexArray::bindIndexBuffer(const Buffer& buffer) {
 	glVertexArrayElementBuffer(m_id, buffer.id());
 }
 
@@ -90,11 +90,11 @@ uint32 VertexArray::id() const {
 // // NAMESPACE FUNC // //
 // //////////////////// //
 
-void akr::bindVertexArray(const VertexArray& va) {
+void akr::gl::bindVertexArray(const VertexArray& va) {
 	glBindVertexArray(va.id());
 }
 
-void akr::resetVertexArray() {
+void akr::gl::resetVertexArray() {
 	glBindVertexArray(0);
 }
 

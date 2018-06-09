@@ -16,8 +16,8 @@
 
 #include <ak/math/Types.hpp>
 #include <ak/render/DebugDraw.hpp>
-#include <ak/render/Shaders.hpp>
-#include <ak/render/Types.hpp>
+#include <ak/render/gl/Shaders.hpp>
+#include <ak/render/gl/Types.hpp>
 #include <ak/String.hpp>
 #include <glm/detail/type_mat4x4.hpp>
 #include <glm/detail/type_vec3.hpp>
@@ -27,12 +27,12 @@
 #include <stdexcept>
 #include <vector>
 
-using namespace akr;
+using namespace akr::gl;
 using namespace akrd;
 
 static ShaderProgram& shader() {
-	static akr::ShaderProgram progShader = []() {
-		akr::ShaderStage vertStage(akr::StageType::Vertex);
+	static ShaderProgram progShader = []() {
+		ShaderStage vertStage(StageType::Vertex);
 		vertStage.attach(
 			"#version 450 \n"
 			"layout(location = 0) in vec3 vPosition;"
@@ -46,7 +46,7 @@ static ShaderProgram& shader() {
 		);
 		if (!vertStage.compile()) throw std::runtime_error(ak::buildString("Failed to build vertex shader. Error Log:\n", vertStage.compileLog()));
 
-		akr::ShaderStage fragStage(akr::StageType::Fragment);
+		ShaderStage fragStage(StageType::Fragment);
 		fragStage.attach(
 			"#version 450 \n"
 			"in vec4 fColour;"
@@ -58,7 +58,7 @@ static ShaderProgram& shader() {
 		);
 		if (!fragStage.compile()) throw std::runtime_error(ak::buildString("Failed to build fragment shader. Error Log:\n", fragStage.compileLog()));
 
-		akr::ShaderProgram prog;
+		ShaderProgram prog;
 		prog.attach(vertStage);
 		prog.attach(fragStage);
 		if (!prog.link()) throw std::runtime_error(ak::buildString("Failed to link shader program. Error Log:\n", prog.linkLog()));
@@ -84,14 +84,14 @@ void akrd::draw(const DisplayList& displayList) {
 	shader().setUniform(0, projViewCache * uMatModel.back());
 	shader().setUniform(1, uColour);
 
-	akr::bindShaderProgram(shader());
-	akr::bindVertexArray(displayList.m_vao);
+	bindShaderProgram(shader());
+	bindVertexArray(displayList.m_vao);
 	switch(displayList.m_primitive) {
 		case Primitive::Lines: {
-			akr::draw(akr::DrawType::Lines, displayList.m_vertexCount, 0);
+			akr::gl::draw(DrawType::Lines, displayList.m_vertexCount, 0);
 		} return;
 		case Primitive::Triangles: {
-			akr::draw(akr::DrawType::Triangles, displayList.m_vertexCount, 0);
+			akr::gl::draw(DrawType::Triangles, displayList.m_vertexCount, 0);
 		} return;
 	}
 }
@@ -153,8 +153,8 @@ DisplayList& DisplayList::end() {
 	m_vertexData.clear();
 
 	m_vao.enableVAttribs({0, 1});
-	m_vao.setVAttribFormat(0, 3, akr::DataType::Single);
-	m_vao.setVAttribFormat(1, 4, akr::DataType::Single);
+	m_vao.setVAttribFormat(0, 3, DataType::Single);
+	m_vao.setVAttribFormat(1, 4, DataType::Single);
 	m_vao.bindVertexBuffer(0, m_buffer, sizeof(akrd::internal::VertexData), offsetof(akrd::internal::VertexData, position));
 	m_vao.bindVertexBuffer(1, m_buffer, sizeof(akrd::internal::VertexData), offsetof(akrd::internal::VertexData, colour));
 

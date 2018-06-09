@@ -15,10 +15,10 @@
  **/
 
 #include <ak/Log.hpp>
-#include <ak/render/Shaders.hpp>
+#include <ak/render/gl/Shaders.hpp>
 #include "GL/gl4.h"
 
-using namespace akr;
+using namespace akr::gl;
 
 static bool getOGLShaderLog(GLuint id, std::string& dst);
 static bool getOGLProgramLog(GLuint id, std::string& dst);
@@ -222,11 +222,11 @@ void ShaderProgram::setUniform(uint32 index, akm::Mat2 matrix) { glProgramUnifor
 // // NAMESPACE FUNCS // //
 // ///////////////////// //
 
-void akr::bindShaderProgram(const ShaderProgram& pipeline) {
+void akr::gl::bindShaderProgram(const ShaderProgram& pipeline) {
 	glUseProgram(pipeline.id());
 }
 
-void akr::unbindShaderProgram() {
+void akr::gl::unbindShaderProgram() {
 	glUseProgram(0);
 }
 

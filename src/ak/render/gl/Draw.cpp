@@ -15,8 +15,8 @@
  **/
 
 #include <ak/Log.hpp>
-#include <ak/render/Buffers.hpp>
-#include <ak/render/Draw.hpp>
+#include <ak/render/gl/Buffers.hpp>
+#include <ak/render/gl/Draw.hpp>
 #include <stddef.h>
 #include <sstream>
 #include <string>
@@ -24,7 +24,9 @@
 #include "GL/gl4.h"
 
 namespace akr {
-	class Buffer;
+	namespace gl {
+		class Buffer;
+	}
 }
 
 #if defined(__linux)
@@ -32,7 +34,7 @@ namespace akr {
 #include "backward.hpp"
 #endif
 
-using namespace akr;
+using namespace akr::gl;
 
 static void APIENTRY ogl_logErrorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* /*userParam​*/) {
 	akl::Logger glLog("OGL");
@@ -80,7 +82,7 @@ static void APIENTRY ogl_logErrorCallback(GLenum source, GLenum type, GLuint id,
 	}
 }
 
-void akr::init() {
+void akr::gl::init() {
 	constexpr ak::log::Logger log("Render::Init");
 
 	static bool hasInit = false;
@@ -103,7 +105,7 @@ void akr::init() {
 	hasInit = true;
 }
 
-void akr::draw(DrawType mode, uint32 vertexCount, uint32 offset) {
+void akr::gl::draw(DrawType mode, uint32 vertexCount, uint32 offset) {
 	switch(mode) {
 		case DrawType::Points: glDrawArrays(GL_POINTS, offset, vertexCount); break;
 
@@ -121,7 +123,7 @@ void akr::draw(DrawType mode, uint32 vertexCount, uint32 offset) {
 	}
 }
 
-void akr::drawIndexed(DrawType mode, IDataType indexType, uint32 vertexCount, uint32 offset) {
+void akr::gl::drawIndexed(DrawType mode, IDataType indexType, uint32 vertexCount, uint32 offset) {
 
 	uint32 dataType = 0;
 	switch(indexType) {
@@ -150,7 +152,7 @@ void akr::drawIndexed(DrawType mode, IDataType indexType, uint32 vertexCount, ui
 	}
 }
 
-void akr::clear(ClearMode clearMode) {
+void akr::gl::clear(ClearMode clearMode) {
 	constexpr auto COLOUR_BUFFER  = static_cast<uint32>(ClearMode::Colour);
 	constexpr auto DEPTH_BUFFER   = static_cast<uint32>(ClearMode::Depth);
 	constexpr auto STENCIL_BUFFER = static_cast<uint32>(ClearMode::Stencil);
@@ -164,19 +166,19 @@ void akr::clear(ClearMode clearMode) {
 	if (mask) glClear(mask);
 }
 
-void akr::setClearColour(fpSingle red, fpSingle green, fpSingle blue, fpSingle alpha) {
+void akr::gl::setClearColour(fpSingle red, fpSingle green, fpSingle blue, fpSingle alpha) {
 	glClearColor(red, green, blue, alpha);
 }
 
-void akr::setClearDepth(fpSingle depth) {
+void akr::gl::setClearDepth(fpSingle depth) {
 	glClearDepth(depth);
 }
 
-void akr::setClearStencil(int32 stencil) {
+void akr::gl::setClearStencil(int32 stencil) {
 	glClearStencil(stencil);
 }
 
-void akr::setFillMode(FillMode fillMode, Face face) {
+void akr::gl::setFillMode(FillMode fillMode, Face face) {
 	uint32 glFillMode = GL_FILL;
 	switch(fillMode) {
 		case FillMode::Point: glFillMode = GL_POINT; break;
@@ -191,17 +193,17 @@ void akr::setFillMode(FillMode fillMode, Face face) {
 	}
 }
 
-void akr::enableDepthTest(bool state) {
+void akr::gl::enableDepthTest(bool state) {
 	if (state) glEnable(GL_DEPTH_TEST);
 	else glDisable(GL_DEPTH_TEST);
 }
 
-void akr::enableCullFace(bool state) {
+void akr::gl::enableCullFace(bool state) {
 	if (state) glEnable(GL_CULL_FACE);
 	else glDisable(GL_CULL_FACE);
 }
 
-void akr::setDepthTestMode(DepthMode depthMode) {
+void akr::gl::setDepthTestMode(DepthMode depthMode) {
 	switch(depthMode) {
 		case DepthMode::Never:        glDepthFunc(GL_NEVER);    break;
 		case DepthMode::Always:       glDepthFunc(GL_ALWAYS);   break;
@@ -214,7 +216,7 @@ void akr::setDepthTestMode(DepthMode depthMode) {
 	}
 }
 
-void akr::setCullFaceMode(CullMode cullMode) {
+void akr::gl::setCullFaceMode(CullMode cullMode) {
 	switch(cullMode) {
 		case CullMode::Front:        glCullFace(GL_FRONT);          break;
 		case CullMode::Back:         glCullFace(GL_BACK);           break;

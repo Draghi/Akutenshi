@@ -14,9 +14,9 @@
  * limitations under the License.
  **/
 
-#include <ak/render/Primitives.hpp>
+#include <ak/render/gl/Primitives.hpp>
 
-using namespace akr;
+using namespace akr::gl;
 
 /*std::vector<fpSingle> akr::genCubeMesh(akm::Vec3 p1, akm::Vec3 p2, bool genNorms, bool genTexcoord) {
 

@@ -17,15 +17,15 @@
 #ifndef AK_RENDER_BINDPOINTS_HPP_
 #define AK_RENDER_BINDPOINTS_HPP_
 
-#include <ak/PrimitiveTypes.hpp>
+#include <ak/gl/PrimitiveTypes.hpp>
 
 namespace akr {
-
-	constexpr akSize UATTRIB_MAT_PROJ  = 0;
-	constexpr akSize UATTRIB_MAT_VIEW  = 1;
-	constexpr akSize UATTRIB_MAT_MODEL = 2;
-	constexpr akSize UATTRIB_MAT_LOCAL = 3;
-
+	namespace gl {
+		constexpr akSize UATTRIB_MAT_PROJ  = 0;
+		constexpr akSize UATTRIB_MAT_VIEW  = 1;
+		constexpr akSize UATTRIB_MAT_MODEL = 2;
+		constexpr akSize UATTRIB_MAT_LOCAL = 3;
+	}
 }
 
 #endif

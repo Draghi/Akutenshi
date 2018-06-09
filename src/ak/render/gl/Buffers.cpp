@@ -14,11 +14,11 @@
  * limitations under the License.
  **/
 
-#include <ak/render/Buffers.hpp>
+#include <ak/render/gl/Buffers.hpp>
 #include <GL/gl4.h>
 #include <stdexcept>
 
-using namespace akr;
+using namespace akr::gl;
 
 static GLbitfield akBufferFlagsToOGL(uint8 hint) {
 	GLbitfield result = 0;
@@ -77,24 +77,24 @@ Buffer& Buffer::operator=(Buffer&& other) {
 	return *this;
 }
 
-static GLenum akBufferTargetToOGL(akr::BufferTarget target) {
+static GLenum akBufferTargetToOGL(BufferTarget target) {
 	switch(target) {
-		case akr::BufferTarget::VARRYING: return GL_ARRAY_BUFFER;
-		case akr::BufferTarget::UNIFORM: return GL_UNIFORM_BUFFER;
-		case akr::BufferTarget::INDEX: return GL_ELEMENT_ARRAY_BUFFER;
+		case BufferTarget::VARRYING: return GL_ARRAY_BUFFER;
+		case BufferTarget::UNIFORM: return GL_UNIFORM_BUFFER;
+		case BufferTarget::INDEX: return GL_ELEMENT_ARRAY_BUFFER;
 	}
 }
 
-void akr::bindBuffer(akr::BufferTarget target, const Buffer& buffer, uint32 index, akSize offset, akSize size) {
-	if (target != akr::BufferTarget::UNIFORM) throw std::logic_error("Only uniform buffers have binding indicies.");
+void akr::gl::bindBuffer(BufferTarget target, const Buffer& buffer, uint32 index, akSize offset, akSize size) {
+	if (target != BufferTarget::UNIFORM) throw std::logic_error("Only uniform buffers have binding indicies.");
 	glBindBufferRange(akBufferTargetToOGL(target), index, buffer.id(), offset, size);
 }
 
-void akr::bindBuffer(akr::BufferTarget target, const Buffer& buffer, uint32 index) {
-	if (target != akr::BufferTarget::UNIFORM) throw std::logic_error("Only uniform buffers have binding indicies.");
+void akr::gl::bindBuffer(BufferTarget target, const Buffer& buffer, uint32 index) {
+	if (target != BufferTarget::UNIFORM) throw std::logic_error("Only uniform buffers have binding indicies.");
 	glBindBufferBase(akBufferTargetToOGL(target), index, buffer.id());
 }
 
-void akr::bindBuffer(akr::BufferTarget target, const Buffer& buffer) {
+void akr::gl::bindBuffer(BufferTarget target, const Buffer& buffer) {
 	glBindBuffer(akBufferTargetToOGL(target), buffer.id());
 }

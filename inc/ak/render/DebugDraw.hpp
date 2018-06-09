@@ -19,9 +19,9 @@
 
 #include <ak/math/Types.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/render/Buffers.hpp>
-#include <ak/render/Draw.hpp>
-#include <ak/render/VertexArrays.hpp>
+#include <ak/render/gl/Buffers.hpp>
+#include <ak/render/gl/Draw.hpp>
+#include <ak/render/gl/VertexArrays.hpp>
 #include <vector>
 
 namespace akrd {
@@ -60,8 +60,8 @@ namespace akrd {
 		friend void akrd::draw(const DisplayList&);
 		private:
 			Primitive m_primitive = Primitive::Triangles;
-			akr::VertexArray m_vao;
-			akr::Buffer m_buffer;
+			akr::gl::VertexArray m_vao;
+			akr::gl::Buffer m_buffer;
 			akSize m_vertexCount = 0;
 			std::vector<internal::VertexData> m_vertexData;
 
@@ -86,7 +86,6 @@ namespace akrd {
 			DisplayList& addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec3* colours);
 			DisplayList& addVertexPoly(akSize count, const akm::Vec3* positions, const akm::Vec4* colours);
 	};
-
 }
 
 #endif

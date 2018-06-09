@@ -20,31 +20,35 @@
 #include <ak/math/Matrix.hpp>
 #include <ak/math/Vector.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/render/Types.hpp>
+#include <ak/render/gl/Types.hpp>
 
 namespace akr {
-	class Buffer;
+	namespace gl {
+		class Buffer;
+	}
 }
 
 namespace akr {
+	namespace gl {
 
-	void init();
+		void init();
 
-	void draw(DrawType mode, uint32 vertexCount, uint32 offset = 0);
-	void drawIndexed(DrawType mode, IDataType indexType, uint32 vertexCount, uint32 offset = 0);
+		void draw(DrawType mode, uint32 vertexCount, uint32 offset = 0);
+		void drawIndexed(DrawType mode, IDataType indexType, uint32 vertexCount, uint32 offset = 0);
 
-	void clear(ClearMode clearMode = ClearMode::All);
-	void setClearColour(fpSingle red, fpSingle green, fpSingle blue, fpSingle alpha = 0);
-	void setClearDepth(fpSingle depth);
-	void setClearStencil(int32 stencil);
+		void clear(ClearMode clearMode = ClearMode::All);
+		void setClearColour(fpSingle red, fpSingle green, fpSingle blue, fpSingle alpha = 0);
+		void setClearDepth(fpSingle depth);
+		void setClearStencil(int32 stencil);
 
-	void setFillMode(FillMode fillMode, Face face = Face::FrontAndBack);
+		void setFillMode(FillMode fillMode, Face face = Face::FrontAndBack);
 
-	void enableDepthTest(bool state);
-	void enableCullFace(bool state);
+		void enableDepthTest(bool state);
+		void enableCullFace(bool state);
 
-	void setDepthTestMode(DepthMode depthMode);
-	void setCullFaceMode(CullMode cullMode);
+		void setDepthTestMode(DepthMode depthMode);
+		void setCullFaceMode(CullMode cullMode);
+	}
 }
 
 #endif

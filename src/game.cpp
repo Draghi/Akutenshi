@@ -46,13 +46,14 @@
 #include <ak/math/Types.hpp>
 #include <ak/Macros.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/render/Buffers.hpp>
+#include <ak/render/gl/Buffers.hpp>
 #include <ak/render/DebugDraw.hpp>
-#include <ak/render/Draw.hpp>
-#include <ak/render/Shaders.hpp>
-#include <ak/render/Textures.hpp>
-#include <ak/render/Types.hpp>
-#include <ak/render/VertexArrays.hpp>
+#include <ak/render/gl/Draw.hpp>
+#include <ak/render/gl/RenderTarget.hpp>
+#include <ak/render/gl/Shaders.hpp>
+#include <ak/render/gl/Textures.hpp>
+#include <ak/render/gl/Types.hpp>
+#include <ak/render/gl/VertexArrays.hpp>
 #include <ak/ScopeGuard.hpp>
 #include <ak/String.hpp>
 #include <ak/thread/CurrentThread.hpp>
@@ -84,9 +85,9 @@ int akGameMain();
 static void printLogHeader(const ak::log::Logger& logger);
 static ak::ScopeGuard startup();
 
-static akr::ShaderProgram buildShaderProgram(const std::vector<std::pair<akr::StageType, std::string>>& stages);
-static akr::Texture loadTexture(const akfs::Path& path);
-static akr::Texture loadTextureCM(const akfs::Path& path);
+static akr::gl::ShaderProgram buildShaderProgram(const std::vector<std::pair<akr::gl::StageType, std::string>>& stages);
+static akr::gl::Texture loadTexture(const akfs::Path& path);
+static akr::gl::Texture loadTextureCM(const akfs::Path& path);
 
 template<typename type_t> static type_t readMeshFile(const akfs::Path& filename);
 
@@ -107,7 +108,7 @@ int akGameMain() {
 	}
 
 	akw::setCursorMode(akw::CursorMode::Captured);
-	akr::init();
+	akr::gl::init();
 
 	startGame();
 
@@ -147,40 +148,55 @@ static void startGame() {
 	cameraEID.component<ake::Camera>().setPerspectiveH(akm::degToRad(90), akw::size(), {0.1f, 65525.0f});
 	cameraEID.component<ake::Behaviours>().addBehaviour(std::make_unique<akgame::CameraControllerBehaviour>());
 
-	// Skybox
-		akr::ShaderProgram shaderSkybox = buildShaderProgram({
-			{akr::StageType::Vertex,   "data/shaders/skybox.vert"},
-			{akr::StageType::Fragment, "data/shaders/skybox.frag"},
+	// Render target
+		akr::gl::RenderTarget renderTarget;
+		akr::gl::RenderBuffer /*colourBuffer,*/ depthBuffer;
+		akr::gl::Texture colourTex(akr::gl::TexTarget::Tex2D);
+		akr::gl::bindTexture(0, colourTex);
+		akr::gl::newTexStorage2D(akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte, akw::size().x, akw::size().y, 1);
+		akr::gl::newRenderBufferDepthStorage(depthBuffer, akr::gl::DepthStorage::SIZE_32F, akw::size().x, akw::size().y, 0);
+		akr::gl::attachColourTexture(renderTarget, 0, colourTex);
+		akr::gl::attachDepthBuffer(renderTarget, depthBuffer);
+
+		akr::gl::ShaderProgram shaderPost = buildShaderProgram({
+			{akr::gl::StageType::Vertex,   "data/shaders/post.vert"},
+			{akr::gl::StageType::Fragment, "data/shaders/post.frag"},
 		});
 
-		akr::Texture texSkybox = loadTextureCM("data/textures/cubemap_snowy_street.aktex");
+	// Skybox
+		akr::gl::ShaderProgram shaderSkybox = buildShaderProgram({
+			{akr::gl::StageType::Vertex,   "data/shaders/skybox.vert"},
+			{akr::gl::StageType::Fragment, "data/shaders/skybox.frag"},
+		});
 
-		akr::VertexArray vaSkybox; {
+		akr::gl::Texture texSkybox = loadTextureCM("data/textures/cubemap_snowy_street.aktex");
+
+		akr::gl::VertexArray vaSkybox; {
 			vaSkybox.enableVAttrib(0);
-			vaSkybox.setVAttribFormat(0, 2, akr::DataType::Single);
+			vaSkybox.setVAttribFormat(0, 2, akr::gl::DataType::Single);
 		}
 
 		fpSingle arrSkyboxVerts[] = {-1, -1,  1, -1,  1,  1, /** 2 **/  1,  1, -1,  1, -1, -1};
-		akr::Buffer vbufSkybox(arrSkyboxVerts, 12*sizeof(fpSingle));
+		akr::gl::Buffer vbufSkybox(arrSkyboxVerts, 12*sizeof(fpSingle));
 		vaSkybox.bindVertexBuffer(0, vbufSkybox, 2*sizeof(fpSingle));
 
 	// Anim
 		// Pipeline
-		akr::ShaderProgram shaderMesh = buildShaderProgram({{akr::StageType::Vertex, "data/shaders/main.vert"}, {akr::StageType::Fragment, "data/shaders/main.frag"}});
+		akr::gl::ShaderProgram shaderMesh = buildShaderProgram({{akr::gl::StageType::Vertex, "data/shaders/main.vert"}, {akr::gl::StageType::Fragment, "data/shaders/main.frag"}});
 
 		// VAO
-		akr::VertexArray vaMesh;
+		akr::gl::VertexArray vaMesh;
 		vaMesh.enableVAttribs({0, 1, 2, 3, 4, 5, 6});
-		vaMesh.setVAttribFormats({0, 1, 2, 3}, 3, akr::DataType::Single);
-		vaMesh.setVAttribFormat(4, 2, akr::DataType::Single);
-		vaMesh.setVAttribFormat(5, 4, akr::IDataType::UInt16);
-		vaMesh.setVAttribFormat(6, 4, akr::DataType::Single);
+		vaMesh.setVAttribFormats({0, 1, 2, 3}, 3, akr::gl::DataType::Single);
+		vaMesh.setVAttribFormat(4, 2, akr::gl::DataType::Single);
+		vaMesh.setVAttribFormat(5, 4, akr::gl::IDataType::UInt16);
+		vaMesh.setVAttribFormat(6, 4, akr::gl::DataType::Single);
 
 		// Mesh
 		aka::Mesh mesh = readMeshFile<aka::Mesh>("data/meshes/Human.akmesh");
 
 		// VBO
-		akr::Buffer vbufMeshVerts(mesh.vertexData().data(), mesh.vertexData().size()*sizeof(aka::VertexData));
+		akr::gl::Buffer vbufMeshVerts(mesh.vertexData().data(), mesh.vertexData().size()*sizeof(aka::VertexData));
 		vaMesh.bindVertexBuffer(0, vbufMeshVerts, sizeof(aka::VertexData), offsetof(aka::VertexData, position));
 		vaMesh.bindVertexBuffer(1, vbufMeshVerts, sizeof(aka::VertexData), offsetof(aka::VertexData, tangent));
 		vaMesh.bindVertexBuffer(2, vbufMeshVerts, sizeof(aka::VertexData), offsetof(aka::VertexData, bitangent));
@@ -189,14 +205,14 @@ static void startGame() {
 
 		aka::Skeleton skele = readMeshFile<aka::Skeleton>("data/meshes/Human.akskel");
 		auto poseData = aka::createPoseData(skele, mesh);
-		akr::Buffer vbufMeshPose(poseData.data(), poseData.size()*sizeof(aka::PoseData));
+		akr::gl::Buffer vbufMeshPose(poseData.data(), poseData.size()*sizeof(aka::PoseData));
 		vaMesh.bindVertexBuffer(5, vbufMeshPose, sizeof(aka::PoseData), offsetof(aka::PoseData, boneIndicies));
 		vaMesh.bindVertexBuffer(6, vbufMeshPose, sizeof(aka::PoseData), offsetof(aka::PoseData, boneWeights));
 
-		akr::Buffer ibufMesh(mesh.indexData().data(), mesh.indexData().size()*sizeof(aka::IndexData));
+		akr::gl::Buffer ibufMesh(mesh.indexData().data(), mesh.indexData().size()*sizeof(aka::IndexData));
 		vaMesh.bindIndexBuffer(ibufMesh);
 
-		akr::Buffer ubufMeshBones(skele.finalTransform().data(), sizeof(akm::Mat4)*skele.finalTransform().size(), akr::BufferHint_Dynamic);
+		akr::gl::Buffer ubufMeshBones(skele.finalTransform().data(), sizeof(akm::Mat4)*skele.finalTransform().size(), akr::gl::BufferHint_Dynamic);
 
 		// Tex
 		auto texMeshAlbedo   = loadTexture("data/textures/brick_albedo.aktex");
@@ -244,6 +260,8 @@ static void startGame() {
 	});*/
 
 	scene.renderEvent().subscribe([&](ake::SceneRenderEvent& renderEventData){
+		akr::gl::bindRenderTarget(renderTarget);
+
 		fpDouble delta = renderEventData.data();
 
 		static fpSingle time = 0;
@@ -261,25 +279,25 @@ static void startGame() {
 		auto viewMatrix = cameraEID.component<ake::Camera>().viewMatrix();
 
 		// Prepare
-		akr::setClearColour(0.2f, 0.2f, 0.2f);
-		akr::clear();
+		akr::gl::setClearColour(0.2f, 0.2f, 0.2f);
+		akr::gl::clear();
 
 		// Skybox
-			akr::enableDepthTest(false);
-			akr::enableCullFace(false);
+			akr::gl::enableDepthTest(false);
+			akr::gl::enableCullFace(false);
 
 			shaderSkybox.setUniform(0, projMatrix);
 			shaderSkybox.setUniform(1, viewMatrix);
 			shaderSkybox.setUniform(3, 0);
 
-			akr::bindShaderProgram(shaderSkybox);
-			akr::bindVertexArray(vaSkybox);
-			akr::bindTexture(0, texSkybox);
-			akr::draw(akr::DrawType::Triangles, 6);
+			akr::gl::bindShaderProgram(shaderSkybox);
+			akr::gl::bindVertexArray(vaSkybox);
+			akr::gl::bindTexture(0, texSkybox);
+			akr::gl::draw(akr::gl::DrawType::Triangles, 6);
 
 		// Scene
-			akr::enableDepthTest(true);
-			akr::enableCullFace(true);
+			akr::gl::enableDepthTest(true);
+			akr::gl::enableCullFace(true);
 
 			// Setup Shader
 			shaderMesh.setUniform(0, projMatrix);
@@ -292,17 +310,17 @@ static void startGame() {
 			shaderMesh.setUniform(7, skele.getIndexedBone(skele.rootID()).data.nodeMatrix);
 
 			// Draw Anim
-			akr::bindBuffer(akr::BufferTarget::UNIFORM, ubufMeshBones, 0);
-			akr::bindShaderProgram(shaderMesh);
-			akr::bindVertexArray(vaMesh);
-			akr::bindTexture(0, texMeshAlbedo);
-			akr::bindTexture(1, texMeshNormal);
-			akr::bindTexture(2, texMeshSpecular);
-			akr::drawIndexed(akr::DrawType::Triangles, akr::IDataType::UInt16, mesh.indexData().size()*3, 0);
+			akr::gl::bindBuffer(akr::gl::BufferTarget::UNIFORM, ubufMeshBones, 0);
+			akr::gl::bindShaderProgram(shaderMesh);
+			akr::gl::bindVertexArray(vaMesh);
+			akr::gl::bindTexture(0, texMeshAlbedo);
+			akr::gl::bindTexture(1, texMeshNormal);
+			akr::gl::bindTexture(2, texMeshSpecular);
+			akr::gl::drawIndexed(akr::gl::DrawType::Triangles, akr::gl::IDataType::UInt16, mesh.indexData().size()*3, 0);
 
 		// Test
-			akr::enableDepthTest(true);
-			akr::enableCullFace(true);
+			akr::gl::enableDepthTest(true);
+			akr::gl::enableCullFace(true);
 
 			akrd::setMatrix(akrd::Matrix::Projection, projMatrix);
 			akrd::setMatrix(akrd::Matrix::View, viewMatrix);
@@ -365,6 +383,21 @@ static void startGame() {
 				akrd::setMatrix(akrd::Matrix::Model, child2EID.component<ake::Transform>().localToWorld());
 				akrd::draw(dlFilledCube);
 			akrd::popMatrix(akrd::Matrix::Model);
+
+		akr::gl::bindDisplayRenderTarget();
+		//akr::gl::blitRenderTargetToDisplay(renderTarget, {0,0}, akw::size(), {0,0}, akw::size(), akr::gl::BlitMask::Colour, akr::gl::FilterType::Linear);
+
+		akr::gl::clear(akr::gl::ClearMode::All);
+		akr::gl::enableDepthTest(false);
+		akr::gl::enableCullFace(false);
+
+		akr::gl::bindShaderProgram(shaderPost);
+		shaderPost.setUniform(1, 0);
+		shaderPost.setUniform(2, akw::size().x);
+		shaderPost.setUniform(3, akw::size().y);
+		akr::gl::bindVertexArray(vaSkybox);
+		akr::gl::bindTexture(0, colourTex);
+		akr::gl::draw(akr::gl::DrawType::Triangles, 6);
 
 		// Finish
 		akw::swapBuffer();
@@ -506,8 +539,8 @@ static ak::ScopeGuard startup() {
 	};
 }
 
-static akr::ShaderProgram buildShaderProgram(const std::vector<std::pair<akr::StageType, std::string>>& stages) {
-	akr::ShaderProgram program;
+static akr::gl::ShaderProgram buildShaderProgram(const std::vector<std::pair<akr::gl::StageType, std::string>>& stages) {
+	akr::gl::ShaderProgram program;
 
 	for(auto& stageInfo : stages) {
 		auto shaderFile = akfs::CFile(stageInfo.second, akfs::OpenFlags::In);
@@ -516,7 +549,7 @@ static akr::ShaderProgram buildShaderProgram(const std::vector<std::pair<akr::St
 		std::string source;
 		if (!shaderFile.readAllLines(source)) throw std::runtime_error(ak::buildString("buildShaderProgram: Could not read data from file: ", stageInfo.second));
 
-		akr::ShaderStage stage(stageInfo.first);
+		akr::gl::ShaderStage stage(stageInfo.first);
 		if (!stage.attach(source)) throw std::runtime_error(ak::buildString("buildShaderProgram: Could not attach source to shader, see log for more information."));
 		if (!stage.compile()) throw std::runtime_error(ak::buildString("buildShaderProgram: Could not compile shader. Error log:\n", stage.compileLog()));
 
@@ -527,7 +560,7 @@ static akr::ShaderProgram buildShaderProgram(const std::vector<std::pair<akr::St
 	return program;
 }
 
-static akr::Texture loadTexture(const akfs::Path& filename) {
+static akr::gl::Texture loadTexture(const akfs::Path& filename) {
 	auto textureFile = akfs::CFile(filename, akfs::OpenFlags::In);
 	if (!textureFile) throw std::runtime_error(ak::buildString("Failed to open texture: ", filename.str()));
 
@@ -538,27 +571,27 @@ static akr::Texture loadTexture(const akfs::Path& filename) {
 	akd::PValue textureConfig;
 	if (!akd::fromMsgPack(textureConfig, textureData)) throw std::runtime_error(ak::buildString("Failed to parse texture: ", filename.str()));
 
-	std::optional<akr::Texture> tex;
+	std::optional<akr::gl::Texture> tex;
 
 	if (textureConfig["hdr"].asBool()) {
 		akd::ImageF32 image;
 		if (!akd::deserialize(textureConfig["image"], image)) throw std::runtime_error(ak::buildString("Failed to deserialize texture: ", filename.str()));
-		tex = akr::createTex2D(0, akr::TexStorage::Single, image);
+		tex = akr::gl::createTex2D(0, akr::gl::TexStorage::Single, image);
 		if (!tex) throw std::runtime_error("Could not create texture.");
 	} else {
 		akd::ImageU8 image;
 		if (!akd::deserialize(textureConfig["image"], image)) throw std::runtime_error(ak::buildString("Failed to deserialize texture: ", filename.str()));
-		tex = akr::createTex2D(0, akr::TexStorage::Byte, image);
+		tex = akr::gl::createTex2D(0, akr::gl::TexStorage::Byte, image);
 		if (!tex) throw std::runtime_error("Could not create texture.");
 	}
 
-	akr::setTexFilters(akr::TexTarget::Tex2D, akr::FilterType::Linear, akr::FilterType::Linear, akr::FilterType::Linear);
-	akr::genTexMipmaps(akr::TexTarget::Tex2D);
+	akr::gl::setTexFilters(akr::gl::TexTarget::Tex2D, akr::gl::FilterType::Linear, akr::gl::FilterType::Linear, akr::gl::FilterType::Linear);
+	akr::gl::genTexMipmaps(akr::gl::TexTarget::Tex2D);
 
 	return std::move(*tex);
 }
 
-static akr::Texture loadTextureCM(const akfs::Path& filename) {
+static akr::gl::Texture loadTextureCM(const akfs::Path& filename) {
 	auto textureFile = akfs::CFile(filename, akfs::OpenFlags::In);
 	if (!textureFile) throw std::runtime_error(ak::buildString("Failed to open texture: ", filename.str()));
 
@@ -569,22 +602,22 @@ static akr::Texture loadTextureCM(const akfs::Path& filename) {
 	akd::PValue textureConfig;
 	if (!akd::fromMsgPack(textureConfig, textureData)) throw std::runtime_error(ak::buildString("Failed to parse texture: ", filename.str()));
 
-	std::optional<akr::Texture> tex;
+	std::optional<akr::gl::Texture> tex;
 
 	if (textureConfig["hdr"].asBool()) {
 		akd::ImageF32 image;
 		if (!akd::deserialize(textureConfig["image"], image)) throw std::runtime_error(ak::buildString("Failed to deserialize texture: ", filename.str()));
-		tex = akr::createTexCubemap(0, akr::TexStorage::Single, image);
+		tex = akr::gl::createTexCubemap(0, akr::gl::TexStorage::Single, image);
 		if (!tex) throw std::runtime_error("Could not create texture.");
 	} else {
 		akd::ImageU8 image;
 		if (!akd::deserialize(textureConfig["image"], image)) throw std::runtime_error(ak::buildString("Failed to deserialize texture: ", filename.str()));
-		tex = akr::createTexCubemap(0, akr::TexStorage::Byte, image);
+		tex = akr::gl::createTexCubemap(0, akr::gl::TexStorage::Byte, image);
 		if (!tex) throw std::runtime_error("Could not create texture.");
 	}
 
-	akr::setTexFilters(akr::TexTarget::TexCubemap, akr::FilterType::Linear, akr::FilterType::Linear, akr::FilterType::Linear);
-	akr::genTexMipmaps(akr::TexTarget::TexCubemap);
+	akr::gl::setTexFilters(akr::gl::TexTarget::TexCubemap, akr::gl::FilterType::Linear, akr::gl::FilterType::Linear, akr::gl::FilterType::Linear);
+	akr::gl::genTexMipmaps(akr::gl::TexTarget::TexCubemap);
 
 	return std::move(*tex);
 }
