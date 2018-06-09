@@ -25,12 +25,15 @@
 #include <ak/data/Image.hpp>
 #include <ak/data/MsgPack.hpp>
 #include <ak/data/PValue.hpp>
+#include <ak/engine/components/Behaviours.hpp>
 #include <ak/engine/components/Camera.hpp>
 #include <ak/engine/components/Transform.hpp>
 #include <ak/engine/Config.hpp>
 #include <ak/engine/EntityManager.hpp>
-#include <ak/engine/Type.hpp>
+#include <ak/engine/Scene.hpp>
+#include <ak/engine/SceneManager.hpp>
 #include <ak/event/Dispatcher.hpp>
+#include <ak/event/Event.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Path.hpp>
 #include <ak/input/Keyboard.hpp>
@@ -60,6 +63,11 @@
 #include <ak/window/Types.hpp>
 #include <ak/window/Window.hpp>
 #include <ak/window/WindowOptions.hpp>
+#include <akgame/CameraControllerBehaviour.hpp>
+#include <glm/detail/type_mat4x4.hpp>
+#include <glm/detail/type_vec2.hpp>
+#include <glm/detail/type_vec3.hpp>
+#include <glm/detail/type_vec4.hpp>
 #include <algorithm>
 #include <cstddef>
 #include <iomanip>
@@ -111,10 +119,14 @@ int akGameMain() {
 static void startGame() {
 	//constexpr ak::log::Logger log(AK_STRING_VIEW("Main"));
 
-	auto ecs = ake::EntityManager([](ake::EntityManager&){ static ake::EntityUID uid = 0; return ++uid; });
+	ake::SceneManager sceneManager;
+	auto& scene = sceneManager.getScene(sceneManager.newScene("World"));
+	auto& ecs = scene.entities();
+
 	//if (!ecs.registerComponentManager(std::make_unique<ake::SceneGraphManager>())) throw std::runtime_error("Failed to register SceneGraphComponent.");
 	if (!ecs.registerComponentManager(std::make_unique<ake::TransformManager>())) throw std::runtime_error("Failed to register TransformComponent.");
 	if (!ecs.registerComponentManager(std::make_unique<ake::CameraManager>())) throw std::runtime_error("Failed to register CameraManager.");
+	if (!ecs.registerComponentManager(std::make_unique<ake::BehavioursManager>())) throw std::runtime_error("Failed to register BehavioursManager.");
 
 	auto objID  = ecs.newEntity("TestObject");
 	objID.createComponent<ake::Transform>(akm::Vec3(23.5f, 127.5f, 12.5f));
@@ -131,7 +143,9 @@ static void startGame() {
 	auto cameraEID = ecs.newEntity("Camera");
 	cameraEID.createComponent<ake::Transform>(akm::Vec3{0,0,0});
 	cameraEID.createComponent<ake::Camera>();
+	cameraEID.createComponent<ake::Behaviours>();
 	cameraEID.component<ake::Camera>().setPerspectiveH(akm::degToRad(90), akw::size(), {0.1f, 65525.0f});
+	cameraEID.component<ake::Behaviours>().addBehaviour(std::make_unique<akgame::CameraControllerBehaviour>());
 
 	// Skybox
 		akr::ShaderProgram shaderSkybox = buildShaderProgram({
@@ -229,7 +243,9 @@ static void startGame() {
 		camera.position() = ecs.getComponent<akec::Transform3D>(event.data().modifiedEntity()).position();
 	});*/
 
-	auto renderFunc = [&](fpSingle delta){
+	scene.renderEvent().subscribe([&](ake::SceneRenderEvent& renderEventData){
+		fpDouble delta = renderEventData.data();
+
 		static fpSingle time = 0;
 		time += delta;
 
@@ -352,43 +368,15 @@ static void startGame() {
 
 		// Finish
 		akw::swapBuffer();
-	};
+	});
 
-	auto updateFunc = [&](fpSingle delta){
-		akw::pollEvents();
-		akw::mouse().update();
-		akw::keyboard().update();
+	scene.updateEvent().subscribe([&](ake::SceneUpdateEvent& updateEventData){
+		fpDouble delta = updateEventData.data();
 
 		static fpSingle time = 0;
 		time += delta;
 
-		if (akw::keyboard().wasPressed(akin::Key::LALT)) akw::setCursorMode(akw::cursorMode() == akw::CursorMode::Captured ? akw::CursorMode::Normal : akw::CursorMode::Captured);
-
 		auto cameraTransform = cameraEID.component<ake::Transform>();
-
-		if (akw::cursorMode() == akw::CursorMode::Captured) {
-			auto mPos = akw::mouse().deltaPosition();
-
-			auto rotY =  akm::degToRad(mPos.x)/20.0f;
-			auto rotX = -akm::degToRad(mPos.y)/20.0f;
-
-			auto eulerRot = cameraTransform.rotationEuler();
-
-			eulerRot.x += rotX;
-			eulerRot.y += rotY * (akm::abs(eulerRot.x) > akm::degToRad(90) ? -1 : 1);
-
-			cameraTransform.setRotation(akm::fromEuler(eulerRot));
-		}
-
-		fpSingle moveSpeed = (akw::keyboard().isDown(akin::Key::LSHIFT) ? 40 : 5)*delta;
-
-
-		if (akw::keyboard().isDown(akin::Key::W)) cameraTransform.moveLocalForward(moveSpeed);
-		if (akw::keyboard().isDown(akin::Key::S)) cameraTransform.moveLocalBackward(moveSpeed);
-		if (akw::keyboard().isDown(akin::Key::D)) cameraTransform.moveLocalRightward(moveSpeed);
-		if (akw::keyboard().isDown(akin::Key::A)) cameraTransform.moveLocalLeftward(moveSpeed);
-		if (akw::keyboard().isDown(akin::Key::R)) cameraTransform.moveLocalUpward(moveSpeed);
-		if (akw::keyboard().isDown(akin::Key::F)) cameraTransform.moveLocalDownward(moveSpeed);
 
 		if (akw::keyboard().wasPressed(akin::Key::H)) updating = !updating;
 		if (akw::keyboard().wasPressed(akin::Key::B)) drawBoxes = !drawBoxes;
@@ -403,9 +391,9 @@ static void startGame() {
 
 		if (!drawBoxes) child2EID.component<ake::Transform>().setScale(1.f);
 
-		if (akw::keyboard().wasPressed(akin::Key::H)) child2EID.setParent(baseEID);
-		if (akw::keyboard().wasPressed(akin::Key::J)) child2EID.setParent(child1EID);
-	};
+		if (akw::keyboard().wasPressed(akin::Key::J)) child2EID.setParent(baseEID);
+		if (akw::keyboard().wasPressed(akin::Key::N)) child2EID.setParent(child1EID);
+	});
 
 	fpSingle updateAccum = 0.f;
 	fpSingle updateDelta = 1.f/ake::config()["engine"]["ticksPerSecond"].asOrDef<fpSingle>(60.f);
@@ -419,7 +407,12 @@ static void startGame() {
 		while(updateAccum >= updateDelta) {
 			aku::Timer updateTimer;
 
-			updateFunc(updateDelta);
+			akw::pollEvents();
+			akw::mouse().update();
+			akw::keyboard().update();
+
+			sceneManager.update(updateDelta);
+
 			tps.update();
 
 			if (updateTimer.mark().secsf() > updateDelta) updateAccum = akm::mod(updateAccum, updateDelta);
@@ -427,7 +420,8 @@ static void startGame() {
 			updateAccum -= updateDelta;
 		}
 
-		renderFunc(fps.update().avgTickDelta());
+		sceneManager.render(fps.update().avgTickDelta());
+		//renderFunc(fps.update().avgTickDelta());
 
 		std::stringstream sstream;
 		sstream << fps.avgTicksPerSecond() << "fps | " << tps.avgTicksPerSecond() << "tps";

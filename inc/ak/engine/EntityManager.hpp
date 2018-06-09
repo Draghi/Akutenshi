@@ -35,6 +35,7 @@ namespace ake {
 
 	using EntityUIDGenerator_f = EntityUID(EntityManager&);
 
+	class Scene;
 	class EntityManager;
 
 	class Entity final {
@@ -99,6 +100,8 @@ namespace ake {
 		EntityManager(const EntityManager&) = delete;
 		EntityManager& operator=(const EntityManager&) = delete;
 		private:
+			ake::Scene* m_owner;
+
 			// Component Storage
 			std::unordered_map<ComponentID, std::unique_ptr<ComponentManager>> m_components;
 
@@ -118,10 +121,7 @@ namespace ake {
 			EntityUID nextEntityUID();
 
 		public:
-			EntityManager(std::function<EntityUIDGenerator_f> entityUIDGenerator);
-			EntityManager(EntityManager&& other);
-
-			EntityManager& operator=(EntityManager&& other);
+			EntityManager(ake::Scene& owner, std::function<EntityUIDGenerator_f> entityUIDGenerator);
 
 			// ////////////// //
 			// // Entities // //
@@ -180,6 +180,13 @@ namespace ake {
 
 			const akev::DispatcherProxy<EntityParentChangedEvent> entityParentChanged() const;
 			const akev::DispatcherProxy<EntityParentChangedEvent> entityParentChanged(EntityID entityID) const;
+
+			// /////////// //
+			// // Scene // //
+			// /////////// //
+
+			Scene& scene() { return *m_owner; }
+			const Scene& scene() const { return *m_owner; }
 	};
 }
 

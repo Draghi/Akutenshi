@@ -22,39 +22,9 @@ using namespace ake;
 // // EntityManager // //
 // /////////////////// //
 
-EntityManager::EntityManager(std::function<EntityUIDGenerator_f> entityUIDGenerator) : m_components(), m_entityUIDGenerator(entityUIDGenerator) {
+EntityManager::EntityManager(ake::Scene& owner, std::function<EntityUIDGenerator_f> entityUIDGenerator) : m_owner(&owner), m_components(), m_entityUIDGenerator(entityUIDGenerator) {
 	for(auto& component : m_components) component.second->m_entityManager = this;
 }
-
-EntityManager::EntityManager(EntityManager&& other)
-	: m_components(std::move(other.m_components)), m_entityUIDGenerator(std::move(other.m_entityUIDGenerator)),
-	  //m_nameStorage(std::move(other.m_nameStorage)), m_entityNameID(std::move(other.m_entityNameID)), m_lookupEntitiesByName(std::move(other.m_lookupEntitiesByName)),
-	  m_entityNameStorage(std::move(other.m_entityNameStorage)), m_entityComponentIDs(std::move(other.m_entityComponentIDs)), m_entityUID(std::move(other.m_entityUID)),
-	  m_lookupEntityByUID(std::move(other.m_lookupEntityByUID)) {
-	for(auto& component : m_components) {
-		component.second->m_entityManager = this;
-		component.second->registerHooks();
-	}
-}
-
-EntityManager& EntityManager::operator=(EntityManager&& other) {
-	m_components = std::move(other.m_components);
-	m_entityUIDGenerator = std::move(other.m_entityUIDGenerator);
-
-	m_entityNameStorage = std::move(other.m_entityNameStorage);
-	m_entityComponentIDs = std::move(other.m_entityComponentIDs);
-	m_entityUID = std::move(other.m_entityUID);
-
-	m_lookupEntityByUID = std::move(other.m_lookupEntityByUID);
-
-	for(auto& component : m_components) {
-		component.second->m_entityManager = this;
-		component.second->registerHooks();
-	}
-
-	return *this;
-}
-
 
 // ////////////// //
 // // Entities // //
@@ -175,6 +145,7 @@ bool EntityManager::registerComponentManager(std::unique_ptr<ComponentManager>&&
 	auto result = m_components.emplace(component->id(), std::move(component));
 	if (!result.second) return false;
 	result.first->second->m_entityManager = this;
+	result.first->second->registerHooks();
 	return true;
 }
 

@@ -232,7 +232,7 @@ void TransformManager::setLocalScale(EntityID entityID, fpSingle s) {
 // // Apply // //
 // /////////// //
 
-void TransformManager::moveLocal(EntityID entityID, const akm::Vec3& p) { setLocalPosition(entityID, localPosition(entityID) + p); }
+void TransformManager::moveLocal(EntityID entityID, const akm::Vec3& p) { setLocalPosition(entityID, localPosition(entityID) + akm::Mat3(localRotationMatrix(entityID)) * p); }
 
 void TransformManager::moveLocalRightward(EntityID entityID, fpSingle dist) { moveLocal(entityID, localRightward(entityID)*dist); }
 void TransformManager::moveLocalUpward(   EntityID entityID, fpSingle dist) { moveLocal(entityID,    localUpward(entityID)*dist); }
