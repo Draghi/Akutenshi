@@ -57,7 +57,7 @@ namespace ake {
 			akm::Quat rotationQuat() const;
 			akm::Vec3 rotationEuler() const;
 
-			fpSingle scale() const;
+			akm::Vec3 scale() const;
 
 			akm::Vec3 rightward() const;
 			akm::Vec3 leftward() const;
@@ -77,7 +77,7 @@ namespace ake {
 			Transform& setRotation(const akm::Vec3& r);
 			Transform& setRotation(const akm::Vec3& forward, const akm::Vec3& upward);
 
-			Transform& setScale(fpSingle s);
+			Transform& setScale(const akm::Vec3& s);
 
 			// /////////// //
 			// // Apply // //
@@ -96,7 +96,7 @@ namespace ake {
 			Transform& rotate(const akm::Quat& r);
 			Transform& rotate(const akm::Vec3& r);
 
-			Transform& scaleByFactor(fpSingle s);
+			Transform& scaleByFactor(const akm::Vec3& s);
 
 			// ///////// //
 			// // Get // //
@@ -111,7 +111,7 @@ namespace ake {
 			akm::Quat localRotationQuat() const;
 			akm::Vec3 localRotationEuler() const;
 
-			fpSingle localScale() const;
+			akm::Vec3 localScale() const;
 
 			akm::Vec3 localRightward() const;
 			akm::Vec3 localUpward() const;
@@ -131,7 +131,7 @@ namespace ake {
 			Transform& setLocalRotation(const akm::Vec3& r);
 			Transform& setLocalRotation(const akm::Vec3& forward, const akm::Vec3& upward);
 
-			Transform& setLocalScale(fpSingle s);
+			Transform& setLocalScale(const akm::Vec3& s);
 
 			// /////////// //
 			// // Apply // //
@@ -150,7 +150,7 @@ namespace ake {
 			Transform& rotateLocal(const akm::Quat& r);
 			Transform& rotateLocal(const akm::Vec3& r);
 
-			Transform& scaleLocalByFactor(fpSingle s);
+			Transform& scaleLocalByFactor(const akm::Vec3& s);
 
 			// //////////////// //
 			// // Components // //
@@ -165,7 +165,7 @@ namespace ake {
 			struct LocalTransformNode final {
 				akm::Vec3 position;
 				akm::Quat rotation;
-				akm::scalar_t scale;
+				akm::Vec3 scale;
 			};
 
 			struct GlobalTransformNode final {
@@ -192,7 +192,7 @@ namespace ake {
 			void markDirty(EntityID id) const;
 
 		protected:
-			bool createComponent(EntityID entityID, const akm::Vec3& position = {0,0,0}, const akm::Quat& rotation = {1,0,0,0}, const akm::scalar_t& scale = 1.f, bool worldSpace = false);
+			bool createComponent(EntityID entityID, const akm::Vec3& position = {0,0,0}, const akm::Quat& rotation = {1,0,0,0}, const akm::Vec3& scale = {1,1,1}, bool worldSpace = false);
 			bool destroyComponent(EntityID entityID) override;
 
 			akm::Mat4 calculateTransformMatrix(const LocalTransformNode& transform) const;
@@ -213,7 +213,7 @@ namespace ake {
 			akm::Quat rotationQuat(  EntityID entityID) const;
 			akm::Vec3 rotationEuler( EntityID entityID) const;
 
-			fpSingle scale(EntityID entityID) const;
+			akm::Vec3 scale(EntityID entityID) const;
 
 			akm::Vec3 rightward(EntityID entityID) const;
 			akm::Vec3 upward(   EntityID entityID) const;
@@ -233,7 +233,7 @@ namespace ake {
 			void setRotation(EntityID entityID, const akm::Vec3& r);
 			void setRotation(EntityID entityID, const akm::Vec3& f, const akm::Vec3& u);
 
-			void setScale(EntityID entityID, fpSingle s);
+			void setScale(EntityID entityID, const akm::Vec3& s);
 
 			// /////////// //
 			// // Apply // //
@@ -258,7 +258,7 @@ namespace ake {
 			void rotatePre(EntityID entityID, const akm::Quat& r);
 			void rotatePre(EntityID entityID, const akm::Vec3& r);
 
-			void scaleByFactor(EntityID entityID, fpSingle s);
+			void scaleByFactor(EntityID entityID, const akm::Vec3& s);
 
 			// ///////// //
 			// // Get // //
@@ -274,7 +274,7 @@ namespace ake {
 			akm::Quat localRotationQuat(  EntityID entityID) const;
 			akm::Vec3 localRotationEuler( EntityID entityID) const;
 
-			fpSingle localScale(EntityID entityID) const;
+			akm::Vec3 localScale(EntityID entityID) const;
 
 			akm::Vec3 localRightward(EntityID entityID) const;
 			akm::Vec3 localUpward(   EntityID entityID) const;
@@ -294,7 +294,7 @@ namespace ake {
 			void setLocalRotation(EntityID entityID, const akm::Vec3& r);
 			void setLocalRotation(EntityID entityID, const akm::Vec3& f, const akm::Vec3& u);
 
-			void setLocalScale(EntityID entityID, fpSingle s);
+			void setLocalScale(EntityID entityID, const akm::Vec3& s);
 
 			// /////////// //
 			// // Apply // //
@@ -314,7 +314,7 @@ namespace ake {
 			void rotateLocal(EntityID entityID, const akm::Quat& r);
 			void rotateLocal(EntityID entityID, const akm::Vec3& r);
 
-			void scaleLocalByFactor(EntityID entityID, fpSingle s);
+			void scaleLocalByFactor(EntityID entityID, const akm::Vec3& s);
 
 			// //////////////// //
 			// // Components // //

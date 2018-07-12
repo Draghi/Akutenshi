@@ -33,6 +33,8 @@ namespace akr {
 
 		void init();
 
+		void setViewport(const akm::Vec2& offset, const akm::Vec2& size);
+
 		void draw(DrawType mode, uint32 vertexCount, uint32 offset = 0);
 		void drawIndexed(DrawType mode, IDataType indexType, uint32 vertexCount, uint32 offset = 0);
 

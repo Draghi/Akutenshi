@@ -14,7 +14,24 @@
  * limitations under the License.
  **/
 
+#include <ak/data/Brotli.hpp>
 #include <ak/data/MsgPack.hpp>
+#include <ak/data/Path.hpp>
+#include <ak/data/PValue.hpp>
+#include <ak/filesystem/CFile.hpp>
+#include <msgpack/v1/object.hpp>
+#include <msgpack/v1/pack.hpp>
+#include <msgpack/v1/sbuffer.hpp>
+#include <msgpack/v2/null_visitor.hpp>
+#include <msgpack/v2/parse.hpp>
+#include <cstring>
+#include <cstddef>
+#include <cstdint>
+#include <deque>
+#include <map>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 using namespace akd;
 
@@ -146,7 +163,7 @@ std::vector<uint8> akd::toMsgPack(const akd::PValue& src) {
     msgpack::sbuffer buffer;
     msgpack::packer<msgpack::sbuffer> pk(&buffer);
 
-	akd::traversePValue(src, [&pk](const akd::Path& path, const akd::TraverseAction traverseAction, const akd::PValue& value) {
+	akd::traversePValue(src, [&pk](const akd::TreePath& path, const akd::TraverseAction traverseAction, const akd::PValue& value) {
 		if ((path.size() > 0) && (!path[path.size() - 1].isIndex) && (traverseAction != akd::TraverseAction::ObjectEnd) && (traverseAction != akd::TraverseAction::ArrayEnd)) {
 			pk.pack(path[path.size()-1].path);
 		}
@@ -189,3 +206,19 @@ bool akd::fromMsgPack(akd::PValue& dest, const std::vector<uint8>& msgPackStream
 	return true;
 }
 
+bool akd::toMsgPackFile(const akd::PValue& src, const akfs::Path& filepath, bool compress, bool overwrite) {
+	akfs::CFile oFile(filepath, akfs::OpenFlags::Out | (overwrite ? akfs::OpenFlags::Truncate : 0x00));
+	if (!oFile) return false;
+	auto fileData = toMsgPack(src);
+	if (compress) fileData = akd::compressBrotli(fileData);
+	if (!oFile.write(fileData.data(), fileData.size())) return false;
+	return true;
+}
+
+akd::PValue akd::fromMsgPackFile(const akfs::Path& filepath, bool decompress) {
+	akfs::CFile inFile(filepath);
+	std::vector<uint8> fileContents; if (!inFile.readAll(fileContents)) return akd::PValue();
+	if (decompress) fileContents = akd::decompressBrotli(fileContents);
+	akd::PValue dst; if (!fromMsgPack(dst, fileContents)) return akd::PValue();
+	return dst;
+}

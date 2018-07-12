@@ -204,11 +204,16 @@ void akr::gl::setTexFilters(TexTarget target, FilterType minFilter, FilterType m
 	glTexParameteri(akToGLTarget(target), GL_TEXTURE_MAG_FILTER, glMagFilter);
 }
 
-void akr::gl::setTexFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter) {
+void akr::gl::setTexFilters(TexTarget target, FilterType minFilter, MipFilterType minMipFilter, FilterType magFilter) {
+	if (minMipFilter == MipFilterType::None) {
+		setTexFilters(target, minFilter, magFilter);
+		return;
+	}
+
 	int32 glMinFilter;
 	switch(minFilter) {
-		case FilterType::Nearest: glMinFilter = (minMipFilter == FilterType::Nearest) ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_LINEAR; break;
-		case FilterType::Linear:  glMinFilter = (minMipFilter == FilterType::Nearest) ? GL_LINEAR_MIPMAP_NEAREST  : GL_LINEAR_MIPMAP_LINEAR;  break;
+		case FilterType::Nearest: glMinFilter = (minMipFilter == MipFilterType::Nearest) ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_LINEAR; break;
+		case FilterType::Linear:  glMinFilter = (minMipFilter == MipFilterType::Nearest) ? GL_LINEAR_MIPMAP_NEAREST  : GL_LINEAR_MIPMAP_LINEAR;  break;
 	}
 
 	int32 glMagFilter;

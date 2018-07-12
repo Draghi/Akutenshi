@@ -34,7 +34,7 @@ namespace akr {
 			Fragment = 2,
 		};
 
-		enum class DrawType {
+		enum class DrawType : uint8 {
 			Points,
 
 			Lines,

@@ -16,10 +16,7 @@
 
 #include <ak/data/PValue.hpp>
 #include <algorithm>
-#include <iostream>
-#include <stdexcept>
-#include <utility>
-#include <sstream>
+#include <cstring>
 
 using namespace akd;
 
@@ -302,7 +299,13 @@ PValue& PValue::setBin(const bin_t& val) {
 	return *this;
 }
 
-static void traversePValue_internal(Path& path, const PValue& cNode, const std::function<void(const Path& path, TraverseAction action, const PValue& value)>& callback) {
+PValue& PValue::setBin(const void* val, akSize size) {
+	bin_t dst; dst.resize(size);
+	std::memcpy(dst.data(), val, size);
+	return setBin(std::move(dst));
+}
+
+static void traversePValue_internal(TreePath& path, const PValue& cNode, const std::function<void(const TreePath& path, TraverseAction action, const PValue& value)>& callback) {
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wswitch-enum"
 	switch(cNode.type()) {
@@ -345,8 +348,8 @@ static void traversePValue_internal(Path& path, const PValue& cNode, const std::
 
 }
 
-void akd::traversePValue(const PValue& cNode, const std::function<void(const Path& path, TraverseAction action, const PValue& value)>& callback) {
-	Path path;
+void akd::traversePValue(const PValue& cNode, const std::function<void(const TreePath& path, TraverseAction action, const PValue& value)>& callback) {
+	TreePath path;
 	traversePValue_internal(path, cNode, callback);
 
 }

@@ -18,20 +18,22 @@
 #define AK_DATA_PVALUE_HPP_
 
 #include <ak/data/Path.hpp>
+#include <ak/filesystem/Path.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <any>
+#include <algorithm>
 #include <cstddef>
 #include <deque>
 #include <functional>
 #include <map>
-#include <optional>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <optional>
 #include <vector>
 
 namespace akd {
+
 	class PValue;
 
 	enum class TraverseAction : uint8 {
@@ -54,9 +56,11 @@ namespace akd {
 		Binary,
 	};
 
-	void traversePValue(const PValue& cNode, const std::function<void(const Path& path, TraverseAction action, const PValue& value)>& callback);
+	void traversePValue(const PValue& cNode, const std::function<void(const TreePath& path, TraverseAction action, const PValue& value)>& callback);
 
-	template<typename type_t> type_t deserialize(const PValue& root);
+
+
+
 
 	class PValue final {
 		public:
@@ -70,7 +74,7 @@ namespace akd {
 			using bool_t = bool;
 			using bin_t = std::vector<uint8>;
 
-			using traverse_f = std::function<bool(const Path&, const PValue&)>;
+			using traverse_f = std::function<bool(const TreePath&, const PValue&)>;
 
 		private:
 			union ValueContainer {
@@ -92,8 +96,8 @@ namespace akd {
 			PType m_type;
 			ValueContainer m_value;
 
-			static PValue& navigate_internal(PValue& cNode, const Path& path);
-			static const PValue* navigate_internal(const PValue* currentNode, const Path& path);
+			static PValue& navigate_internal(PValue& cNode, const TreePath& path);
+			static const PValue* navigate_internal(const PValue* currentNode, const TreePath& path);
 
 		public:
 			PValue() : m_type(PType::Null) {}
@@ -171,6 +175,8 @@ namespace akd {
 			PValue& setDec(const dec_t& val);
 			PValue& setBool(const bool_t& val);
 			PValue& setBin(const bin_t& val);
+
+			PValue& setBin(const void* val, akSize size);
 
 			obj_t& asObj();
 			arr_t& asArr();
@@ -477,6 +483,39 @@ namespace akd {
 			void mvBuild(PValue& dest) { dest = std::move(m_result); m_result = PValue(); m_stack.clear(); m_stack.push_back(&m_result); }
 			const PValue& build() const { return m_result; }
 	};
+}
+
+namespace akd {
+	template<typename type_t> PValue serialize(const type_t& val) {
+		PValue result; serialize(result, val);
+		return result;
+	}
+
+	template<typename type_t> std::optional<type_t> tryDeserialize(const PValue& root) {
+		type_t result;
+		return deserialize(result, root) ?  std::optional<type_t>{result} :  std::optional<type_t>{};
+	}
+
+	template<typename type_t> type_t deserialize(const PValue& root) {
+		auto result = tryDeserialize<type_t>(root);
+		if (result) return *result;
+		else throw std::logic_error("Failed to deserialize value.");
+	}
+
+	template<typename type_t, typename callback_t> bool deserializeFromFile(type_t& dst, const akfs::Path& filepath, callback_t callback) {
+		akd::PValue data = callback(filepath);
+		return deserialize(dst, data);
+	}
+
+	template<typename type_t, typename callback_t> std::optional<type_t> tryDeserializeFromFile(const akfs::Path& filepath, callback_t callback) {
+		akd::PValue data = callback(filepath);
+		return tryDeserialize<type_t>(data);
+	}
+
+	template<typename type_t, typename callback_t> type_t deserializeFromFile(const akfs::Path& filepath, callback_t callback) {
+		akd::PValue data = callback(filepath);
+		return deserialize<type_t>(data);
+	}
 }
 
 #endif

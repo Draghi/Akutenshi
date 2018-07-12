@@ -25,7 +25,7 @@
 
 namespace akfs {
 
-	class Path {
+	class Path final {
 		private:
 			std::vector<std::string> m_pathTokens;
 
@@ -63,13 +63,20 @@ namespace akfs {
 				return result;
 			}
 
-			void setExtension(const std::string& ext) {
-				if (!isFile()) return;
-				auto index = m_pathTokens.back().find_last_of('.');
-				if (index != std::string::npos) m_pathTokens.back() = m_pathTokens.back().substr(0, index);
-				if (ext.size() <= 0) return;
+			Path& setExtension(const std::string& ext) {
+				if (!isFile()) return *this;
+				clearExtension();
+				if (ext.size() <= 0) return *this;
 				if (ext.front() != '.') m_pathTokens.back() += '.';
 				m_pathTokens.back() += ext;
+				return *this;
+			}
+
+			Path& clearExtension() {
+				if (!isFile()) return *this;
+				auto index = m_pathTokens.back().find_last_of('.');
+				if (index != std::string::npos) m_pathTokens.back() = m_pathTokens.back().substr(0, index);
+				return *this;
 			}
 
 			std::string extension() const {
@@ -102,14 +109,53 @@ namespace akfs {
 			Path& operator/=(const Path& path) { return *this += path; }
 			Path& operator+=(const Path& path) {
 				m_pathTokens.reserve(path.m_pathTokens.size());
+				if (m_pathTokens.back().back() != '/') m_pathTokens.back() += '/';
 				m_pathTokens.insert(m_pathTokens.end(), path.m_pathTokens.begin(), path.m_pathTokens.end());
 				return *this;
 			}
 
 			Path operator/(const Path& path) const { return Path(*this) /= path; }
 			Path operator+(const Path& path) const { return Path(*this) += path; }
+
+			bool operator==(const Path& path) const {
+				return (m_pathTokens.size() == path.m_pathTokens.size()) && std::equal(m_pathTokens.begin(), m_pathTokens.end(), path.m_pathTokens.begin(), path.m_pathTokens.end());
+			}
+
+			bool operator!=(const Path& path) const {
+				return (m_pathTokens.size() != path.m_pathTokens.size()) || !std::equal(m_pathTokens.begin(), m_pathTokens.end(), path.m_pathTokens.begin(), path.m_pathTokens.end());
+			}
+
+			bool operator< (const Path& path) const {
+				for(akSize i = 0; (i < m_pathTokens.size()) && (i < path.m_pathTokens.size()); i++) if (m_pathTokens[i] < path.m_pathTokens[i]) return true;
+				return m_pathTokens.size() < path.m_pathTokens.size();
+			}
+
+			bool operator> (const Path& path) const {
+				for(akSize i = 0; (i < m_pathTokens.size()) && (i < path.m_pathTokens.size()); i++) if (m_pathTokens[i] > path.m_pathTokens[i]) return true;
+				return m_pathTokens.size() > path.m_pathTokens.size();
+			}
+
+			bool operator<=(const Path& path) const {
+				for(akSize i = 0; (i < m_pathTokens.size()) && (i < path.m_pathTokens.size()); i++) if (m_pathTokens[i] <= path.m_pathTokens[i]) return true;
+				return m_pathTokens.size() <= path.m_pathTokens.size();
+			}
+
+			bool operator>=(const Path& path) const {
+				for(akSize i = 0; (i < m_pathTokens.size()) && (i < path.m_pathTokens.size()); i++) if (m_pathTokens[i] >= path.m_pathTokens[i]) return true;
+				return m_pathTokens.size() >= path.m_pathTokens.size();
+			}
 	};
 
+}
+
+namespace std {
+	template<> struct hash<akfs::Path> {
+		using argument_type = akfs::Path;
+		using result_type = std::hash<std::string>::result_type;
+
+		hash() = default;
+		result_type operator()(const argument_type& s) const noexcept { return std::hash<std::string>()(s.str()); }
+	};
 }
 
 #endif

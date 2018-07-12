@@ -73,6 +73,16 @@ namespace aku {
 			}
 
 			/**
+			 * Calls the mark function, copies the timer, resets and returns the clone.
+			 * @return The cloned timer
+			 */
+			Timer markAndReset() {
+				auto result = Timer(mark());
+				reset();
+				return result;
+			}
+
+			/**
 			 * Converts the timed period from seconds into the given unit
 			 * @tparam ratio_t The unit of time to convert to
 			 * @return The elapsed period of time in the given period

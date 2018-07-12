@@ -21,7 +21,6 @@ layout(binding = 0) uniform BoneBlock {
 out vec3 fPos;
 out vec3 fNorm;
 out vec2 fTex;
-out vec3 fCol;
 out mat3 fMatTBN;
 
 void main() {
@@ -34,6 +33,5 @@ void main() {
 	fPos = (uMatModel * pose * vec4(vPosition, 1)).xyz;
 	fNorm = mat3(uMatMesh) * mat3(pose) * vNormal;
 	fTex = vTexCoord;
-	fCol = vBoneWeights.xyz*vec3(vBoneIndicies.x, vBoneIndicies.y, vBoneIndicies.z)*(1/26.0);
 	fMatTBN = transpose(mat3(uMatModel) * mat3(uMatMesh) * mat3(pose) * mat3(vTangent, vBitangent, vNormal));
 }

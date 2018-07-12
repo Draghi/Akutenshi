@@ -14,6 +14,9 @@
  * limitations under the License.
  **/
 
+#ifndef AK_DATA_BROTLI_HPP
+#define AK_DATA_BROTLI_HPP
+
 #include <ak/PrimitiveTypes.hpp>
 #include <limits>
 #include <vector>
@@ -30,3 +33,5 @@ namespace akd {
 	std::vector<uint8> decompressBrotli(const std::vector<uint8>& inData);
 
 }
+
+#endif

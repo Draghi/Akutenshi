@@ -17,13 +17,20 @@
 #ifndef AK_DATA_MSGPACK_HPP_
 #define AK_DATA_MSGPACK_HPP_
 
-#include <ak/data/PValue.hpp>
-#include <iostream>
-#include <string>
+#include <ak/filesystem/Path.hpp>
+#include <ak/PrimitiveTypes.hpp>
+#include <vector>
+
+namespace akd {
+	class PValue;
+} /* namespace akd */
 
 namespace akd {
 	std::vector<uint8> toMsgPack(const akd::PValue& src);
 	bool fromMsgPack(akd::PValue& dest, const std::vector<uint8>& msgPackStream);
+
+	bool toMsgPackFile(const akd::PValue& src, const akfs::Path& filepath, bool compress = true, bool overwrite = true);
+	akd::PValue fromMsgPackFile(const akfs::Path& filepath, bool decompress);
 }
 
 #endif

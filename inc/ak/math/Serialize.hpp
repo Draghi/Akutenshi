@@ -17,12 +17,21 @@
 #ifndef AK_MATH_SERIALIZE_HPP_
 #define AK_MATH_SERIALIZE_HPP_
 
+#include <ak/data/Json.hpp>
 #include <ak/data/PValue.hpp>
-#include <ak/math/Matrix.hpp>
-#include <ak/math/Quaternion.hpp>
 #include <ak/math/SphericalCoord.hpp>
 #include <ak/math/Transform.hpp>
-#include <ak/math/Vector.hpp>
+#include <ak/math/Types.hpp>
+#include <glm/detail/type_mat2x2.hpp>
+#include <glm/detail/type_mat3x3.hpp>
+#include <glm/detail/type_mat4x4.hpp>
+#include <glm/detail/type_vec2.hpp>
+#include <glm/detail/type_vec3.hpp>
+#include <glm/detail/type_vec4.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <iostream>
+#include <stdexcept>
+#include <string>
 
 namespace akd {
 	inline void serialize(akd::PValue& dest, const akm::Quat& val) { for(auto i = 0u; i < 4; i++) dest[i].set<typename akm::Quat::value_type>(val[i]); }
@@ -49,10 +58,10 @@ namespace akd {
 	inline bool deserialize(akm::Quat& dest, const akd::PValue& val) {
 		try {
 			dest = akm::Quat(
+				val[3].as<typename akm::Quat::value_type>(),
 				val[0].as<typename akm::Quat::value_type>(),
 				val[1].as<typename akm::Quat::value_type>(),
-				val[2].as<typename akm::Quat::value_type>(),
-				val[3].as<typename akm::Quat::value_type>()
+				val[2].as<typename akm::Quat::value_type>()
 			);
 			return true;
 		} catch(const std::logic_error& /*e*/) {
@@ -100,26 +109,71 @@ namespace akd {
 	}
 
 	inline bool deserialize(akm::Mat4& dest, const akd::PValue& val) {
-		akm::Vec4 c0; if (!deserialize(c0, val[0])) return false;
-		akm::Vec4 c1; if (!deserialize(c1, val[1])) return false;
-		akm::Vec4 c2; if (!deserialize(c2, val[2])) return false;
-		akm::Vec4 c3; if (!deserialize(c3, val[3])) return false;
-		dest = akm::Mat4(c0, c1, c2, c3);
+		if (!val.isArr()) return false;
+		if (val.size() <= 0) return false;
+		if (val[0].isArr()) {
+			akm::Vec4 c0; if (!deserialize(c0, val.atOrDef(0))) return false;
+			akm::Vec4 c1; if (!deserialize(c1, val.atOrDef(1))) return false;
+			akm::Vec4 c2; if (!deserialize(c2, val.atOrDef(2))) return false;
+			akm::Vec4 c3; if (!deserialize(c3, val.atOrDef(3))) return false;
+			dest = akm::Mat4(c0, c1, c2, c3);
+		} else {
+			try {
+				using conv_t = typename akm::Vec4::value_type;
+				dest = akm::Mat4(
+					val[ 0].as<conv_t>(), val[ 4].as<conv_t>(), val[ 8].as<conv_t>(), val[12].as<conv_t>(),
+					val[ 1].as<conv_t>(), val[ 5].as<conv_t>(), val[ 9].as<conv_t>(), val[13].as<conv_t>(),
+					val[ 2].as<conv_t>(), val[ 6].as<conv_t>(), val[10].as<conv_t>(), val[14].as<conv_t>(),
+					val[ 3].as<conv_t>(), val[ 7].as<conv_t>(), val[11].as<conv_t>(), val[15].as<conv_t>()
+				);
+			} catch(const std::logic_error& /*e*/) {
+				return false;
+			}
+		}
 		return true;
 	}
 
 	inline bool deserialize(akm::Mat3& dest, const akd::PValue& val) {
-		akm::Vec3 c0; if (!deserialize(c0, val[0])) return false;
-		akm::Vec3 c1; if (!deserialize(c1, val[1])) return false;
-		akm::Vec3 c2; if (!deserialize(c2, val[2])) return false;
-		dest = akm::Mat3(c0, c1, c2);
+		if (!val.isArr()) return false;
+		if (val.size() <= 0) return false;
+		if (val[0].isArr()) {
+			akm::Vec3 c0; if (!deserialize(c0, val[0])) return false;
+			akm::Vec3 c1; if (!deserialize(c1, val[1])) return false;
+			akm::Vec3 c2; if (!deserialize(c2, val[2])) return false;
+			dest = akm::Mat3(c0, c1, c2);
+		} else {
+			try {
+				using conv_t = typename akm::Vec4::value_type;
+				dest = akm::Mat3(
+					val[0].as<conv_t>(), val[3].as<conv_t>(), val[6].as<conv_t>(),
+					val[1].as<conv_t>(), val[4].as<conv_t>(), val[7].as<conv_t>(),
+					val[2].as<conv_t>(), val[5].as<conv_t>(), val[8].as<conv_t>()
+				);
+			} catch(const std::logic_error& /*e*/) {
+				return false;
+			}
+		}
 		return true;
 	}
 
 	inline bool deserialize(akm::Mat2& dest, const akd::PValue& val) {
-		akm::Vec2 c0; if (!deserialize(c0, val[0])) return false;
-		akm::Vec2 c1; if (!deserialize(c1, val[1])) return false;
-		dest = akm::Mat2(c0, c1);
+		if (!val.isArr()) return false;
+		if (val.size() <= 0) return false;
+		if (val[0].isArr()) {
+			akm::Vec2 c0; if (!deserialize(c0, val[0])) return false;
+			akm::Vec2 c1; if (!deserialize(c1, val[1])) return false;
+			dest = akm::Mat2(c0, c1);
+		} else {
+			try {
+				using conv_t = typename akm::Vec4::value_type;
+				dest = akm::Mat2(
+					val[0].as<conv_t>(), val[2].as<conv_t>(),
+					val[1].as<conv_t>(), val[3].as<conv_t>()
+				);
+			} catch(const std::logic_error& /*e*/) {
+				return false;
+			}
+		}
 		return true;
 	}
 

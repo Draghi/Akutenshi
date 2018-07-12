@@ -17,8 +17,13 @@
 #ifndef AK_DATA_JSON_PVALUEPARSER_HPP_
 #define AK_DATA_JSON_PVALUEPARSER_HPP_
 
-#include <ak/data/PValue.hpp>
+#include <ak/filesystem/Path.hpp>
 #include <string>
+
+namespace akd {
+	class PValue;
+} /* namespace akd */
+
 
 namespace akd {
 	/**
@@ -27,7 +32,7 @@ namespace akd {
 	 * @param pretty Should the output be pretty (ie. new lines, tabs etc.)
 	 * @return The completed string
 	 */
-	std::string toJson(const akd::PValue& src, bool pretty = false);
+	std::string toJson(const akd::PValue& src, bool pretty = true);
 
 	/**
 	 * Attempts to deserialize a JSON string to a PValue tree
@@ -36,6 +41,10 @@ namespace akd {
 	 * @return If the JSON string was deserialized
 	 */
 	bool fromJson(akd::PValue& dest, const std::string& jsonStr);
+
+	bool toJsonFile(const akd::PValue& src, const akfs::Path& filepath, bool pretty = true, bool overwrite = true);
+
+	akd::PValue fromJsonFile(const akfs::Path& filepath);
 }
 
 #endif

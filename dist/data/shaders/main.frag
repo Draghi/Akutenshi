@@ -3,7 +3,6 @@
 in vec3 fPos;
 in vec3 fNorm;
 in vec2 fTex;
-in vec3 fCol;
 in mat3 fMatTBN;
 
 layout(location = 3) uniform sampler2D uTex;
@@ -31,7 +30,7 @@ void main() {
 		
 	float ambientFactor = 0.1;
 	fragColour = vec4(
-		ambientFactor*texColour/*fCol*/ +
-		diffuseFactor*texColour/*fCol*/ + 
+		ambientFactor*texColour +
+		diffuseFactor*texColour + 
 		pow(specularFactor,25)*specColour, 1.0);
 }

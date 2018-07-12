@@ -313,6 +313,7 @@ namespace akc {
 			// // Properties // //
 			// //////////////// //
 
+			const container_type<type_t>& dataContainer() const { return m_data; }
 			container_type<type_t> copyData() const { return m_data; }
 
 			void shrink_to_fit() {
@@ -321,6 +322,7 @@ namespace akc {
 				m_freeList.shrink_to_fit();
 				m_indexLookup.shrink_to_fit();
 			}
+
 			bool empty() const { return m_data.empty(); }
 			index_type size() const { return m_data.size(); }
 			size_t capacity() const { return m_data.capacity(); }

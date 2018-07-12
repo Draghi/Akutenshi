@@ -61,10 +61,13 @@ namespace ake {
 				akm::Mat4 viewMatrix;
 			} m_cache;
 
+			akm::Vec2 m_viewOffset;
+			akm::Vec2 m_viewSize;
+
 			akev::SubscriberID m_transformChangeSubscription;
 
 		public:
-			Camera(EntityID id, const CameraManager& cManager, const EntityManager& eManager) : m_id(id), m_cManager(cManager), m_eManager(eManager), m_projection(), m_projectionType(Projection::Orthographic), m_cache{true, akm::Mat4(1), true, akm::Mat4(1)}, m_transformChangeSubscription() {
+			Camera(EntityID id, const CameraManager& cManager, const EntityManager& eManager) : m_id(id), m_cManager(cManager), m_eManager(eManager), m_projection(), m_projectionType(Projection::Orthographic), m_cache{true, akm::Mat4(1), true, akm::Mat4(1)}, m_viewOffset(0,0), m_viewSize(1,1), m_transformChangeSubscription() {
 				//@todo Add change tracking transform
 				//m_transformChangeSubscription = m_eManager.component<Transform>(m_id).
 			}
@@ -122,11 +125,21 @@ namespace ake {
 			// ////////// //
 			// // View // //
 			// ////////// //
+
 			akm::Mat4 viewMatrix() const {
 				// @todo Remove when tracking implemented
 				if (std::exchange(m_cache.isViewDirty, false) || true) m_cache.viewMatrix = m_eManager.component<Transform>(m_id).worldToLocal();
 				return m_cache.viewMatrix;
 			}
+
+			// ////////////// //
+			// // ViewPort // //
+			// ////////////// //
+			void viewOffset(const akm::Vec2& val) { m_viewOffset = val; }
+			void viewSize(const akm::Vec2& val) { m_viewSize = val; }
+
+			akm::Vec2 viewOffset() const { return m_viewOffset; }
+			akm::Vec2 viewSize() const { return m_viewSize; }
 	};
 
 
@@ -152,6 +165,8 @@ namespace ake {
 
 			Camera& component(EntityID entityID) { return m_components.at(entityID); }
 			const Camera& component(EntityID entityID) const { return m_components.at(entityID); }
+
+			const std::unordered_map<EntityID, Camera>& components() const { return m_components; }
 
 			bool hasComponent(EntityID entityID) const override { return m_components.find(entityID) != m_components.end(); }
 	};

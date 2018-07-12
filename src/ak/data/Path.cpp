@@ -22,10 +22,10 @@
 
 using namespace akd;
 
-Path akd::parseObjectDotNotation(const std::string& path) {
-	if (path.size() <= 0) return Path();
+TreePath akd::parseObjectDotNotation(const std::string& path) {
+	if (path.size() <= 0) return TreePath();
 
-	Path result;
+	TreePath result;
 
 	bool parsingIndex = false;
 	ak::split(path, {".", "["}, [&](const std::string& delimStr, const std::string& str) {
@@ -58,7 +58,7 @@ Path akd::parseObjectDotNotation(const std::string& path) {
 	return result;
 }
 
-std::string akd::pathToObjectDotNotation(const Path& path) {
+std::string akd::pathToObjectDotNotation(const TreePath& path) {
 	std::stringstream sstream;
 
 	for(akSize i = 0; i < path.size(); i++) {

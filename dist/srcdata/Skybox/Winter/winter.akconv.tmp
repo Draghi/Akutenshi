@@ -1,0 +1,25 @@
+{
+	"type": "TEXTURE",
+	"config":{
+		"type":"CUBEMAP",
+		"levels":[
+			[
+				{"image":"pX.png"},
+				{"image":"pY.png"},
+				{"image":"pZ.png"},
+				{"image":"nX.png"},
+				{"image":"nY.png"},
+				{"image":"nZ.png"},
+			],
+		],
+		"clamp":{
+			"S":"EDGE",
+			"T":"EDGE"
+		},
+		"filter":{
+			"min":"LINEAR",
+			"max":"LINEAR",
+			"mip":"NONE",
+		}
+	}
+}

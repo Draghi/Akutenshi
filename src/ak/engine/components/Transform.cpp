@@ -41,9 +41,9 @@ void TransformManager::markDirty(EntityID id) const {
 	}
 }
 
-bool TransformManager::createComponent(EntityID entityID, const akm::Vec3& position, const akm::Quat& rotation, const akm::scalar_t& scale, bool worldSpace) {
+bool TransformManager::createComponent(EntityID entityID, const akm::Vec3& position, const akm::Quat& rotation, const akm::Vec3& scale, bool worldSpace) {
 	if (!m_localTransform.emplace(entityID, LocalTransformNode{position, rotation, scale}).second) return false;
-	if (!m_globalTransform.emplace(entityID, GlobalTransformNode{{akm::Vec3(0,0,0), akm::Quat(1,0,0,0), 1}, true}).second) throw std::logic_error("ake::TransformManager: Data corruption, cache data exists when transform exists");
+	if (!m_globalTransform.emplace(entityID, GlobalTransformNode{{akm::Vec3(0,0,0), akm::Quat(1,0,0,0), akm::Vec3{1,1,1}}, true}).second) throw std::logic_error("ake::TransformManager: Data corruption, cache data exists when transform exists");
 
 	if (worldSpace) {
 		setPosition(entityID, position);
@@ -63,7 +63,7 @@ bool TransformManager::destroyComponent(EntityID entityID) {
 }
 
 akm::Mat4 TransformManager::calculateTransformMatrix(const LocalTransformNode& transform) const {
-	auto rotationMatrix = transform.scale * akm::mat3_cast(transform.rotation);
+	auto rotationMatrix = akm::scale3(transform.scale) * akm::mat3_cast(transform.rotation);
 	return akm::Mat4(
 		akm::Vec4(akm::column(rotationMatrix, 0), 0),
 		akm::Vec4(akm::column(rotationMatrix, 1), 0),
@@ -73,11 +73,11 @@ akm::Mat4 TransformManager::calculateTransformMatrix(const LocalTransformNode& t
 }
 
 TransformManager::LocalTransformNode TransformManager::getWorldTransform(EntityID entityID) const {
-	if (!entityID) return LocalTransformNode{akm::Vec3(0,0,0), akm::Quat(1,0,0,0), 1.f};
+	if (!entityID) return LocalTransformNode{akm::Vec3(0,0,0), akm::Quat(1,0,0,0), akm::Vec3{1,1,1}};
 	auto& globalNode = m_globalTransform.at(entityID);
 	if (!std::exchange(globalNode.isDirty, false)) return globalNode.transform;
 
-	// TODO Experimental, matrix-less transforms. Should be about ~38 multiplications rather than 64.
+	// TODO Experimental, matrix-less transforms. Should be about less multiplications.
 	auto& localNode = m_localTransform.at(entityID);
 	auto parentNode = getWorldTransform(entityManager().entityParentID(entityID));
 	globalNode.transform.position = parentNode.position + parentNode.rotation * (parentNode.scale * localNode.position);
@@ -105,7 +105,7 @@ akm::Mat4 TransformManager::rotationMatrix(EntityID entityID) const { return akm
 akm::Quat TransformManager::rotationQuat(  EntityID entityID) const { return getWorldTransform(entityID).rotation; }
 akm::Vec3 TransformManager::rotationEuler( EntityID entityID) const { return akm::toEuler(rotationQuat(entityID)); }
 
-fpSingle TransformManager::scale(EntityID entityID) const { return getWorldTransform(entityID).scale; }
+akm::Vec3 TransformManager::scale(EntityID entityID) const { return getWorldTransform(entityID).scale; }
 
 akm::Vec3 TransformManager::rightward(EntityID entityID) const { return akm::extractAxisX(getWorldTransform(entityID).rotation); } //akm::column(rotationMatrix(entityID), 0); }
 akm::Vec3 TransformManager::upward(   EntityID entityID) const { return akm::extractAxisY(getWorldTransform(entityID).rotation); } //akm::column(rotationMatrix(entityID), 1); }
@@ -148,9 +148,9 @@ void TransformManager::setRotation(EntityID entityID, const akm::Vec3& f, const 
 }
 
 
-void TransformManager::setScale(EntityID entityID, fpSingle s) {
+void TransformManager::setScale(EntityID entityID, const akm::Vec3& s) {
 	auto parentID = entityManager().entityParentID(entityID);
-	auto parentScl = hasComponent(parentID) ? scale(parentID) : 1.f;
+	auto parentScl = hasComponent(parentID) ? scale(parentID) : akm::Vec3{1,1,1};
 	setLocalScale(entityID, s/parentScl);
 }
 
@@ -177,7 +177,7 @@ void TransformManager::rotatePre(EntityID entityID, const akm::Mat4& r) { rotate
 void TransformManager::rotatePre(EntityID entityID, const akm::Quat& r) { setRotation(entityID, r * rotationQuat(entityID)); }
 void TransformManager::rotatePre(EntityID entityID, const akm::Vec3& r) { rotatePre(entityID, akm::fromEuler(r)); }
 
-void TransformManager::scaleByFactor(EntityID entityID, fpSingle s) { setScale(entityID, scale(entityID) * s); }
+void TransformManager::scaleByFactor(EntityID entityID, const akm::Vec3& s) { setScale(entityID, scale(entityID) * s); }
 
 // ///////// //
 // // Get // //
@@ -193,7 +193,7 @@ akm::Mat4 TransformManager::localRotationMatrix(EntityID entityID) const { retur
 akm::Quat TransformManager::localRotationQuat(  EntityID entityID) const { return m_localTransform.at(entityID).rotation; }
 akm::Vec3 TransformManager::localRotationEuler( EntityID entityID) const { return akm::toEuler(localRotationQuat(entityID)); }
 
-fpSingle TransformManager::localScale(EntityID entityID) const { return m_localTransform.at(entityID).scale; }
+akm::Vec3 TransformManager::localScale(EntityID entityID) const { return m_localTransform.at(entityID).scale; }
 
 akm::Vec3 TransformManager::localRightward(EntityID entityID) const { return akm::extractAxisX(m_localTransform.at(entityID).rotation); }
 akm::Vec3 TransformManager::localUpward(   EntityID entityID) const { return akm::extractAxisY(m_localTransform.at(entityID).rotation); }
@@ -223,7 +223,7 @@ void TransformManager::setLocalRotation(EntityID entityID, const akm::Vec3& f, c
 	setLocalRotation(entityID, akm::quat_cast(akm::Mat3(rRight, rUp, rForward)));
 }
 
-void TransformManager::setLocalScale(EntityID entityID, fpSingle s) {
+void TransformManager::setLocalScale(EntityID entityID, const akm::Vec3& s) {
 	m_localTransform.at(entityID).scale = s;
 	markDirty(entityID);
 }
@@ -246,7 +246,7 @@ void TransformManager::rotateLocal(EntityID entityID, const akm::Mat4& r) { rota
 void TransformManager::rotateLocal(EntityID entityID, const akm::Quat& r) { setLocalRotation(entityID, rotationQuat(entityID) * r); }
 void TransformManager::rotateLocal(EntityID entityID, const akm::Vec3& r) { rotateLocal(entityID, akm::fromEuler(r)); }
 
-void TransformManager::scaleLocalByFactor(EntityID entityID, fpSingle s) { setLocalScale(entityID, localScale(entityID) * s); }
+void TransformManager::scaleLocalByFactor(EntityID entityID, const akm::Vec3& s) { setLocalScale(entityID, localScale(entityID) * s); }
 
 // //////////////// //
 // // Components // //
@@ -279,7 +279,7 @@ akm::Mat4 Transform::rotationMatrix() const { return m_manager->rotationMatrix(m
 akm::Quat Transform::rotationQuat() const { return m_manager->rotationQuat(m_id); }
 akm::Vec3 Transform::rotationEuler() const { return m_manager->rotationEuler(m_id); }
 
-fpSingle Transform::scale() const { return m_manager->scale(m_id); }
+akm::Vec3 Transform::scale() const { return m_manager->scale(m_id); }
 
 akm::Vec3 Transform::rightward() const { return m_manager->rightward(m_id); }
 akm::Vec3 Transform::upward()    const { return m_manager->upward(m_id);    }
@@ -299,7 +299,7 @@ Transform& Transform::setRotation(const akm::Quat& r) { m_manager->setRotation(m
 Transform& Transform::setRotation(const akm::Vec3& r) { m_manager->setRotation(m_id, r); return *this; }
 Transform& Transform::setRotation(const akm::Vec3& f, const akm::Vec3& u) { m_manager->setRotation(m_id, f, u); return *this; }
 
-Transform& Transform::setScale(fpSingle s) { m_manager->setScale(m_id, s); return *this; }
+Transform& Transform::setScale(const akm::Vec3& s) { m_manager->setScale(m_id, s); return *this; }
 
 // /////////// //
 // // Apply // //
@@ -318,7 +318,7 @@ Transform& Transform::rotate(const akm::Mat4& r) { m_manager->rotate(m_id, r); r
 Transform& Transform::rotate(const akm::Quat& r) { m_manager->rotate(m_id, r); return *this; }
 Transform& Transform::rotate(const akm::Vec3& r) { m_manager->rotate(m_id, r); return *this; }
 
-Transform& Transform::scaleByFactor(fpSingle s) { m_manager->scaleByFactor(m_id, s); return *this; }
+Transform& Transform::scaleByFactor(const akm::Vec3& s) { m_manager->scaleByFactor(m_id, s); return *this; }
 
 // ///////// //
 // // Get // //
@@ -333,7 +333,7 @@ akm::Mat4 Transform::localRotationMatrix() const { return m_manager->localRotati
 akm::Quat Transform::localRotationQuat() const { return m_manager->localRotationQuat(m_id); }
 akm::Vec3 Transform::localRotationEuler() const { return m_manager->localRotationEuler(m_id); }
 
-fpSingle Transform::localScale() const { return m_manager->localScale(m_id); }
+akm::Vec3 Transform::localScale() const { return m_manager->localScale(m_id); }
 
 akm::Vec3 Transform::localRightward() const { return m_manager->localRightward(m_id); }
 akm::Vec3 Transform::localUpward()    const { return m_manager->localUpward(m_id);    }
@@ -353,7 +353,7 @@ Transform& Transform::setLocalRotation(const akm::Quat& r) { m_manager->setLocal
 Transform& Transform::setLocalRotation(const akm::Vec3& r) { m_manager->setLocalRotation(m_id, r); return *this; }
 Transform& Transform::setLocalRotation(const akm::Vec3& f, const akm::Vec3& u) { m_manager->setLocalRotation(m_id, f, u); return *this; }
 
-Transform& Transform::setLocalScale(fpSingle s) { m_manager->setLocalScale(m_id, s); return *this; }
+Transform& Transform::setLocalScale(const akm::Vec3& s) { m_manager->setLocalScale(m_id, s); return *this; }
 
 // /////////// //
 // // Apply // //
@@ -372,7 +372,7 @@ Transform& Transform::rotateLocal(const akm::Mat4& r) { m_manager->rotateLocal(m
 Transform& Transform::rotateLocal(const akm::Quat& r) { m_manager->rotateLocal(m_id, r); return *this; }
 Transform& Transform::rotateLocal(const akm::Vec3& r) { m_manager->rotateLocal(m_id, r); return *this; }
 
-Transform& Transform::scaleLocalByFactor(fpSingle s) { m_manager->scaleLocalByFactor(m_id, s); return *this; }
+Transform& Transform::scaleLocalByFactor(const akm::Vec3& s) { m_manager->scaleLocalByFactor(m_id, s); return *this; }
 
 // //////////////// //
 // // Components // //

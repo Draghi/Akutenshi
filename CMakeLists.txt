@@ -35,7 +35,7 @@ set_target_properties(akutenshi PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUI
 find_package(Threads REQUIRED)
 target_link_libraries(akutenshi Threads::Threads)
 
-target_link_libraries(akutenshi assimp)
+# target_link_libraries(akutenshi assimp)
 target_link_libraries(akutenshi brotlicommon-static)
 target_link_libraries(akutenshi brotlidec-static)
 target_link_libraries(akutenshi brotlienc-static)

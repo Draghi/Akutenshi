@@ -17,6 +17,20 @@
 #ifndef AK_ANIMATION_SERIALIZE_HPP_
 #define AK_ANIMATION_SERIALIZE_HPP_
 
+#include <ak/animation/Animation.hpp>
+#include <ak/animation/Fwd.hpp>
+#include <ak/animation/Mesh.hpp>
+#include <ak/animation/Skeleton.hpp>
+#include <ak/animation/Type.hpp>
+#include <ak/math/Serialize.hpp>
+#include <ak/PrimitiveTypes.hpp>
+#include <cstring>
+#include <deque>
+#include <map>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
 // Mesh
 namespace akd {
 	inline bool deserialize(aka::Mesh& dst, const akd::PValue& src) {

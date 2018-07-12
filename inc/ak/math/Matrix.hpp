@@ -69,6 +69,12 @@ namespace akm {
 
 	inline Mat3 eulerOrient3(const Vec3& eulerAngles) { return glm::orientate3(eulerAngles); }
 	inline Mat4 eulerOrient4(const Vec3& eulerAngles) { return glm::orientate4(eulerAngles); }
+
+	inline void decompose(const Mat4& mat, Vec3& translation, Quat& rotation, Vec3& scale) {
+		akm::Vec3 skew;
+		akm::Vec4 persp;
+		glm::decompose(mat, scale, rotation, translation, skew, persp);
+	}
 }
 
 #endif

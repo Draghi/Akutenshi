@@ -63,6 +63,12 @@ namespace akr {
 			Linear,
 		};
 
+		enum class MipFilterType {
+			None,
+			Nearest,
+			Linear,
+		};
+
 		enum class ClampType {
 			Repeat,
 			Mirror,
@@ -123,7 +129,7 @@ namespace akr {
 
 		void setTexAnisotropy(TexTarget target, fpSingle amount);
 		void setTexFilters(TexTarget target, FilterType minFilter, FilterType magFilter);
-		void setTexFilters(TexTarget target, FilterType minFilter, FilterType minMipFilter, FilterType magFilter);
+		void setTexFilters(TexTarget target, FilterType minFilter, MipFilterType minMipFilter, FilterType magFilter);
 		void setTexClamping(TexTarget target, ClampDir clampDir, ClampType clampType);
 		void setTexBorder(TexTarget target, akm::Vec4 colour);
 

@@ -16,27 +16,29 @@
 
 #include <ak/data/Json.hpp>
 #include <ak/data/Path.hpp>
+#include <ak/data/PValue.hpp>
+#include <ak/filesystem/CFile.hpp>
 #include <ak/Log.hpp>
-#include <ak/PrimitiveTypes.hpp>
 #include <ak/Macros.hpp>
+#include <ak/PrimitiveTypes.hpp>
+#include <cppcodec/base64_rfc4648.hpp>
+#include <rapidjson/encodings.h>
+#include <rapidjson/error/en.h>
+#include <rapidjson/error/error.h>
+#include <rapidjson/prettywriter.h>
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/reader.h>
+#include <rapidjson/stream.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 #include <algorithm>
+#include <cstdint>
 #include <deque>
 #include <limits>
 #include <map>
 #include <stdexcept>
 #include <utility>
 #include <vector>
-
-#include "cppcodec/base64_rfc4648.hpp"
-#include "rapidjson/encodings.h"
-#include "rapidjson/error/en.h"
-#include "rapidjson/error/error.h"
-#include "rapidjson/prettywriter.h"
-#include "rapidjson/rapidjson.h"
-#include "rapidjson/reader.h"
-#include "rapidjson/stream.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
 
 using namespace akd;
 
@@ -161,8 +163,9 @@ std::string akd::toJson(const akd::PValue& src, bool pretty) {
 
     rj::Writer<rj::StringBuffer> nWriter(s);
     rj::PrettyWriter<rj::StringBuffer> pWriter(s);
+    pWriter.SetFormatOptions(rj::PrettyFormatOptions::kFormatSingleLineArray);
 
-	akd::traversePValue(src, [pretty, &nWriter, &pWriter](const akd::Path& path, const akd::TraverseAction traverseAction, const akd::PValue& value) {
+	akd::traversePValue(src, [pretty, &nWriter, &pWriter](const akd::TreePath& path, const akd::TraverseAction traverseAction, const akd::PValue& value) {
 
 
 		if ((path.size() > 0) && (!path[path.size() - 1].isIndex) && (traverseAction != akd::TraverseAction::ObjectEnd) && (traverseAction != akd::TraverseAction::ArrayEnd)) {
@@ -254,5 +257,17 @@ std::string akd::toJson(const akd::PValue& src, bool pretty) {
 	return std::string(s.GetString(), s.GetSize());
 }
 
+ bool akd::toJsonFile(const akd::PValue& src, const akfs::Path& filepath, bool pretty, bool overwrite) {
+	akfs::CFile oFile(filepath, akfs::OpenFlags::Out | (overwrite ? akfs::OpenFlags::Truncate : 0x00));
+	if (!oFile) return false;
+	if (!oFile.writeLine(toJson(src, pretty), "")) return false;
+	return true;
+}
 
+akd::PValue akd::fromJsonFile(const akfs::Path& filepath) {
+	akfs::CFile inFile(filepath);
+	std::string fileContents; if (!inFile.readAllLines(fileContents)) return akd::PValue();
+	akd::PValue dst;          if (!fromJson(dst, fileContents))       return akd::PValue();
+	return dst;
+}
 

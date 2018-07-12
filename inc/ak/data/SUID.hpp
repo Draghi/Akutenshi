@@ -17,9 +17,10 @@
 #ifndef AK_DATA_SUID_HPP_
 #define AK_DATA_SUID_HPP_
 
-#include <ak/data/Rand.hpp>
+#include <ak/data/PValue.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <cstddef>
+#include <stdexcept>
 #include <unordered_map>
 
 namespace akd {
@@ -42,14 +43,33 @@ namespace akd {
 		bool operator>=(const SUID& o) const { return (high >  o.high) || ((high == o.high) && (low >= o.low)); }
 	};
 
+	template<typename rand_t> SUID generateSUID(rand_t& randSource) {
+		static_assert(sizeof(typename rand_t::int_type) == 8, "Rand source must provide 64 bits of randomness");
+		return SUID(randSource.nextInt(), randSource.nextInt());
+	}
+
 	template<typename rand_t> SUID generateSUID(uint8 seed, rand_t& randSource) {
-		static_assert(sizeof(typename rand_t::result_type) == 8, "Rand source must provide 64 bits of randomness");
+		static_assert(sizeof(typename rand_t::int_type) == 8, "Rand source must provide 64 bits of randomness");
 		return SUID(
-			((randSource() % 1152921504606846976) & 0x00FFFFFFFFFFFFFF) | (static_cast<uint64>(seed) << 48), // 48 Rand-Bits + 8 Identification Bits (ID Bits to reduce collision chance on decenteralized system)
-			randSource()                                                                                     // 64 Rand-Bits
+			((randSource.nextInt() % 1152921504606846976) & 0x00FFFFFFFFFFFFFF) | (static_cast<uint64>(seed) << 48), // 48 Rand-Bits + 8 Identification Bits (ID Bits to reduce collision chance on decenteralized system)
+			randSource.nextInt()                                                                                     // 64 Rand-Bits
 		);
 	}
 
+	inline void serialize(akd::PValue& dest, const SUID& val) {
+		dest.setArr();
+		dest[0].setUInt(val.high);
+		dest[1].setUInt(val.low);
+	}
+
+	inline bool deserialize(SUID& dest, const akd::PValue& val) {
+		try {
+			dest = SUID(val[0].as<uint64>(), val[1].as<uint64>());
+			return true;
+		} catch(const std::logic_error& /*e*/) {
+			return false;
+		}
+	}
 }
 
 namespace std {

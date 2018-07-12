@@ -1,0 +1,42 @@
+{
+    "images": {
+        "": "data/human/textures/",
+        "Test": {
+            "destination": "data/human/textures/Test.png.akres",
+            "identifier": [18140265845053987872, 9029574955021597397]
+        }
+    },
+    "materials": {
+        "": "data/human/materials/",
+        "BaseMaterial": {
+            "destination": "data/human/materials/BaseMaterial.akmat.akres",
+            "identifier": [12683000380716741282, 15124156157694060429]
+        },
+        "Material": {
+            "destination": "data/human/materials/Material.akmat.akres",
+            "identifier": [12178545993583557750, 8493447580308817972]
+        },
+        "Material.001": {
+            "destination": "data/human/materials/Material.001.akmat.akres",
+            "identifier": [10476455320994161011, 18367074529871488692]
+        },
+        "Material.002": {
+            "destination": "data/human/materials/Material.002.akmat.akres",
+            "identifier": [11529666911760020303, 13573512785014152022]
+        }
+    },
+    "meshes": {
+        "": "data/human/meshes/",
+        "BaseMesh": {
+            "destination": "data/human/meshes/BaseMesh.akmesh.akres",
+            "identifier": [17294254334438290793, 1872987695199013778]
+        },
+        "Cube": {
+            "destination": "data/human/meshes/Cube.akmesh.akres",
+            "identifier": [17993800027375208562, 5687103001710998052]
+        }
+    },
+    "modifiedTime": 1531382429,
+    "source": "test.gltf",
+    "type": "GLTF"
+}

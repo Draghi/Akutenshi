@@ -31,48 +31,48 @@ namespace akd {
 		uint64 index;
 	};
 
-	class Path final {
+	class TreePath final {
 		private:
 			std::vector<PathEntry> m_path;
 
 			using diff_t = typename std::vector<PathEntry>::difference_type;
 
 		public:
-			Path() = default;
+			TreePath() = default;
 
-			Path& append(const std::string& path) {
+			TreePath& append(const std::string& path) {
 				m_path.push_back(PathEntry{false, path, 0});
 				return *this;
 			}
 
-			Path& append(uint64 index) {
+			TreePath& append(uint64 index) {
 				m_path.push_back(PathEntry{true, std::string(), index});
 				return *this;
 			}
 
-			Path& append(PathEntry entry) {
+			TreePath& append(PathEntry entry) {
 				m_path.push_back(entry);
 				return *this;
 			}
 
-			Path& append(const Path& entry) {
+			TreePath& append(const TreePath& entry) {
 				for(auto iter = entry.m_path.begin(); iter != entry.m_path.end(); iter++) {
 					m_path.push_back(*iter);
 				}
 				return *this;
 			}
 
-			Path& pop(uint64 count = 1) {
+			TreePath& pop(uint64 count = 1) {
 				for(uint64 i = 0; i < count; i++) m_path.pop_back();
 				return *this;
 			}
 
-			Path& remove(diff_t index) {
+			TreePath& remove(diff_t index) {
 				m_path.erase(m_path.begin() + index);
 				return *this;
 			}
 
-			Path& clear() {
+			TreePath& clear() {
 				m_path.clear();
 				return *this;
 			}
@@ -99,17 +99,17 @@ namespace akd {
 			PathEntry& operator[](uint64 index) { return entry(index); }
 			PathEntry operator[](uint64 index) const { return entry(index); }
 
-			Path& operator<<(const std::string& path) { return append(path); }
-			Path& operator<<(uint64 index) { return append(index); }
-			Path& operator<<(PathEntry entry) { return append(entry); }
+			TreePath& operator<<(const std::string& path) { return append(path); }
+			TreePath& operator<<(uint64 index) { return append(index); }
+			TreePath& operator<<(PathEntry entry) { return append(entry); }
 
 			akSize size() const { return m_path.size(); }
 			bool empty() const { return m_path.size() <= 0; }
 
 	};
 
-	Path parseObjectDotNotation(const std::string& path);
-	std::string pathToObjectDotNotation(const Path& path);
+	TreePath parseObjectDotNotation(const std::string& path);
+	std::string pathToObjectDotNotation(const TreePath& path);
 }
 
 #endif

@@ -26,10 +26,12 @@ namespace akfs {
 	bool exists(const akfs::Path& path);
 	bool remove(const akfs::Path& path);
 	bool rename(const akfs::Path& src, const akfs::Path& dst, bool overwrite = false);
+	bool copy(const akfs::Path& src, const akfs::Path& dst, akSize bufferSize = 4194304);
 
+	int64 modifiedTime(const akfs::Path& path);
 	akSize size(const akfs::Path& path);
 
-	void iterateDirectory(const akfs::Path& path, const std::function<void(const akfs::Path&)> callback, bool recursive);
+	bool iterateDirectory(const akfs::Path& path, const std::function<bool(const akfs::Path&, bool)> callback, bool recursive);
 
 	std::string toSystemPath(const akfs::Path& path);
 

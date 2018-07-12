@@ -107,10 +107,17 @@ namespace ak {
 			public:
 				constexpr Logger(const std::string_view& name) : m_name(name) {}
 
+				template<typename... vargs_t> bool test_fatal(bool cond, const vargs_t&... vargs) const { if (!cond) fatal(vargs...); return cond; }
+				template<typename... vargs_t> bool test_error(bool cond, const vargs_t&... vargs) const { if (!cond) error(vargs...); return cond; }
+				template<typename... vargs_t> bool test_warn( bool cond, const vargs_t&... vargs) const { if (!cond)  warn(vargs...); return cond; }
+				template<typename... vargs_t> bool test_info( bool cond, const vargs_t&... vargs) const { if (!cond)  info(vargs...); return cond; }
+				template<typename... vargs_t> bool test_debug(bool cond, const vargs_t&... vargs) const { if (!cond) debug(vargs...); return cond; }
+				template<typename... vargs_t> bool test_raw(  bool cond, const vargs_t&... vargs) const { if (!cond)   raw(vargs...); return cond; }
+
 				template<typename... vargs_t> void fatal(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::FATAL)) build(Level::FATAL, vargs...); }
 				template<typename... vargs_t> void error(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::ERROR)) build(Level::ERROR, vargs...); }
-				template<typename... vargs_t> void warn(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::WARN))   build(Level::WARN, vargs...); }
-				template<typename... vargs_t> void info(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::INFO))   build(Level::INFO, vargs...); }
+				template<typename... vargs_t> void warn( const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::WARN))  build(Level::WARN,  vargs...); }
+				template<typename... vargs_t> void info( const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::INFO))  build(Level::INFO,  vargs...); }
 				template<typename... vargs_t> void debug(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::DEBUG)) build(Level::DEBUG, vargs...); }
 
 				template<typename... vargs_t> void raw(const vargs_t&... vargs) const { if (!isFilterLevelEnabled(Level::RAW)) return; printMessage(Level::RAW, ak::buildString(vargs...)); }

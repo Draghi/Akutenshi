@@ -1,0 +1,82 @@
+++======================================++
+|| Akutenshi Converter Config (.akconv) ||
+++======================================++
+
+{
+	"type": <ENUM["GLTF", "TEXTURE"]>,                                           // The type of file to convert from
+
+	(Section:["type":"GLTF"])		
+		"source": <STR>,                                                         // The file to convert, relative to this file
+		(Gen, Opt[min(INT)]) "modifiedTime": <INT>,                              // The last modified date of the file, in unix time. Used to identify modifications.
+		(Opt[true]) "remapPaths": <BOOL>,                                        // When paths are resolved/created, replace them with SUIDs
+
+		(Opt]) "meshes":{                                                        // Map of mesh names to destination (Path/SUID)
+			(Opt) <STR>: {                                                       // Mesh name
+				(Opt) "identifier": <SUID>,                                      // SUID of asset
+				(Opt) "destination": <STR>                                       // Destination of asset .akres file.
+			},
+			[...]
+		},
+		
+		(Opt) "materials":{                                                      // Map of material names to destination (Path/SUID)
+			(Opt) <STR>: {                                                       // Material name
+				(Opt) "identifier": <SUID>,                                      // SUID of asset
+				(Opt) "destination": <STR>                                       // Destination of asset .akres file.
+			},			
+			[...]
+		},
+		
+		(Opt) "images":{                                                         // Map of image names to destination (Path/SUID)
+			(Opt) <STR>: {                                                       // Image name
+				(Opt) "identifier": <SUID>,                                      // SUID of asset
+				(Opt) "destination": <STR>                                       // Destination of asset .akres file.
+			},			
+			[...]
+		},
+		
+	(Section:["type":"TEXTURE"])
+		(Opt[true]) "remapPaths": <BOOL>,                                       // When paths are resolved/created, replace them with SUIDs
+		"config": <Akutenshi Texture>,
+}
+
+++=============================++
+|| Akutenshi Resource (.akres) ||
+++=============================++
+
+{
+	"identifier": <SUID>,                                                                    // SUID of file
+	"type": <ENUM["ANIMATION", "MATERIAL", "MESH", "PREFAB", "SCENE", "SOUND", "TEXTURE"]>,  // The type of data the file contains
+	"displayName: <STR>                                                                      // The display name of the file
+}
+
+++============================++
+|| Akutenshi Texture (.aktex) ||
+++============================++
+
+{
+	"type": <ENUM["1D", "2D", "3D", "1D_ARRAY", "2D_ARRAY", "CUBEMAP"]>,
+	"levels":[
+		[
+			{
+				"image": <<STR> or <SUID>>,
+				(Opt["NONE"]) "rotate": <ENUM["NONE","RIGHT", "UPSIDEDOWN", "LEFT"]>,
+				(Opt["NONE"]) "flip": <ENUM["NONE", "HORZ", "VERT", "BOTH"]>,
+				(Opt[0]) "layer":<INT>,
+				(Opt[[0,0]]) "offset":[<INT>, <INT>],
+				(Opt[[0,0]]) "crop":[<INT>, <INT>]
+			},
+			...
+		],
+		...
+	],
+	(Opt) "clamp": {
+		(Opt["EDGE"]) "S": <ENUM["EDGE", "BORDER", "WRAP", "MIRROR"],
+		(Opt["EDGE"]) "T": <ENUM["EDGE", "BORDER", "WRAP", "MIRROR"],
+		(Opt["EDGE"]) "R": <ENUM["EDGE", "BORDER", "WRAP", "MIRROR"],
+	},
+	(Opt) "filter": {
+		(Opt["NEAREST"])"min": <ENUM["NEAREST", "LINEAR"],
+		(Opt["NEAREST"])"max": <ENUM["NEAREST", "LINEAR"],
+		(Opt["NONE"])"mip": <ENUM["NONE", "NEAREST", "LINEAR"],
+	}
+}

@@ -103,7 +103,7 @@ bool akfs::makeDirectory(const akfs::Path& path, bool recursive) {
 bool akfs::exists(const akfs::Path& path) {
 	auto sysPath = toSystemPath(path);
 	struct stat st;
-	return (stat(sysPath.c_str(), &st) != 0);
+	return (stat(sysPath.c_str(), &st) == 0);
 }
 
 bool akfs::remove(const akfs::Path& path) {
@@ -118,34 +118,52 @@ bool akfs::rename(const akfs::Path& src, const akfs::Path& dst, bool overwrite) 
 	return ::rename(srcSysPath.c_str(), dstSysPath.c_str()) != -1;
 }
 
+bool akfs::copy(const akfs::Path& src, const akfs::Path& dst, akSize bufferSize) {
+	akfs::remove(dst);
+	akfs::CFile srcFile(src), dstFile(dst, OpenFlags::Out | OpenFlags::Truncate);
+	if (!srcFile || !dstFile) return false;
+	std::unique_ptr<uint8[]> buffer(new uint8[bufferSize]);
+	akSize readBytes;
+	while(!srcFile.eof() && ((readBytes = srcFile.read(buffer.get(), bufferSize)) > 0)) if (dstFile.write(buffer.get(), readBytes) != readBytes) return false;
+	return true;
+}
+
+int64 akfs::modifiedTime(const akfs::Path& path) {
+	auto sysPath = toSystemPath(path);
+	struct stat st;
+	return stat(sysPath.c_str(), &st) == 0 ? static_cast<int64>(st.st_mtime) : 0;
+}
+
 akSize akfs::size(const akfs::Path& path) {
 	auto sysPath = toSystemPath(path);
 	struct stat st;
 	return stat(sysPath.c_str(), &st) == 0 ? static_cast<akSize>(st.st_size) : 0;
 }
 
-void akfs::iterateDirectory(const akfs::Path& path, const std::function<void(const akfs::Path&)> callback, bool recursive) {
+bool akfs::iterateDirectory(const akfs::Path& path, const std::function<bool(const akfs::Path&, bool)> callback, bool recursive) {
 	auto sysPath = toSystemPath(path);
 
 	auto dir = ::opendir(sysPath.c_str());
-	if (!dir) return;
+	if (!dir) return true;
 	auto dirGuard = ak::ScopeGuard([&]{::closedir(dir);});
 
 	struct dirent* entry = nullptr;
 	while((entry = ::readdir(dir))) {
-		auto cPath = path/std::string(entry->d_name);
+		auto entryName = std::string(entry->d_name);
+		auto currentPath = path/akfs::Path(entryName);
+		if ((entryName == ".") || (entryName == "..")) continue;
 
-		if (recursive) {
+		bool isDir; {
 			struct stat st;
-			if (stat(cPath.str().c_str(), &st) != 0) continue;
-			if (S_ISDIR(st.st_mode)) {
-				iterateDirectory(path/std::string(entry->d_name), callback, true);
-			}
+			if (stat(currentPath.str().c_str(), &st) != 0) continue;
+			isDir = S_ISDIR(st.st_mode);
 		}
 
-		callback(cPath);
+		if (!callback(currentPath, isDir)) return false;
+		if ((recursive) && (isDir) && (!iterateDirectory(currentPath, callback, true))) return false;
 	}
 
+	return true;
 }
 
 std::string akfs::toSystemPath(const akfs::Path& path) {

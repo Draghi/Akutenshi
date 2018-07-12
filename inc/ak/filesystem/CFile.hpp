@@ -80,7 +80,7 @@ namespace akfs {
 			 * @param path The path to open
 			 * @param openFlags The OpenFlags flags (bitwise-or'd) to open the file with
 			 */
-			CFile(const akfs::Path& path, uint8 openFlags);
+			CFile(const akfs::Path& path, uint8 openFlags = akfs::OpenFlags::In);
 
 			/**
 			 * Move constructs a file
