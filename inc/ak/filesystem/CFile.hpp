@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,7 @@
 #ifndef AK_FILESYSTEM_CFILE_HPP_
 #define AK_FILESYSTEM_CFILE_HPP_
 
-#include <ak/filesystem/Path.hpp>
-#include <ak/PrimitiveTypes.hpp>
+#include <bits/types/FILE.h>
 #include <stddef.h>
 #include <sys/types.h>
 #include <cstdio>
@@ -26,6 +25,9 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+
+#include <ak/filesystem/Path.hpp>
+#include <ak/PrimitiveTypes.hpp>
 
 namespace akfs {
 

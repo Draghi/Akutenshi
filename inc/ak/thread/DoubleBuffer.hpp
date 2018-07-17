@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,11 @@
 #ifndef AK_CONTAINER_DOUBLEBUFFER_HPP_
 #define AK_CONTAINER_DOUBLEBUFFER_HPP_
 
+#include <vector>
+
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/ScopeGuard.hpp>
 #include <ak/thread/Spinlock.hpp>
-#include <stddef.h>
-#include <sys/types.h>
-#include <vector>
 
 namespace akt {
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,23 +17,23 @@
 #ifndef AK_ANIMATION_SKELETON_HPP_
 #define AK_ANIMATION_SKELETON_HPP_
 
-#include <ak/animation/Animation.hpp>
-#include <ak/animation/AnimPoseMap.hpp>
-#include <ak/animation/Fwd.hpp>
-#include <ak/animation/Type.hpp>
-#include <ak/math/Matrix.hpp>
-#include <ak/PrimitiveTypes.hpp>
-#include <glm/detail/type_mat4x4.hpp>
-#include <glm/matrix.hpp>
 #include <algorithm>
-#include <stdexcept>
 #include <deque>
-#include <functional>
+#include <initializer_list>
 #include <iterator>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#include <ak/animation/Animation.hpp>
+#include <ak/animation/AnimPoseMap.hpp>
+#include <ak/animation/Fwd.hpp>
+#include <ak/animation/Type.hpp>
+#include <ak/math/Quaternion.hpp>
+#include <ak/math/Types.hpp>
+#include <ak/PrimitiveTypes.hpp>
 
 namespace aka {
 
@@ -46,7 +46,7 @@ namespace aka {
 		nameLookup.resize(bones.size());
 		for(auto i = 0u; i < bones.size(); i++) {
 			const std::string& name = bones[i].name;
-			if (!m_indexLookup.insert(std::make_pair(name, i)).second) throw std::logic_error("aka::Skeleton: Found conflicting bone.");
+			if (!m_indexLookup.emplace(name, i).second) throw std::logic_error("aka::Skeleton: Found conflicting bone.");
 			nameLookup[i] = name;
 		}
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,12 @@
 #ifndef AK_WINDOW_INTERNALSTATE_HPP_
 #define AK_WINDOW_INTERNALSTATE_HPP_
 
+#include <atomic>
+#include <string>
+
 #include <ak/thread/DoubleBuffer.hpp>
 #include <ak/window/Monitor.hpp>
 #include <ak/window/Types.hpp>
-#include <atomic>
-#include <string>
 
 struct GLFWmonitor;
 

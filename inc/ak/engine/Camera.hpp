@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,8 @@
 
 #include <ak/math/Quaternion.hpp>
 #include <ak/math/SphericalCoord.hpp>
-#include <ak/math/Vector.hpp>
+#include <ak/math/Types.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <glm/gtc/quaternion.hpp>
 
 namespace ake {
 

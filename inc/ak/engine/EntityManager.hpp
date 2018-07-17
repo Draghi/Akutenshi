@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,24 @@
 #ifndef AK_ENGINE_ENTITYMANAGER_HPP_
 #define AK_ENGINE_ENTITYMANAGER_HPP_
 
+#include <functional>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+
 #include <ak/container/SlotMap.hpp>
 #include <ak/container/UnorderedVector.hpp>
-#include <ak/data/PValue.hpp>
 #include <ak/engine/ComponentManager.hpp>
 #include <ak/engine/internal/EntityGraph.hpp>
 #include <ak/engine/internal/NameStorage.hpp>
 #include <ak/engine/Type.hpp>
 #include <ak/event/Dispatcher.hpp>
-#include <functional>
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
+
+namespace akd {
+	class PValue;
+}
 
 namespace ake {
 

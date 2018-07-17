@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,10 @@
 #ifndef AK_DATA_BROTLI_HPP
 #define AK_DATA_BROTLI_HPP
 
-#include <ak/PrimitiveTypes.hpp>
 #include <limits>
 #include <vector>
+
+#include <ak/PrimitiveTypes.hpp>
 
 namespace akd {
 

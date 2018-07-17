@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,17 @@
 #ifndef AK_RENDER_SCENERENDERERDEFAULT_HPP_
 #define AK_RENDER_SCENERENDERERDEFAULT_HPP_
 
-#include <ak/container/SlotMap.hpp>
-#include <ak/engine/components/Camera.hpp>
-#include <ak/engine/EntityManager.hpp>
-#include <ak/engine/Scene.hpp>
+#include <memory>
+
 #include <ak/math/Types.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/render/gl/Draw.hpp>
-#include <ak/render/gl/RenderTarget.hpp>
-#include <ak/render/gl/Textures.hpp>
 #include <ak/render/SceneRenderer.hpp>
-#include <unordered_map>
-#include <utility>
+
+namespace akr {
+	namespace gl {
+		class Texture;
+	} /* namespace gl */
+} /* namespace akr */
 
 namespace akr {
 

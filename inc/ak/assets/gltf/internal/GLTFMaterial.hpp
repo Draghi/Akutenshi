@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@
 #ifndef AKRES_GLTFMATERIAL_HPP_
 #define AKRES_GLTFMATERIAL_HPP_
 
-#include <ak/assets/Convert.hpp>
 #include <vector>
+
+#include <ak/assets/Convert.hpp>
 
 namespace akas {
 	namespace gltf {

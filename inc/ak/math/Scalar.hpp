@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,12 @@
 #ifndef AK_MATH_SCALAR_HPP_
 #define AK_MATH_SCALAR_HPP_
 
-#include <ak/math/Types.hpp>
-#include <glm/glm.hpp>
+#include <bits/std_abs.h>
 #include <glm/common.hpp>
-#include <glm/exponential.hpp>
+#include <glm/ext/vec1.hpp>
 #include <cmath>
+
+#include <ak/math/Types.hpp>
 
 namespace akm {
 	constexpr scalar_t PI = static_cast<scalar_t>(3.141592653589793238462643);

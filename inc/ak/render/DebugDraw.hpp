@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,13 @@
 #ifndef AK_RENDER_DEBUGDRAW_HPP_
 #define AK_RENDER_DEBUGDRAW_HPP_
 
+#include <glm/detail/type_mat4x4.hpp>
+#include <vector>
+
 #include <ak/math/Types.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/gl/Buffers.hpp>
-#include <ak/render/gl/Draw.hpp>
 #include <ak/render/gl/VertexArrays.hpp>
-#include <vector>
 
 namespace akrd {
 	namespace internal {

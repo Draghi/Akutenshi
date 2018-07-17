@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,25 @@
  * limitations under the License.
  **/
 
+#include <ak/render/SceneRendererDefault.hpp>
+
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include <ak/container/SlotMap.hpp>
+#include <ak/engine/components/Camera.hpp>
+#include <ak/engine/EntityManager.hpp>
+#include <ak/engine/Scene.hpp>
 #include <ak/render/gl/Buffers.hpp>
+#include <ak/render/gl/Draw.hpp>
+#include <ak/render/gl/RenderTarget.hpp>
 #include <ak/render/gl/Shaders.hpp>
+#include <ak/render/gl/Textures.hpp>
 #include <ak/render/gl/Types.hpp>
 #include <ak/render/gl/Util.hpp>
 #include <ak/render/gl/VertexArrays.hpp>
-#include <ak/render/SceneRendererDefault.hpp>
 #include <ak/window/Window.hpp>
-#include <glm/detail/type_vec2.hpp>
-#include <algorithm>
 
 namespace akr {
 	struct SceneRendererDefault_Data {

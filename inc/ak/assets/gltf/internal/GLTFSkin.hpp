@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,17 @@
 #ifndef AK_ASSETS_GLTF_INTERNAL_GLTFSKIN_HPP_
 #define AK_ASSETS_GLTF_INTERNAL_GLTFSKIN_HPP_
 
-#include <ak/assets/Skin.hpp>
-#include <ak/assets/gltf/Asset.hpp>
-#include <ak/assets/gltf/Skin.hpp>
+#include <unordered_map>
+
+#include <ak/assets/gltf/Types.hpp>
+
+namespace akas {
+	struct Skin;
+	namespace gltf {
+		struct Asset;
+		struct Skin;
+	} /* namespace gltf */
+} /* namespace akas */
 
 namespace akas {
 	namespace gltf {

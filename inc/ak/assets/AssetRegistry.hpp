@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,13 @@
 #ifndef AK_ASSETS_ASSETREGISTRY_HPP_
 #define AK_ASSETS_ASSETREGISTRY_HPP_
 
+#include <functional>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <utility>
+
 #include <ak/assets/Asset.hpp>
 #include <ak/container/SlotMap.hpp>
 #include <ak/data/Json.hpp>
@@ -25,10 +32,7 @@
 #include <ak/filesystem/Filesystem.hpp>
 #include <ak/filesystem/Path.hpp>
 #include <ak/Log.hpp>
-#include <functional>
-#include <string>
-#include <unordered_map>
-#include <utility>
+#include <ak/String.hpp>
 
 namespace akas {
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,10 @@
 #ifndef AK_TIMER_HPP_
 #define AK_TIMER_HPP_
 
-#include <ak/PrimitiveTypes.hpp>
 #include <chrono>
 #include <ratio>
+
+#include <ak/PrimitiveTypes.hpp>
 
 namespace aku {
 	class Timer final {

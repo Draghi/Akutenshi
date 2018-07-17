@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,22 +17,20 @@
 #ifndef AK_CONTAINER_SPARSEGRID_HPP_
 #define AK_CONTAINER_SPARSEGRID_HPP_
 
-#include <ak/container/SlotMap.hpp>
-#include <ak/container/UnorderedVector.hpp>
-#include <ak/math/Scalar.hpp>
-#include <ak/math/Types.hpp>
-#include <ak/math/Vector.hpp>
-#include <ak/PrimitiveTypes.hpp>
-#include <ak/ScopeGuard.hpp>
-#include <glm/detail/type_vec3.hpp>
 #include <algorithm>
 #include <climits>
 #include <iterator>
 #include <limits>
 #include <optional>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
+
+#include <ak/container/SlotMap.hpp>
+#include <ak/container/UnorderedVector.hpp>
+#include <ak/math/Scalar.hpp>
+#include <ak/math/Types.hpp>
+#include <ak/math/Vector.hpp>
+#include <ak/PrimitiveTypes.hpp>
 
 namespace akc {
 	namespace sparsegrid {

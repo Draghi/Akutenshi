@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@
 #define AK_INPUT_KEYS_HPP_
 
 #include <ak/PrimitiveTypes.hpp>
-#include <limits>
 
 namespace akin {
 	enum class Key : uint16 {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +14,29 @@
  * limitations under the License.
  **/
 
-#include <ak/data/Brotli.hpp>
 #include <ak/data/MsgPack.hpp>
-#include <ak/data/Path.hpp>
-#include <ak/data/PValue.hpp>
-#include <ak/filesystem/CFile.hpp>
+
+#include <bits/stdint-intn.h>
+#include <bits/stdint-uintn.h>
 #include <msgpack/v1/object.hpp>
 #include <msgpack/v1/pack.hpp>
 #include <msgpack/v1/sbuffer.hpp>
 #include <msgpack/v2/null_visitor.hpp>
 #include <msgpack/v2/parse.hpp>
-#include <cstring>
 #include <cstddef>
-#include <cstdint>
+#include <cstring>
 #include <deque>
+#include <functional>
+#include <initializer_list>
 #include <map>
 #include <stdexcept>
 #include <string>
 #include <utility>
+
+#include <ak/data/Brotli.hpp>
+#include <ak/data/Path.hpp>
+#include <ak/data/PValue.hpp>
+#include <ak/filesystem/CFile.hpp>
 
 using namespace akd;
 

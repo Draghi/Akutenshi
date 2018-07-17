@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,14 @@
 #ifndef AK_ENGINE_COMPONENTS_TRANSFORM_HPP_
 #define AK_ENGINE_COMPONENTS_TRANSFORM_HPP_
 
+#include <unordered_map>
 
 #include <ak/container/SlotMap.hpp>
-#include <ak/engine/EntityManager.hpp>
+#include <ak/engine/ComponentManager.hpp>
 #include <ak/engine/Type.hpp>
-#include <ak/math/Matrix.hpp>
-#include <ak/math/Quaternion.hpp>
+#include <ak/event/Dispatcher.hpp>
 #include <ak/math/Types.hpp>
-#include <ak/math/Vector.hpp>
-#include <deque>
-#include <initializer_list>
-#include <stdexcept>
-#include <unordered_map>
-#include <utility>
+#include <ak/PrimitiveTypes.hpp>
 
 namespace ake {
 

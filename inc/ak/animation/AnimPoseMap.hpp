@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,12 @@
 #ifndef AK_ANIMATION_ANIMPOSEMAP_HPP_
 #define AK_ANIMATION_ANIMPOSEMAP_HPP_
 
+#include <vector>
+
 #include <ak/animation/Animation.hpp>
 #include <ak/animation/Fwd.hpp>
 #include <ak/animation/Skeleton.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <vector>
 
 namespace aka {
 		inline AnimPoseMap::AnimPoseMap(const Skeleton& skeleton, const Animation& animation) {

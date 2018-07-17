@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,16 @@
  * limitations under the License.
  **/
 
-#include <ak/engine/Config.hpp>
-#include <ak/event/Dispatcher.hpp>
 #include <ak/window/WindowOptions.hpp>
+
 #include <algorithm>
 #include <iterator>
+#include <type_traits>
 #include <vector>
+
+#include <ak/engine/Config.hpp>
+#include <ak/event/Dispatcher.hpp>
+#include <ak/event/Event.hpp>
 
 using namespace akw;
 

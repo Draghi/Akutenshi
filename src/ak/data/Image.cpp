@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,10 @@
  **/
 
 #include <ak/data/Image.hpp>
-#include <ak/ScopeGuard.hpp>
-#include <ak/Traits.hpp>
-#include <stddef.h>
-#include <optional>
-#include <stdexcept>
-#include <utility>
 
-#include "stb_image.h"
+#include <stb_image.h>
+
+#include <ak/ScopeGuard.hpp>
 
 template<typename type_t, auto load_f> static std::optional<akd::Image<type_t>> loadImageInternal(const uint8* data, akSize len, bool bottomUp) {
 	stbi_set_flip_vertically_on_load(bottomUp);

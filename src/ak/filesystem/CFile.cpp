@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,15 @@
  **/
 
 #include <ak/filesystem/CFile.hpp>
-#include <ak/filesystem/Filesystem.hpp>
-#include <ak/Log.hpp>
-#include <ak/PrimitiveTypes.hpp>
-#include <stddef.h>
+
 #include <algorithm>
-#include <cstdio>
 #include <locale>
 #include <sstream>
 #include <stdexcept>
-#include <string>
 #include <string_view>
-#include <system_error>
-#include <vector>
+
+#include <ak/filesystem/Filesystem.hpp>
+#include <ak/Log.hpp>
 
 using namespace akfs;
 

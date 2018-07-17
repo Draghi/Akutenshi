@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,16 @@
  * limitations under the License.
  **/
 
-#include <ak/math/Types.hpp>
 #include <ak/render/DebugDraw.hpp>
-#include <ak/render/gl/Shaders.hpp>
-#include <ak/render/gl/Types.hpp>
-#include <ak/String.hpp>
-#include <glm/detail/type_mat4x4.hpp>
-#include <glm/detail/type_vec3.hpp>
-#include <glm/detail/type_vec4.hpp>
+
 #include <cstddef>
 #include <deque>
 #include <stdexcept>
-#include <vector>
+
+#include <ak/render/gl/Draw.hpp>
+#include <ak/render/gl/Shaders.hpp>
+#include <ak/render/gl/Types.hpp>
+#include <ak/String.hpp>
 
 using namespace akr::gl;
 using namespace akrd;

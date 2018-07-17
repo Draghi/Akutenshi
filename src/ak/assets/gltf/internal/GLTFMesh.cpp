@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,24 @@
  * limitations under the License.
  **/
 
+#include <ak/assets/gltf/internal/GLTFMesh.hpp>
+
+#include <array>
+#include <deque>
+#include <map>
+#include <utility>
+
 #include <ak/assets/gltf/Accessor.hpp>
 #include <ak/assets/gltf/Asset.hpp>
-#include <ak/assets/gltf/internal/GLTFMesh.hpp>
 #include <ak/assets/gltf/Mesh.hpp>
 #include <ak/assets/gltf/Util.hpp>
 #include <ak/assets/Mesh.hpp>
-#include <ak/data/SUID.hpp>
-#include <ak/filesystem/Path.hpp>
 #include <ak/Iterator.hpp>
+#include <ak/Log.hpp>
 #include <ak/math/Types.hpp>
 #include <ak/math/Vector.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/gl/Types.hpp>
-#include <glm/detail/type_vec3.hpp>
-#include <glm/detail/type_vec4.hpp>
-#include <array>
-#include <deque>
-#include <iostream>
-#include <map>
 
 using namespace akas::gltf;
 

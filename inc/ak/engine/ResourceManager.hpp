@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,16 @@
 #ifndef AK_ENGINE_RESOURCEMANAGER_HPP_
 #define AK_ENGINE_RESOURCEMANAGER_HPP_
 
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
 #include <ak/animation/Fwd.hpp>
 #include <ak/animation/Mesh.hpp>
 #include <ak/animation/Type.hpp>
@@ -32,18 +42,9 @@
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/gl/Buffers.hpp>
 #include <ak/render/gl/Textures.hpp>
+#include <ak/render/gl/Types.hpp>
 #include <ak/render/gl/VertexArrays.hpp>
 #include <ak/String.hpp>
-#include <glm/detail/type_vec2.hpp>
-#include <glm/detail/type_vec3.hpp>
-#include <cstddef>
-#include <memory>
-#include <optional>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <utility>
-#include <vector>
 
 namespace ake {
 

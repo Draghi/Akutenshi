@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,17 @@
 #ifndef AK_MATH_MATRIX_HPP_
 #define AK_MATH_MATRIX_HPP_
 
+#include <glm/detail/setup.hpp>
+#include <glm/detail/type_mat3x3.hpp>
+#include <glm/gtc/matrix_access.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/transform.hpp>
+
 #include <ak/math/Scalar.hpp>
 #include <ak/math/Types.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <glm/detail/setup.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/matrix_access.hpp>
-#include <glm/gtx/euler_angles.hpp>
-#include <glm/gtx/transform.hpp>
-#include <glm/gtx/matrix_decompose.hpp>
 
 namespace akm {
 	// //////////////// //

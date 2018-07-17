@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@
 #ifndef AK_TIME_TIME_HPP_
 #define AK_TIME_TIME_HPP_
 
-#include <ak/PrimitiveTypes.hpp>
 #include <ctime>
+
+#include <ak/PrimitiveTypes.hpp>
 
 namespace aku {
 	struct Timestamp {

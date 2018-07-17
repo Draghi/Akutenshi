@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,13 @@
  * limitations under the License.
  **/
 
-#include <ak/Log.hpp>
-#include <ak/math/Scalar.hpp>
 #include <ak/render/gl/Textures.hpp>
-#include <ak/Traits.hpp>
-#include <ext/type_traits.h>
-#include <glm/common.hpp>
-#include <cmath>
-#include <optional>
+
+#include <GL/gl4.h>
+#include <algorithm>
 #include <stdexcept>
 
-#include "GL/gl4.h"
+#include <ak/math/Scalar.hpp>
 
 using namespace akr::gl;
 

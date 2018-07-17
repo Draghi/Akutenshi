@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,13 @@
 #ifndef AK_ANIMATION_TYPE_HPP_
 #define AK_ANIMATION_TYPE_HPP_
 
-#include <ak/math/Matrix.hpp>
-#include <ak/math/Quaternion.hpp>
-#include <ak/math/Vector.hpp>
-#include <ak/PrimitiveTypes.hpp>
 #include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include <ak/math/Types.hpp>
+#include <ak/PrimitiveTypes.hpp>
 
 namespace aka {
 

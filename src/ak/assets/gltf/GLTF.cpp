@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,18 +23,21 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
-#include <ak/assets/Convert.hpp>
 #include <ak/assets/gltf/Asset.hpp>
 #include <ak/assets/gltf/Buffer.hpp>
 #include <ak/assets/gltf/internal/GLTFMaterial.hpp>
 #include <ak/assets/gltf/internal/GLTFMesh.hpp>
 #include <ak/assets/gltf/internal/GLTFSkin.hpp>
 #include <ak/assets/gltf/Types.hpp>
+#include <ak/assets/Material.hpp>
+#include <ak/assets/Mesh.hpp>
 #include <ak/assets/Skin.hpp>
 #include <ak/data/Json.hpp>
 #include <ak/data/PValue.hpp>
 #include <ak/data/Rand.hpp>
+#include <ak/data/SUID.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Filesystem.hpp>
 #include <ak/Log.hpp>

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,18 @@
 #ifndef AK_ASSETS_MESH_HPP_
 #define AK_ASSETS_MESH_HPP_
 
+#include <array>
+#include <cstring>
+#include <deque>
+#include <stdexcept>
+#include <vector>
+
 #include <ak/assets/Skin.hpp>
+#include <ak/data/PValue.hpp>
 #include <ak/data/SUID.hpp>
 #include <ak/math/Types.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/gl/Types.hpp>
-#include <array>
-#include <vector>
 
 namespace akas {
 

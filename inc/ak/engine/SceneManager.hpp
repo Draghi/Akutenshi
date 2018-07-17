@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,15 @@
 #ifndef AK_ENGINE_SCENEMANAGER_HPP_
 #define AK_ENGINE_SCENEMANAGER_HPP_
 
-#include <ak/container/SlotMap.hpp>
-#include <ak/engine/Scene.hpp>
-#include <ak/engine/SceneManagerProxy.hpp>
-#include <ak/engine/Type.hpp>
-#include <ak/PrimitiveTypes.hpp>
-#include <iterator>
 #include <memory>
 #include <string>
-#include <utility>
+
+#include <ak/container/SlotMap.hpp>
+#include <ak/PrimitiveTypes.hpp>
+
+namespace ake {
+	class Scene;
+} /* namespace ake */
 
 namespace ake {
 

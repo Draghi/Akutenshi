@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,7 @@
 #define AK_ASSETS_GLTF_GLTF_HPP_
 
 #include <ak/assets/Convert.hpp>
-#include <ak/assets/Material.hpp>
-#include <ak/assets/Mesh.hpp>
-#include <ak/data/SUID.hpp>
 #include <ak/filesystem/Path.hpp>
-#include <utility>
-#include <vector>
 
 namespace akas {
 	namespace gltf {

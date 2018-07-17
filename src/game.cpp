@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,14 @@
  * limitations under the License.
  **/
 
+#include <iomanip>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+
 #include <ak/assets/AssetRegistry.hpp>
 #include <ak/assets/Convert.hpp>
 #include <ak/data/PValue.hpp>
-#include <ak/data/SUID.hpp>
 #include <ak/engine/components/Behaviours.hpp>
 #include <ak/engine/components/Camera.hpp>
 #include <ak/engine/components/Transform.hpp>
@@ -27,7 +31,7 @@
 #include <ak/engine/Scene.hpp>
 #include <ak/engine/SceneManager.hpp>
 #include <ak/event/Dispatcher.hpp>
-#include <ak/filesystem/CFile.hpp>
+#include <ak/event/Event.hpp>
 #include <ak/filesystem/Path.hpp>
 #include <ak/input/Keyboard.hpp>
 #include <ak/input/Mouse.hpp>
@@ -49,10 +53,6 @@
 #include <ak/window/Window.hpp>
 #include <ak/window/WindowOptions.hpp>
 #include <akgame/CameraControllerBehaviour.hpp>
-#include <iomanip>
-#include <memory>
-#include <sstream>
-#include <stdexcept>
 
 int akGameMain();
 
@@ -88,7 +88,7 @@ int akGameMain() {
 }
 
 static void startGame() {
-	constexpr ak::log::Logger log(AK_STRING_VIEW("Main"));
+	// constexpr ak::log::Logger log(AK_STRING_VIEW("Main"));
 
 	akas::AssetRegistry assetRegistry(akfs::Path("data/"));
 	ake::ResourceManager resourceManager;

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,13 @@
  **/
 
 #include <ak/engine/SceneManager.hpp>
+
+#include <iterator>
+#include <utility>
+
+#include <ak/engine/Scene.hpp>
 #include <ak/engine/SceneManagerProxy.hpp>
+#include <ak/engine/Type.hpp>
 
 using namespace ake;
 

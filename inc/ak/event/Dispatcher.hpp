@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,17 @@
 #ifndef AK_EVENT_DISPATCHER_HPP_
 #define AK_EVENT_DISPATCHER_HPP_
 
-#include <ak/container/SlotMap.hpp>
-#include <ak/event/Util.hpp>
-#include <ak/ScopeGuard.hpp>
-#include <ak/thread/CurrentThread.hpp>
+#include <algorithm>
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <string_view>
-#include <utility>
+#include <vector>
+
+#include <ak/container/SlotMap.hpp>
+#include <ak/event/Util.hpp>
+#include <ak/PrimitiveTypes.hpp>
+#include <ak/thread/CurrentThread.hpp>
 
 namespace akev {
 	using SubscriberID = akc::SlotID;

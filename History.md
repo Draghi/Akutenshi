@@ -1,3 +1,12 @@
+##### < 07/18 - Missing Time Chunk
+- A lot of work, mostly missing from here.
+- Skeletal Animation
+- Entity Component System
+- Asset Conversion System
+- Cleaned Up Some Submodules
+- Runs on Windows, when built with Clang + MSYS2
+- etc.
+
 ##### 12/17 - Rendering subsystem -WIP-
 - More window subsystem work, started work on rendering subsystem, fixed a deadlock
 - Fixed crash caused by negative keycodes in the event input objects

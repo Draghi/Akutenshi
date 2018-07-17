@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,11 @@
  **/
 
 #include <ak/engine/EntityManager.hpp>
+
+#include <algorithm>
+#include <utility>
+
+#include <ak/engine/ComponentManager.hpp>
 
 using namespace ake;
 

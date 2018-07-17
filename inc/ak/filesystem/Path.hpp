@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,15 @@
 #ifndef AK_FILESYSTEM_PATH_HPP_
 #define AK_FILESYSTEM_PATH_HPP_
 
-#include <ak/String.hpp>
 #include <algorithm>
-#include <functional>
+#include <iterator>
+#include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
+
+#include <ak/PrimitiveTypes.hpp>
+#include <ak/String.hpp>
 
 namespace akfs {
 

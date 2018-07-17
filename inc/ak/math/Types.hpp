@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,11 @@
 #ifndef AK_MATH_TYPES_HPP_
 #define AK_MATH_TYPES_HPP_
 
-#include <ak/PrimitiveTypes.hpp>
-#include <glm/common.hpp>
+#include <glm/detail/qualifier.hpp>
+#include <glm/detail/setup.hpp>
 #include <glm/gtc/quaternion.hpp>
+
+#include <ak/PrimitiveTypes.hpp>
 
 namespace akm {
 

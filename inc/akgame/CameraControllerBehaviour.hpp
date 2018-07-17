@@ -14,6 +14,7 @@
 #include <ak/input/Mouse.hpp>
 #include <ak/math/Quaternion.hpp>
 #include <ak/math/Scalar.hpp>
+#include <ak/math/Types.hpp>
 #include <ak/math/Vector.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/window/Types.hpp>

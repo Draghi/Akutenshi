@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,24 @@
  * limitations under the License.
  **/
 
-#include <ak/Iterator.hpp>
-#include <ak/math/Types.hpp>
-#include <ak/PrimitiveTypes.hpp>
-#include <ak/assets/gltf/Types.hpp>
-#include <ak/assets/gltf/Util.hpp>
 #include <ak/assets/gltf/internal/GLTFSkin.hpp>
-#include <glm/detail/type_mat4x4.hpp>
+
 #include <algorithm>
-#include <iostream>
 #include <iterator>
 #include <map>
 #include <optional>
 #include <set>
-#include <unordered_map>
+#include <stdexcept>
 #include <utility>
 #include <vector>
+
+#include <ak/assets/gltf/Asset.hpp>
+#include <ak/assets/gltf/Skin.hpp>
+#include <ak/assets/gltf/Util.hpp>
+#include <ak/assets/Skin.hpp>
+#include <ak/Iterator.hpp>
+#include <ak/math/Types.hpp>
+#include <ak/PrimitiveTypes.hpp>
 
 using namespace akas::gltf;
 

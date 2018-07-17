@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,27 +14,21 @@
  * limitations under the License.
  **/
 
+#include <ak/Log.hpp>
+
+#include <algorithm>
+#include <atomic>
+#include <iostream>
+#include <utility>
+
 #include <ak/data/PValue.hpp>
 #include <ak/engine/Config.hpp>
 #include <ak/event/Dispatcher.hpp>
+#include <ak/event/Event.hpp>
 #include <ak/filesystem/CFile.hpp>
-#include <ak/filesystem/Path.hpp>
-#include <ak/Log.hpp>
-#include <ak/PrimitiveTypes.hpp>
 #include <ak/ScopeGuard.hpp>
-#include <ak/thread/CurrentThread.hpp>
 #include <ak/thread/DoubleBuffer.hpp>
 #include <ak/thread/Spinlock.hpp>
-#include <ak/thread/Thread.hpp>
-#include <ak/util/Time.hpp>
-#include <algorithm>
-#include <atomic>
-#include <deque>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <utility>
 
 using namespace ak::log;
 

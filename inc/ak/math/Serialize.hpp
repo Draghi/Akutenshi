@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,6 @@
 #ifndef AK_MATH_SERIALIZE_HPP_
 #define AK_MATH_SERIALIZE_HPP_
 
-#include <ak/data/Json.hpp>
-#include <ak/data/PValue.hpp>
-#include <ak/math/SphericalCoord.hpp>
-#include <ak/math/Transform.hpp>
-#include <ak/math/Types.hpp>
 #include <glm/detail/type_mat2x2.hpp>
 #include <glm/detail/type_mat3x3.hpp>
 #include <glm/detail/type_mat4x4.hpp>
@@ -29,9 +24,12 @@
 #include <glm/detail/type_vec3.hpp>
 #include <glm/detail/type_vec4.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <iostream>
 #include <stdexcept>
-#include <string>
+
+#include <ak/data/PValue.hpp>
+#include <ak/math/SphericalCoord.hpp>
+#include <ak/math/Transform.hpp>
+#include <ak/math/Types.hpp>
 
 namespace akd {
 	inline void serialize(akd::PValue& dest, const akm::Quat& val) { for(auto i = 0u; i < 4; i++) dest[i].set<typename akm::Quat::value_type>(val[i]); }

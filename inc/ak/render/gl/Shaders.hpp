@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,12 @@
 #ifndef AK_RENDER_SHADERS_HPP_
 #define AK_RENDER_SHADERS_HPP_
 
-#include <ak/math/Matrix.hpp>
-#include <ak/math/Vector.hpp>
-#include <ak/PrimitiveTypes.hpp>
-#include <ak/render/gl/Buffers.hpp>
-#include <ak/render/gl/Types.hpp>
 #include <array>
 #include <string>
+
+#include <ak/math/Types.hpp>
+#include <ak/PrimitiveTypes.hpp>
+#include <ak/render/gl/Types.hpp>
 
 namespace akr {
 	namespace gl {

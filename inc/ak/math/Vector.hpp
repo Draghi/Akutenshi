@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,12 @@
 #ifndef AK_MATH_VECTOR_HPP_
 #define AK_MATH_VECTOR_HPP_
 
+#include <glm/common.hpp>
+#include <glm/geometric.hpp>
+
 #include <ak/math/Types.hpp>
 #include <ak/math/Scalar.hpp>
-#include <glm/glm.hpp>
-#include <glm/geometric.hpp>
+#include <ak/PrimitiveTypes.hpp>
 
 namespace akm {
 	template<glm::length_t l, typename func_t> Vec<l> forEachV(const Vec<l>& v0, const func_t& func) { Vec<l> result; for(akSSize i = 0; i < l; i++) result[i] = func(v0[i]); return result; }

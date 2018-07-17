@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,7 @@
  **/
 
 #include <ak/data/Json.hpp>
-#include <ak/data/Path.hpp>
-#include <ak/data/PValue.hpp>
-#include <ak/filesystem/CFile.hpp>
-#include <ak/Log.hpp>
-#include <ak/Macros.hpp>
-#include <ak/PrimitiveTypes.hpp>
-#include <cppcodec/base64_rfc4648.hpp>
+
 #include <rapidjson/encodings.h>
 #include <rapidjson/error/en.h>
 #include <rapidjson/error/error.h>
@@ -32,13 +26,23 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 #include <algorithm>
-#include <cstdint>
 #include <deque>
+#include <functional>
+#include <initializer_list>
 #include <limits>
 #include <map>
 #include <stdexcept>
+#include <string_view>
 #include <utility>
 #include <vector>
+
+#include <ak/data/Path.hpp>
+#include <ak/data/PValue.hpp>
+#include <ak/data/Base64.hpp>
+#include <ak/filesystem/CFile.hpp>
+#include <ak/Log.hpp>
+#include <ak/Macros.hpp>
+#include <ak/PrimitiveTypes.hpp>
 
 using namespace akd;
 
@@ -62,7 +66,7 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 			akd::PValue& cValue = *valueStack.back();
 
 			if (cValue.isObj()) {
-				cValue.asObj().insert(std::make_pair(cKey, std::move(value)));
+				cValue.asObj().emplace(cKey, std::move(value));
 				if (isObjOrArr) valueStack.push_back(&cValue.asObj().at(cKey));
 			} else if (cValue.isArr()) {
 				cValue.asArr().push_back(std::move(value));
@@ -111,7 +115,7 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 	    bool String(const char* str, rj::SizeType length, bool) {
 	    	std::string inStr = std::string(str, length);
 	    	if (inStr.substr(0, JSON_BASE64_IDENTIFIER.size()) == JSON_BASE64_IDENTIFIER) {
-		    	addPValue(akd::PValue::from(cppcodec::base64_rfc4648::decode(inStr.substr(JSON_BASE64_IDENTIFIER.size()))));
+		    	addPValue(akd::PValue::from(akd::base64::decode(inStr.substr(JSON_BASE64_IDENTIFIER.size()))));
 	    	} else {
 		    	addPValue(akd::PValue::from(inStr));
 	    	}
@@ -244,7 +248,7 @@ std::string akd::toJson(const akd::PValue& src, bool pretty) {
 						break;
 
 					case akd::PType::Binary:
-						std::string binStr = std::string(JSON_BASE64_IDENTIFIER) + cppcodec::base64_rfc4648::encode(value.asBin().data(), value.asBin().size());
+						std::string binStr = std::string(JSON_BASE64_IDENTIFIER) + akd::base64::encode(value.asBin().data(), value.asBin().size());
 						if (pretty) pWriter.String(binStr.c_str(), binStr.size());
 						else nWriter.String(binStr.c_str(), binStr.size());
 

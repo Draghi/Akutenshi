@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,10 @@
 #ifndef AK_MATH_QUATERNION_HPP_
 #define AK_MATH_QUATERNION_HPP_
 
-#include <ak/math/Types.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/compatibility.hpp>
+
+#include <ak/math/Scalar.hpp>
+#include <ak/math/Types.hpp>
 
 namespace akm {
 	inline Quat lerp(const Quat& l, const Quat& r, scalar_t a) { return glm::lerp(l, r, a); }

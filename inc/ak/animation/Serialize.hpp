@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,22 @@
 #ifndef AK_ANIMATION_SERIALIZE_HPP_
 #define AK_ANIMATION_SERIALIZE_HPP_
 
+#include <ak/math/Serialize.hpp>
+
+#include <cstring>
+#include <deque>
+#include <initializer_list>
+#include <map>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
 #include <ak/animation/Animation.hpp>
 #include <ak/animation/Fwd.hpp>
 #include <ak/animation/Mesh.hpp>
 #include <ak/animation/Skeleton.hpp>
 #include <ak/animation/Type.hpp>
-#include <ak/math/Serialize.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <cstring>
-#include <deque>
-#include <map>
-#include <unordered_map>
-#include <utility>
-#include <vector>
 
 // Mesh
 namespace akd {
@@ -49,10 +52,10 @@ namespace akd {
 			for(auto i = 0u; i < boneCfg.size(); i++) {
 				auto& vWeightCfg = boneCfg[i].asArr();
 				for(auto j = 0u; j < vWeightCfg.size(); j++) {
-					boneWeights[i].insert(std::make_pair(
+					boneWeights[i].emplace(
 						vWeightCfg[j]["name"].asStr(),
 						vWeightCfg[j]["weight"].asDec()
-					));
+					);
 				}
 			}
 		}
@@ -164,7 +167,7 @@ namespace akd {
 		for(auto i = 0u; i < rotFrameArr.size(); i++) {
 			akm::Quat quat;
 			if (!deserialize(quat, rotFrameArr[i][1])) throw std::runtime_error("Quat failed");
-			rotFrames.insert(std::make_pair(rotFrameArr[i][0].as<fpSingle>(), quat));
+			rotFrames.emplace(rotFrameArr[i][0].as<fpSingle>(), quat);
 		}
 
 		auto& posFrameArr = src["posFrames"].asArr();
@@ -172,7 +175,7 @@ namespace akd {
 		for(auto i = 0u; i < posFrameArr.size(); i++) {
 			akm::Vec3 vec;
 			if (!deserialize(vec, posFrameArr[i][1])) throw std::runtime_error("Pos failed");
-			posFrames.insert(std::make_pair(posFrameArr[i][0].as<fpSingle>(), vec));
+			posFrames.emplace(posFrameArr[i][0].as<fpSingle>(), vec);
 		}
 
 		auto& sclFrameArr = src["sclFrames"].asArr();
@@ -180,7 +183,7 @@ namespace akd {
 		for(auto i = 0u; i < sclFrameArr.size(); i++) {
 			akm::Vec3 vec;
 			if (!deserialize(vec, sclFrameArr[i][1])) throw std::runtime_error("Scl failed");
-			sclFrames.insert(std::make_pair(sclFrameArr[i][0].as<fpSingle>(), vec));
+			sclFrames.emplace(sclFrameArr[i][0].as<fpSingle>(), vec);
 		}
 
 		aka::TweenMode preTween, postTween;

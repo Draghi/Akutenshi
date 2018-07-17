@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,12 @@
 #ifndef AK_DATA_SUID_HPP_
 #define AK_DATA_SUID_HPP_
 
-#include <ak/data/PValue.hpp>
-#include <ak/PrimitiveTypes.hpp>
 #include <cstddef>
 #include <stdexcept>
 #include <unordered_map>
+
+#include <ak/data/PValue.hpp>
+#include <ak/PrimitiveTypes.hpp>
 
 namespace akd {
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,19 @@
 #ifndef AK_ENGINE_COMPONENTS_CAMERA_HPP_
 #define AK_ENGINE_COMPONENTS_CAMERA_HPP_
 
+#include <stdexcept>
+#include <unordered_map>
+#include <utility>
+
+#include <ak/container/SlotMap.hpp>
 #include <ak/engine/components/Transform.hpp>
+#include <ak/engine/ComponentManager.hpp>
 #include <ak/engine/EntityManager.hpp>
+#include <ak/engine/Type.hpp>
 #include <ak/event/Dispatcher.hpp>
 #include <ak/math/Matrix.hpp>
 #include <ak/math/Types.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <glm/detail/type_mat4x4.hpp>
-#include <utility>
 
 namespace ake {
 
@@ -34,7 +39,6 @@ namespace ake {
 		AKE_DEFINE_COMPONENT(CameraManager, Camera)
 		private:
 			EntityID m_id;
-			const CameraManager& m_cManager;
 			const EntityManager& m_eManager;
 
 			enum class Projection : uint8 {
@@ -67,7 +71,7 @@ namespace ake {
 			akev::SubscriberID m_transformChangeSubscription;
 
 		public:
-			Camera(EntityID id, const CameraManager& cManager, const EntityManager& eManager) : m_id(id), m_cManager(cManager), m_eManager(eManager), m_projection(), m_projectionType(Projection::Orthographic), m_cache{true, akm::Mat4(1), true, akm::Mat4(1)}, m_viewOffset(0,0), m_viewSize(1,1), m_transformChangeSubscription() {
+			Camera(EntityID id, const EntityManager& eManager) : m_id(id), m_eManager(eManager), m_projection(), m_projectionType(Projection::Orthographic), m_cache{true, akm::Mat4(1), true, akm::Mat4(1)}, m_viewOffset(0,0), m_viewSize(1,1), m_transformChangeSubscription() {
 				//@todo Add change tracking transform
 				//m_transformChangeSubscription = m_eManager.component<Transform>(m_id).
 			}
@@ -150,12 +154,12 @@ namespace ake {
 
 		protected:
 			bool createComponent(EntityID entityID) {
-				return m_components.emplace(entityID, Camera(entityID, *this, entityManager())).second;
+				return m_components.emplace(entityID, Camera(entityID, entityManager())).second;
 			}
 
 			bool destroyComponent(EntityID entityID) override {
 				auto iter = m_components.find(entityID);
-				if (iter == m_components.end()) throw std::logic_error("ake::Transform: Data corruption, tried to delete non-existent instance.");
+				if (iter == m_components.end()) throw std::logic_error("ake::Camera: Data corruption, tried to delete non-existent instance.");
 				m_components.erase(entityID);
 				return true;
 			}

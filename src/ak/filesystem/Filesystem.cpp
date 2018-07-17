@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,20 @@
  **/
 
 #include <ak/filesystem/Filesystem.hpp>
-#include <ak/filesystem/Path.hpp>
-#include <ak/Log.hpp>
-#include <ak/PrimitiveTypes.hpp>
-#include <ak/ScopeGuard.hpp>
-#include <ak/String.hpp>
+
+#include <bits/types/struct_timespec.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <cstdio>
-#include <functional>
+#include <initializer_list>
+#include <memory>
 #include <stdexcept>
-#include <string>
 #include <unordered_map>
 #include <utility>
+
+#include <ak/filesystem/CFile.hpp>
+#include <ak/ScopeGuard.hpp>
+#include <ak/String.hpp>
 
 using namespace akfs;
 
@@ -46,8 +47,8 @@ class VFSMounts final {
 			if (mountPoint.back() != '/') mountPoint += '/';
 			if (systemPath.back() != '/') systemPath += '/';
 
-			if (!m_vfsToSys.insert({mountPoint, systemPath}).second) return false;
-			if (!m_sysToVfs.insert({systemPath, mountPoint}).second) {
+			if (!m_vfsToSys.emplace(mountPoint, systemPath).second) return false;
+			if (!m_sysToVfs.emplace(systemPath, mountPoint).second) {
 				m_vfsToSys.erase(mountPoint);
 				return false;
 			}

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,26 +17,17 @@
 #ifndef AK_ASSETS_MATERIAL_HPP_
 #define AK_ASSETS_MATERIAL_HPP_
 
-#include <ak/animation/Fwd.hpp>
-#include <ak/animation/Serialize.hpp>
-#include <ak/animation/Type.hpp>
-#include <ak/assets/Asset.hpp>
-#include <ak/assets/Mesh.hpp>
-#include <ak/assets/Skin.hpp>
-#include <ak/data/Image.hpp>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <utility>
+
 #include <ak/data/PValue.hpp>
 #include <ak/data/SUID.hpp>
 #include <ak/math/Serialize.hpp>
-#include <ak/math/SphericalCoord.hpp>
-#include <ak/math/Transform.hpp>
 #include <ak/math/Types.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/gl/Textures.hpp>
-#include <ak/window/WindowOptions.hpp>
-#include <stdexcept>
-#include <string>
-#include <optional>
-#include <utility>
 
 namespace akas {
 

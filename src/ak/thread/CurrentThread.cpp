@@ -1,5 +1,5 @@
 /**
-* Copyright 2017 Michael J. Baker
+* Copyright 2018 Michael J. Baker
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -15,8 +15,12 @@
 **/
 
 
+
 #include <ak/thread/CurrentThread.hpp>
+
 #include <chrono>
+
+#include <ak/thread/Thread.hpp>
 
 using namespace ak;
 using namespace akt;

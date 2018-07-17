@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,14 @@
 #ifndef AK_ENGINE_SCENE_HPP_
 #define AK_ENGINE_SCENE_HPP_
 
+#include <functional>
+#include <string>
+
 #include <ak/engine/EntityManager.hpp>
 #include <ak/engine/SceneManagerProxy.hpp>
 #include <ak/event/Dispatcher.hpp>
 #include <ak/event/Event.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <functional>
-#include <string>
 
 namespace ake {
 	AK_DEFINE_EVENT(SceneUpdateEvent, fpDouble, false);

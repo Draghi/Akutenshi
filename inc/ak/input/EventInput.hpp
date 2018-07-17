@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,18 @@
 #ifndef AK_INPUT_EVENTINPUT_HPP_
 #define AK_INPUT_EVENTINPUT_HPP_
 
-#include <ak/thread/DoubleBuffer.hpp>
+#include <array>
+#include <utility>
+
 #include <ak/event/Dispatcher.hpp>
+#include <ak/input/Buttons.hpp>
 #include <ak/input/Keyboard.hpp>
 #include <ak/input/Keys.hpp>
 #include <ak/input/Mouse.hpp>
-#include <ak/input/Buttons.hpp>
 #include <ak/input/Types.hpp>
-#include <stddef.h>
-#include <array>
-#include <utility>
+#include <ak/math/Types.hpp>
+#include <ak/PrimitiveTypes.hpp>
+#include <ak/thread/DoubleBuffer.hpp>
 
 namespace akin {
 	class EventKeyboard final : public Keyboard {

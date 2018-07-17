@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,20 +17,16 @@
 #ifndef AK_ASSETS_GLTF_NODE_HPP_
 #define AK_ASSETS_GLTF_NODE_HPP_
 
-#include <ak/data/PValue.hpp>
-#include <ak/math/Matrix.hpp>
-#include <ak/math/Quaternion.hpp>
-#include <ak/math/Serialize.hpp>
-#include <ak/math/Types.hpp>
-#include <ak/assets/gltf/Types.hpp>
-#include <glm/detail/type_mat4x4.hpp>
-#include <glm/detail/type_vec3.hpp>
-#include <glm/gtc/quaternion.hpp>
 #include <deque>
 #include <iostream>
 #include <string>
-#include <type_traits>
 #include <vector>
+
+#include <ak/assets/gltf/Types.hpp>
+#include <ak/data/PValue.hpp>
+#include <ak/math/Matrix.hpp>
+#include <ak/math/Serialize.hpp>
+#include <ak/math/Types.hpp>
 
 namespace akas {
 	namespace gltf {

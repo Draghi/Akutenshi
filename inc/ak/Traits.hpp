@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 #ifndef AK_TRAITS_HPP_
 #define AK_TRAITS_HPP_
+
+#include <ak/PrimitiveTypes.hpp>
 
 namespace ak {
 	namespace traits {

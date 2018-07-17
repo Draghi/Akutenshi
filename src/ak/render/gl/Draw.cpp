@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,15 @@
  * limitations under the License.
  **/
 
-#include <ak/Log.hpp>
-#include <ak/render/gl/Buffers.hpp>
 #include <ak/render/gl/Draw.hpp>
-#include <stddef.h>
+
+#include <GL/gl4.h>
+#include <stdint.h>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
-#include "GL/gl4.h"
+#include <ak/Log.hpp>
 
 namespace akr {
 	namespace gl {

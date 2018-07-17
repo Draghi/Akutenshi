@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,14 @@
  **/
 
 #include <ak/assets/Convert.hpp>
+
+#include <functional>
+
 #include <ak/assets/gltf/GLTF.hpp>
 #include <ak/data/Json.hpp>
 #include <ak/data/MsgPack.hpp>
 #include <ak/data/PValue.hpp>
 #include <ak/filesystem/Filesystem.hpp>
-#include <ak/Log.hpp>
-#include <ak/PrimitiveTypes.hpp>
 #include <ak/util/Timer.hpp>
 
 using namespace akas;

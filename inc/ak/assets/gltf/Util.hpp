@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,17 @@
 #ifndef AK_ASSETS_GLTF_UTIL_HPP_
 #define AK_ASSETS_GLTF_UTIL_HPP_
 
-#include <ak/PrimitiveTypes.hpp>
+#include <limits>
+#include <stdexcept>
+#include <type_traits>
+#include <vector>
+
 #include <ak/assets/gltf/Accessor.hpp>
 #include <ak/assets/gltf/Asset.hpp>
 #include <ak/assets/gltf/Buffer.hpp>
-#include <ak/assets/gltf/BufferView.hpp>
 #include <ak/assets/gltf/Types.hpp>
-#include <limits>
-#include <vector>
+#include <ak/math/Types.hpp>
+#include <ak/PrimitiveTypes.hpp>
 
 namespace akas {
 	namespace gltf {

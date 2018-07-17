@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,16 @@
 #ifndef AK_ANIMATION_MESHPOSEDATA_HPP_
 #define AK_ANIMATION_MESHPOSEDATA_HPP_
 
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
 #include <ak/animation/Fwd.hpp>
+#include <ak/animation/Mesh.hpp>
 #include <ak/animation/Skeleton.hpp>
 #include <ak/animation/Type.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <string>
-#include <utility>
-#include <vector>
 
 namespace aka {
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,12 @@
  * limitations under the License.
  **/
 
-#include <ak/container/SlotMap.hpp>
-#include <ak/container/UnorderedVector.hpp>
-#include <ak/engine/EntityManager.hpp>
 #include <ak/engine/internal/EntityGraph.hpp>
-#include <ak/engine/Type.hpp>
-#include <ak/event/Dispatcher.hpp>
-#include <ak/Iterator.hpp>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
+
 #include <utility>
+
+#include <ak/engine/EntityManager.hpp>
+#include <ak/Iterator.hpp>
 
 using namespace ake;
 using namespace ake::internal;

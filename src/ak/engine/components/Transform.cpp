@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,22 @@
  * limitations under the License.
  **/
 
-#include "ak/engine/components/Transform.hpp"
+#include <ak/engine/components/Transform.hpp>
+
+#include <glm/detail/type_mat3x3.hpp>
+#include <glm/detail/type_mat4x4.hpp>
+#include <glm/detail/type_vec3.hpp>
+#include <glm/detail/type_vec4.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <deque>
+#include <stdexcept>
+#include <utility>
+
+#include <ak/container/UnorderedVector.hpp>
+#include <ak/engine/EntityManager.hpp>
+#include <ak/math/Matrix.hpp>
+#include <ak/math/Quaternion.hpp>
+#include <ak/math/Vector.hpp>
 
 using namespace ake;
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,10 @@
 #ifndef AK_EVENT_EVENT_HPP_
 #define AK_EVENT_EVENT_HPP_
 
-#include <ak/event/Util.hpp>
-#include <ak/String.hpp>
-#include <string>
 #include <string_view>
+
+#include <ak/event/Dispatcher.hpp>
+#include <ak/event/Util.hpp>
 
 #define AK_DEFINE_EVENT(eventName, dataType, canCancel) \
 	namespace AK_DEFINE_EVENT_INTERNAL { \

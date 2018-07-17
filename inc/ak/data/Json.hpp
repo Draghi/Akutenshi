@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@
 #ifndef AK_DATA_JSON_PVALUEPARSER_HPP_
 #define AK_DATA_JSON_PVALUEPARSER_HPP_
 
-#include <ak/filesystem/Path.hpp>
 #include <string>
+
+#include <ak/filesystem/Path.hpp>
 
 namespace akd {
 	class PValue;

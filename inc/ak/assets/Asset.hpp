@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,13 @@
 #ifndef AK_ASSETS_ASSET_HPP_
 #define AK_ASSETS_ASSET_HPP_
 
-#include <ak/data/Json.hpp>
-#include <ak/data/PValue.hpp>
-#include <ak/data/SUID.hpp>
-#include <ak/filesystem/CFile.hpp>
-#include <ak/PrimitiveTypes.hpp>
 #include <stdexcept>
 #include <string>
-#include <vector>
+
+#include <ak/data/PValue.hpp>
+#include <ak/data/SUID.hpp>
+#include <ak/filesystem/Path.hpp>
+#include <ak/PrimitiveTypes.hpp>
 
 namespace akas { struct AssetInfo; }
 

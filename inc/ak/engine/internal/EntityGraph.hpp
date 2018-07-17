@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,15 @@
 #ifndef AK_ENGINE_INTERNAL_ENTITYGRAPHMANAGER_HPP_
 #define AK_ENGINE_INTERNAL_ENTITYGRAPHMANAGER_HPP_
 
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+
 #include <ak/container/SlotMap.hpp>
 #include <ak/container/UnorderedVector.hpp>
 #include <ak/engine/Type.hpp>
 #include <ak/event/Dispatcher.hpp>
 #include <ak/event/Event.hpp>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
 
 namespace ake {
 

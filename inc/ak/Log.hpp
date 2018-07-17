@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,17 @@
 #ifndef AK_LOG_LOGGER_HPP_
 #define AK_LOG_LOGGER_HPP_
 
-#include <ak/filesystem/CFile.hpp>
+#include <iomanip>
+#include <limits>
+#include <sstream>
+#include <string>
+#include <string_view>
+
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/thread/CurrentThread.hpp>
 #include <ak/thread/Thread.hpp>
 #include <ak/util/Time.hpp>
 #include <ak/String.hpp>
-#include <iomanip>
-#include <sstream>
-#include <string>
-#include <string_view>
-#include <type_traits>
 
 namespace ak {
 	namespace log {
