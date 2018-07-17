@@ -61,24 +61,23 @@ namespace akc {
 	};
 	using SlotID = SlotID_t<4>;
 
-	template<akSize l, typename type_t, typename alloc_t = std::allocator<type_t>> class SlotMap_t final {
+	template<akSize l, typename type_t> class SlotMap_t final {
 		public:
 			using slot_type = SlotID_t<l>;
 			using index_type = typename slot_type::value_type;
 
 			using value_type = type_t;
-			using allocator_type = alloc_t;
-			template<typename value_t> using container_type = akc::UnorderedVector<value_t, alloc_t>;
+			template<typename value_t> using container_type = akc::UnorderedVector<value_t>;
 			using iterator = typename container_type<type_t>::iterator;
 			using const_iterator = typename container_type<type_t>::const_iterator;
 			using reverse_iterator = typename container_type<type_t>::reverse_iterator;
 			using const_reverse_iterator = typename container_type<type_t>::const_reverse_iterator;
 
 		private:
-			std::vector<slot_type, alloc_t> m_indicies;
+			std::vector<slot_type> m_indicies;
 			container_type<type_t> m_data;
-			std::vector<index_type, alloc_t> m_freeList;
-			std::vector<index_type, alloc_t> m_indexLookup;
+			std::vector<index_type> m_freeList;
+			std::vector<index_type> m_indexLookup;
 
 			void removeEntry(index_type indexID) {
 
@@ -328,7 +327,7 @@ namespace akc {
 			size_t capacity() const { return m_data.capacity(); }
 	};
 
-	template<typename type_t, typename alloc_t = std::allocator<type_t>> using SlotMap = SlotMap_t<4, type_t, alloc_t>;
+	template<typename type_t> using SlotMap = SlotMap_t<4, type_t>;
 
 }
 

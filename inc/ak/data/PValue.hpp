@@ -17,20 +17,22 @@
 #ifndef AK_DATA_PVALUE_HPP_
 #define AK_DATA_PVALUE_HPP_
 
-#include <ak/data/Path.hpp>
-#include <ak/filesystem/Path.hpp>
-#include <ak/PrimitiveTypes.hpp>
 #include <algorithm>
 #include <cstddef>
 #include <deque>
 #include <functional>
+#include <initializer_list>
 #include <map>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
-#include <optional>
 #include <vector>
+
+#include <ak/data/Path.hpp>
+#include <ak/filesystem/Path.hpp>
+#include <ak/PrimitiveTypes.hpp>
 
 namespace akd {
 
@@ -124,7 +126,7 @@ namespace akd {
 			PValue& at(akSize id) { return asArr().at(id); }
 
 			PValue& atOrSet(const std::string& name, const PValue& val = PValue()) {
-				return asObjOrSet().insert(std::make_pair(name, val)).first->second;
+				return asObjOrSet().emplace(name, val).first->second;
 			}
 
 			const PValue& atOrDef(const std::string& name, const PValue& val = PValue()) const {

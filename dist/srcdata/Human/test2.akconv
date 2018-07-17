@@ -9,7 +9,7 @@
     "materials": {
         "": "data/human2/materials/",
         "BaseMaterial": {
-            "destination": "data/human2/materials/BaseMaterial.akmat.akres",
+            "destination": "data/human/BaseMaterial.akmat.akres",
             "identifier": [642687351235872926, 6135447350553388496]
         },
         "Material": {
@@ -17,7 +17,7 @@
             "identifier": [16655846992221811987, 8670508779153227061]
         },
         "Material.001": {
-            "destination": "data/human2/materials/Material.001.akmat.akres",
+            "destination": "data/human/Material.001.akmat.akres",
             "identifier": [7162251674570295383, 13672807736484942403]
         },
         "Material.002": {
@@ -36,7 +36,7 @@
             "identifier": [6041817852295058879, 6607783555874459802]
         }
     },
-    "modifiedTime": 1531382429,
+    "modifiedTime": 1531388096,
     "source": "test.gltf",
     "type": "GLTF"
 }

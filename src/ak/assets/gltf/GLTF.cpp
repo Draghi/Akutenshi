@@ -14,31 +14,32 @@
  * limitations under the License.
  **/
 
-#include <ak/animation/Serialize.hpp>
-#include <ak/assets/Asset.hpp>
+#include <ak/assets/gltf/GLTF.hpp>
+
+#include <cstdlib>
+#include <ctime>
+#include <limits>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+
+#include <ak/assets/Convert.hpp>
 #include <ak/assets/gltf/Asset.hpp>
 #include <ak/assets/gltf/Buffer.hpp>
-#include <ak/assets/gltf/GLTF.hpp>
 #include <ak/assets/gltf/internal/GLTFMaterial.hpp>
 #include <ak/assets/gltf/internal/GLTFMesh.hpp>
 #include <ak/assets/gltf/internal/GLTFSkin.hpp>
 #include <ak/assets/gltf/Types.hpp>
 #include <ak/assets/Skin.hpp>
-#include <ak/data/Image.hpp>
 #include <ak/data/Json.hpp>
 #include <ak/data/PValue.hpp>
 #include <ak/data/Rand.hpp>
 #include <ak/filesystem/CFile.hpp>
-#include <ak/math/Serialize.hpp>
+#include <ak/filesystem/Filesystem.hpp>
+#include <ak/Log.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/util/Timer.hpp>
-#include <ak/window/WindowOptions.hpp>
-#include <cstdlib>
-#include <ctime>
-#include <stdexcept>
-#include <string>
-#include <optional>
-#include <unordered_map>
 
 using namespace akas::gltf;
 
@@ -105,9 +106,9 @@ bool akas::gltf::convertGLTFFile(akas::ConversionHelper& convertHelper, const ak
 			continue;
 		}
 
-		if (akfs::exists(info.destination) && akfs::exists(akfs::Path(info.destination).clearExtension())) {
+		if (akfs::exists(info.destination) && akfs::exists(info.destination) && akfs::exists(akfs::Path(info.destination).clearExtension())) {
 			auto srcModifiedTime = akfs::modifiedTime(srcPath);
-			auto dstModifiedTime = akfs::modifiedTime(info.destination);
+			auto dstModifiedTime = akfs::modifiedTime(akfs::Path(info.destination).clearExtension());
 			if (dstModifiedTime >= srcModifiedTime) continue;
 		}
 

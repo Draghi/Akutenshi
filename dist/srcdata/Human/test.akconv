@@ -2,7 +2,7 @@
     "images": {
         "": "data/human/textures/",
         "Test": {
-            "destination": "data/human/textures/Test.png.akres",
+            "destination": "data/human/Test.png.akres",
             "identifier": [18140265845053987872, 9029574955021597397]
         }
     },
@@ -36,7 +36,7 @@
             "identifier": [17993800027375208562, 5687103001710998052]
         }
     },
-    "modifiedTime": 1531382429,
+    "modifiedTime": 1531388096,
     "source": "test.gltf",
     "type": "GLTF"
 }

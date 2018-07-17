@@ -17,6 +17,14 @@
 #ifndef AK_ASSETS_CONVERT_HPP_
 #define AK_ASSETS_CONVERT_HPP_
 
+#include <cstdlib>
+#include <ctime>
+#include <map>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <utility>
+
 #include <ak/assets/Asset.hpp>
 #include <ak/assets/AssetRegistry.hpp>
 #include <ak/assets/Material.hpp>
@@ -25,13 +33,8 @@
 #include <ak/data/Rand.hpp>
 #include <ak/data/SUID.hpp>
 #include <ak/filesystem/Path.hpp>
-#include <cstdlib>
-#include <ctime>
-#include <map>
-#include <stdexcept>
-#include <string>
-#include <optional>
-#include <utility>
+#include <ak/Log.hpp>
+#include <ak/PrimitiveTypes.hpp>
 
 namespace akas {
 
