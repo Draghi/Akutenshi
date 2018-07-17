@@ -26,7 +26,7 @@ See the [HISTORY](History.md) file for more information.
 - [GLM](https://glm.g-truc.net/) [Vector/Scalar math, MIT License]
 - [MsgPack-C](https://github.com/msgpack/msgpack-c) [Binary Data Serialization Format, Boost Software License(Version 1.0)]
 - [RapidJson](https://github.com/Tencent/rapidjson) [Json I/O, MIT License]
-- [STB] (https://github.com/nothings/stb) [Header-only libraries, Public Domain/MIT]
+- [STB](https://github.com/nothings/stb) [Header-only libraries, Public Domain/MIT]
 - [Sugar](https://github.com/ruslo/sugar) [CMake helper library, BSD License]
 
 ## License
