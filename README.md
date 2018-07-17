@@ -36,3 +36,5 @@ See the [LICENSE](License.md) file for full license text.
 
 Please note that some included files have individual licenses, in particular, but not exhaustively:
 - inc/ak/data/Base64.hpp
+
+See files for more details.
