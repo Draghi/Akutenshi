@@ -34,9 +34,15 @@
 #include <ak/data/SUID.hpp>
 #include <ak/filesystem/Path.hpp>
 #include <ak/Log.hpp>
+#include <ak/Macros.hpp>
 #include <ak/PrimitiveTypes.hpp>
 
 namespace akas {
+
+	AK_DEFINE_SMART_TENUM_CLASS_KV(AssetSourceType, uint64,
+		GLTF,  100,
+		Image, 0
+	)
 
 	struct ConversionInfo {
 		akd::SUID identifier;
@@ -85,6 +91,13 @@ namespace akas {
 
 			}
 
+			akfs::Path getDestinationSuggestionFor(const akfs::Path& root, const std::string& name) {
+				auto result = root/(name+".akres");
+				if ((result.front() == "./") || (result.front() == "../")) result.pop_front();
+				result = akfs::Path("data")/result.pop_front();
+				return result;
+			}
+
 			void registerAsset(ConversionInfo info, const akfs::Path& path, const std::optional<akfs::Path>& source) {
 				auto id = m_images.insert({info, path}).first;
 				if (!m_assetsByDestination.emplace(info.destination, std::make_pair(AssetType::Image, id)).second)  throw std::logic_error("Destination conflict for: " + info.destination.str());
@@ -122,9 +135,9 @@ namespace akas {
 				auto lookupIter = m_assetsByIdentifier.find(identifier);
 				if (lookupIter == m_assetsByIdentifier.end()) return {};
 				switch(lookupIter->second.first) {
-					case AssetType::Mesh:      return    m_meshes[lookupIter->second.second].first;
-					case AssetType::Material:  return m_materials[lookupIter->second.second].first;
-					case AssetType::Image:     return    m_images[lookupIter->second.second].first;
+					case AssetType::Mesh:      return     m_meshes[lookupIter->second.second].first;
+					case AssetType::Material:  return  m_materials[lookupIter->second.second].first;
+					case AssetType::Image:      return m_images[lookupIter->second.second].first;
 					case AssetType::Animation: [[fallthrough]];
 					case AssetType::Prefab:    [[fallthrough]];
 					case AssetType::Scene:     [[fallthrough]];
@@ -141,9 +154,9 @@ namespace akas {
 				auto lookupIter = m_assetsByDestination.find(path);
 				if (lookupIter == m_assetsByDestination.end()) return {};
 				switch(lookupIter->second.first) {
-					case AssetType::Mesh:      return    m_meshes[lookupIter->second.second].first;
-					case AssetType::Material:  return m_materials[lookupIter->second.second].first;
-					case AssetType::Image:     return    m_images[lookupIter->second.second].first;
+					case AssetType::Mesh:      return     m_meshes[lookupIter->second.second].first;
+					case AssetType::Material:  return  m_materials[lookupIter->second.second].first;
+					case AssetType::Image:      return m_images[lookupIter->second.second].first;
 					case AssetType::Animation: [[fallthrough]];
 					case AssetType::Prefab:    [[fallthrough]];
 					case AssetType::Scene:     [[fallthrough]];
@@ -160,9 +173,9 @@ namespace akas {
 				auto lookupIter = m_assetsBySource.find(path);
 				if (lookupIter == m_assetsBySource.end()) return {};
 				switch(lookupIter->second.first) {
-					case AssetType::Mesh:      return    m_meshes[lookupIter->second.second].first;
-					case AssetType::Material:  return m_materials[lookupIter->second.second].first;
-					case AssetType::Image:     return    m_images[lookupIter->second.second].first;
+					case AssetType::Mesh:      return     m_meshes[lookupIter->second.second].first;
+					case AssetType::Material:  return  m_materials[lookupIter->second.second].first;
+					case AssetType::Image:      return m_images[lookupIter->second.second].first;
 					case AssetType::Animation: [[fallthrough]];
 					case AssetType::Prefab:    [[fallthrough]];
 					case AssetType::Scene:     [[fallthrough]];
@@ -172,12 +185,12 @@ namespace akas {
 				}
 			}
 
-			const akc::SlotMap<std::pair<ConversionInfo, akfs::Path>>& images() const { return m_images; }
+			const akc::SlotMap<std::pair<ConversionInfo, akfs::Path>>& copies() const { return m_images; }
 			const akc::SlotMap<std::pair<ConversionInfo, akas::Mesh>>& meshes() const { return m_meshes; }
 			const akc::SlotMap<std::pair<ConversionInfo, akas::Material>>& materials() const { return m_materials; }
 
-			auto& getImage(akSize i) { return m_images[i].second; }
-			const auto& getImage(akSize i) const { return m_images[i].second; }
+			auto& getImages(akSize i) { return m_images[i].second; }
+			const auto& getImages(akSize i) const { return m_images[i].second; }
 			akSize imageCount() const { return m_images.size(); }
 
 			auto& getMesh(akSize i) { return m_meshes[i].second; }
@@ -193,6 +206,6 @@ namespace akas {
 
 }
 
-
+AK_DEFINE_SMART_ENUM_SERIALIZE(akas, AssetSourceType)
 
 #endif /* AK_ASSETS_CONVERT_HPP_ */

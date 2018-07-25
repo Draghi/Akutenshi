@@ -22,67 +22,69 @@
 
 #include <ak/data/Image.hpp>
 #include <ak/math/Types.hpp>
+#include <ak/Macros.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/gl/Types.hpp>
 
 namespace akr {
 	namespace gl {
 
-		enum class CubemapTarget {
+		AK_DEFINE_SMART_ENUM_CLASS(CubemapTarget,
 			PosX,
 			PosY,
 			PosZ,
 			NegX,
 			NegY,
-			NegZ,
-		};
+			NegZ
+		)
 
-		enum class TexTarget {
+		AK_DEFINE_SMART_ENUM_CLASS(TexTarget,
 			Tex1D,
 			Tex2D,
 			Tex3D,
 			Tex1D_Array,
 			Tex2D_Array,
-			TexCubemap,
-		};
+			TexCubemap
+		)
 
-		enum class TexFormat {
-			R,
-			RG,
-			RGB,
-			RGBA
-		};
+		AK_DEFINE_SMART_ENUM_CLASS_KV(TexFormat,
+			R,    1,
+			RG,   2,
+			RGB,  3,
+			RGBA, 4
+		)
 
-		enum class TexStorage {
+		AK_DEFINE_SMART_ENUM_CLASS(TexStorage,
 			Byte,
 			Byte_sRGB,
+			Short,
 			Half,
-			Single,
-		};
+			Single
+		)
 
-		enum class FilterType {
+		AK_DEFINE_SMART_ENUM_CLASS(FilterType,
 			Nearest,
-			Linear,
-		};
+			Linear
+		)
 
-		enum class MipFilterType {
+		AK_DEFINE_SMART_ENUM_CLASS(MipFilterType,
 			None,
 			Nearest,
-			Linear,
-		};
+			Linear
+		)
 
-		enum class ClampType {
+		AK_DEFINE_SMART_ENUM_CLASS(ClampType,
 			Repeat,
 			Mirror,
 			Edge,
-			Border,
-		};
+			Border
+		)
 
-		enum class ClampDir {
+		AK_DEFINE_SMART_ENUM_CLASS(ClampDir,
 			Horz,
 			Vert,
 			Depth
-		};
+		)
 
 		class Texture final {
 			Texture(const Texture& other) = delete;
@@ -125,7 +127,10 @@ namespace akr {
 		void loadTexData1D(akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize xOff = 0);
 		void loadTexData2D(akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize height, akSize xOff = 0, akSize yOff = 0);
 		void loadTexData3D(akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize height, akSize depth, akSize xOff = 0, akSize yOff = 0, akSize zOff = 0);
-		void loadTexDataCubemap(CubemapTarget cubemap, akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize height, akSize xOff = 0, akSize yOff = 0);
+
+		// Careful here, yOffset is effectively inverted unless the image is already inverted. IE. replace 5 pixels up is cubemapHeight - 5, not just 5.
+		void loadTexDataCubemap(CubemapTarget cubemap, akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize height, akSize xOff = 0, akSize yOff = 0, bool alreadyInverted = false);
+
 		void loadTexData1DArray(akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize layer, akSize layers = 0, akSize xOff = 0);
 		void loadTexData2DArray(akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize height, akSize layer, akSize layers = 0, akSize xOff = 0, akSize yOff = 0);
 
@@ -180,5 +185,14 @@ namespace akr {
 		}
 	}
 }
+
+AK_DEFINE_SMART_ENUM_SERIALIZE(akr::gl, CubemapTarget)
+AK_DEFINE_SMART_ENUM_SERIALIZE(akr::gl, TexTarget)
+AK_DEFINE_SMART_ENUM_SERIALIZE(akr::gl, TexFormat)
+AK_DEFINE_SMART_ENUM_SERIALIZE(akr::gl, TexStorage)
+AK_DEFINE_SMART_ENUM_SERIALIZE(akr::gl, FilterType)
+AK_DEFINE_SMART_ENUM_SERIALIZE(akr::gl, MipFilterType)
+AK_DEFINE_SMART_ENUM_SERIALIZE(akr::gl, ClampType)
+AK_DEFINE_SMART_ENUM_SERIALIZE(akr::gl, ClampDir)
 
 #endif

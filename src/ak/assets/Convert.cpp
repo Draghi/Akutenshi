@@ -29,9 +29,10 @@ using namespace akas;
 
 static void writeMeshes(ConversionHelper& state);
 static void writeMaterials(ConversionHelper& state);
-static void writeImages(ConversionHelper& state);
+static void writeCopies(ConversionHelper& state);
 
 static bool convertTexture(ConversionHelper& state, const akfs::Path& root, akd::PValue& cfg);
+static bool convertImage(ConversionHelper& state, const akfs::Path& root, akd::PValue& cfg);
 
 static auto writeAssetMetaFile = [](const akfs::Path& dst, const akd::SUID& suid, akas::AssetType assetType, const std::string& name, const akfs::Path& source){
 	akd::PValue dstData; akd::serialize(dstData, akas::AssetInfo{suid, assetType, name, source});
@@ -47,45 +48,55 @@ static auto writeAssetFile = [](const akfs::Path& filename, const auto& data, bo
 using callback_t = bool(ConversionHelper&, const akfs::Path&, akd::PValue&);
 static const std::map<std::string, callback_t*> proccessFunctions{{
 	{"GLTF", &akas::gltf::convertGLTFFile},
-	{"TEXTURE", &convertTexture}
+	{"Texture", &convertTexture},
+	{"Image", &convertImage}
 }};
 
 void akas::convertDirectory(const akfs::Path& dir) {
 
 	aku::Timer convertTimer;
 
-	akSize     fileCount = 0;
+	akSize fileCount = 0;
+
+	std::map<akas::AssetSourceType, std::vector<akfs::Path>> collectedAssets;
+	akfs::iterateDirectory(dir, [&](const akfs::Path& path, bool isDir){
+		if ((isDir) || (path.extension() != ".akconv")) return true;
+		akd::PValue convData = akd::fromJsonFile(path);
+		collectedAssets[akd::deserialize<akas::AssetSourceType>(convData["type"])].push_back(path);
+		fileCount     += 1;
+		return true;
+	}, true);
+
+	akl::Logger("Convert").info("Found ", fileCount, " asset conversion definition files in ", convertTimer.markAndReset().msecs() , "ms.");
+
 	akSize proccessCount = 0;
 	akSize     meshCount = 0;
 	akSize materialCount = 0;
 	akSize    imageCount = 0;
 
-	akfs::iterateDirectory(dir, [&](const akfs::Path& path, bool isDir){
-		if ((isDir) || (path.extension() != ".akconv")) return true;
+	for(auto assetTypeIter = collectedAssets.begin(); assetTypeIter != collectedAssets.end(); assetTypeIter++) {
+		for(auto assetPathIter = assetTypeIter->second.begin(); assetPathIter != assetTypeIter->second.end(); assetPathIter++) {
+			ConversionHelper convertHelper(akfs::Path("data/"), true);
 
-		ConversionHelper convertHelper(akfs::Path("data/"), true);
+			akd::PValue convData = akd::fromJsonFile(*assetPathIter);
+			auto iter = proccessFunctions.find(convData["type"].asStr());
+			if (iter == proccessFunctions.end()) { akl::Logger("Convert").warn("Could not proccess type '",  convData["type"].asStr(), "' in file: ", (*assetPathIter).str()); continue; }
 
-		akd::PValue convData = akd::fromJsonFile(path);
-		auto iter = proccessFunctions.find(convData["type"].asStr());
-		if (iter == proccessFunctions.end()) { akl::Logger("Convert").warn("Could not proccess type '",  convData["type"].asStr(), "' in file: ", path.str()); return true; }
+			if (iter->second(convertHelper, akfs::Path(*assetPathIter).pop_back(), convData)) proccessCount++;
 
-		if (iter->second(convertHelper, akfs::Path(path).pop_back(), convData)) proccessCount++;
+			akl::Logger("Convert").test_warn(akd::toJsonFile(convData, *assetPathIter), "Could not resave conversion file: ", assetPathIter->str());
 
-		akl::Logger("Convert").test_warn(akd::toJsonFile(convData, path), "Could not resave conversion file: ", path.str());
+			writeMeshes(convertHelper);
+			writeMaterials(convertHelper);
+			writeCopies(convertHelper);
 
-		writeMeshes(convertHelper);
-		writeMaterials(convertHelper);
-		writeImages(convertHelper);
+			meshCount     += convertHelper.meshCount();
+			materialCount += convertHelper.materialCount();
+			imageCount    += convertHelper.imageCount();
+		}
+	}
 
-		fileCount     += 1;
-		meshCount     += convertHelper.meshCount();
-		materialCount += convertHelper.materialCount();
-		imageCount    += convertHelper.imageCount();
-
-		return true;
-	}, true);
-
-	akl::Logger("Convert").info("Converted ", proccessCount, " out of ", fileCount, " resources in ", convertTimer.mark().msecs() , "ms. Resulting in ", meshCount, " meshes, ", materialCount, " materials, ", imageCount, " images.");
+	akl::Logger("Convert").info("Converted ", proccessCount, " out of ", fileCount, " assets in ", convertTimer.markAndReset().msecs() , "ms. Resulting in ", meshCount, " meshes, ", materialCount, " materials, ", imageCount, " images.");
 }
 
 static void writeMeshes(ConversionHelper& state) {
@@ -102,13 +113,53 @@ static void writeMaterials(ConversionHelper& state) {
 	}
 }
 
-static void writeImages(ConversionHelper& state) {
-	for(auto& image : state.images()) {
-		if (!writeAssetMetaFile(image.first.destination, image.first.identifier, akas::AssetType::Image, image.first.displayName, image.second)) continue;
-		if (!akfs::copy(image.second, akfs::Path(image.first.destination).clearExtension())) continue;
+static void writeCopies(ConversionHelper& state) {
+	for(auto& copy : state.copies()) {
+		if (!writeAssetMetaFile(copy.first.destination, copy.first.identifier, akas::AssetType::Image, copy.first.displayName, copy.second)) continue;
+		if (!akfs::copy(copy.second, akfs::Path(copy.first.destination).clearExtension())) continue;
 	}
 }
 
-static bool convertTexture(ConversionHelper& /*convertHelper*/, const akfs::Path& /*root*/, akd::PValue& /*cfg*/) {
+static bool convertTexture(ConversionHelper& convertHelper, const akfs::Path& root, akd::PValue& cfg) {
+	auto& texCfg = cfg["config"];
+
+	auto& levelsCfg = texCfg["levels"].asArr();
+	for(auto levelCfg = levelsCfg.begin(); levelCfg != levelsCfg.end(); levelCfg++) {
+		for(auto imgCfg = levelCfg->asArr().begin(); imgCfg != levelCfg->asArr().end(); imgCfg++) {
+			auto& source = imgCfg->at("source").asStr();
+
+		}
+	}
+
+
+	return true;
+}
+
+static bool convertImage(ConversionHelper& state, const akfs::Path& root, akd::PValue& cfg) {
+	auto srcPath = root/akfs::Path(cfg.at("source").asStr());
+
+	auto info = state.findConversionInfo(
+		srcPath.filename() + ".akres",
+		akd::tryDeserialize<akd::SUID>(cfg.atOrDef("identifier")),
+		srcPath,
+		cfg["destination"].tryAs<std::string>(),
+		state.getDestinationSuggestionFor(root, cfg.at("source").asStr())
+	);
+
+	cfg.atOrSet("identifier").setPValue(akd::serialize(info.identifier));
+	if (cfg.atOrDef("remapPaths").asOrDef<bool>(false)) cfg.atOrSet("destination").setStr(info.destination.str());
+
+	if (!akfs::exists(srcPath)) {
+		akl::Logger("Image").warn("Missing image asset: ", srcPath.str());
+		return false;
+	}
+
+	if (akfs::exists(info.destination) && akfs::exists(akfs::Path(info.destination).clearExtension())) {
+		auto srcModifiedTime = akfs::modifiedTime(srcPath);
+		auto dstModifiedTime = akfs::modifiedTime(akfs::Path(info.destination).clearExtension());
+		if (dstModifiedTime >= srcModifiedTime) return false;
+	}
+
+	state.registerAsset(info, srcPath, srcPath);
 	return true;
 }

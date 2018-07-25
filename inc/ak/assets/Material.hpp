@@ -26,18 +26,21 @@
 #include <ak/data/SUID.hpp>
 #include <ak/math/Serialize.hpp>
 #include <ak/math/Types.hpp>
+#include <ak/Macros.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/gl/Textures.hpp>
 
 namespace akas {
 
-	enum class AlphaMode : uint8 {
-		Opaque = 0,
-		Mask   = 1,
-		Blend  = 2
-	};
+	AK_DEFINE_SMART_TENUM_CLASS_KV(AlphaMode, uint8,
+		Opaque, 0,
+		Mask,   1,
+		Blend,  2
+	)
 
 	struct Sampler final {
+		akd::SUID imgAssetID;
+
 		akr::gl::FilterType    minFilter;
 		akr::gl::MipFilterType minMipFilter;
 		akr::gl::FilterType    magFilter;
@@ -52,11 +55,11 @@ namespace akas {
 		fpSingle roughnessFactor;
 		akm::Vec3 emmisiveFactor;
 
-		std::optional<std::pair<akd::SUID, Sampler>> baseTexture;
-		std::optional<std::pair<akd::SUID, Sampler>> metallicRoughnessTexture;
-		std::optional<std::pair<akd::SUID, Sampler>> normalTexture;
-		std::optional<std::pair<akd::SUID, Sampler>> occlusionTexture;
-		std::optional<std::pair<akd::SUID, Sampler>> emissiveTexture;
+		std::optional<Sampler> baseTexture;
+		std::optional<Sampler> metalRoughTexture;
+		std::optional<Sampler> normalTexture;
+		std::optional<Sampler> occlusionTexture;
+		std::optional<Sampler> emissiveTexture;
 
 		AlphaMode alphaMode;
 		fpSingle alphaCutoff;
@@ -65,80 +68,32 @@ namespace akas {
 
 }
 
+AK_DEFINE_SMART_ENUM_SERIALIZE(akas, AlphaMode)
 
 namespace akd {
 
 	inline void serialize(akd::PValue& dst, const akas::Sampler& src) {
-		switch(src.minFilter) {
-			case akr::gl::FilterType::Nearest: dst["minFilter"].setStr("NEAREST"); break;
-			case akr::gl::FilterType::Linear:  dst["minFilter"].setStr("LINEAR");  break;
-			default: throw std::logic_error("Unsupported filter type.");
-		}
-		switch(src.minMipFilter) {
-			case akr::gl::MipFilterType::None:    dst["minMipFilter"].setStr("NONE");    break;
-			case akr::gl::MipFilterType::Nearest: dst["minMipFilter"].setStr("NEAREST"); break;
-			case akr::gl::MipFilterType::Linear:  dst["minMipFilter"].setStr("LINEAR");  break;
-		}
-		switch(src.magFilter) {
-			case akr::gl::FilterType::Nearest: dst["magFilter"].setStr("NEAREST"); break;
-			case akr::gl::FilterType::Linear:  dst["magFilter"].setStr("LINEAR");  break;
-			default: throw std::logic_error("Unsupported filter type.");
-		}
-		switch(src.clampS) {
-			case akr::gl::ClampType::Border: dst["clampS"].setStr("BORDER"); break;
-			case akr::gl::ClampType::Edge:   dst["clampS"].setStr("EDGE");   break;
-			case akr::gl::ClampType::Mirror: dst["clampS"].setStr("MIRROR"); break;
-			case akr::gl::ClampType::Repeat: dst["clampS"].setStr("REPEAT"); break;
-			default: throw std::logic_error("Unsupported clamp type.");
-		}
-		switch(src.clampT) {
-			case akr::gl::ClampType::Border: dst["clampT"].setStr("BORDER"); break;
-			case akr::gl::ClampType::Edge:   dst["clampT"].setStr("EDGE");   break;
-			case akr::gl::ClampType::Mirror: dst["clampT"].setStr("MIRROR"); break;
-			case akr::gl::ClampType::Repeat: dst["clampT"].setStr("REPEAT"); break;
-			default: throw std::logic_error("Unsupported clamp type.");
-		}
+		serialize(dst["imgAssetID"],   src.imgAssetID  );
+		serialize(dst["minFilter"],    src.minFilter   );
+		serialize(dst["minMipFilter"], src.minMipFilter);
+		serialize(dst["magFilter"],    src.magFilter   );
+		serialize(dst["clampS"],       src.clampS      );
+		serialize(dst["clampT"],       src.clampT      );
 	}
 
 	inline bool deserialize(akas::Sampler& dst, const akd::PValue& src) {
 		try {
 			akas::Sampler result;
-			{
-				auto& minFilterStr = src["minFilter"].asStr();
-				     if (minFilterStr == "NEAREST") result.minFilter = akr::gl::FilterType::Nearest;
-				else if (minFilterStr == "LINEAR")  result.minFilter = akr::gl::FilterType::Linear;
-				else return false;
-			}
-			{
-				auto& minMipFilterStr = src["minMipFilter"].asStr();
-			         if (minMipFilterStr == "NONE")    result.minMipFilter = akr::gl::MipFilterType::None;
-				else if (minMipFilterStr == "NEAREST") result.minMipFilter = akr::gl::MipFilterType::Nearest;
-				else if (minMipFilterStr == "LINEAR")  result.minMipFilter = akr::gl::MipFilterType::Linear;
-				else return false;
-			}
-			{
-				auto& magFilterStr = src["magFilter"].asStr();
-				     if (magFilterStr == "NEAREST") result.magFilter = akr::gl::FilterType::Nearest;
-				else if (magFilterStr == "LINEAR")  result.magFilter = akr::gl::FilterType::Linear;
-				else return false;
-			}
-			{
-				auto& clampSStr = src["clampS"].asStr();
-					 if (clampSStr == "BORDER") result.clampS = akr::gl::ClampType::Border;
-				else if (clampSStr == "EDGE")   result.clampS = akr::gl::ClampType::Edge;
-				else if (clampSStr == "MIRROR") result.clampS = akr::gl::ClampType::Mirror;
-				else if (clampSStr == "REPEAT") result.clampS = akr::gl::ClampType::Repeat;
-				else return false;
-			}
-			{
-				auto& clampTStr = src["clampT"].asStr();
-				     if (clampTStr == "BORDER") result.clampT = akr::gl::ClampType::Border;
-				else if (clampTStr == "EDGE")   result.clampT = akr::gl::ClampType::Edge;
-				else if (clampTStr == "MIRROR") result.clampT = akr::gl::ClampType::Mirror;
-				else if (clampTStr == "REPEAT") result.clampT = akr::gl::ClampType::Repeat;
-				else return false;
-			}
+
+			if (!deserialize(result.imgAssetID  , src["imgAssetID"]  )) return false;
+			if (!deserialize(result.minFilter   , src["minFilter"]   )) return false;
+			if (!deserialize(result.minMipFilter, src["minMipFilter"])) return false;
+			if (!deserialize(result.magFilter   , src["magFilter"]   )) return false;
+			if (!deserialize(result.clampS      , src["clampS"]      )) return false;
+			if (!deserialize(result.clampT      , src["clampT"]      )) return false;
+
 			dst = result;
+
 			return true;
 		} catch(const std::logic_error& /*e*/) {
 			return false;
@@ -151,46 +106,41 @@ namespace akd {
 		dst["roughnessFactor"].setDec(src.roughnessFactor);
 		serialize(dst["emmisiveFactor"], src.emmisiveFactor);
 
-		if (src.baseTexture) {
-			serialize(dst["baseTexture"]["id"],      src.baseTexture->first);
-			serialize(dst["baseTexture"]["sampler"], src.baseTexture->second);
-		}
+		if (src.baseTexture      ) serialize(dst["baseTexture"],       *src.baseTexture);
+		if (src.metalRoughTexture) serialize(dst["metalRoughTexture"], *src.metalRoughTexture);
+		if (src.normalTexture    ) serialize(dst["normalTexture"],     *src.normalTexture);
+		if (src.occlusionTexture ) serialize(dst["occlusionTexture"],  *src.occlusionTexture);
+		if (src.emissiveTexture  ) serialize(dst["emissiveTexture"],   *src.emissiveTexture);
 
-		if (src.metallicRoughnessTexture) {
-			serialize(dst["metallicRoughnessTexture"]["id"],      src.metallicRoughnessTexture->first);
-			serialize(dst["metallicRoughnessTexture"]["sampler"], src.metallicRoughnessTexture->second);
-		}
-
-		if (src.normalTexture) {
-			serialize(dst["normalTexture"]["id"],      src.normalTexture->first);
-			serialize(dst["normalTexture"]["sampler"], src.normalTexture->second);
-		}
-
-		if (src.occlusionTexture) {
-			serialize(dst["occlusionTexture"]["id"],      src.occlusionTexture->first);
-			serialize(dst["occlusionTexture"]["sampler"], src.occlusionTexture->second);
-		}
-
-		if (src.emissiveTexture) {
-			serialize(dst["emissiveTexture"]["id"],      src.emissiveTexture->first);
-			serialize(dst["emissiveTexture"]["sampler"], src.emissiveTexture->second);
-		}
-
-		switch(src.alphaMode) {
-			case akas::AlphaMode::Blend:  dst["alphaMode"].setStr("BLEND");  break;
-			case akas::AlphaMode::Mask:   dst["alphaMode"].setStr("MASK");   break;
-			case akas::AlphaMode::Opaque: dst["alphaMode"].setStr("OPAQUE"); break;
-			default: throw std::logic_error("Unsupported alpha mode.");
-		}
-
+		serialize(dst["alphaMode"], src.alphaMode);
 		dst["alphaCutoff"].setDec(src.alphaCutoff);
 		dst["doubleSided"].setBool(src.doubleSided);
 	}
 
-	inline bool deserialize(akas::Material& /*dst*/, const akd::PValue& /*src*/) {
+	inline bool deserialize(akas::Material& dst, const akd::PValue& src) {
 		try {
-		} catch(const std::logic_error& /*e*/) {}
-		return false;
+			akas::Material result;
+
+			deserialize(result.baseColour, src["baseColour"]);
+			result.metallicFactor = src["metallicFactor"].as<fpSingle>();
+			result.roughnessFactor = src["roughnessFactor"].as<fpSingle>();
+			deserialize(result.emmisiveFactor, src["emmisiveFactor"]);
+
+			if (src.exists("baseTexture"      )) result.baseTexture       = deserialize<akas::Sampler>(src["baseTexture"]      );
+			if (src.exists("metalRoughTexture")) result.metalRoughTexture = deserialize<akas::Sampler>(src["metalRoughTexture"]);
+			if (src.exists("normalTexture"    )) result.normalTexture     = deserialize<akas::Sampler>(src["normalTexture"]    );
+			if (src.exists("occlusionTexture" )) result.occlusionTexture  = deserialize<akas::Sampler>(src["occlusionTexture"] );
+			if (src.exists("emissiveTexture"  )) result.emissiveTexture   = deserialize<akas::Sampler>(src["emissiveTexture"]  );
+
+			deserialize(result.alphaMode, src["alphaMode"]);
+			result.alphaCutoff = src["alphaCutoff"].as<fpSingle>();
+			result.doubleSided = src["doubleSided"].asBool();
+
+			dst = result;
+			return true;
+		} catch(const std::logic_error& /*e*/) {
+			return false;
+		}
 	}
 
 }

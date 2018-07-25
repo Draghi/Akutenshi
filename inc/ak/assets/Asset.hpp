@@ -23,7 +23,7 @@
 #include <ak/data/PValue.hpp>
 #include <ak/data/SUID.hpp>
 #include <ak/filesystem/Path.hpp>
-#include <ak/PrimitiveTypes.hpp>
+#include <ak/Macros.hpp>
 
 namespace akas { struct AssetInfo; }
 
@@ -34,7 +34,7 @@ namespace akd {
 
 namespace akas {
 
-	enum class AssetType : uint32 {
+	AK_DEFINE_SMART_ENUM_CLASS(AssetType,
 		Animation,
 		Material,
 		Mesh,
@@ -42,8 +42,8 @@ namespace akas {
 		Scene,
 		Sound,
 		Texture,
-		Image,
-	};
+		Image
+	)
 
 	// @todo Add source field
 	struct AssetInfo final {
@@ -54,36 +54,9 @@ namespace akas {
 	};
 }
 
+AK_DEFINE_SMART_ENUM_SERIALIZE(akas, AssetType)
+
 namespace akd {
-
-	inline void serialize(akd::PValue& dst, akas::AssetType src) {
-		switch(src) {
-			case akas::AssetType::Animation: dst.setStr("ANIMATION");      break;
-			case akas::AssetType::Material:  dst.setStr("MATERIAL");       break;
-			case akas::AssetType::Mesh:      dst.setStr("MESH");           break;
-			case akas::AssetType::Prefab:    dst.setStr("PREFAB");         break;
-			case akas::AssetType::Scene:     dst.setStr("SCENE");          break;
-			case akas::AssetType::Sound:     dst.setStr("SOUND");          break;
-			case akas::AssetType::Texture:   dst.setStr("TEXTURE");        break;
-			case akas::AssetType::Image:     dst.setStr("IMAGE");          break;
-			default: throw std::logic_error("Missing asset type mapping"); break;
-		}
-	}
-
-	inline bool deserialize(akas::AssetType& dst, const akd::PValue& src) {
-		try {
-			const auto& srcStr = src.asStr();
-			if (srcStr == "ANIMATION") { dst = akas::AssetType::Animation; return true; }
-			if (srcStr == "MATERIAL" ) { dst = akas::AssetType::Material;  return true; }
-			if (srcStr == "MESH"     ) { dst = akas::AssetType::Mesh;      return true; }
-			if (srcStr == "PREFAB"   ) { dst = akas::AssetType::Prefab;    return true; }
-			if (srcStr == "SCENE"    ) { dst = akas::AssetType::Scene;     return true; }
-			if (srcStr == "SOUND"    ) { dst = akas::AssetType::Sound;     return true; }
-			if (srcStr == "TEXTURE"  ) { dst = akas::AssetType::Texture;   return true; }
-			if (srcStr == "IMAGE"    ) { dst = akas::AssetType::Image;     return true; }
-		} catch(const std::logic_error& /*e*/) {}
-		return false;
-	}
 
 	inline void serialize(akd::PValue& dst, const akas::AssetInfo& src) {
 		serialize(dst["identifier"], src.identifier);

@@ -53,7 +53,7 @@ static akas::ConversionInfo getAssetInfo(akd::PValue& cfg, const akas::Conversio
 	auto& entry = cfg[categoryName].atOrSet(entryName);
 	auto& defEntry = cfg[categoryName].atOrSet("");
 
-	auto defPathStr = (akfs::Path(defEntry.asStrOrDef("data/"))/defaultPath).str();
+	auto defPathStr = (akfs::Path(defEntry.asStrOrDef("data/"))/defaultPath).str(); // This isn't right
 	auto info = convertHelper.findConversionInfo(
 		entryName,
 		akd::tryDeserialize<akd::SUID>(entry.atOrDef("identifier")),
@@ -100,23 +100,15 @@ bool akas::gltf::convertGLTFFile(akas::ConversionHelper& convertHelper, const ak
 	for(akSize i = 0; i < asset.images.size(); i++) {
 		auto& image = asset.images[i];
 		auto srcPath = root/image.uri;
+		auto info = convertHelper.tryFindAssetInfoBySource(srcPath);
+		if (!info) info = convertHelper.tryFindAssetInfoByDestination(convertHelper.getDestinationSuggestionFor(root, image.uri));
 
-		auto info = getAssetInfo(cfg, convertHelper, "images", image.name, akfs::Path(image.uri).filename() + ".akres", srcPath);
-		images.push_back(info);
-
-		if (!akfs::exists(srcPath)) {
-			akl::Logger("GLTF").warn("Missing image asset: ", srcPath.str());
-			continue;
+		if (!info) {
+			akl::Logger("GLTF").warn("Could not find asset info for '", srcPath.str(), "' for '", image.name);
+			return false;
 		}
 
-		if (akfs::exists(info.destination) && akfs::exists(info.destination) && akfs::exists(akfs::Path(info.destination).clearExtension())) {
-			auto srcModifiedTime = akfs::modifiedTime(srcPath);
-			auto dstModifiedTime = akfs::modifiedTime(akfs::Path(info.destination).clearExtension());
-			if (dstModifiedTime >= srcModifiedTime) continue;
-		}
-
-		convertHelper.registerAsset(info, srcPath, srcPath);
-		addedConversion = true;
+		images.push_back(*info);
 	}
 
 	// ////////////////////////// //

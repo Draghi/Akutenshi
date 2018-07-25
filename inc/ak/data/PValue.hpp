@@ -487,9 +487,82 @@ namespace akd {
 }
 
 namespace akd {
+
+	// /////////////////////// //
+	// // Container Helpers // //
+	// /////////////////////// //
+
+	template<typename type_t, typename alloc_t> void serialize(akd::PValue& dst, const std::vector<type_t, alloc_t>& val) {
+		if (!dst.isArr()) dst.setArr();
+		for(akSize i = 0; i < val.size(); i++) serialize(dst[i], val[i]);
+	}
+
+	template<typename type_t, size_t l> void serialize(akd::PValue& dst, const std::array<type_t, l>& val) {
+		if (!dst.isArr()) dst.setArr();
+		for(akSize i = 0; i < val.size(); i++) serialize(dst[i], val[i]);
+	}
+
+	template<typename type_t, typename alloc_t> void serialize(akd::PValue& dst, const std::deque<type_t, alloc_t>& val) {
+		if (!dst.isArr()) dst.setArr();
+		for(akSize i = 0; i < val.size(); i++) serialize(dst[i], val[i]);
+	}
+
+	template<typename type_t, typename type2_t> void serialize(akd::PValue& dst, const std::pair<type_t, type2_t>& val, akSize offset = 0) {
+		if (!dst.isArr()) dst.setArr();
+		if (dst.size() < offset + 2) dst.asArr().resize(offset + 2);
+		serialize(dst[offset + 0], val.first);
+		serialize(dst[offset + 1], val.second);
+	}
+
+	// /////////////////////// //
+	// // Serialize Helpers // //
+	// /////////////////////// //
+
 	template<typename type_t> PValue serialize(const type_t& val) {
 		PValue result; serialize(result, val);
 		return result;
+	}
+
+
+	// ///////////////////////// //
+	// // Deserialize Helpers // //
+	// ///////////////////////// //
+
+	template<typename type_t, typename alloc_t> bool deserialize(std::vector<type_t, alloc_t>& dst, const akd::PValue& val) {
+		if (!val.isArr()) return false;
+		for(akSize i = 0; i < val.size(); i++) {
+			if (i >= dst.size()) dst.push_back(type_t());
+			if (!deserialize(dst[i], val[i])) return false;
+		}
+		return true;
+	}
+
+	template<typename type_t, size_t l> bool deserialize(std::array<type_t, l>& dst, const akd::PValue& val) {
+		if (!val.isArr()) return false;
+		for(akSize i = 0; i < val.size(); i++) {
+			if (!deserialize(dst[i], val[i])) return false;
+		}
+		return true;
+	}
+
+	template<typename type_t, typename alloc_t> bool deserialize(std::deque<type_t, alloc_t>& dst, const akd::PValue& val) {
+		if (!val.isArr()) return false;
+		for(akSize i = 0; i < val.size(); i++) {
+			if (i >= dst.size()) dst.push_back(type_t());
+			if (!deserialize(dst[i], val[i])) return false;
+		}
+		return true;
+	}
+
+	template<typename type_t, typename type2_t> bool deserialize(std::pair<type_t, type2_t>& dst, const akd::PValue& val, akSize offset = 0) {
+		if ((!val.isArr()) || (val.size() < offset + 2)) return false;
+
+		std::pair<type_t, type2_t> result;
+		if (!deserialize(result.first,  val[offset + 0])) return false;
+		if (!deserialize(result.second, val[offset + 1])) return false;
+
+		dst = result;
+		return true;
 	}
 
 	template<typename type_t> std::optional<type_t> tryDeserialize(const PValue& root) {
@@ -502,6 +575,10 @@ namespace akd {
 		if (result) return *result;
 		else throw std::logic_error("Failed to deserialize value.");
 	}
+
+	// ///////////////// //
+	// // I/O Helpers // //
+	// ///////////////// //
 
 	template<typename type_t, typename callback_t> bool deserializeFromFile(type_t& dst, const akfs::Path& filepath, callback_t callback) {
 		akd::PValue data = callback(filepath);

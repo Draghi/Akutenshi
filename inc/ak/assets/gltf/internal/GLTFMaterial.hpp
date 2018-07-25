@@ -25,15 +25,13 @@ namespace akas {
 	namespace gltf {
 		struct Asset;
 		struct Material;
-	} /* namespace gltf */
-} /* namespace akas */
+	}
+}
 
 namespace akas {
 	namespace gltf {
 		akas::Material proccessGLTFMaterial(const Asset& asset, const Material& material, const std::vector<akas::ConversionInfo>& textureAssetIDs);
 	}
 }
-
-
 
 #endif /* AKRES_GLTFMATERIAL_HPP_ */

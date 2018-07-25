@@ -18,8 +18,10 @@
 
 #include <GL/gl4.h>
 #include <algorithm>
+#include <memory>
 #include <stdexcept>
 
+#include <ak/assets/Image.hpp>
 #include <ak/math/Scalar.hpp>
 
 using namespace akr::gl;
@@ -29,6 +31,7 @@ static GLenum akToGLTarget(TexTarget target);
 static GLenum cubemapTargetToGlTarget(CubemapTarget akTarget);
 static uint32 akToGLTexStorage(TexFormat format, TexStorage storage);
 static uint32 akToGLComponents(TexFormat format);
+static akSize akTypeToSize(DataType dType);
 static uint akToGLType(DataType dType);
 static akSize getDataTypeSize(DataType dType);
 
@@ -169,8 +172,13 @@ void akr::gl::loadTexData3D(akSize miplevel, TexFormat format, DataType dataType
 	glTexSubImage3D(GL_TEXTURE_3D, miplevel, xOff, yOff, zOff, width, height, depth, akToGLComponents(format), akToGLType(dataType), data);
 }
 
-void akr::gl::loadTexDataCubemap(CubemapTarget cubemap, akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize height, akSize xOff, akSize yOff) {
-	glTexSubImage2D(cubemapTargetToGlTarget(cubemap), miplevel, xOff, yOff, width, height, akToGLComponents(format), akToGLType(dataType), data);
+void akr::gl::loadTexDataCubemap(CubemapTarget cubemap, akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize height, akSize xOff, akSize yOff, bool alreadyInverted) {
+	if (!alreadyInverted) {
+		auto dataImg = akas::transformImageData(data, static_cast<int>(format)*akTypeToSize(dataType), width, height, akas::ImageRotation::None, 0, 0, 0, 0, false, true);
+		glTexSubImage2D(cubemapTargetToGlTarget(cubemap), miplevel, xOff, yOff, width, height, akToGLComponents(format), akToGLType(dataType), dataImg.get());
+	} else {
+		glTexSubImage2D(cubemapTargetToGlTarget(cubemap), miplevel, xOff, yOff, width, height, akToGLComponents(format), akToGLType(dataType), data);
+	}
 }
 
 void akr::gl::loadTexData1DArray(akSize miplevel, TexFormat format, DataType dataType, const void* data, akSize width, akSize layer, akSize layers, akSize xOff) {
@@ -333,6 +341,7 @@ static uint32 akToGLTexStorage(TexFormat format, TexStorage storage) {
 			switch(storage) {
 				case TexStorage::Byte:      return GL_R8;
 				case TexStorage::Byte_sRGB: throw std::logic_error("Texture storage format 'sR' is not supported.");
+				case TexStorage::Short:     return GL_R16;
 				case TexStorage::Half:      return GL_R16F;
 				case TexStorage::Single:    return GL_R32F;
 			}
@@ -342,6 +351,7 @@ static uint32 akToGLTexStorage(TexFormat format, TexStorage storage) {
 			switch(storage) {
 				case TexStorage::Byte:      return GL_RG8;
 				case TexStorage::Byte_sRGB: throw std::logic_error("Texture storage format 'sRG' is not supported.");
+				case TexStorage::Short:     return GL_RG16;
 				case TexStorage::Half:      return GL_RG16F;
 				case TexStorage::Single:    return GL_RG32F;
 			}
@@ -351,6 +361,7 @@ static uint32 akToGLTexStorage(TexFormat format, TexStorage storage) {
 			switch(storage) {
 				case TexStorage::Byte:      return GL_RGB8;
 				case TexStorage::Byte_sRGB: return GL_SRGB8;
+				case TexStorage::Short:     return GL_RGB16;
 				case TexStorage::Half:      return GL_RGB16F;
 				case TexStorage::Single:    return GL_RGB32F;
 			}
@@ -360,6 +371,7 @@ static uint32 akToGLTexStorage(TexFormat format, TexStorage storage) {
 			switch(storage) {
 				case TexStorage::Byte:      return GL_RGBA8;
 				case TexStorage::Byte_sRGB: return GL_SRGB8_ALPHA8;
+				case TexStorage::Short:     return GL_RGBA16;
 				case TexStorage::Half:      return GL_RGBA16F;
 				case TexStorage::Single:    return GL_RGBA32F;
 			}
@@ -373,6 +385,19 @@ static uint32 akToGLComponents(TexFormat format) {
 		case TexFormat::RG:   return GL_RG;
 		case TexFormat::RGB:  return GL_RGB;
 		case TexFormat::RGBA: return GL_RGBA;
+	}
+}
+
+static akSize akTypeToSize(DataType dType) {
+	switch(dType) {
+		case DataType::Int8: return 1;
+		case DataType::Int16: return 2;
+		case DataType::Int32: return 4;
+		case DataType::UInt8: return 1;
+		case DataType::UInt16: return 2;
+		case DataType::UInt32: return 4;
+		case DataType::Single: return 4;
+		case DataType::Double: return 8;
 	}
 }
 

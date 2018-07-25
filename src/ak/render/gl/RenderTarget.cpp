@@ -231,6 +231,7 @@ static uint32 akToGLTexStorage(TexFormat format, TexStorage storage) {
 			switch(storage) {
 				case TexStorage::Byte:      return GL_R8;
 				case TexStorage::Byte_sRGB: throw std::logic_error("Texture storage format 'sR' is not supported.");
+				case TexStorage::Short:     return GL_R16;
 				case TexStorage::Half:      return GL_R16F;
 				case TexStorage::Single:    return GL_R32F;
 			}
@@ -240,6 +241,7 @@ static uint32 akToGLTexStorage(TexFormat format, TexStorage storage) {
 			switch(storage) {
 				case TexStorage::Byte:      return GL_RG8;
 				case TexStorage::Byte_sRGB: throw std::logic_error("Texture storage format 'sRG' is not supported.");
+				case TexStorage::Short:     return GL_RG16;
 				case TexStorage::Half:      return GL_RG16F;
 				case TexStorage::Single:    return GL_RG32F;
 			}
@@ -249,6 +251,7 @@ static uint32 akToGLTexStorage(TexFormat format, TexStorage storage) {
 			switch(storage) {
 				case TexStorage::Byte:      return GL_RGB8;
 				case TexStorage::Byte_sRGB: return GL_SRGB8;
+				case TexStorage::Short:     return GL_RGB16;
 				case TexStorage::Half:      return GL_RGB16F;
 				case TexStorage::Single:    return GL_RGB32F;
 			}
@@ -258,6 +261,7 @@ static uint32 akToGLTexStorage(TexFormat format, TexStorage storage) {
 			switch(storage) {
 				case TexStorage::Byte:      return GL_RGBA8;
 				case TexStorage::Byte_sRGB: return GL_SRGB8_ALPHA8;
+				case TexStorage::Short:     return GL_RGBA16;
 				case TexStorage::Half:      return GL_RGBA16F;
 				case TexStorage::Single:    return GL_RGBA32F;
 			}

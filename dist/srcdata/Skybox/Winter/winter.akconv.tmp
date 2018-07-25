@@ -1,25 +1,41 @@
 {
-	"type": "TEXTURE",
+	"type": "Texture",
 	"config":{
-		"type":"CUBEMAP",
+		"type":"TexCubemap",
 		"levels":[
 			[
-				{"image":"pX.png"},
-				{"image":"pY.png"},
-				{"image":"pZ.png"},
-				{"image":"nX.png"},
-				{"image":"nY.png"},
-				{"image":"nZ.png"},
+				{
+					"destination":"pX.png.akres",
+					"source":"pX.png"
+				},
+				{
+					"destination":"pY.png.akres",
+					"source":"pY.png"
+				},
+				{
+					"destination":"pZ.png.akres",
+					"source":"pZ.png"
+				},
+				{
+					"destination":"nX.png.akres",
+					"source":"nX.png"
+				},
+				{
+					"destination":"nY.png.akres",
+					"source":"nY.png"
+				},
+				{
+					"destination":"nZ.png.akres",
+					"source":"nZ.png"
+				},
 			],
 		],
-		"clamp":{
-			"S":"EDGE",
-			"T":"EDGE"
-		},
-		"filter":{
-			"min":"LINEAR",
-			"max":"LINEAR",
-			"mip":"NONE",
-		}
+		"format":"RGB"
+		"storage":"Byte"
+		"clampHorz":"Edge",
+		"clampVert":"Edge",
+		"filterMin":"Linear",
+		"filterMax":"Linear",
+		"filterMip":"None"
 	}
 }

@@ -31,7 +31,7 @@
 
 using namespace akas::gltf;
 
-static std::optional<std::pair<akd::SUID, akas::Sampler>> extractTextureInfo(const Asset& asset, gltfID textureID, const std::vector<akas::ConversionInfo>& textureAssetIDs);
+static std::optional<akas::Sampler> extractTextureInfo(const Asset& asset, gltfID textureID, const std::vector<akas::ConversionInfo>& textureAssetIDs);
 
 akas::Material akas::gltf::proccessGLTFMaterial(const Asset& asset, const Material& material, const std::vector<akas::ConversionInfo>& textureAssetIDs) {
 
@@ -54,7 +54,7 @@ akas::Material akas::gltf::proccessGLTFMaterial(const Asset& asset, const Materi
 }
 
 
-static std::optional<std::pair<akd::SUID, akas::Sampler>> extractTextureInfo(const Asset& asset, gltfID textureID, const std::vector<akas::ConversionInfo>& textureAssetIDs) {
+static std::optional<akas::Sampler> extractTextureInfo(const Asset& asset, gltfID textureID, const std::vector<akas::ConversionInfo>& textureAssetIDs) {
 	if (textureID < 0) return {};
 	auto& texture = asset.textures[textureID];
 
@@ -88,8 +88,5 @@ static std::optional<std::pair<akd::SUID, akas::Sampler>> extractTextureInfo(con
 	else if (sampler.wrapT == Wrap::Repeat        ) { wrapT = akr::gl::ClampType::Repeat; }
 	else throw std::runtime_error("Unsupported WrapT.");
 
-	return {{
-		textureAssetIDs[texture.sourceID].identifier,
-		{minFilter, mipFilter, magFilter, wrapS, wrapT}
-	}};
+	return {{textureAssetIDs[texture.sourceID].identifier, minFilter, mipFilter, magFilter, wrapS, wrapT}};
 }
