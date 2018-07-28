@@ -70,8 +70,8 @@ namespace akd {
 			dst = akas::AssetInfo{
 				akd::deserialize<akd::SUID>(src["identifier"]),
 				akd::deserialize<akas::AssetType>(src["type"]),
-				src["displayName"].asStr(),
-				akfs::Path(src["source"].asStr())
+				src["displayName"].getStr(),
+				akfs::Path(src["source"].getStr())
 			};
 			return true;
 		} catch(const std::logic_error& /*e*/) {

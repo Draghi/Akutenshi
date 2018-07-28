@@ -105,7 +105,6 @@ namespace akas {
 				if (source) {
 					akl::Logger("ConvertionHelper").test_warn(m_assetsBySource.emplace(*source,  std::make_pair(AssetType::Image, id)).second, "Source conflict for: " + info.destination.str());
 				}
-
 			}
 
 			void registerAsset(ConversionInfo info, const akas::Mesh& mesh, const std::optional<akfs::Path>& source) {

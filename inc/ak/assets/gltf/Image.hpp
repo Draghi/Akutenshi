@@ -43,7 +43,7 @@ namespace akas {
 		};
 
 		inline Image extractImage(const akd::PValue& imageData) {
-			std::string uri = imageData.atOrDef("uri").asStrOrDef("");
+			std::string uri = imageData.atOrDef("uri").getStrOrDef("");
 			std::vector<uint8> dataURI;
 			if (uri.rfind("data:", 0) == 0) { //@todo Test
 				dataURI = akd::base64::decode(uri.substr(uri.find(',')));
@@ -51,13 +51,13 @@ namespace akas {
 			}
 
 			MimeType mimeType;
-			std::string mimeTypeStr = imageData.atOrDef("mimeType").asStrOrDef("");
+			std::string mimeTypeStr = imageData.atOrDef("mimeType").getStrOrDef("");
 			if (mimeTypeStr == "image/jpeg") mimeType = MimeType::jpeg;
 			else if (mimeTypeStr == "image/png") mimeType = MimeType::png;
 			else mimeType = MimeType::undefined;
 
 			return Image{
-				imageData.atOrDef("name").asStrOrDef(""),
+				imageData.atOrDef("name").getStrOrDef(""),
 				uri, dataURI, mimeType,
 				imageData.atOrDef("bufferView").asOrDef(-1)
 			};

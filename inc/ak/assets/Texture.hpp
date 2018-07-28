@@ -68,10 +68,10 @@ namespace akd {
 		serialize(dst["image"],  src.image);
 		serialize(dst["rotate"], src.rotate);
 		  dst["layer"].setUInt(src.layer);
-		dst["offsetX"].setInt( src.offsetX);
-		dst["offsetY"].setInt( src.offsetY);
-		  dst["cropX"].setInt( src.cropX);
-		  dst["cropY"].setInt( src.cropY);
+		dst["offsetX"].setSInt( src.offsetX);
+		dst["offsetY"].setSInt( src.offsetY);
+		  dst["cropX"].setSInt( src.cropX);
+		  dst["cropY"].setSInt( src.cropY);
 	}
 
 	inline bool deserialize(akas::ImageReference& dst, const akd::PValue& src) {

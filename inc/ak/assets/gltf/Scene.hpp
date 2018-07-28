@@ -35,11 +35,11 @@ namespace akas {
 		inline Scene extractScene(const akd::PValue& val) {
 			std::vector<gltfID> nodeIDs;
 			if (val.exists("nodes")) {
-				auto& arr = val["nodes"].asArr();
+				auto& arr = val["nodes"].getArr();
 				nodeIDs.reserve(arr.size());
 				for(auto& node : arr) nodeIDs.push_back(node.as<gltfID>());
 			}
-			return Scene{val.atOrDef("name").asStrOrDef(""), nodeIDs};
+			return Scene{val.atOrDef("name").getStrOrDef(""), nodeIDs};
 		}
 
 	}

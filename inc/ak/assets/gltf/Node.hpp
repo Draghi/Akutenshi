@@ -47,7 +47,7 @@ namespace akas {
 		inline Node extractNode(const akd::PValue& val) {
 			std::vector<gltfID> nodes;
 			if (val.exists("children")) {
-				auto& arr = val["children"].asArr();
+				auto& arr = val["children"].getArr();
 				nodes.reserve(arr.size());
 				for(auto& node : arr) nodes.push_back(node.as<gltfID>());
 			}
@@ -61,7 +61,7 @@ namespace akas {
 				if (!akd::deserialize(rotation, val.atOrDef("rotation")))    rotation = akm::Quat(1,0,0,0);
 				if (!akd::deserialize(scale,    val.atOrDef("scale")))          scale = akm::Vec3(0,0,0);
 			}
-			return Node{val.atOrDef("name").asStrOrDef(""), nodes, position, rotation, scale, val.atOrDef("mesh").asOrDef<gltfID>(-1), val.atOrDef("skin").asOrDef<gltfID>(-1)};
+			return Node{val.atOrDef("name").getStrOrDef(""), nodes, position, rotation, scale, val.atOrDef("mesh").asOrDef<gltfID>(-1), val.atOrDef("skin").asOrDef<gltfID>(-1)};
 		}
 	}
 }

@@ -79,7 +79,7 @@ namespace ake {
 				if (!akd::fromMsgPack(dTree, data)) throw std::runtime_error(ak::buildString("Failed to parse mesh: ", filename.str()));
 
 				type_t result; // @TODO Remove hack for loading mesh eventually
-				if (!akd::deserialize(result, dTree.asObj().begin()->second["mesh"])) throw std::runtime_error(ak::buildString("Failed to deserialize mesh: ", filename.str()));
+				if (!akd::deserialize(result, dTree.getObj().begin()->second["mesh"])) throw std::runtime_error(ak::buildString("Failed to deserialize mesh: ", filename.str()));
 				return result;
 			}
 
@@ -127,8 +127,8 @@ namespace ake {
 				std::shared_ptr<akr::gl::Texture> texResult;
 				akr::gl::TexTarget texTarget = akr::gl::TexTarget::Tex1D;
 
-				std::string textureType = textureConfig["type"].asStr();
-				if (textureConfig["hdr"].asBool()) {
+				std::string textureType = textureConfig["type"].getStr();
+				if (textureConfig["hdr"].getBool()) {
 					akd::ImageF32 image;
 					if (!akd::deserialize(textureConfig["image"], image)) throw std::runtime_error(ak::buildString("Failed to deserialize texture, invalid data: ", filename.str()));
 						 if (textureType == "2D")      { texResult = std::make_shared<akr::gl::Texture>(     *akr::gl::createTex2D(0, akr::gl::TexStorage::Single, image)); texTarget = akr::gl::TexTarget::Tex2D; }

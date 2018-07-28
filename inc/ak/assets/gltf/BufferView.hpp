@@ -43,14 +43,14 @@ namespace akas {
 
 		inline BufferView extractBufferView(const akd::PValue& bufferViewData) {
 			static constexpr auto extractBufferTarget = [](const akd::PValue& bufferTargetData) {
-				std::string target = bufferTargetData.asOrDef("");
+				std::string target = bufferTargetData.getStrOrDef("");
 				if (target == "ARRAY_BUFFER") return BufferTarget::Array;
 				if (target == "ELEMENT_ARRAY_BUFFER") return BufferTarget::Element;
 				return BufferTarget::None;
 			};
 
 			return BufferView{
-				bufferViewData.atOrDef("name").asStrOrDef(""),
+				bufferViewData.atOrDef("name").getStrOrDef(""),
 				bufferViewData["buffer"].as<gltfID>(),
 				bufferViewData.atOrDef("byteOffset").asOrDef<int32>(0),
 				bufferViewData["byteLength"].as<int32>(),

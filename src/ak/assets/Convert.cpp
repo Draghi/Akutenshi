@@ -79,8 +79,8 @@ void akas::convertDirectory(const akfs::Path& dir) {
 			ConversionHelper convertHelper(akfs::Path("data/"), true);
 
 			akd::PValue convData = akd::fromJsonFile(*assetPathIter);
-			auto iter = proccessFunctions.find(convData["type"].asStr());
-			if (iter == proccessFunctions.end()) { akl::Logger("Convert").warn("Could not proccess type '",  convData["type"].asStr(), "' in file: ", (*assetPathIter).str()); continue; }
+			auto iter = proccessFunctions.find(convData["type"].getStr());
+			if (iter == proccessFunctions.end()) { akl::Logger("Convert").warn("Could not proccess type '",  convData["type"].getStr(), "' in file: ", (*assetPathIter).str()); continue; }
 
 			if (iter->second(convertHelper, akfs::Path(*assetPathIter).pop_back(), convData)) proccessCount++;
 
@@ -123,10 +123,10 @@ static void writeCopies(ConversionHelper& state) {
 static bool convertTexture(ConversionHelper& convertHelper, const akfs::Path& root, akd::PValue& cfg) {
 	auto& texCfg = cfg["config"];
 
-	auto& levelsCfg = texCfg["levels"].asArr();
+	auto& levelsCfg = texCfg["levels"].getArr();
 	for(auto levelCfg = levelsCfg.begin(); levelCfg != levelsCfg.end(); levelCfg++) {
-		for(auto imgCfg = levelCfg->asArr().begin(); imgCfg != levelCfg->asArr().end(); imgCfg++) {
-			auto& source = imgCfg->at("source").asStr();
+		for(auto imgCfg = levelCfg->getArr().begin(); imgCfg != levelCfg->getArr().end(); imgCfg++) {
+			auto& source = imgCfg->at("source").getStr();
 
 		}
 	}
@@ -136,17 +136,17 @@ static bool convertTexture(ConversionHelper& convertHelper, const akfs::Path& ro
 }
 
 static bool convertImage(ConversionHelper& state, const akfs::Path& root, akd::PValue& cfg) {
-	auto srcPath = root/akfs::Path(cfg.at("source").asStr());
+	auto srcPath = root/akfs::Path(cfg.at("source").getStr());
 
 	auto info = state.findConversionInfo(
 		srcPath.filename() + ".akres",
 		akd::tryDeserialize<akd::SUID>(cfg.atOrDef("identifier")),
 		srcPath,
 		cfg["destination"].tryAs<std::string>(),
-		state.getDestinationSuggestionFor(root, cfg.at("source").asStr())
+		state.getDestinationSuggestionFor(root, cfg.at("source").getStr())
 	);
 
-	cfg.atOrSet("identifier").setPValue(akd::serialize(info.identifier));
+	akd::serialize(cfg.atOrSet("identifier"), info.identifier);
 	if (cfg.atOrDef("remapPaths").asOrDef<bool>(false)) cfg.atOrSet("destination").setStr(info.destination.str());
 
 	if (!akfs::exists(srcPath)) {

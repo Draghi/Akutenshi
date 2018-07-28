@@ -65,7 +65,7 @@ namespace akas {
 
 		inline AnimationSampler extractAnimationSampler(const akd::PValue& animationSamplerData) {
 			Interpolation interpolationType;
-			std::string interpolationTypeStr = animationSamplerData.atOrDef("interpolation").asStrOrDef("LINEAR");
+			std::string interpolationTypeStr = animationSamplerData.atOrDef("interpolation").getStrOrDef("LINEAR");
 
 			if (interpolationTypeStr == "LINEAR") interpolationType = Interpolation::Linear;
 			else if (interpolationTypeStr == "STEP") interpolationType = Interpolation::Step;
@@ -81,7 +81,7 @@ namespace akas {
 
 		inline AnimationTarget extractAnimationTarget(const akd::PValue& animationTargetData) {
 			AnimationType animationType;
-			std::string animationTypeStr = animationTargetData["path"].asStr();
+			std::string animationTypeStr = animationTargetData["path"].getStr();
 
 			if (animationTypeStr == "translation")   animationType = AnimationType::Translation;
 			else if (animationTypeStr == "rotation") animationType = AnimationType::Rotation;
@@ -104,17 +104,17 @@ namespace akas {
 
 		inline Animation extractAnimation(const akd::PValue& animationData) {
 			std::vector<AnimationChannel> channels;
-			auto& channelArr = animationData["channels"].asArr();
+			auto& channelArr = animationData["channels"].getArr();
 			channels.reserve(channelArr.size());
 			for(auto& channel : channelArr) channels.push_back(extractAnimationChannel(channel));
 
 			std::vector<AnimationSampler> samplers;
-			auto& samplerArr = animationData["samplers"].asArr();
+			auto& samplerArr = animationData["samplers"].getArr();
 			samplers.reserve(samplerArr.size());
 			for(auto& sampler : samplerArr) samplers.push_back(extractAnimationSampler(sampler));
 
 			return Animation {
-				animationData.atOrDef("name").asStrOrDef(""),
+				animationData.atOrDef("name").getStrOrDef(""),
 				channels,
 				samplers
 			};

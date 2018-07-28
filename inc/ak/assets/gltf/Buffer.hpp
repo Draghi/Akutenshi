@@ -35,7 +35,7 @@ namespace akas {
 		};
 
 		inline Buffer extractBuffer(const akd::PValue& bufferData) {
-			std::string uri = bufferData.atOrDef("uri").asStrOrDef("");
+			std::string uri = bufferData.atOrDef("uri").getStrOrDef("");
 			std::vector<uint8> dataURI;
 			if (uri.rfind("data:", 0) == 0) { //@todo Test
 				dataURI = akd::base64::decode(uri.substr(uri.find(',')));
@@ -43,7 +43,7 @@ namespace akas {
 			}
 
 			return Buffer{
-				bufferData.atOrDef("name").asStrOrDef(""),
+				bufferData.atOrDef("name").getStrOrDef(""),
 				uri,
 				dataURI,
 				bufferData["byteLength"].as<int32>()

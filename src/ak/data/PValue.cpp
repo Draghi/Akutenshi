@@ -24,163 +24,163 @@ using namespace akd;
 // // Values // //
 // //////////// //
 
-PValue::obj_t& PValue::asObj() {
+PValue::obj_t& PValue::getObj() {
 	if (isObj()) return m_value.oVal;
 	throw std::logic_error("PValue does not contain an object.");
 }
 
-PValue::arr_t& PValue::asArr() {
+PValue::arr_t& PValue::getArr() {
 	if (isArr()) return m_value.aVal;
 	throw std::logic_error("PValue does not contain an array.");
 }
 
-PValue::str_t& PValue::asStr() {
+PValue::str_t& PValue::getStr() {
 	if (isStr()) return m_value.sVal;
 	throw std::logic_error("PValue does not contain an string.");
 }
 
-PValue::int_t& PValue::asInt() {
+PValue::sint_t& PValue::getSInt() {
 	if (isSInt()) return m_value.iVal;
 	throw std::logic_error("PValue does not contain a signed integer.");
 }
 
-PValue::uint_t& PValue::asUInt() {
+PValue::uint_t& PValue::getUInt() {
 	if (isUInt()) return m_value.uVal;
 	throw std::logic_error("PValue does not contain an unsigned integer.");
 }
 
-PValue::dec_t& PValue::asDec() {
+PValue::dec_t& PValue::getDec() {
 	if (isDec()) return m_value.dVal;
 	throw std::logic_error("PValue does not contain a floating point number.");
 }
 
-PValue::bool_t& PValue::asBool() {
+PValue::bool_t& PValue::getBool() {
 	if (isBool()) return m_value.bVal;
 	throw std::logic_error("PValue does not contain a boolean.");
 }
 
-PValue::bin_t& PValue::asBin() {
+PValue::bin_t& PValue::getBin() {
 	if (isBin()) return m_value.binVal;
 	throw std::logic_error("PValue does not contain binary data.");
 }
 
-PValue::obj_t& PValue::asObjOrSet(const PValue::obj_t& val) {
+PValue::obj_t& PValue::getObjOrSet(const PValue::obj_t& val) {
 	if (!isObj()) setObj(val);
 	return m_value.oVal;
 }
 
-PValue::arr_t& PValue::asArrOrSet(const PValue::arr_t& val) {
+PValue::arr_t& PValue::getArrOrSet(const PValue::arr_t& val) {
 	if (!isArr()) setArr(val);
 	return m_value.aVal;
 }
 
-PValue::str_t& PValue::asStrOrSet(const PValue::str_t& val) {
+PValue::str_t& PValue::getStrOrSet(const PValue::str_t& val) {
 	if (!isStr()) setStr(val);
 	return m_value.sVal;
 }
 
-PValue::int_t& PValue::asIntOrSet(PValue::int_t val) {
-	if (!isSInt()) setInt(val);
+PValue::sint_t& PValue::getSIntOrSet(const PValue::sint_t& val) {
+	if (!isSInt()) setSInt(val);
 	return m_value.iVal;
 }
 
-PValue::uint_t& PValue::asUIntOrSet(PValue::uint_t val) {
+PValue::uint_t& PValue::getUIntOrSet(const PValue::uint_t& val) {
 	if (!isUInt()) setUInt(val);
 	return m_value.uVal;
 }
 
-PValue::dec_t& PValue::asDecOrSet(PValue::dec_t val) {
+PValue::dec_t& PValue::getDecOrSet(const PValue::dec_t& val) {
 	if (!isDec()) setDec(val);
 	return m_value.dVal;
 }
 
-PValue::bool_t& PValue::asBoolOrSet(PValue::bool_t val) {
+PValue::bool_t& PValue::getBoolOrSet(const PValue::bool_t& val) {
 	if (!isBool()) setBool(val);
 	return m_value.bVal;
 }
 
-PValue::bin_t& PValue::asBinOrSet(const PValue::bin_t& val) {
+PValue::bin_t& PValue::getBinOrSet(const PValue::bin_t& val) {
 	if (!isBin()) setBin(val);
 	return m_value.binVal;
 }
 
 
-const PValue::obj_t& PValue::asObj() const {
+const PValue::obj_t& PValue::getObj() const {
 	if (isObj()) return m_value.oVal;
 	throw std::logic_error("PValue does not contain an object.");
 }
 
-const PValue::arr_t& PValue::asArr() const {
+const PValue::arr_t& PValue::getArr() const {
 	if (isArr()) return m_value.aVal;
 	throw std::logic_error("PValue does not contain an array.");
 }
 
-const PValue::str_t& PValue::asStr() const {
+const PValue::str_t& PValue::getStr() const {
 	if (isStr()) return m_value.sVal;
 	throw std::logic_error("PValue does not contain an string.");
 }
 
-PValue::int_t PValue::asInt() const {
+PValue::sint_t PValue::getSInt() const {
 	if (isSInt()) return m_value.iVal;
 	throw std::logic_error("PValue does not contain a signed integer.");
 }
 
-PValue::uint_t PValue::asUInt() const {
+PValue::uint_t PValue::getUInt() const {
 	if (isUInt()) return m_value.uVal;
 	throw std::logic_error("PValue does not contain an unsigned integer.");
 }
 
-PValue::dec_t PValue::asDec() const {
+PValue::dec_t PValue::getDec() const {
 	if (isDec()) return m_value.dVal;
 	throw std::logic_error("PValue does not contain a floating point number.");
 }
 
-PValue::bool_t PValue::asBool() const {
+PValue::bool_t PValue::getBool() const {
 	if (isBool()) return m_value.bVal;
 	throw std::logic_error("PValue does not contain a boolean.");
 }
 
-const PValue::bin_t& PValue::asBin() const {
+const PValue::bin_t& PValue::getBin() const {
 	if (isBin()) return m_value.binVal;
 	throw std::logic_error("PValue does not contain binary data.");
 }
 
-const PValue::obj_t& PValue::asObjOrDef(const PValue::obj_t& val) const {
+const PValue::obj_t& PValue::getObjOrDef(const PValue::obj_t& val) const {
 	if (isObj()) return m_value.oVal;
 	return val;
 }
 
-const PValue::arr_t& PValue::asArrOrDef(const PValue::arr_t& val) const {
+const PValue::arr_t& PValue::getArrOrDef(const PValue::arr_t& val) const {
 	if (isArr()) return m_value.aVal;
 	return val;
 }
 
-const PValue::str_t& PValue::asStrOrDef(const PValue::str_t& val) const {
+const PValue::str_t& PValue::getStrOrDef(const PValue::str_t& val) const {
 	if (isStr()) return m_value.sVal;
 	return val;
 }
 
-PValue::int_t PValue::asIntOrDef(PValue::int_t val) const {
+const PValue::sint_t& PValue::getSIntOrDef(const PValue::sint_t& val) const {
 	if (isSInt()) return m_value.iVal;
 	return val;
 }
 
-PValue::uint_t PValue::asUIntOrDef(PValue::uint_t val) const {
+const PValue::uint_t& PValue::getUIntOrDef(const PValue::uint_t& val) const {
 	if (isUInt()) return m_value.uVal;
 	return val;
 }
 
-PValue::dec_t PValue::asDecOrDef(PValue::dec_t val) const {
+const PValue::dec_t& PValue::getDecOrDef(const PValue::dec_t& val) const {
 	if (isDec()) return m_value.dVal;
 	return val;
 }
 
-PValue::bool_t PValue::asBoolOrDef(PValue::bool_t val) const {
+const PValue::bool_t& PValue::getBoolOrDef(const PValue::bool_t& val) const {
 	if (isBool()) return m_value.bVal;
 	return val;
 }
 
-const PValue::bin_t& PValue::asBinOrDef(const PValue::bin_t& val) const {
+const PValue::bin_t& PValue::getBinOrDef(const PValue::bin_t& val) const {
 	if (isBin()) return m_value.binVal;
 	return val;
 }
@@ -223,7 +223,7 @@ PValue& PValue::setPValue(const PValue& val) {
 		case PType::Array: setArr(val.m_value.aVal); break;
 		case PType::String: setStr(val.m_value.sVal); break;
 
-		case PType::Integer: setInt(val.m_value.iVal); break;
+		case PType::Signed: setSInt(val.m_value.iVal); break;
 		case PType::Unsigned:setUInt(val.m_value.uVal); break;
 		case PType::Decimal: setDec(val.m_value.dVal); break;
 		case PType::Boolean: setBool(val.m_value.bVal); break;
@@ -233,20 +233,10 @@ PValue& PValue::setPValue(const PValue& val) {
 	return *this;
 }
 
-PValue& PValue::setObj() {
-	setObj(obj_t());
-	return *this;
-}
-
 PValue& PValue::setObj(const obj_t& val) {
 	if (!isObj()) setNull();
 	new(&m_value.oVal) obj_t(val);
 	m_type = PType::Object;
-	return *this;
-}
-
-PValue& PValue::setArr() {
-	setArr(arr_t());
 	return *this;
 }
 
@@ -264,10 +254,10 @@ PValue& PValue::setStr(const str_t& val) {
 	return *this;
 }
 
-PValue& PValue::setInt(const int_t& val) {
+PValue& PValue::setSInt(const sint_t& val) {
 	if (!isSInt()) setNull();
 	m_value.iVal = val;
-	m_type = PType::Integer;
+	m_type = PType::Signed;
 	return *this;
 }
 

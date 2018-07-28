@@ -119,7 +119,7 @@ struct MSGPackVistor : public msgpack::v2::null_visitor {
     }
 
     bool end_array_item() {
-    	stack.back().second.asArr().push_back(nextValue.second);
+    	stack.back().second.getArr().push_back(nextValue.second);
         return true;
     }
 
@@ -154,7 +154,7 @@ struct MSGPackVistor : public msgpack::v2::null_visitor {
     }
 
     bool end_map_value() {
-    	stack.back().second.asObj().insert(nextValue);
+    	stack.back().second.getObj().insert(nextValue);
         return true;
     }
 
@@ -174,20 +174,20 @@ std::vector<uint8> akd::toMsgPack(const akd::PValue& src) {
 		}
 
 		switch(traverseAction) {
-			case akd::TraverseAction::ArrayStart: pk.pack_array(value.asArr().size()); break;
-			case akd::TraverseAction::ObjectStart: pk.pack_map(value.asObj().size()); break;
+			case akd::TraverseAction::ArrayStart: pk.pack_array(value.getArr().size()); break;
+			case akd::TraverseAction::ObjectStart: pk.pack_map(value.getObj().size()); break;
 
 			case akd::TraverseAction::Value: {
 				switch(value.type()) {
 					case akd::PType::Object: throw std::logic_error("Cannot serialize object directly.");
 					case akd::PType::Array:  throw std::logic_error("Cannot serialize array directly.");
 					case akd::PType::Null: pk.pack_nil(); break;
-					case akd::PType::Boolean: pk.pack(value.asBool()); break;
-					case akd::PType::Integer: pk.pack(value.asInt()); break;
-					case akd::PType::Unsigned: pk.pack(value.asUInt()); break;
-					case akd::PType::Decimal: pk.pack(value.asDec()); break;
-					case akd::PType::String: pk.pack(value.asStr()); break;
-					case akd::PType::Binary: pk.pack(value.asBin()); break;
+					case akd::PType::Boolean: pk.pack(value.getBool()); break;
+					case akd::PType::Signed: pk.pack(value.getSInt()); break;
+					case akd::PType::Unsigned: pk.pack(value.getUInt()); break;
+					case akd::PType::Decimal: pk.pack(value.getDec()); break;
+					case akd::PType::String: pk.pack(value.getStr()); break;
+					case akd::PType::Binary: pk.pack(value.getBin()); break;
 				}
 				break;
 			}

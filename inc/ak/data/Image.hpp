@@ -182,7 +182,7 @@ namespace akd {
 			std::vector<type_t> data;
 			data.resize(dataSize);
 
-			auto& srcData = src["data"].asBin();
+			auto& srcData = src["data"].getBin();
 			dst = Image<type_t>(reinterpret_cast<const type_t*>(srcData.data()), components, width, height, depth);
 
 			return true;

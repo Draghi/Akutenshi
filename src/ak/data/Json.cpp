@@ -16,6 +16,8 @@
 
 #include <ak/data/Json.hpp>
 
+#include <bits/stdint-intn.h>
+#include <bits/stdint-uintn.h>
 #include <rapidjson/encodings.h>
 #include <rapidjson/error/en.h>
 #include <rapidjson/error/error.h>
@@ -28,7 +30,6 @@
 #include <algorithm>
 #include <deque>
 #include <functional>
-#include <initializer_list>
 #include <limits>
 #include <map>
 #include <stdexcept>
@@ -36,9 +37,9 @@
 #include <utility>
 #include <vector>
 
+#include <ak/data/Base64.hpp>
 #include <ak/data/Path.hpp>
 #include <ak/data/PValue.hpp>
-#include <ak/data/Base64.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/Log.hpp>
 #include <ak/Macros.hpp>
@@ -66,13 +67,13 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 			akd::PValue& cValue = *valueStack.back();
 
 			if (cValue.isObj()) {
-				cValue.asObj().emplace(cKey, std::move(value));
-				if (isObjOrArr) valueStack.push_back(&cValue.asObj().at(cKey));
+				cValue.getObj().emplace(cKey, std::move(value));
+				if (isObjOrArr) valueStack.push_back(&cValue.getObj().at(cKey));
 			} else if (cValue.isArr()) {
-				cValue.asArr().push_back(std::move(value));
-				if (isObjOrArr) valueStack.push_back(&cValue.asArr().back());
+				cValue.getArr().push_back(std::move(value));
+				if (isObjOrArr) valueStack.push_back(&cValue.getArr().back());
 			} else {
-				cValue.set<akd::PValue>(value);
+				cValue = value;
 				if (!isObjOrArr) valueStack.pop_back();
 			}
 		}
@@ -83,12 +84,13 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 	    }
 
 	    bool Bool(bool b) {
-	    	addPValue(akd::PValue::from(b));
+	    	akl::Logger("json").info("boolean: ", cKey);
+	    	addPValue(akd::PValue::from<akd::PValue::bool_t>(b));
 	    	return true;
 	    }
 
 	    bool Int(int i) {
-	    	addPValue(akd::PValue::from(static_cast<akd::PValue::int_t>(i)));
+	    	addPValue(akd::PValue::from(static_cast<akd::PValue::sint_t>(i)));
 	    	return true;
 	    }
 
@@ -98,7 +100,7 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 	    }
 
 	    bool Int64(int64_t i) {
-	    	addPValue(akd::PValue::from(static_cast<akd::PValue::int_t>(i)));
+	    	addPValue(akd::PValue::from(static_cast<akd::PValue::sint_t>(i)));
 	    	return true;
 	    }
 
@@ -217,7 +219,7 @@ std::string akd::toJson(const akd::PValue& src, bool pretty) {
 						else nWriter.Bool(value.as<bool>());
 						break;
 
-					case akd::PType::Integer:
+					case akd::PType::Signed:
 						if ((value.as<int64>() >= std::numeric_limits<int>::min()) && (value.as<int64>() <= std::numeric_limits<int>::max())) {
 							if (pretty) pWriter.Int(value.as<int>());
 							else nWriter.Int(value.as<int>());
@@ -248,7 +250,7 @@ std::string akd::toJson(const akd::PValue& src, bool pretty) {
 						break;
 
 					case akd::PType::Binary:
-						std::string binStr = std::string(JSON_BASE64_IDENTIFIER) + akd::base64::encode(value.asBin().data(), value.asBin().size());
+						std::string binStr = std::string(JSON_BASE64_IDENTIFIER) + akd::base64::encode(value.getBin().data(), value.getBin().size());
 						if (pretty) pWriter.String(binStr.c_str(), binStr.size());
 						else nWriter.String(binStr.c_str(), binStr.size());
 

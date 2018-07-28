@@ -75,23 +75,23 @@ namespace akd {
 
 	inline bool deserialize(akas::Primitive& dst, const akd::PValue& src) {
 		try {
-			auto& indexDataBin = src["indexData"].asBin();
+			auto& indexDataBin = src["indexData"].getBin();
 			std::vector<uint16> indexData; indexData.resize(indexDataBin.size()/sizeof(uint16));
 			std::memcpy(indexData.data(), indexDataBin.data(), indexDataBin.size());
 
-			auto& surfaceDataBin = src["surfaceData"].asBin();
+			auto& surfaceDataBin = src["surfaceData"].getBin();
 			std::vector<akas::VertexSurfaceData> surfaceData; surfaceData.resize(surfaceDataBin.size()/sizeof(akas::VertexSurfaceData));
 			std::memcpy(surfaceData.data(), surfaceDataBin.data(), surfaceDataBin.size());
 
-			auto& texCoordDataBin = src["texCoordData"].asBin();
+			auto& texCoordDataBin = src["texCoordData"].getBin();
 			std::array<std::vector<akm::Vec2>, 4> texCoordData;
 			std::memcpy(texCoordData.data(), texCoordDataBin.data(), texCoordDataBin.size());
 
-			auto& colourDataBin = src["colourData"].asBin();
+			auto& colourDataBin = src["colourData"].getBin();
 			std::vector<akm::Vec4> colourData; surfaceData.resize(surfaceDataBin.size()/sizeof(akm::Vec4));
 			std::memcpy(colourData.data(), colourDataBin.data(), colourDataBin.size());
 
-			auto& skinningDataBin = src["skinningData"].asBin();
+			auto& skinningDataBin = src["skinningData"].getBin();
 			std::vector<akas::VertexWeightData> skinningData; skinningData.resize(skinningDataBin.size()/sizeof(akas::VertexWeightData));
 			std::memcpy(skinningData.data(), skinningDataBin.data(), surfaceDataBin.size());
 
@@ -110,7 +110,7 @@ namespace akd {
 
 	inline void serialize(akd::PValue& dst, const akas::Mesh& src) {
 		auto& primitives = dst["primitives"].setArr();
-		for(const auto& primitive : src.primitives) { primitives.asArr().push_back(akd::PValue()); serialize(primitives.asArr().back(), primitive); };
+		for(const auto& primitive : src.primitives) { primitives.getArr().push_back(akd::PValue()); serialize(primitives.getArr().back(), primitive); };
 		serialize(dst["skin"], src.skin);
 	}
 }

@@ -16,7 +16,6 @@
 
 #include <ak/filesystem/Filesystem.hpp>
 
-#include <bits/types/struct_timespec.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <cstdio>
@@ -35,10 +34,12 @@ using namespace akfs;
 class VFSMounts final {
 	private:
 		std::unordered_map<std::string, std::string> m_vfsToSys = {
-			{"./", "./"},
+			{"./",    "./"},
+			{"bin/",  "./bin/"},
+			{"lib/",  "./lib/"},
 			{"data/", "./data/"},
-			{"config/", "./config/"},
-			{"cache/", "./cache/"}
+			{"meta/", "./meta/"},
+			{"src/",  "./src/"},
 		};
 		std::unordered_map<std::string, std::string> m_sysToVfs;
 

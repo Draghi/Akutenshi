@@ -55,66 +55,66 @@ namespace akas {
 
 		inline Asset extractAsset(const akd::PValue& val) {
 			std::vector<Node> nodes; {
-				auto& arrData = val["nodes"].asArr();
+				auto& arrData = val["nodes"].getArr();
 				for(auto& data : arrData) nodes.push_back(extractNode(data));
 			}
 
 			std::vector<Scene> scenes; {
-				auto& arrData = val["scenes"].asArr();
+				auto& arrData = val["scenes"].getArr();
 				for(auto& data : arrData) scenes.push_back(extractScene(data));
 			}
 
 			std::vector<Mesh> meshes; {
-				auto& arrData = val["meshes"].asArr();
+				auto& arrData = val["meshes"].getArr();
 				for(auto& data : arrData) meshes.push_back(extractMesh(data));
 			}
 
 			std::vector<Skin> skins; {
-				auto& arrData = val["skins"].asArr();
+				auto& arrData = val["skins"].getArr();
 				for(auto& data : arrData) skins.push_back(extractSkin(data));
 			}
 
 			std::vector<Material> materials; {
-				auto& arrData = val["materials"].asArr();
+				auto& arrData = val["materials"].getArr();
 				for(auto& data : arrData) materials.push_back(extractMaterial(data));
 			}
 
 			std::vector<Texture> textures; {
-				auto& arrData = val["textures"].asArr();
+				auto& arrData = val["textures"].getArr();
 				for(auto& data : arrData) textures.push_back(extractTexture(data));
 			}
 
 			std::vector<Image> images; {
-				auto& arrData = val["images"].asArr();
+				auto& arrData = val["images"].getArr();
 				for(auto& data : arrData) images.push_back(extractImage(data));
 			}
 
 			std::vector<Sampler> samplers; {
-				auto& arrData = val["samplers"].asArr();
+				auto& arrData = val["samplers"].getArr();
 				for(auto& data : arrData) samplers.push_back(extractSampler(data));
 			}
 
 			std::vector<Animation> animations; {
-				auto& arrData = val["animations"].asArr();
+				auto& arrData = val["animations"].getArr();
 				for(auto& data : arrData) animations.push_back(extractAnimation(data));
 			}
 
 			std::vector<Accessor> accessors; {
-				auto& arrData = val["accessors"].asArr();
+				auto& arrData = val["accessors"].getArr();
 				for(auto& data : arrData) accessors.push_back(extractAccessor(data));
 			}
 
 			std::vector<BufferView> bufferViews; {
-				auto& arrData = val["bufferViews"].asArr();
+				auto& arrData = val["bufferViews"].getArr();
 				for(auto& data : arrData) bufferViews.push_back(extractBufferView(data));
 			}
 
 			std::vector<Buffer> buffers; {
-				auto& arrData = val["buffers"].asArr();
+				auto& arrData = val["buffers"].getArr();
 				for(auto& data : arrData) buffers.push_back(extractBuffer(data));
 			}
 
-			return Asset{nodes, scenes, meshes, skins, materials, textures, images, samplers, animations, accessors, bufferViews, buffers, val.atOrDef("scene").asIntOrDef(-1)};
+			return Asset{nodes, scenes, meshes, skins, materials, textures, images, samplers, animations, accessors, bufferViews, buffers, val.atOrDef("scene").asOrDef(-1)};
 		}
 	}
 }

@@ -55,7 +55,7 @@ namespace akas {
 
 		inline Sampler extractSampler(const akd::PValue& samplerData) {
 			return Sampler{
-				samplerData.atOrDef("name").asStrOrDef(""),
+				samplerData.atOrDef("name").getStrOrDef(""),
 				static_cast<MinFilter>(samplerData.atOrDef("minFilter").asOrDef<uint32>(static_cast<uint32>(MinFilter::Linear_Mipmap_Linear))),
 				static_cast<MagFilter>(samplerData.atOrDef("magFilter").asOrDef<uint32>(static_cast<uint32>(MagFilter::Linear))),
 				static_cast<Wrap>(samplerData.atOrDef("wrapS").asOrDef<uint32>(static_cast<uint32>(Wrap::Repeat))),

@@ -33,6 +33,12 @@
 #include <ak/filesystem/Path.hpp>
 #include <ak/PrimitiveTypes.hpp>
 
+/**
+ * TODO Extend, refactor and make breaking api changes, yay.
+ * - "as" methods should use "try" methods.
+ * - "as" methods should only perform minimal conversions (uint<->int, single<->double ie.)
+ */
+
 namespace akd {
 
 	class PValue;
@@ -50,7 +56,7 @@ namespace akd {
 		Object,
 		Array,
 		String,
-		Integer,
+		Signed,
 		Unsigned,
 		Decimal,
 		Boolean,
@@ -69,7 +75,7 @@ namespace akd {
 			using obj_t = std::map<std::string, PValue>;
 			using arr_t = std::deque<PValue>;
 			using str_t = std::string;
-			using int_t = int64;
+			using sint_t = int64;
 			using uint_t = uint64;
 			using dec_t = fpDouble;
 			using bool_t = bool;
@@ -84,7 +90,7 @@ namespace akd {
 				str_t sVal;
 
 				uint_t uVal;
-				int_t iVal;
+				sint_t iVal;
 				dec_t dVal;
 				bool_t bVal;
 
@@ -100,59 +106,79 @@ namespace akd {
 			static PValue& navigate_internal(PValue& cNode, const TreePath& path);
 			static const PValue* navigate_internal(const PValue* currentNode, const TreePath& path);
 
+			PValue& setPValue(const PValue& val);
+
+			std::string toDebugString() const {
+				if (isNull()) return "<null>";
+				if (isObj())  return ak::buildString("<str:", getObj().size(), ">");
+				if (isArr())  return ak::buildString("<str:", getArr().size(), ">");
+				if (isBin())  return ak::buildString("<str:", getBin().size(), ">");
+				if (isStr())  return ak::buildString("<str:", getStr(), ">");
+				if (isSInt()) return ak::buildString("<sint:",getSInt(),">");
+				if (isUInt()) return ak::buildString("<uint:",getUInt(),">");
+				if (isDec())  return ak::buildString("<dec:", getDec(), ">");
+				if (isBool()) return ak::buildString("<bool:",getBool(),">");
+				return "<error>";
+			}
+
 		public:
 			PValue() : m_type(PType::Null) {}
 			PValue(const PValue& val) : m_type(PType::Null) { setPValue(val); }
-			/*PValue(const obj_t& val) : m_type(PType::Null)  { setObj(val); }
-			PValue(const arr_t& val) : m_type(PType::Null)  { setArr(val); }
-			PValue(const str_t& val) : m_type(PType::Null)  { setStr(val); }
-			PValue(const int_t& val) : m_type(PType::Null)  { setInt(val); }
-			PValue(const uint_t& val) : m_type(PType::Null) { setUInt(val); }
-			PValue(const dec_t& val) : m_type(PType::Null)  { setDec(val); }
-			PValue(const bool_t& val) : m_type(PType::Null) { setBool(val); }
-			PValue(const bin_t& val) : m_type(PType::Null) { setBin(val); }*/
+			PValue& operator=(const PValue& val) { setPValue(val); return *this; }
 
 			template<typename type_t> static PValue from(const type_t& val) { PValue result; result.set<type_t>(val); return result; }
-			//template<typename dest_t, typename type_t> static PValue from(const type_t& val) { PValue result; result.set<dest_t>(static_cast<dest_t>(val)); return result; }
 
 			~PValue() { setNull(); }
+
+
 
 			// //////////////// //
 			// // Navigation // //
 			// //////////////// //
 
-			PValue& at(const std::string& name) { return asObj().at(name); }
-			PValue& at(akSize id) { return asArr().at(id); }
+			const PValue& at(const std::string& name) const {
+				return getObj().at(name);
+			}
+
+			PValue& at(const std::string& name) {
+				return getObj().at(name);
+			}
 
 			PValue& atOrSet(const std::string& name, const PValue& val = PValue()) {
-				return asObjOrSet().emplace(name, val).first->second;
+				return getObjOrSet().emplace(name, val).first->second;
 			}
 
 			const PValue& atOrDef(const std::string& name, const PValue& val = PValue()) const {
 				if (!isObj()) return val;
-				auto iter = asObj().find(name);
-				return (iter == asObj().end()) ? val : iter->second;
+				auto iter = getObj().find(name);
+				return (iter == getObj().end()) ? val : iter->second;
+			}
+
+			const PValue& at(akSize id) const {
+				return getArr().at(id);
+			}
+
+			PValue& at(akSize id) {
+				return getArr().at(id);
 			}
 
 			PValue& atOrSet(akSize id, const PValue& val = PValue()) {
-				if (isArr() && id < asArr().size()) return asArr()[id];
-				asArrOrSet().resize(id + 1);
-				return asArr()[id] = val;
+				auto& arr = getArrOrSet();
+				if (id >= arr.size()) arr.resize(id + 1);
+				return arr[id] = val;
 			}
 
 			const PValue& atOrDef(akSize id, const PValue& val = PValue()) const {
 				if (!isArr()) return val;
-				return (id < asArr().size()) ? asArr()[id] : val;
+				return (id < getArr().size()) ? getArr()[id] : val;
 			}
 
 			PValue& operator[](const std::string& name) { return atOrSet(name); }
 			PValue& operator[](const akSize& id) { return atOrSet(id); }
 
-			const PValue& at(const std::string& name) const { return asObj().at(name); }
-			const PValue& at(akSize id) const { return asArr().at(id); }
 
-			bool exists(const std::string& name) const { return (isObj()) && (asObj().find(name) != asObj().end()); }
-			bool exists(akSize id) const { return (isArr()) && (id < asArr().size()); }
+			bool exists(const std::string& name) const { return (isObj()) && (getObj().find(name) != getObj().end()); }
+			bool exists(akSize id) const { return (isArr()) && (id < getArr().size()); }
 
 			const PValue& operator[](const std::string& name) const { return atOrDef(name); }
 			const PValue& operator[](const akSize& id) const { return atOrDef(id); }
@@ -162,59 +188,53 @@ namespace akd {
 			// ///////////// //
 
 			PValue& setNull();
-			PValue& setPValue(const PValue& val);
-
-			PValue& setObj();
-			PValue& setObj(const obj_t& val);
-
-			PValue& setArr();
-			PValue& setArr(const arr_t& val);
-
-			PValue& setStr(const str_t& val);
-			PValue& setInt(const int_t& val);
-			PValue& setUInt(const uint_t& val);
-			PValue& setDec(const dec_t& val);
-			PValue& setBool(const bool_t& val);
-			PValue& setBin(const bin_t& val);
-
+			PValue& setObj(const obj_t& val = obj_t());
+			PValue& setArr(const arr_t& val = arr_t());
+			PValue& setStr(const str_t& val = str_t());
+			PValue& setSInt(const sint_t& val = sint_t());
+			PValue& setUInt(const uint_t& val = uint_t());
+			PValue& setDec(const dec_t& val = dec_t());
+			PValue& setBool(const bool_t& val =  bool_t());
+			PValue& setBin(const bin_t& val = bin_t());
 			PValue& setBin(const void* val, akSize size);
 
-			obj_t& asObj();
-			arr_t& asArr();
-			str_t& asStr();
-			int_t& asInt();
-			uint_t& asUInt();
-			dec_t& asDec();
-			bool_t& asBool();
-			bin_t& asBin();
+			obj_t&  getObj();
+			arr_t&  getArr();
+			bin_t&  getBin();
+			str_t&  getStr();
+			sint_t&  getSInt();
+			uint_t& getUInt();
+			dec_t&  getDec();
+			bool_t& getBool();
 
-			obj_t& asObjOrSet(const obj_t& val = obj_t());
-			arr_t& asArrOrSet(const arr_t& val = arr_t());
-			str_t& asStrOrSet(const str_t& val = str_t());
-			int_t& asIntOrSet(int_t val);
-			uint_t& asUIntOrSet(uint_t val);
-			dec_t& asDecOrSet(dec_t val);
-			bool_t& asBoolOrSet(bool_t val);
-			bin_t& asBinOrSet(const bin_t& val = bin_t());
+			obj_t& getObjOrSet(const obj_t& val = obj_t());
+			arr_t& getArrOrSet(const arr_t& val = arr_t());
+			bin_t& getBinOrSet(const bin_t& val = bin_t());
+			bin_t& getBinOrSet(const void* val, akSize size);
+			str_t&  getStrOrSet(const str_t& val = str_t());
+			sint_t&  getSIntOrSet(const sint_t& val = sint_t());
+			uint_t& getUIntOrSet(const uint_t& val = uint_t());
+			dec_t&  getDecOrSet(const dec_t& val = dec_t());
+			bool_t& getBoolOrSet(const bool_t& val =  bool_t());
 
-			const obj_t& asObj() const;
-			const arr_t& asArr() const;
-			const str_t& asStr() const;
-			int_t asInt() const;
-			uint_t asUInt() const;
-			dec_t asDec() const;
-			bool_t asBool() const;
-			const bin_t& asBin() const;
+			const obj_t& getObjOrDef(const obj_t& val = obj_t()) const;
+			const arr_t& getArrOrDef(const arr_t& val = arr_t()) const;
+			const bin_t& getBinOrDef(const bin_t& val = bin_t()) const;
+			const bin_t& getBinOrDef(const void* val, akSize size) const;
+			const str_t&  getStrOrDef(const str_t& val = str_t()) const;
+			const sint_t&  getSIntOrDef(const sint_t& val = sint_t()) const;
+			const uint_t& getUIntOrDef(const uint_t& val = uint_t()) const;
+			const dec_t&  getDecOrDef(const dec_t& val = dec_t()) const;
+			const bool_t& getBoolOrDef(const bool_t& val =  bool_t()) const;
 
-			const obj_t& asObjOrDef(const obj_t& val = obj_t()) const;
-			const arr_t& asArrOrDef(const arr_t& val = arr_t()) const;
-			const str_t& asStrOrDef(const str_t& val = str_t()) const;
-			int_t asIntOrDef(int_t val) const;
-			uint_t asUIntOrDef(uint_t val) const;
-			dec_t asDecOrDef(dec_t val) const;
-			bool_t asBoolOrDef(bool_t val) const;
-			const bin_t& asBinOrDef(const bin_t& val) const;
-
+			const obj_t& getObj() const;
+			const arr_t& getArr() const;
+			const bin_t& getBin() const;
+			const str_t& getStr() const;
+			sint_t getSInt() const;
+			uint_t getUInt() const;
+			dec_t getDec() const;
+			bool_t getBool() const;
 
 			// //////////// //
 			// // Values // //
@@ -255,7 +275,7 @@ namespace akd {
 			bool isObj()  const { return type() == PType::Object; }
 			bool isArr()  const { return type() == PType::Array; }
 			bool isStr()  const { return type() == PType::String; }
-			bool isSInt() const { return type() == PType::Integer; }
+			bool isSInt() const { return type() == PType::Signed; }
 			bool isUInt() const { return type() == PType::Unsigned; }
 			bool isDec()  const { return type() == PType::Decimal; }
 			bool isBool() const { return type() == PType::Boolean; }
@@ -265,25 +285,75 @@ namespace akd {
 			bool isNumber() const { return isSInt() || isUInt() || isDec(); }
 			bool isPrimitive() const { return isSInt() || isUInt() || isDec() || isBool(); }
 
-			akSize size() const { return asArr().size(); }
+			akSize size() const { return getArr().size(); }
+
+			// ///////// //
+			// // Get // //
+			// ///////// //
+			template<typename type_t> typename std::enable_if<std::is_same<type_t, obj_t>::value, std::optional<type_t>>::type tryGet() const {
+				return isObj() ? std::optional<type_t>(getObj()) : std::optional<type_t>();
+			}
+
+			template<typename type_t> typename std::enable_if<std::is_same<type_t, arr_t>::value, std::optional<type_t>>::type tryGet() const {
+				return isArr() ? std::optional<type_t>(getArr()) : std::optional<type_t>();
+			}
+
+			template<typename type_t> typename std::enable_if<std::is_same<type_t, bin_t>::value, std::optional<type_t>>::type tryGet() const {
+				return isBin() ? std::optional<type_t>(getBin()) : std::optional<type_t>();
+			}
+
+			template<typename type_t> typename std::enable_if<std::is_same<type_t, str_t>::value, std::optional<type_t>>::type tryGet() const {
+				return isStr() ? std::optional<type_t>(getStr()) : std::optional<type_t>();
+			}
+
+			template<typename type_t> typename std::enable_if<std::is_integral<type_t>::value && std::is_signed<type_t>::value, std::optional<type_t>>::type tryGet() const {
+				return isSInt() ? std::optional<type_t>(getSInt()) : std::optional<type_t>();
+			}
+
+			template<typename type_t> typename std::enable_if<std::is_integral<type_t>::value && std::is_unsigned<type_t>::value && !std::is_same<type_t, std::optional<type_t>>::value, type_t>::type tryGet() const {
+				return isUInt() ? std::optional<type_t>(getUInt()) : std::optional<type_t>();
+			}
+
+			template<typename type_t> typename std::enable_if<std::is_floating_point<type_t>::value, std::optional<type_t>>::type tryGet() const {
+				return isDec() ? std::optional<type_t>(getDec()) : std::optional<type_t>();
+			}
+
+			template<typename type_t> typename std::enable_if<std::is_same<type_t, bool>::value, std::optional<type_t>>::type tryGet() const {
+				return isBool() ? std::optional<type_t>(getBool()) : std::optional<type_t>();
+			}
+
+			template<typename type_t> type_t get() const {
+				auto result = tryGet<type_t>();
+				throw std::logic_error(ak::buildString("Failed to get value from PValue containing ", toDebugString()));
+				return *result;
+			}
+
+			template<typename type_t> type_t getOrDef(const type_t& val) const {
+				auto result = tryGet<type_t>();
+				if (!result) return val;
+				return *result;
+			}
+
+			template<typename type_t> type_t getOrSet(const type_t& val) const {
+				auto result = tryGet<type_t>();
+				if (!result) return set<type_t>(val).template get<type_t>();
+				return *result;
+			}
 
 			// //////////////// //
 			// // Assignment // //
 			// //////////////// //
-
-
-			template<typename type_t> PValue& set(const typename std::enable_if<std::is_same<type_t, PValue>::value, type_t>::type& val) { return setPValue(val); }
-
-			template<typename type_t> PValue& set(const typename std::enable_if<std::is_same<type_t, obj_t>::value, type_t>::type& val) { return setObj(val); }
-			template<typename type_t> PValue& set(const typename std::enable_if<std::is_same<type_t, arr_t>::value, type_t>::type& val) { return setArr(val); }
-			template<typename type_t> PValue& set(const typename std::enable_if<std::is_same<type_t, str_t>::value || std::is_same<typename std::decay<type_t>::type, char*>::value, type_t>::type& val) { return setStr(val); }
-
-			template<typename type_t> PValue& set(const typename std::enable_if<std::is_integral<type_t>::value && std::is_signed<type_t>::value, type_t>::type& val) { return setInt(static_cast<int_t>(val)); }
-			template<typename type_t> PValue& set(const typename std::enable_if<std::is_integral<type_t>::value && std::is_unsigned<type_t>::value && !std::is_same<type_t, bool>::value, type_t>::type& val) { return setUInt(static_cast<uint_t>(val)); }
-			template<typename type_t> PValue& set(const typename std::enable_if<std::is_floating_point<type_t>::value, type_t>::type& val) { return setDec(static_cast<dec_t>(val)); }
-			template<typename type_t> PValue& set(const typename std::enable_if<std::is_same<type_t, bool>::value, type_t>::type& val) { return setBool(static_cast<bool_t>(val)); }
-
-			template<typename type_t> PValue& set(const typename std::enable_if<std::is_same<type_t, bin_t>::value, type_t>::type& val) { return setBin(static_cast<bin_t>(val)); }
+			template<typename type_t> PValue& set(const type_t& val) {
+				if constexpr(std::is_same<type_t, obj_t>::value) return setObj(val);
+				if constexpr(std::is_same<type_t, arr_t>::value) return setArr(val);
+				if constexpr(std::is_same<type_t, bin_t>::value) return setBin(val);
+				if constexpr(std::is_same<type_t, str_t>::value) return setStr(val);
+				if constexpr(std::is_same<type_t, bool_t>::value) return setBool(val); // Ensure ahead of implicit conversions (ie. ints)
+				if constexpr(std::is_integral<type_t>::value && std::is_signed<type_t>::value) return setSInt(val);
+				if constexpr(std::is_integral<type_t>::value && std::is_unsigned<type_t>::value) return setUInt(val);
+				if constexpr(std::is_floating_point<type_t>::value) return setDec(val);
+				throw std::logic_error("Invalid set type provided.");
+			}
 
 			template<typename type_t> PValue& trySet(const std::optional<type_t>& val) {
 				if (val) return set<type_t>(*val);
@@ -295,151 +365,53 @@ namespace akd {
 				return setNull();
 			}
 
-			PValue& operator=(const PValue& val) { return setPValue(val); }
-			PValue& operator=(const obj_t& val) { return setObj(val); }
-			PValue& operator=(const arr_t& val) { return setArr(val); }
-			PValue& operator=(const str_t& val) { return setStr(val); }
-			template<typename type_t> PValue& operator=(const type_t& val) { return set<type_t>(val); }
-
 			// //////////////// //
 			// // Conversion // //
 			// //////////////// //
-			template<typename type_t> typename std::enable_if<std::is_same<type_t, obj_t>::value, type_t>::type as() const { return asObj(); }
-			template<typename type_t> typename std::enable_if<std::is_same<type_t, arr_t>::value, type_t>::type as() const { return asArr(); }
-			template<typename type_t> typename std::enable_if<std::is_same<type_t, str_t>::value || std::is_same<typename std::decay<type_t>::type, char*>::value, std::string>::type as() const { return asStr(); }
-			template<typename type_t> typename std::enable_if<std::is_same<type_t, bin_t>::value, type_t>::type as() const { return asBin(); }
-
-			template<typename type_t> typename std::enable_if<std::is_arithmetic<type_t>::value && !std::is_same<type_t, bool>::value, type_t>::type as() const {
-				if (isSInt()) return static_cast<type_t>(m_value.iVal);
-				if (isUInt()) return static_cast<type_t>(m_value.uVal);
-				if (isDec())  return static_cast<type_t>(m_value.dVal);
-				if (isBool()) return static_cast<type_t>(m_value.bVal);
-				throw std::logic_error("PValue does not contain a primitive value.");
+			template<typename type_t> typename std::enable_if<std::is_same<type_t, obj_t>::value, std::optional<type_t>>::type tryAs()  const { // Object
+				return isObj() ? getObj() : std::optional<type_t>();
 			}
 
-			template<typename type_t> typename std::enable_if<std::is_same<type_t, bool>::value, type_t>::type as() const {
-				if (isBool()) return static_cast<type_t>(m_value.bVal);
-				if (isSInt()) return static_cast<type_t>(m_value.iVal);
-				if (isUInt()) return static_cast<type_t>(m_value.uVal);
-				if (isDec())  return static_cast<type_t>(m_value.dVal);
-				throw std::logic_error("PValue does not contain a primitive value.");
+			template<typename type_t> typename std::enable_if<std::is_same<type_t, arr_t>::value, std::optional<type_t>>::type tryAs()  const { // Array
+				return isArr() ? getArr() : std::optional<type_t>();
 			}
 
-
-
-			template<typename type_t> typename std::enable_if<std::is_same<type_t, obj_t>::value, type_t>::type asOrSet(const type_t& val)  {
-				if (!isObj()) setObj(val);
-				return m_value.oVal;
+			template<typename type_t> typename std::enable_if<std::is_same<type_t, bin_t>::value, std::optional<type_t>>::type tryAs()  const { // Binary
+				return isBin() ? getBin() : std::optional<type_t>();
 			}
 
-			template<typename type_t> typename std::enable_if<std::is_same<type_t, arr_t>::value, type_t>::type asOrSet(const type_t& val)  {
-				if (!isArr()) setArr(val);
-				return m_value.aVal;
+			template<typename type_t> typename std::enable_if<std::is_same<type_t, str_t>::value, std::optional<type_t>>::type tryAs()  const { // String
+				return isStr() ? getStr() : std::optional<type_t>();
 			}
 
-			template<typename type_t> typename std::enable_if<std::is_same<type_t, bin_t>::value, type_t>::type asOrSet(const type_t& val)  {
-				if (!isBin()) setBin(val);
-				return m_value.binVal;
+			template<typename type_t> typename std::enable_if<std::is_arithmetic<type_t>::value && !std::is_same<type_t, bool>::value, std::optional<type_t>>::type tryAs() const { // Number
+				if (isSInt()) return static_cast<type_t>(getSInt());
+				if (isUInt()) return static_cast<type_t>(getUInt());
+				if (isDec())  return static_cast<type_t>(getDec());
+				return std::optional<type_t>();
 			}
 
-			template<typename type_t> typename std::enable_if<std::is_same<type_t, str_t>::value || std::is_same<typename std::decay<type_t>::type, char*>::value, std::string>::type asOrSet(const type_t& val)  {
-				if (!isStr()) asStr(val);
-				return m_value.sVal;
+			template<typename type_t> typename std::enable_if<std::is_same<type_t, bool_t>::value, std::optional<type_t>>::type tryAs() const { // Boolean
+				if (isBool()) return static_cast<type_t>(getBool());
+				return std::optional<type_t>();
 			}
 
-			template<typename type_t> typename std::enable_if<std::is_integral<type_t>::value && std::is_signed<type_t>::value, type_t>::type asOrSet(const type_t& val) {
-				if (isSInt()) return static_cast<type_t>(m_value.iVal);
-				if (isUInt()) return static_cast<type_t>(m_value.uVal);
-				if (isDec())  return static_cast<type_t>(m_value.dVal);
-				if (isBool()) return static_cast<type_t>(m_value.bVal);
-				setInt(static_cast<int_t>(val));
-				return static_cast<type_t>(m_value.iVal);
+			template<typename type_t> type_t as() const {
+				auto result = tryAs<type_t>();
+				if (!result) throw std::logic_error(ak::buildString("Failed to convert value from PValue containing ", toDebugString()));
+				return *result;
 			}
 
-			template<typename type_t> typename std::enable_if<std::is_integral<type_t>::value && std::is_unsigned<type_t>::value, type_t>::type asOrSet(const type_t& val) {
-				if (isSInt()) return static_cast<type_t>(m_value.iVal);
-				if (isUInt()) return static_cast<type_t>(m_value.uVal);
-				if (isDec())  return static_cast<type_t>(m_value.dVal);
-				if (isBool()) return static_cast<type_t>(m_value.bVal);
-				setUInt(static_cast<uint_t>(val));
-				return static_cast<type_t>(m_value.uVal);
+			template<typename type_t> type_t asOrDef(const type_t& val) const {
+				auto result = tryAs<type_t>();
+				if (!result) return val;
+				return *result;
 			}
 
-			template<typename type_t> typename std::enable_if<std::is_floating_point<type_t>::value, type_t>::type asOrSet(const type_t& val) {
-				if (isSInt()) return static_cast<type_t>(m_value.iVal);
-				if (isUInt()) return static_cast<type_t>(m_value.uVal);
-				if (isDec())  return static_cast<type_t>(m_value.dVal);
-				if (isBool()) return static_cast<type_t>(m_value.bVal);
-				setDec(static_cast<dec_t>(val));
-				return static_cast<type_t>(m_value.dVal);
-			}
-
-			template<typename type_t> typename std::enable_if<std::is_same<type_t, bool>::value, type_t>::type asOrSet(const type_t& val) {
-				if (isSInt()) return static_cast<type_t>(m_value.iVal);
-				if (isUInt()) return static_cast<type_t>(m_value.uVal);
-				if (isDec())  return static_cast<type_t>(m_value.dVal);
-				if (isBool()) return static_cast<type_t>(m_value.bVal);
-				setBool(static_cast<bool_t>(val));
-				return static_cast<type_t>(m_value.bVal);
-			}
-
-
-
-			template<typename type_t> typename std::enable_if<std::is_same<type_t, obj_t>::value, type_t>::type asOrDef(const type_t& val)  const {
-				if (!isObj()) return val;
-				return m_value.oVal;
-			}
-
-			template<typename type_t> typename std::enable_if<std::is_same<type_t, arr_t>::value, type_t>::type asOrDef(const type_t& val)  const {
-				if (!isArr()) return val;
-				return m_value.aVal;
-			}
-
-			template<typename type_t> typename std::enable_if<std::is_same<type_t, bin_t>::value, type_t>::type asOrDef(const type_t& val)  const {
-				if (!isBin()) return val;
-				return m_value.binVal;
-			}
-
-			template<typename type_t> typename std::enable_if<std::is_same<type_t, str_t>::value || std::is_same<typename std::decay<type_t>::type, char*>::value, std::string>::type asOrDef(const type_t& val)  const {
-				if (!isStr()) return std::string(val);
-				return m_value.sVal;
-			}
-
-			template<typename type_t> typename std::enable_if<std::is_integral<type_t>::value && std::is_signed<type_t>::value && !std::is_same<type_t, bool>::value, type_t>::type asOrDef(const type_t& val) const {
-				if (isSInt()) return static_cast<type_t>(m_value.iVal);
-				if (isUInt()) return static_cast<type_t>(m_value.uVal);
-				if (isDec())  return static_cast<type_t>(m_value.dVal);
-				if (isBool()) return static_cast<type_t>(m_value.bVal);
-				return val;
-			}
-
-			template<typename type_t> typename std::enable_if<std::is_integral<type_t>::value && std::is_unsigned<type_t>::value && !std::is_same<type_t, bool>::value, type_t>::type asOrDef(const type_t& val) const {
-				if (isSInt()) return static_cast<type_t>(m_value.iVal);
-				if (isUInt()) return static_cast<type_t>(m_value.uVal);
-				if (isDec())  return static_cast<type_t>(m_value.dVal);
-				if (isBool()) return static_cast<type_t>(m_value.bVal);
-				return val;
-			}
-
-			template<typename type_t> typename std::enable_if<std::is_floating_point<type_t>::value && !std::is_same<type_t, bool>::value, type_t>::type asOrDef(const type_t& val) const {
-				if (isSInt()) return static_cast<type_t>(m_value.iVal);
-				if (isUInt()) return static_cast<type_t>(m_value.uVal);
-				if (isDec())  return static_cast<type_t>(m_value.dVal);
-				if (isBool()) return static_cast<type_t>(m_value.bVal);
-				return val;
-			}
-
-			template<typename type_t> typename std::enable_if<std::is_same<type_t, bool>::value, type_t>::type asOrDef(const type_t& val) const {
-				if (isSInt()) return static_cast<type_t>(m_value.iVal);
-				if (isUInt()) return static_cast<type_t>(m_value.uVal);
-				if (isDec())  return static_cast<type_t>(m_value.dVal);
-				if (isBool()) return static_cast<type_t>(m_value.bVal);
-				return val;
-			}
-
-			template<typename type_t> std::optional<type_t> tryAs() const {
-				if (isNull()) return std::optional<type_t>();
-				return std::optional<type_t>(as<type_t>());
+			template<typename type_t> type_t asOrSet(const type_t& val) {
+				auto result = tryGet<type_t>();
+				if (!result) return set<type_t>(val).template as<type_t>();
+				return *result;
 			}
 	};
 
@@ -459,8 +431,8 @@ namespace akd {
 
 			PVBuilder& pushIndex() {
 				if (!m_stack.back()->isArr()) m_stack.back()->setArr();
-				m_stack.back()->asArr().push_back(PValue());
-				m_stack.push_back(&(m_stack.back()->asArr().back()));
+				m_stack.back()->getArr().push_back(PValue());
+				m_stack.push_back(&(m_stack.back()->getArr().back()));
 				return *this;
 			}
 
@@ -477,7 +449,7 @@ namespace akd {
 
 			template<typename type_t> PVBuilder& insert(const type_t& val) {
 				if (!m_stack.back()->isArr()) m_stack.back()->setArr();
-				m_stack.back()->asArr().push_back(PValue::from<type_t>(val));
+				m_stack.back()->getArr().push_back(PValue::from<type_t>(val));
 				return *this;
 			}
 
@@ -487,6 +459,26 @@ namespace akd {
 }
 
 namespace akd {
+	// ///////////////////////// //
+	// // Default Deserialize // //
+	// ///////////////////////// //
+
+	namespace internal {
+		template<typename type_t> bool methodDeserialize(type_t& dst, const PValue& src) {
+			auto tmp = src.tryAs<type_t>();
+			if (tmp) dst = *tmp;
+			return tmp.has_value();
+		}
+	}
+
+	inline bool deserialize(PValue::obj_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::arr_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::bin_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::str_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::sint_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::uint_t& dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::dec_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::bool_t& dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
 
 	// /////////////////////// //
 	// // Container Helpers // //
@@ -509,7 +501,7 @@ namespace akd {
 
 	template<typename type_t, typename type2_t> void serialize(akd::PValue& dst, const std::pair<type_t, type2_t>& val, akSize offset = 0) {
 		if (!dst.isArr()) dst.setArr();
-		if (dst.size() < offset + 2) dst.asArr().resize(offset + 2);
+		if (dst.size() < offset + 2) dst.getArr().resize(offset + 2);
 		serialize(dst[offset + 0], val.first);
 		serialize(dst[offset + 1], val.second);
 	}
@@ -560,6 +552,26 @@ namespace akd {
 		std::pair<type_t, type2_t> result;
 		if (!deserialize(result.first,  val[offset + 0])) return false;
 		if (!deserialize(result.second, val[offset + 1])) return false;
+
+		dst = result;
+		return true;
+	}
+
+	template<typename type_t, typename type2_t> bool deserialize(std::map<type_t, type2_t>& dst, const akd::PValue& val) {
+		if (!val.isObj()) return false;
+
+		std::map<type_t, type2_t> result;
+		for(auto& entry : dst.asObj()) result.emplace(deserialize<type_t>(entry.first), deserialize<type2_t>(entry.second));
+
+		dst = result;
+		return true;
+	}
+
+	template<typename type_t, typename type2_t> bool deserialize(std::unordered_map<type_t, type2_t>& dst, const akd::PValue& val) {
+		if (!val.isObj()) return false;
+
+		std::unordered_map<type_t, type2_t> result;
+		for(auto& entry : dst.asObj()) result.emplace(deserialize<type_t>(entry.first), deserialize<type2_t>(entry.second));
 
 		dst = result;
 		return true;

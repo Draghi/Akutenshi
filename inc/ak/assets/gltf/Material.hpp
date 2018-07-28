@@ -68,7 +68,7 @@ namespace akas {
 
 		inline Material extractMaterial(const akd::PValue& val) {
 			AlphaMode alphaMode;
-			std::string modeStr = val.atOrDef("alphaMode").asStrOrDef("OPAQUE");
+			std::string modeStr = val.atOrDef("alphaMode").getStrOrDef("OPAQUE");
 			     if (modeStr == "OPAQUE") alphaMode = AlphaMode::Opaque;
 			else if (modeStr == "MASK")   alphaMode = AlphaMode::Mask;
 			else if (modeStr == "BLEND")  alphaMode = AlphaMode::Blend;
@@ -78,7 +78,7 @@ namespace akas {
 			akm::Vec3 emissiveFactor{0,0,0}; akd::deserialize(emissiveFactor, val.atOrDef("emissiveFactor"));
 
 			return Material{
-				val.atOrDef("name").asStrOrDef(""),
+				val.atOrDef("name").getStrOrDef(""),
 
 				baseFactor,
 				val["pbrMetallicRoughness"].atOrDef("metallicFactor").asOrDef<fpSingle>(1.0f),

@@ -36,11 +36,11 @@ namespace akas {
 
 		inline Skin extractSkin(const akd::PValue& val) {
 			std::vector<gltfID> joints;
-			auto& arr = val["joints"].asArr();
+			auto& arr = val["joints"].getArr();
 			joints.reserve(arr.size());
 			for(auto& jointID : arr) joints.push_back(jointID.as<gltfID>());
 			return Skin{
-				val.atOrDef("name").asStrOrDef(""),
+				val.atOrDef("name").getStrOrDef(""),
 				val.atOrDef("inverseBindMatrices").asOrDef<gltfID>(-1),
 				val.atOrDef("skeleton").asOrDef<gltfID>(-1),
 				joints

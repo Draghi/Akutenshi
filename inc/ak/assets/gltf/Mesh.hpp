@@ -86,10 +86,10 @@ namespace akas {
 
 		inline Mesh extractMesh(const akd::PValue& val) {
 			std::vector<Primitive> primitives;
-			auto& arr = val["primitives"].asArr();
+			auto& arr = val["primitives"].getArr();
 			primitives.reserve(arr.size());
 			for(auto& primitive : arr) primitives.push_back(extractPrimitive(primitive));
-			return Mesh{val.atOrDef("name").asStrOrDef(""), primitives};
+			return Mesh{val.atOrDef("name").getStrOrDef(""), primitives};
 		}
 
 	}

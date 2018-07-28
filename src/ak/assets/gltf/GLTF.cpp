@@ -53,16 +53,16 @@ static akas::ConversionInfo getAssetInfo(akd::PValue& cfg, const akas::Conversio
 	auto& entry = cfg[categoryName].atOrSet(entryName);
 	auto& defEntry = cfg[categoryName].atOrSet("");
 
-	auto defPathStr = (akfs::Path(defEntry.asStrOrDef("data/"))/defaultPath).str(); // This isn't right
+	auto defPathStr = (akfs::Path(defEntry.getStrOrDef("data/"))/defaultPath).str(); // This isn't right
 	auto info = convertHelper.findConversionInfo(
 		entryName,
 		akd::tryDeserialize<akd::SUID>(entry.atOrDef("identifier")),
 		source,
-		entry.exists("destination") ? std::optional<akfs::Path>{akfs::Path(entry.at("destination").asStr())} : std::optional<akfs::Path>{},
+		entry.exists("destination") ? std::optional<akfs::Path>{akfs::Path(entry.at("destination").getStr())} : std::optional<akfs::Path>{},
 		akfs::Path(defPathStr)
 	);
 
-	entry["identifier"].setPValue(akd::serialize(info.identifier));
+	akd::serialize(entry["identifier"], info.identifier);
 	entry["destination"].setStr(info.destination.str());
 
 	return info;
@@ -74,13 +74,13 @@ bool akas::gltf::convertGLTFFile(akas::ConversionHelper& convertHelper, const ak
 
 	bool addedConversion = false;
 
-	auto assetFilename = root/cfg["source"].asStr();
+	auto assetFilename = root/cfg["source"].getStr();
 	bool skipExisting = false;
 	{
 		auto lastModifiedTime = cfg.atOrDef("modifiedTime").asOrDef<int64>(std::numeric_limits<int64>::min());
 		auto curModifiedTime = akfs::modifiedTime(assetFilename);
 		skipExisting = curModifiedTime >= lastModifiedTime;
-		if (skipExisting) cfg["modifiedTime"].setInt(curModifiedTime);
+		if (skipExisting) cfg["modifiedTime"].setSInt(curModifiedTime);
 	}
 
 	// //////////////////// //

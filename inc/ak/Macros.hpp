@@ -85,7 +85,7 @@
 	namespace akd { \
 		inline void serialize(akd::PValue& dst, const qualification::enumName& val) { dst.setStr(qualification::convert##enumName##ToString(val)); } \
 		inline bool deserialize(qualification::enumName& dst, const akd::PValue& val) { \
-			try { dst = qualification::convert##StringTo##enumName(val.asStr()); } \
+			try { dst = qualification::convert##StringTo##enumName(val.getStr()); } \
 			catch(const std::logic_error&) { return false; } \
 			return true; \
 		} \

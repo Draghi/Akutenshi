@@ -134,7 +134,7 @@ namespace akd {
 
 			deserialize(result.alphaMode, src["alphaMode"]);
 			result.alphaCutoff = src["alphaCutoff"].as<fpSingle>();
-			result.doubleSided = src["doubleSided"].asBool();
+			result.doubleSided = src["doubleSided"].getBool();
 
 			dst = result;
 			return true;

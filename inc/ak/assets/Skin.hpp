@@ -52,8 +52,8 @@ namespace akd {
 	inline bool deserialize(akas::Joint& dst, const akd::PValue& src) {
 		try {
 			dst = {
-				src["name"].asStr(),
-				ak::convert_to<std::vector<uint32>>(src["children"].asArr(), [](const auto& val){ return val.template as<uint32>(); }),
+				src["name"].getStr(),
+				ak::convert_to<std::vector<uint32>>(src["children"].getArr(), [](const auto& val){ return val.template as<uint32>(); }),
 				deserialize<akm::Mat4>(src["inverseBindMatrix"]),
 				deserialize<akm::Vec3>(src["position"]),
 				deserialize<akm::Quat>(src["rotation"]),
@@ -65,7 +65,7 @@ namespace akd {
 
 	inline void serialize(akd::PValue& dst, const akas::Joint& src) {
 		dst["name"].setStr(src.name);
-		dst["children"].setArr(); for(auto child : src.children) dst["children"].asArr().push_back(akd::PValue::from<uint32>(child));
+		dst["children"].setArr(); for(auto child : src.children) dst["children"].getArr().push_back(akd::PValue::from<uint32>(child));
 		serialize(dst["inverseBindMatrix"], src.inverseBindMatrix);
 		serialize(dst["position"],          src.position);
 		serialize(dst["rotation"],          src.rotation);
@@ -76,8 +76,8 @@ namespace akd {
 		try {
 			dst = {
 				src["root"].as<int32>(),
-				ak::convert_to<std::vector<akas::Joint>>(src["joints"].asArr(), [](const auto& val){ return deserialize<akas::Joint>(val); }),
-				ak::convert_to<std::vector<uint32>>(src["mapping"].asArr(), [](const auto& val){ return val.template as<uint32>(); })
+				ak::convert_to<std::vector<akas::Joint>>(src["joints"].getArr(), [](const auto& val){ return deserialize<akas::Joint>(val); }),
+				ak::convert_to<std::vector<uint32>>(src["mapping"].getArr(), [](const auto& val){ return val.template as<uint32>(); })
 			};
 			return true;
 		} catch(const std::logic_error&) { return false; }
@@ -85,8 +85,8 @@ namespace akd {
 
 	inline void serialize(akd::PValue& dst, const akas::Skin& src) {
 		dst["root"].set<int32>(src.root);
-		dst["joints"].setArr(); for(auto joint : src.joints) { dst["joints"].asArr().push_back(akd::PValue()); serialize(dst["joints"].asArr().back(), joint); }
-		dst["mapping"].setArr(); for(auto mapping : src.mapping) dst["mapping"].asArr().push_back(akd::PValue::from<uint32>(mapping));
+		dst["joints"].setArr(); for(auto joint : src.joints) { dst["joints"].getArr().push_back(akd::PValue()); serialize(dst["joints"].getArr().back(), joint); }
+		dst["mapping"].setArr(); for(auto mapping : src.mapping) dst["mapping"].getArr().push_back(akd::PValue::from<uint32>(mapping));
 	}
 
 }

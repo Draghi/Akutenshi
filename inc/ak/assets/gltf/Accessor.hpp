@@ -79,7 +79,7 @@ namespace akas {
 		};
 
 		inline AccessorType extractAccessorType(const akd::PValue& accessorTypeData) {
-			std::string val = accessorTypeData.asStr();
+			std::string val = accessorTypeData.getStr();
 			if (val == "SCALAR") return AccessorType::Scalar;
 			if (val == "VEC2") return AccessorType::Vec2;
 			if (val == "VEC3") return AccessorType::Vec3;
@@ -109,14 +109,14 @@ namespace akas {
 		inline Accessor extractAccessor(const akd::PValue& accessorData) {
 			static constexpr auto extractArray = [](const akd::PValue& val){
 				std::vector<fpSingle> result; result.reserve(val.isArr() ? val.size() : 0);
-				for(auto& v : val.asArr()) result.push_back(v.as<fpSingle>());
+				for(auto& v : val.getArr()) result.push_back(v.as<fpSingle>());
 				return result;
 			};
 
 			if (accessorData.exists("sparse")) throw std::runtime_error("Sparse accessor not supported.");
 
 			return Accessor{
-				accessorData.atOrDef("name").asStrOrDef(""),
+				accessorData.atOrDef("name").getStrOrDef(),
 				accessorData["bufferView"].as<gltfID>(),
 				accessorData.atOrDef("byteOffset").asOrDef<int32>(0),
 				static_cast<ComponnentType>(accessorData["componentType"].as<uint32>()),

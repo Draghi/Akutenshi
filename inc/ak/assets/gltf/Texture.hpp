@@ -33,7 +33,7 @@ namespace akas {
 
 		inline Texture extractTexture(const akd::PValue& textureData) {
 			return Texture{
-				textureData.atOrDef("name").asStrOrDef(""),
+				textureData.atOrDef("name").getStrOrDef(""),
 				textureData.atOrDef("sampler").asOrDef<gltfID>(-1),
 				textureData["source"].as<gltfID>(),
 			};

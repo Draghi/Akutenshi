@@ -39,7 +39,7 @@ namespace akd {
 	inline bool deserialize(aka::Mesh& dst, const akd::PValue& src) {
 		std::vector<aka::VertexData> vertexData;
 		{
-			auto binData = src["vertexData"].asBin();
+			auto binData = src["vertexData"].getBin();
 			if ((binData.size() % sizeof(aka::VertexData)) != 0) return false;
 			vertexData.resize(binData.size()/sizeof(aka::VertexData));
 			std::memcpy(vertexData.data(), binData.data(), binData.size());
@@ -47,14 +47,14 @@ namespace akd {
 
 		std::vector<aka::BoneWeights> boneWeights;
 		{
-			auto& boneCfg = src["boneWeights"].asArr();
+			auto& boneCfg = src["boneWeights"].getArr();
 			boneWeights.resize(boneCfg.size());
 			for(auto i = 0u; i < boneCfg.size(); i++) {
-				auto& vWeightCfg = boneCfg[i].asArr();
+				auto& vWeightCfg = boneCfg[i].getArr();
 				for(auto j = 0u; j < vWeightCfg.size(); j++) {
 					boneWeights[i].emplace(
-						vWeightCfg[j]["name"].asStr(),
-						vWeightCfg[j]["weight"].asDec()
+						vWeightCfg[j]["name"].getStr(),
+						vWeightCfg[j]["weight"].getDec()
 					);
 				}
 			}
@@ -62,7 +62,7 @@ namespace akd {
 
 		std::vector<aka::IndexData> indexData;
 		{
-			auto binData = src["indexData"].asBin();
+			auto binData = src["indexData"].getBin();
 			if ((indexData.size() % sizeof(aka::IndexData)) != 0) return false;
 			indexData.resize(binData.size()/sizeof(aka::IndexData));
 			std::memcpy(indexData.data(), binData.data(), binData.size());
@@ -143,13 +143,13 @@ namespace akd {
 	}
 
 	inline void serialize(akd::PValue& dst, const aka::Animation& src) {
-		dst["ticksPerSecond"] = src.ticksPerSecond();
-		dst["duration"] = src.duration();
+		dst["ticksPerSecond"].set(src.ticksPerSecond());
+		dst["duration"].set(src.duration());
 		for(auto i = 0u; i < src.nodes().size(); i++) serialize(dst["nodes"][i], src.nodes()[i]);
 	}
 
 	inline bool deserialize(aka::TweenMode& dst, const akd::PValue& src) {
-		auto enumStr = src.asStr();
+		auto enumStr = src.getStr();
 		if      (enumStr == "None"   ) dst = aka::TweenMode::None;
 		else if (enumStr == "Nearest") dst = aka::TweenMode::Nearest;
 		else if (enumStr == "Linear" ) dst = aka::TweenMode::Linear;
@@ -160,9 +160,9 @@ namespace akd {
 	}
 
 	inline bool deserialize(aka::AnimNode& dst, const akd::PValue& src) {
-		std::string nodeName = src["nodeName"].asStr();
+		std::string nodeName = src["nodeName"].getStr();
 
-		auto& rotFrameArr = src["rotFrames"].asArr();
+		auto& rotFrameArr = src["rotFrames"].getArr();
 		std::map<fpSingle, akm::Quat> rotFrames;
 		for(auto i = 0u; i < rotFrameArr.size(); i++) {
 			akm::Quat quat;
@@ -170,7 +170,7 @@ namespace akd {
 			rotFrames.emplace(rotFrameArr[i][0].as<fpSingle>(), quat);
 		}
 
-		auto& posFrameArr = src["posFrames"].asArr();
+		auto& posFrameArr = src["posFrames"].getArr();
 		std::map<fpSingle, akm::Vec3> posFrames;
 		for(auto i = 0u; i < posFrameArr.size(); i++) {
 			akm::Vec3 vec;
@@ -178,7 +178,7 @@ namespace akd {
 			posFrames.emplace(posFrameArr[i][0].as<fpSingle>(), vec);
 		}
 
-		auto& sclFrameArr = src["sclFrames"].asArr();
+		auto& sclFrameArr = src["sclFrames"].getArr();
 		std::map<fpSingle, akm::Vec3> sclFrames;
 		for(auto i = 0u; i < sclFrameArr.size(); i++) {
 			akm::Vec3 vec;
@@ -199,7 +199,7 @@ namespace akd {
 	}
 
 	inline bool deserialize(aka::Animation& dst, const akd::PValue& src) {
-		auto& nodeArr = src["nodes"].asArr();
+		auto& nodeArr = src["nodes"].getArr();
 		std::vector<aka::AnimNode> animNodes;
 		animNodes.resize(nodeArr.size());
 		for(auto i = 0u; i < nodeArr.size(); i++) deserialize(animNodes[i], nodeArr[i]);
@@ -217,7 +217,7 @@ namespace akd {
 		dst["parentName"].setStr(src.parentName);
 		dst["name"].setStr(src.name);
 
-		auto& childrenNames = dst["childrenNames"].setArr().asArr();
+		auto& childrenNames = dst["childrenNames"].setArr().getArr();
 		childrenNames.resize(src.childrenNames.size());
 		for(auto i = 0u; i < src.childrenNames.size(); i++) childrenNames[i] = akd::PValue::from(src.childrenNames[i]);
 
@@ -230,12 +230,12 @@ namespace akd {
 		try {
 			aka::NamedBone result;
 
-			result.parentName = src["parentName"].asStr();
-			result.name = src["name"].asStr();
+			result.parentName = src["parentName"].getStr();
+			result.name = src["name"].getStr();
 
-			auto& childrenNames = src["childrenNames"].asArr();
+			auto& childrenNames = src["childrenNames"].getArr();
 			result.childrenNames.clear(); dst.childrenNames.reserve(childrenNames.size());
-			for(auto i = 0u; i < childrenNames.size(); i++) result.childrenNames.push_back(childrenNames[i].asStr());
+			for(auto i = 0u; i < childrenNames.size(); i++) result.childrenNames.push_back(childrenNames[i].getStr());
 
 			auto& data = src["data"];
 			if (!akd::deserialize(result.data.nodeMatrix, data["nodeMatrix"])) return false;
@@ -254,7 +254,7 @@ namespace akd {
 
 	inline bool deserialize(aka::Skeleton& dst, const akd::PValue& src) {
 		if (!src.isArr()) return false;
-		auto boneArr = src.asArr();
+		auto boneArr = src.getArr();
 
 		std::vector<aka::NamedBone> bones;
 		bones.resize(boneArr.size());
