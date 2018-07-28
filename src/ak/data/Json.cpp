@@ -84,7 +84,6 @@ struct JSONParser : public rj::BaseReaderHandler<rj::UTF8<>, JSONParser> {
 	    }
 
 	    bool Bool(bool b) {
-	    	akl::Logger("json").info("boolean: ", cKey);
 	    	addPValue(akd::PValue::from<akd::PValue::bool_t>(b));
 	    	return true;
 	    }
