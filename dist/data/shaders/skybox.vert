@@ -15,4 +15,7 @@ void main() {
     
     mat3 invView = transpose(mat3(uMatView));
     fTex = (invView * viewPos);
+    
+    
+   
 }

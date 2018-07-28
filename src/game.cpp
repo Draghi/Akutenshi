@@ -116,27 +116,27 @@ static void startGame() {
 	akr::gl::bindTexture(0, *skyboxTexture);
 	akr::gl::newTexStorageCubemap(akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte, 32, 32, akr::gl::calcTexMaxMipmaps(32, 32));
 	{
-		auto image = akas::loadImageAndTransform("data/pX.png", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 32, 32, false, false);
+		auto image = akas::loadImageAndTransform("data/pX.png", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
 		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::PosX, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, image->data(), image->width(), image->height(), 0, 0);
 	}
 	{
-		auto image = akas::loadImageAndTransform("data/pY.png", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 32, 32, false, false);
+		auto image = akas::loadImageAndTransform("data/pY.png", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
 		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::PosY, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, image->data(), image->width(), image->height(), 0, 0);
 	}
 	{
-		auto image = akas::loadImageAndTransform("data/pZ.png", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 32, 32, false, false);
+		auto image = akas::loadImageAndTransform("data/pZ.png", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
 		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::PosZ, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, image->data(), image->width(), image->height(), 0, 0);
 	}
 	{
-		auto image = akas::loadImageAndTransform("data/nX.png", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 32, 32, false, false);
+		auto image = akas::loadImageAndTransform("data/nX.png", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
 		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::NegX, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, image->data(), image->width(), image->height(), 0, 0);
 	}
 	{
-		auto image = akas::loadImageAndTransform("data/nY.png", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 32, 32, false, false);
+		auto image = akas::loadImageAndTransform("data/nY.png", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
 		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::NegY, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, image->data(), image->width(), image->height(), 0, 0);
 	}
 	{
-		auto image = akas::loadImageAndTransform("data/nZ.png", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 32, 32, false, false);
+		auto image = akas::loadImageAndTransform("data/nZ.png", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
 		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::NegZ, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, image->data(), image->width(), image->height(), 0, 0);
 	}
 	akr::gl::setTexFilters(akr::gl::TexTarget::TexCubemap, akr::gl::FilterType::Linear, akr::gl::MipFilterType::Linear, akr::gl::FilterType::Linear);
