@@ -70,6 +70,7 @@ void akas::convertDirectory(const akfs::Path& dir) {
 	akl::Logger("Convert").info("Found ", fileCount, " asset conversion definition files in ", convertTimer.markAndReset().msecs() , "ms.");
 
 	akSize proccessCount = 0;
+	akSize modifiedCount = 0;
 	akSize     meshCount = 0;
 	akSize materialCount = 0;
 	akSize    imageCount = 0;
@@ -82,9 +83,13 @@ void akas::convertDirectory(const akfs::Path& dir) {
 			auto iter = proccessFunctions.find(convData["type"].getStr());
 			if (iter == proccessFunctions.end()) { akl::Logger("Convert").warn("Could not proccess type '",  convData["type"].getStr(), "' in file: ", (*assetPathIter).str()); continue; }
 
+			const auto convDataTmp = convData;
 			if (iter->second(convertHelper, akfs::Path(*assetPathIter).pop_back(), convData)) proccessCount++;
 
-			akl::Logger("Convert").test_warn(akd::toJsonFile(convData, *assetPathIter), "Could not resave conversion file: ", assetPathIter->str());
+			if (convDataTmp != convData) {
+				if (!akd::toJsonFile(convData, *assetPathIter)) akl::Logger("Convert").warn("Could not save modified conversion file at '", assetPathIter->str(), "'. SUIDs may not persist between conversions!");
+				modifiedCount++;
+			}
 
 			writeMeshes(convertHelper);
 			writeMaterials(convertHelper);
@@ -96,7 +101,9 @@ void akas::convertDirectory(const akfs::Path& dir) {
 		}
 	}
 
-	akl::Logger("Convert").info("Converted ", proccessCount, " out of ", fileCount, " assets in ", convertTimer.markAndReset().msecs() , "ms. Resulting in ", meshCount, " meshes, ", materialCount, " materials, ", imageCount, " images.");
+	akl::Logger("Convert").info("Converted ", proccessCount, " out of ", fileCount, " assets in ", convertTimer.markAndReset().msecs() , "ms.");
+	akl::Logger("Convert").info("Created ", meshCount, " meshes, ", materialCount, " materials and ", imageCount, " images.");
+	akl::Logger("Convert").info("Modified ", modifiedCount, "  of the *.akconv files.");
 }
 
 static void writeMeshes(ConversionHelper& state) {

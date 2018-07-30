@@ -18,6 +18,7 @@
 #define AK_DATA_PVALUE_HPP_
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <deque>
 #include <functional>
@@ -26,18 +27,13 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include <ak/data/Path.hpp>
-#include <ak/filesystem/Path.hpp>
 #include <ak/PrimitiveTypes.hpp>
-
-/**
- * TODO Extend, refactor and make breaking api changes, yay.
- * - "as" methods should use "try" methods.
- * - "as" methods should only perform minimal conversions (uint<->int, single<->double ie.)
- */
+#include <ak/String.hpp>
 
 namespace akd {
 
@@ -64,10 +60,6 @@ namespace akd {
 	};
 
 	void traversePValue(const PValue& cNode, const std::function<void(const TreePath& path, TraverseAction action, const PValue& value)>& callback);
-
-
-
-
 
 	class PValue final {
 		public:
@@ -122,14 +114,32 @@ namespace akd {
 			}
 
 		public:
+			template<typename type_t> static PValue from(const type_t& val) { PValue result; result.set<type_t>(val); return result; }
+
 			PValue() : m_type(PType::Null) {}
 			PValue(const PValue& val) : m_type(PType::Null) { setPValue(val); }
-			PValue& operator=(const PValue& val) { setPValue(val); return *this; }
-
-			template<typename type_t> static PValue from(const type_t& val) { PValue result; result.set<type_t>(val); return result; }
 
 			~PValue() { setNull(); }
 
+			PValue& operator=(const PValue& val) { setPValue(val); return *this; }
+
+			bool operator==(const PValue& o) const {
+				if (m_type != o.m_type) return false;
+				switch(m_type) {
+					case PType::Null:     return true;
+					case PType::Object:   return getObj()  == o.getObj();
+					case PType::Array:    return getArr()  == o.getArr();
+					case PType::Binary:   return getBin()  == o.getBin();
+					case PType::String:   return getStr()  == o.getStr();
+					case PType::Signed:   return getSInt() == o.getSInt();
+					case PType::Unsigned: return getUInt() == o.getUInt();
+					case PType::Decimal:  return getDec()  == o.getDec();
+					case PType::Boolean:  return getBool() == o.getBool();
+					default: throw std::logic_error("Unhandled data type.");
+				}
+			}
+
+			bool operator!=(const PValue& o) const { return !(*this == o); }
 
 
 			// //////////////// //
@@ -459,30 +469,11 @@ namespace akd {
 }
 
 namespace akd {
-	// ///////////////////////// //
-	// // Default Deserialize // //
-	// ///////////////////////// //
-
-	namespace internal {
-		template<typename type_t> bool methodDeserialize(type_t& dst, const PValue& src) {
-			auto tmp = src.tryAs<type_t>();
-			if (tmp) dst = *tmp;
-			return tmp.has_value();
-		}
-	}
-
-	inline bool deserialize(PValue::obj_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::arr_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::bin_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::str_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::sint_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::uint_t& dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::dec_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::bool_t& dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-
 	// /////////////////////// //
 	// // Container Helpers // //
 	// /////////////////////// //
+
+	// Serialize
 
 	template<typename type_t, typename alloc_t> void serialize(akd::PValue& dst, const std::vector<type_t, alloc_t>& val) {
 		if (!dst.isArr()) dst.setArr();
@@ -506,19 +497,17 @@ namespace akd {
 		serialize(dst[offset + 1], val.second);
 	}
 
-	// /////////////////////// //
-	// // Serialize Helpers // //
-	// /////////////////////// //
-
-	template<typename type_t> PValue serialize(const type_t& val) {
-		PValue result; serialize(result, val);
-		return result;
+	template<typename type_t, typename alloc_t> void serialize(akd::PValue& dst, const std::map<std::string, type_t>& val) {
+		if (!dst.isArr()) dst.setArr();
+		for(const auto& entry : val) serialize(dst[entry.first.asStr()], entry.second);
 	}
 
+	template<typename type_t, typename alloc_t> void serialize(akd::PValue& dst, const std::unordered_map<std::string, type_t>& val) {
+		if (!dst.isArr()) dst.setArr();
+		for(const auto& entry : val) serialize(dst[entry.first.asStr()], entry.second);
+	}
 
-	// ///////////////////////// //
-	// // Deserialize Helpers // //
-	// ///////////////////////// //
+	// Deserialize
 
 	template<typename type_t, typename alloc_t> bool deserialize(std::vector<type_t, alloc_t>& dst, const akd::PValue& val) {
 		if (!val.isArr()) return false;
@@ -577,6 +566,42 @@ namespace akd {
 		return true;
 	}
 
+	// /////////////////////// //
+	// // Serialize Helpers // //
+	// /////////////////////// //
+
+	template<typename type_t> PValue serialize(const type_t& val) {
+		PValue result; serialize(result, val);
+		return result;
+	}
+
+	// ///////////////////////// //
+	// // Default Deserialize // //
+	// ///////////////////////// //
+
+	namespace internal {
+		template<typename type_t> bool methodDeserialize(type_t& dst, const PValue& src) {
+			auto tmp = src.tryAs<type_t>();
+			if (tmp) dst = *tmp;
+			return tmp.has_value();
+		}
+	}
+
+	inline bool deserialize(PValue::obj_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::arr_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::bin_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::str_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::sint_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::uint_t& dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::dec_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::bool_t& dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+
+
+	// ///////////////////////// //
+	// // Deserialize Helpers // //
+	// ///////////////////////// //
+
+
 	template<typename type_t> std::optional<type_t> tryDeserialize(const PValue& root) {
 		type_t result;
 		return deserialize(result, root) ?  std::optional<type_t>{result} :  std::optional<type_t>{};
@@ -586,25 +611,6 @@ namespace akd {
 		auto result = tryDeserialize<type_t>(root);
 		if (result) return *result;
 		else throw std::logic_error("Failed to deserialize value.");
-	}
-
-	// ///////////////// //
-	// // I/O Helpers // //
-	// ///////////////// //
-
-	template<typename type_t, typename callback_t> bool deserializeFromFile(type_t& dst, const akfs::Path& filepath, callback_t callback) {
-		akd::PValue data = callback(filepath);
-		return deserialize(dst, data);
-	}
-
-	template<typename type_t, typename callback_t> std::optional<type_t> tryDeserializeFromFile(const akfs::Path& filepath, callback_t callback) {
-		akd::PValue data = callback(filepath);
-		return tryDeserialize<type_t>(data);
-	}
-
-	template<typename type_t, typename callback_t> type_t deserializeFromFile(const akfs::Path& filepath, callback_t callback) {
-		akd::PValue data = callback(filepath);
-		return deserialize<type_t>(data);
 	}
 }
 

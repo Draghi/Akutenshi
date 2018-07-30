@@ -80,7 +80,7 @@ bool akas::gltf::convertGLTFFile(akas::ConversionHelper& convertHelper, const ak
 		auto lastModifiedTime = cfg.atOrDef("modifiedTime").asOrDef<int64>(std::numeric_limits<int64>::min());
 		auto curModifiedTime = akfs::modifiedTime(assetFilename);
 		skipExisting = curModifiedTime >= lastModifiedTime;
-		if (skipExisting) cfg["modifiedTime"].setSInt(curModifiedTime);
+		if (!skipExisting) cfg["modifiedTime"].setSInt(curModifiedTime);
 	}
 
 	// //////////////////// //

@@ -24,6 +24,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include <ak/data/PValue.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/String.hpp>
 
@@ -149,6 +150,20 @@ namespace akfs {
 				return m_pathTokens.size() >= path.m_pathTokens.size();
 			}
 	};
+
+}
+
+namespace akd {
+
+	inline void serialize(akd::PValue& dst, const akfs::Path& src) {
+		dst.setStr(src.str());
+	}
+
+	inline bool deserialize(akfs::Path& dst, const akd::PValue& src) {
+		if (!src.isStr()) return false;
+		dst = akfs::Path(src.getStr());
+		return true;
+	}
 
 }
 
