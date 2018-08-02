@@ -25,7 +25,7 @@
 #include <ak/container/SlotMap.hpp>
 #include <ak/container/UnorderedVector.hpp>
 #include <ak/engine/Type.hpp>
-#include <ak/Iterator.hpp>
+#include <ak/util/Iterator.hpp>
 
 namespace ake {
 	namespace internal {
@@ -56,7 +56,7 @@ namespace ake {
 					auto nameID = m_entityNameID.at(entityID);
 					auto& name = m_nameStorage.at(nameID);
 					auto& nameEntry = m_lookupEntitiesByName.at(name);
-					nameEntry.second.erase(ak::find(nameEntry.second, entityID));
+					nameEntry.second.erase(aku::find(nameEntry.second, entityID));
 					if (nameEntry.second.empty()) {
 						m_lookupEntitiesByName.erase(name);
 						m_nameStorage.erase(nameID);

@@ -22,14 +22,14 @@
 
 #include <ak/data/Image.hpp>
 #include <ak/math/Types.hpp>
-#include <ak/Macros.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/gl/Types.hpp>
+#include <ak/data/SmartEnum.hpp>
 
 namespace akr {
 	namespace gl {
 
-		AK_DEFINE_SMART_ENUM_CLASS(CubemapTarget,
+		AK_SMART_ENUM_CLASS(CubemapTarget,
 			PosX,
 			PosY,
 			PosZ,
@@ -38,7 +38,7 @@ namespace akr {
 			NegZ
 		)
 
-		AK_DEFINE_SMART_ENUM_CLASS(TexTarget,
+		AK_SMART_ENUM_CLASS(TexTarget,
 			Tex1D,
 			Tex2D,
 			Tex3D,
@@ -47,14 +47,14 @@ namespace akr {
 			TexCubemap
 		)
 
-		AK_DEFINE_SMART_ENUM_CLASS_KV(TexFormat,
+		AK_SMART_ENUM_CLASS_KV(TexFormat,
 			R,    1,
 			RG,   2,
 			RGB,  3,
 			RGBA, 4
 		)
 
-		AK_DEFINE_SMART_ENUM_CLASS(TexStorage,
+		AK_SMART_ENUM_CLASS(TexStorage,
 			Byte,
 			Byte_sRGB,
 			Short,
@@ -62,25 +62,25 @@ namespace akr {
 			Single
 		)
 
-		AK_DEFINE_SMART_ENUM_CLASS(FilterType,
+		AK_SMART_ENUM_CLASS(FilterType,
 			Nearest,
 			Linear
 		)
 
-		AK_DEFINE_SMART_ENUM_CLASS(MipFilterType,
+		AK_SMART_ENUM_CLASS(MipFilterType,
 			None,
 			Nearest,
 			Linear
 		)
 
-		AK_DEFINE_SMART_ENUM_CLASS(ClampType,
+		AK_SMART_ENUM_CLASS(ClampType,
 			Repeat,
 			Mirror,
 			Edge,
 			Border
 		)
 
-		AK_DEFINE_SMART_ENUM_CLASS(ClampDir,
+		AK_SMART_ENUM_CLASS(ClampDir,
 			Horz,
 			Vert,
 			Depth
@@ -186,13 +186,13 @@ namespace akr {
 	}
 }
 
-AK_DEFINE_SMART_ENUM_SERIALIZE(akr::gl, CubemapTarget)
-AK_DEFINE_SMART_ENUM_SERIALIZE(akr::gl, TexTarget)
-AK_DEFINE_SMART_ENUM_SERIALIZE(akr::gl, TexFormat)
-AK_DEFINE_SMART_ENUM_SERIALIZE(akr::gl, TexStorage)
-AK_DEFINE_SMART_ENUM_SERIALIZE(akr::gl, FilterType)
-AK_DEFINE_SMART_ENUM_SERIALIZE(akr::gl, MipFilterType)
-AK_DEFINE_SMART_ENUM_SERIALIZE(akr::gl, ClampType)
-AK_DEFINE_SMART_ENUM_SERIALIZE(akr::gl, ClampDir)
+AK_SMART_ENUM_SERIALIZE(akr::gl, CubemapTarget)
+AK_SMART_ENUM_SERIALIZE(akr::gl, TexTarget)
+AK_SMART_ENUM_SERIALIZE(akr::gl, TexFormat)
+AK_SMART_ENUM_SERIALIZE(akr::gl, TexStorage)
+AK_SMART_ENUM_SERIALIZE(akr::gl, FilterType)
+AK_SMART_ENUM_SERIALIZE(akr::gl, MipFilterType)
+AK_SMART_ENUM_SERIALIZE(akr::gl, ClampType)
+AK_SMART_ENUM_SERIALIZE(akr::gl, ClampDir)
 
 #endif

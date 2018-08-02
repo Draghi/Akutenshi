@@ -39,13 +39,15 @@
 #include <ak/Log.hpp>
 #include <ak/math/Scalar.hpp>
 #include <ak/math/Types.hpp>
-#include <ak/Macros.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/gl/Draw.hpp>
 #include <ak/render/gl/RenderTarget.hpp>
 #include <ak/render/gl/Textures.hpp>
 #include <ak/render/SceneRendererDefault.hpp>
 #include <ak/ScopeGuard.hpp>
+#include <ak/data/SmartEnum.hpp>
+
+#include <ak/data/SmartClass.hpp>
 #include <ak/thread/CurrentThread.hpp>
 #include <ak/util/FPSCounter.hpp>
 #include <ak/util/Time.hpp>
@@ -54,6 +56,7 @@
 #include <ak/window/Window.hpp>
 #include <ak/window/WindowOptions.hpp>
 #include <akgame/CameraControllerBehaviour.hpp>
+
 
 int akGameMain();
 

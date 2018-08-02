@@ -34,7 +34,32 @@
 		},
 		
 	(Section:["type":"TEXTURE"])
-		"config": <Akutenshi Texture>,
+		"config": {
+			"type": <ENUM["Tex1D", "Tex2D", "Tex3D", "Tex1D_Array", "Tex2D_Array", "TexCubemap"]>,
+			"levels":[
+				[
+					{
+						(Opt["source"])_"identifier": <SUID>,                                 // Asset ID of image
+						(Opt["identifier"]) "source": <STR>                                   // Source akconv file of image
+						(Opt["None"]) "rotate": <ENUM["None","Right", "Upsidedown", "Left"]>, // Rotates after offset/cropping
+						(Opt[0]) "layer":<INT>,                                               // Used in 1D textures/1D arrays
+						(Opt[0]) "offsetX":<INT>,                                             // Image wraps around
+						(Opt[0]) "offsetY":<INT>,                                             // Image wraps around
+						(Opt[0]) "cropX":<INT>,                                               // Negative values flip, 0 = image size
+						(Opt[0]) "cropY":<INT>                                                // Negative values flip, 0 = image size
+					},
+					...
+				],
+				...
+			],
+			(Opt["Edge"]) "clampHorz":  <ENUM["Edge", "Border", "Wrap", "Mirror"],
+			(Opt["Edge"]) "clampVert":  <ENUM["Edge", "Border", "Wrap", "Mirror"],
+			(Opt["Edge"]) "clampDepth": <ENUM["Edge", "Border", "Wrap", "Mirror"],
+			
+			(Opt["Nearest"]) "filterMin": <ENUM["Nearest", "Linear"]>,
+			(Opt["Nearest"]) "filterMax": <ENUM["Nearest", "Linear"]>,
+			(Opt["None"])"filterMip": <ENUM["None", "Nearest", "Linear"]>,
+		}
 }
 
 ++=============================++
@@ -56,7 +81,7 @@
 	"levels":[
 		[
 			{
-				"image": <<STR> or <SUID>>,                                           // Asset ID of image
+				"identifier": <SUID>,                                                 // Asset ID of image
 				(Opt["None"]) "rotate": <ENUM["None","Right", "Upsidedown", "Left"]>, // Rotates after offset/cropping
 				(Opt[0]) "layer":<INT>,                                               // Used in 1D textures/1D arrays
 				(Opt[0]) "offsetX":<INT>,                                             // Image wraps around

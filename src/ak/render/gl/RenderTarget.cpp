@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include <ak/BitManipulaton.hpp>
+#include <ak/util/Bits.hpp>
 
 using namespace akr::gl;
 
@@ -88,9 +88,9 @@ void akr::gl::bindDisplayRenderTarget() {
 
 static GLbitfield akToGLBlitMask(BlitMask mask) {
 	GLbitfield result = 0;
-	result |= ak::hasBitFlag(mask, BlitMask::Colour)  ? GL_COLOR_BUFFER_BIT : 0;
-	result |= ak::hasBitFlag(mask, BlitMask::Depth)   ? GL_DEPTH_BUFFER_BIT : 0;
-	result |= ak::hasBitFlag(mask, BlitMask::Stencil) ? GL_STENCIL_BUFFER_BIT : 0;
+	result |= aku::hasBitFlag(mask, BlitMask::Colour)  ? GL_COLOR_BUFFER_BIT : 0;
+	result |= aku::hasBitFlag(mask, BlitMask::Depth)   ? GL_DEPTH_BUFFER_BIT : 0;
+	result |= aku::hasBitFlag(mask, BlitMask::Stencil) ? GL_STENCIL_BUFFER_BIT : 0;
 	return result;
 }
 

@@ -19,7 +19,7 @@
 #include <utility>
 
 #include <ak/engine/EntityManager.hpp>
-#include <ak/Iterator.hpp>
+#include <ak/util/Iterator.hpp>
 
 using namespace ake;
 using namespace ake::internal;
@@ -71,7 +71,7 @@ bool EntityGraphManager::setParent(EntityID entityID, EntityID newParent) {
 
 	// Change parent
 	auto& parentEntry = m_data.at(childEntry.parent);
-	parentEntry.children.erase(ak::find(parentEntry.children, entityID));
+	parentEntry.children.erase(aku::find(parentEntry.children, entityID));
 	childEntry.parent = newParent;
 	if (newParent) m_data.at(newParent).children.insert(entityID);
 	else m_root.insert(entityID);

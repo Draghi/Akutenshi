@@ -25,7 +25,7 @@
 #include <ak/filesystem/CFile.hpp>
 #include <ak/render/gl/Shaders.hpp>
 #include <ak/render/gl/Types.hpp>
-#include <ak/String.hpp>
+#include <ak/util/String.hpp>
 
 namespace akr {
 	namespace gl {
@@ -35,19 +35,19 @@ namespace akr {
 
 				for(auto& stageInfo : stages) {
 					auto shaderFile = akfs::CFile(stageInfo.second, akfs::OpenFlags::In);
-					if (!shaderFile) throw std::runtime_error(ak::buildString("buildShaderProgram: Could not open file: ", stageInfo.second));
+					if (!shaderFile) throw std::runtime_error(aku::buildString("buildShaderProgram: Could not open file: ", stageInfo.second));
 
 					std::string source;
-					if (!shaderFile.readAllLines(source)) throw std::runtime_error(ak::buildString("buildShaderProgram: Could not read data from file: ", stageInfo.second));
+					if (!shaderFile.readAllLines(source)) throw std::runtime_error(aku::buildString("buildShaderProgram: Could not read data from file: ", stageInfo.second));
 
 					ShaderStage stage(stageInfo.first);
-					if (!stage.attach(source)) throw std::runtime_error(ak::buildString("buildShaderProgram: Could not attach source to shader, see log for more information."));
-					if (!stage.compile()) throw std::runtime_error(ak::buildString("buildShaderProgram: Could not compile shader. Error log:\n", stage.compileLog()));
+					if (!stage.attach(source)) throw std::runtime_error(aku::buildString("buildShaderProgram: Could not attach source to shader, see log for more information."));
+					if (!stage.compile()) throw std::runtime_error(aku::buildString("buildShaderProgram: Could not compile shader. Error log:\n", stage.compileLog()));
 
-					if (!program.attach(stage)) throw std::runtime_error(ak::buildString("buildShaderProgram: Could not attach shader to program."));
+					if (!program.attach(stage)) throw std::runtime_error(aku::buildString("buildShaderProgram: Could not attach shader to program."));
 				}
 
-				if (!program.link()) throw std::runtime_error(ak::buildString("buildShaderProgram: Failed to link shader. Error log:\n", program.linkLog()));
+				if (!program.link()) throw std::runtime_error(aku::buildString("buildShaderProgram: Failed to link shader. Error log:\n", program.linkLog()));
 				return program;
 			}
 		}

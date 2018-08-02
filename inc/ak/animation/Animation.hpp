@@ -28,7 +28,7 @@
 #include <ak/math/Scalar.hpp>
 #include <ak/math/Types.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/Iterator.hpp>
+#include <ak/util/Iterator.hpp>
 
 namespace aka {
 
@@ -127,7 +127,7 @@ namespace aka {
 				}
 
 			} else {
-				startFrame = ak::prevIter(endFrame);
+				startFrame = aku::prevIter(endFrame);
 				startTime = startFrame->first;
 				endTime = endFrame->first;
 			}

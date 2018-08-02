@@ -23,7 +23,7 @@
 #include <ak/data/PValue.hpp>
 #include <ak/data/SUID.hpp>
 #include <ak/filesystem/Path.hpp>
-#include <ak/Macros.hpp>
+#include <ak/data/SmartEnum.hpp>
 
 namespace akas { struct AssetInfo; }
 
@@ -34,7 +34,7 @@ namespace akd {
 
 namespace akas {
 
-	AK_DEFINE_SMART_ENUM_CLASS(AssetType,
+	AK_SMART_ENUM_CLASS(AssetType,
 		Animation,
 		Material,
 		Mesh,
@@ -54,7 +54,7 @@ namespace akas {
 	};
 }
 
-AK_DEFINE_SMART_ENUM_SERIALIZE(akas, AssetType)
+AK_SMART_ENUM_SERIALIZE(akas, AssetType)
 
 namespace akd {
 

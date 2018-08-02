@@ -29,7 +29,7 @@
 #include <ak/assets/gltf/Skin.hpp>
 #include <ak/assets/gltf/Util.hpp>
 #include <ak/assets/Skin.hpp>
-#include <ak/Iterator.hpp>
+#include <ak/util/Iterator.hpp>
 #include <ak/math/Types.hpp>
 #include <ak/PrimitiveTypes.hpp>
 
@@ -89,7 +89,7 @@ akas::Skin akas::gltf::processGLTFSkin(const Asset& asset, const Skin& skin, glt
 	for(const auto& jointID : jointSet) {
 		jointHierarchy.push_back({
 			asset.nodes[jointID].name,
-			ak::convert_to_if<std::vector<uint32>>(asset.nodes[jointID].childrenIDs, [&](const auto& childID){
+			aku::convert_to_if<std::vector<uint32>>(asset.nodes[jointID].childrenIDs, [&](const auto& childID){
 				auto jointIter = jointIndexMap.find(childID);
 				return jointIter == jointIndexMap.end() ? std::optional<uint32>() : std::optional<uint32>(jointIter->second);
 			}),

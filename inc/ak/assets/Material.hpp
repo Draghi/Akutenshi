@@ -18,21 +18,19 @@
 #define AK_ASSETS_MATERIAL_HPP_
 
 #include <optional>
-#include <stdexcept>
-#include <string>
-#include <utility>
 
-#include <ak/data/PValue.hpp>
 #include <ak/data/SUID.hpp>
-#include <ak/math/Serialize.hpp>
 #include <ak/math/Types.hpp>
-#include <ak/Macros.hpp>
+#include <ak/math/Serialize.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/gl/Textures.hpp>
+#include <ak/data/SmartEnum.hpp>
+
+#include <ak/data/SmartClass.hpp>
 
 namespace akas {
 
-	AK_DEFINE_SMART_TENUM_CLASS_KV(AlphaMode, uint8,
+	AK_SMART_TENUM_CLASS_KV(AlphaMode, uint8,
 		Opaque, 0,
 		Mask,   1,
 		Blend,  2
@@ -68,81 +66,30 @@ namespace akas {
 
 }
 
-AK_DEFINE_SMART_ENUM_SERIALIZE(akas, AlphaMode)
+AK_SMART_ENUM_SERIALIZE(akas, AlphaMode)
 
-namespace akd {
+AK_SMART_CLASS(akas::Sampler,
+	FIELD, imgAssetID,
+	FIELD, minFilter,
+	FIELD, minMipFilter,
+	FIELD, magFilter,
+	FIELD, clampS,
+	FIELD, clampT
+)
 
-	inline void serialize(akd::PValue& dst, const akas::Sampler& src) {
-		serialize(dst["imgAssetID"],   src.imgAssetID  );
-		serialize(dst["minFilter"],    src.minFilter   );
-		serialize(dst["minMipFilter"], src.minMipFilter);
-		serialize(dst["magFilter"],    src.magFilter   );
-		serialize(dst["clampS"],       src.clampS      );
-		serialize(dst["clampT"],       src.clampT      );
-	}
-
-	inline bool deserialize(akas::Sampler& dst, const akd::PValue& src) {
-		try {
-			akas::Sampler result;
-
-			if (!deserialize(result.imgAssetID  , src["imgAssetID"]  )) return false;
-			if (!deserialize(result.minFilter   , src["minFilter"]   )) return false;
-			if (!deserialize(result.minMipFilter, src["minMipFilter"])) return false;
-			if (!deserialize(result.magFilter   , src["magFilter"]   )) return false;
-			if (!deserialize(result.clampS      , src["clampS"]      )) return false;
-			if (!deserialize(result.clampT      , src["clampT"]      )) return false;
-
-			dst = result;
-
-			return true;
-		} catch(const std::logic_error& /*e*/) {
-			return false;
-		}
-	}
-
-	inline void serialize(akd::PValue& dst, const akas::Material& src) {
-		serialize(dst["baseColour"], src.baseColour);
-		dst["metallicFactor"].setDec(src.metallicFactor);
-		dst["roughnessFactor"].setDec(src.roughnessFactor);
-		serialize(dst["emmisiveFactor"], src.emmisiveFactor);
-
-		if (src.baseTexture      ) serialize(dst["baseTexture"],       *src.baseTexture);
-		if (src.metalRoughTexture) serialize(dst["metalRoughTexture"], *src.metalRoughTexture);
-		if (src.normalTexture    ) serialize(dst["normalTexture"],     *src.normalTexture);
-		if (src.occlusionTexture ) serialize(dst["occlusionTexture"],  *src.occlusionTexture);
-		if (src.emissiveTexture  ) serialize(dst["emissiveTexture"],   *src.emissiveTexture);
-
-		serialize(dst["alphaMode"], src.alphaMode);
-		dst["alphaCutoff"].setDec(src.alphaCutoff);
-		dst["doubleSided"].setBool(src.doubleSided);
-	}
-
-	inline bool deserialize(akas::Material& dst, const akd::PValue& src) {
-		try {
-			akas::Material result;
-
-			deserialize(result.baseColour, src["baseColour"]);
-			result.metallicFactor = src["metallicFactor"].as<fpSingle>();
-			result.roughnessFactor = src["roughnessFactor"].as<fpSingle>();
-			deserialize(result.emmisiveFactor, src["emmisiveFactor"]);
-
-			if (src.exists("baseTexture"      )) result.baseTexture       = deserialize<akas::Sampler>(src["baseTexture"]      );
-			if (src.exists("metalRoughTexture")) result.metalRoughTexture = deserialize<akas::Sampler>(src["metalRoughTexture"]);
-			if (src.exists("normalTexture"    )) result.normalTexture     = deserialize<akas::Sampler>(src["normalTexture"]    );
-			if (src.exists("occlusionTexture" )) result.occlusionTexture  = deserialize<akas::Sampler>(src["occlusionTexture"] );
-			if (src.exists("emissiveTexture"  )) result.emissiveTexture   = deserialize<akas::Sampler>(src["emissiveTexture"]  );
-
-			deserialize(result.alphaMode, src["alphaMode"]);
-			result.alphaCutoff = src["alphaCutoff"].as<fpSingle>();
-			result.doubleSided = src["doubleSided"].getBool();
-
-			dst = result;
-			return true;
-		} catch(const std::logic_error& /*e*/) {
-			return false;
-		}
-	}
-
-}
+AK_SMART_CLASS(akas::Material,
+	FIELD, baseColour,
+	FIELD, metallicFactor,
+	FIELD, roughnessFactor,
+	FIELD, emmisiveFactor,
+	FIELD, baseTexture,
+	FIELD, metalRoughTexture,
+	FIELD, normalTexture,
+	FIELD, occlusionTexture,
+	FIELD, emissiveTexture,
+	FIELD, alphaMode,
+	FIELD, alphaCutoff,
+	FIELD, doubleSided
+)
 
 #endif /* AK_ASSETS_MATERIAL_HPP_ */

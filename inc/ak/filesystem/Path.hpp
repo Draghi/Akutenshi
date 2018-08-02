@@ -26,7 +26,7 @@
 
 #include <ak/data/PValue.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/String.hpp>
+#include <ak/util/String.hpp>
 
 namespace akfs {
 
@@ -37,7 +37,7 @@ namespace akfs {
 			std::vector<std::string> tokenize(const std::string& path) {
 				std::vector<std::string> result;
 				result.reserve(std::count(path.begin(), path.end(), '/'));
-				ak::split(path, {{"/"}}, [&](const std::string& delim, const std::string& substr){ if (substr.size() > 0) result.push_back(substr + delim); });
+				aku::split(path, {{"/"}}, [&](const std::string& delim, const std::string& substr){ if (substr.size() > 0) result.push_back(substr + delim); });
 				return result;
 			}
 

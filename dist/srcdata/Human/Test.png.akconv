@@ -1,5 +1,5 @@
 {
-    "destination": "data/Human/Test.png.akres",
+    "destination": "data/human/Test.png.akres",
     "identifier": [16383795956207811637, 11532294557925067071],
     "remapPaths": true,
     "source": "Test.png",

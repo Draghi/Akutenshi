@@ -1,61 +1,24 @@
 /**
  * Copyright 2018 Michael J. Baker
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-#ifndef AK_INTERNAL_MACROSINTERNAL_HPP_
-#define AK_INTERNAL_MACROSINTERNAL_HPP_
 
-// ////////////////////////// //
-// // Macro Helper Section // //
-// ////////////////////////// //
+#ifndef AK_DATA_SMARTENUM_HPP_
+#define AK_DATA_SMARTENUM_HPP_
 
-#define AK_INTERNAL_CONCATENATE1(arg1, arg2)  AK_INTERNAL_CONCATENATE2(arg1, arg2)
-#define AK_INTERNAL_CONCATENATE2(arg1, arg2)  arg1##arg2
-
-#define AK_INTERNAL_NARGS(\
-		 _0,  _1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, \
-		_10, _11, _12, _13, _14, _15, _16, _17, _18, _19, \
-		_20, _21, _22, _23, _24, _25, _26, _27, _28, _29, \
-		_30, _31, _32, _33, _34, _35, _36, _37, _38, _39, \
-		_40, _41, _42, _43, _44, _45, _46, _47, _48, _49, \
-		_50, _51, _52, _53, _54, _55, _56, _57, _58, _59, \
-		_60, _61, _62, _63, _64, _65, _66, _67, _68, _69, \
-		_70, _71, _72, _73, _74, _75, _76, _77, _78, _79, \
-		_80, _81, _82, _83, _84, _85, _86, _87, _88, _89, \
-		_90, _91, _92, _93, _94, _95, _96, _97, _98, _99, \
-		N, ...) N
-
-#define AK_CONCATENATE(arg1, arg2)   AK_INTERNAL_CONCATENATE1(arg1, arg2)
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
-#define AK_NARGS(...) AK_INTERNAL_NARGS(0, ## __VA_ARGS__, \
-		99, 98, 97, 96, 95, 94, 93, 92, 91, 90, \
-		89, 88, 87, 86, 85, 84, 83, 82, 81, 80, \
-		79, 78, 77, 76, 75, 74, 73, 72, 71, 70, \
-		69, 68, 67, 66, 65, 64, 63, 62, 61, 60, \
-		59, 58, 57, 56, 55, 54, 53, 52, 51, 50, \
-		49, 48, 47, 46, 45, 44, 43, 42, 41, 40, \
-		39, 38, 37, 36, 35, 34, 33, 32, 31, 30, \
-		29, 28, 27, 26, 25, 24, 23, 22, 21, 20, \
-		19, 18, 17, 16, 15, 14, 13, 12, 11, 10, \
-		 9,  8,  7,  6,  5,  4,  3,  2,  1,  0)
-#pragma clang diagnostic pop
-
-// /////////////////////// //
-// // SmartEnum Section // //
-// /////////////////////// //
+#include <string_view>
+#include <ak/util/Macro.hpp>
 
 #define AK_INTERNAL_ENUM_KV_2( x, y) x = y,
 #define AK_INTERNAL_ENUM_KV_4( x, y, ...) x = y, AK_INTERNAL_ENUM_KV_2( __VA_ARGS__)
@@ -219,7 +182,7 @@
 		throw std::logic_error(std::string("Invalid identifier for enum '"#enumName"': ") + val); \
 	}
 
-#define AK_INTERNAL_ENUM_TO_STR_1( enumName, x     ) case enumName::x: return AK_STRING_VIEW(#x);
+#define AK_INTERNAL_ENUM_TO_STR_1( enumName, x     ) case enumName::x: return AK_STRING_VIEW(#x); default: throw std::logic_error(aku::buildString("Unhandled enum in auto generated enum converter: ", static_cast<int64>(val)));
 #define AK_INTERNAL_ENUM_TO_STR_2( enumName, x, ...) case enumName::x: return AK_STRING_VIEW(#x); AK_INTERNAL_ENUM_TO_STR_1( enumName, __VA_ARGS__)
 #define AK_INTERNAL_ENUM_TO_STR_3( enumName, x, ...) case enumName::x: return AK_STRING_VIEW(#x); AK_INTERNAL_ENUM_TO_STR_2( enumName, __VA_ARGS__)
 #define AK_INTERNAL_ENUM_TO_STR_4( enumName, x, ...) case enumName::x: return AK_STRING_VIEW(#x); AK_INTERNAL_ENUM_TO_STR_3( enumName, __VA_ARGS__)
@@ -319,7 +282,7 @@
 #define AK_INTERNAL_ENUM_TO_STR_98(enumName, x, ...) case enumName::x: return AK_STRING_VIEW(#x); AK_INTERNAL_ENUM_TO_STR_97(enumName, __VA_ARGS__)
 #define AK_INTERNAL_ENUM_TO_STR_99(enumName, x, ...) case enumName::x: return AK_STRING_VIEW(#x); AK_INTERNAL_ENUM_TO_STR_98(enumName, __VA_ARGS__)
 
-#define AK_INTERNAL_ENUM_TO_ENUM_1( enumName, x     ) if(val == #x) return enumName::x;
+#define AK_INTERNAL_ENUM_TO_ENUM_1( enumName, x     ) if(val == #x) return enumName::x; throw std::logic_error(aku::buildString("Unhandled enum in auto generated enum converter: ", val));
 #define AK_INTERNAL_ENUM_TO_ENUM_2( enumName, x, ...) if(val == #x) return enumName::x; AK_INTERNAL_ENUM_TO_ENUM_1( enumName, __VA_ARGS__)
 #define AK_INTERNAL_ENUM_TO_ENUM_3( enumName, x, ...) if(val == #x) return enumName::x; AK_INTERNAL_ENUM_TO_ENUM_2( enumName, __VA_ARGS__)
 #define AK_INTERNAL_ENUM_TO_ENUM_4( enumName, x, ...) if(val == #x) return enumName::x; AK_INTERNAL_ENUM_TO_ENUM_3( enumName, __VA_ARGS__)
@@ -431,4 +394,90 @@
 		throw std::logic_error(std::string("Invalid identifier for enum '"#enumName"': ") + val); \
 	}
 
-#endif /* AK_INTERNAL_MACROSINTERNAL_HPP_ */
+// /////////////////////// //
+// // SmartEnum Section // //
+// /////////////////////// //
+
+/**
+ * A smart enum is an enum with conversions to/from strings predefined:
+ *  - [enumName]ToStringView <constexpr>
+ *  - [enumName]ToString
+ *  - stringTo[enumName] <constexpr>
+ *  - stringTo[enumName]
+ *  The bellow macros help define different types of smart enums
+ */
+
+// Defines a typed smart-enum using automatic value assignment
+#define AK_SMART_TENUM(enumName, enumType, ...) \
+	enum enumName : enumType { __VA_ARGS__ }; \
+	AK_INTERNAL_ENUM_CONV(enumName, __VA_ARGS__)
+
+// Defines a typed smart-enum class using automatic value assignment
+#define AK_SMART_TENUM_CLASS(enumName, enumType, ...) \
+	enum class enumName : enumType { __VA_ARGS__ }; \
+	AK_INTERNAL_ENUM_CONV(enumName, __VA_ARGS__)
+
+// Defines an untyped smart-enum using automatic value assignment
+#define AK_SMART_ENUM(enumName, ...) \
+	enum enumName { __VA_ARGS__ }; \
+	AK_INTERNAL_ENUM_CONV(enumName, __VA_ARGS__)
+
+// Defines a untyped smart-enum class using automatic value assignment
+#define AK_SMART_ENUM_CLASS(enumName, ...) \
+	enum class enumName { __VA_ARGS__ }; \
+	AK_INTERNAL_ENUM_CONV(enumName, __VA_ARGS__)
+
+// Defines a typed smart-enum using manual value assignment
+#define AK_SMART_TENUM_KV(enumName, enumType, ...) \
+	enum enumName : enumType { AK_CONCATENATE(AK_INTERNAL_ENUM_KV_,  AK_NARGS(__VA_ARGS__))(__VA_ARGS__) }; \
+	AK_INTERNAL_ENUM_CONV_KV(enumName, __VA_ARGS__)
+
+// Defines a typed smart-enum class using manual value assignment
+#define AK_SMART_TENUM_CLASS_KV(enumName, enumType, ...) \
+	enum class enumName : enumType { AK_CONCATENATE(AK_INTERNAL_ENUM_KV_,  AK_NARGS(__VA_ARGS__))(__VA_ARGS__) }; \
+	AK_INTERNAL_ENUM_CONV_KV(enumName, __VA_ARGS__)
+
+// Defines an untyped smart-enum using manual value assignment
+#define AK_SMART_ENUM_KV(enumName, ...) \
+	enum enumName { AK_CONCATENATE(AK_INTERNAL_ENUM_KV_,  AK_NARGS(__VA_ARGS__))(__VA_ARGS__) }; \
+	AK_INTERNAL_ENUM_CONV_KV(enumName, __VA_ARGS__)
+
+// Defines an untyped smart-enum class using manual value assignment
+#define AK_SMART_ENUM_CLASS_KV(enumName, ...) \
+	enum class enumName { AK_CONCATENATE(AK_INTERNAL_ENUM_KV_,  AK_NARGS(__VA_ARGS__))(__VA_ARGS__) }; \
+	AK_INTERNAL_ENUM_CONV_KV(enumName, __VA_ARGS__)
+
+// Defines serialization/deserialization methods in the akd namespace for a qualified smart enums
+#define AK_SMART_ENUM_SERIALIZE(qualification, enumName) \
+	namespace akd { \
+		inline void serialize(akd::PValue& dst, const qualification::enumName& val) { dst.setStr(qualification::convert##enumName##ToString(val)); } \
+		inline bool deserialize(qualification::enumName& dst, const akd::PValue& val) { \
+			try { dst = qualification::convert##StringTo##enumName(val.getStr()); } \
+			catch(const std::logic_error&) { return false; } \
+			return true; \
+		} \
+	}
+
+// Defines serialization/deserialization methods in the akd namespace for a unqualified smart enums
+#define AK_SMART_ENUM_SERIALIZE_NQ(enumName) \
+	namespace akd { \
+		inline void serialize(akd::PValue& dst, const ::enumName& val) { dst.setStr(::convert##enumName##ToString(val)); } \
+		inline bool deserialize(::enumName& dst, const akd::PValue& val) { \
+			try { dst = ::convert##StringTo##enumName(val.asStr()); } \
+			catch(const std::logic_error&) { return false; } \
+			return true; \
+		} \
+	}
+
+// //////////////////////////// //
+// // SmartSerialize Section // //
+// //////////////////////////// //
+
+/*
+template<typename type_t> class SerializationHelper final {
+	private:
+
+};
+*/
+
+#endif

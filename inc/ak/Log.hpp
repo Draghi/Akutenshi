@@ -27,7 +27,7 @@
 #include <ak/thread/CurrentThread.hpp>
 #include <ak/thread/Thread.hpp>
 #include <ak/util/Time.hpp>
-#include <ak/String.hpp>
+#include <ak/util/String.hpp>
 
 namespace ak {
 	namespace log {
@@ -95,7 +95,7 @@ namespace ak {
 					sstream  << "][" << akt::current().name() << "][" << m_name << "][" << LevelTags[static_cast<uint8>(level)] << "]";
 
 					std::stringstream vargStream;
-					ak::buildString(vargStream, vargs...);
+					aku::buildString(vargStream, vargs...);
 
 					if (vargStream.str().front() != '[') sstream << " ";
 
@@ -120,7 +120,7 @@ namespace ak {
 				template<typename... vargs_t> void info( const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::INFO))  build(Level::INFO,  vargs...); }
 				template<typename... vargs_t> void debug(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::DEBUG)) build(Level::DEBUG, vargs...); }
 
-				template<typename... vargs_t> void raw(const vargs_t&... vargs) const { if (!isFilterLevelEnabled(Level::RAW)) return; printMessage(Level::RAW, ak::buildString(vargs...)); }
+				template<typename... vargs_t> void raw(const vargs_t&... vargs) const { if (!isFilterLevelEnabled(Level::RAW)) return; printMessage(Level::RAW, aku::buildString(vargs...)); }
 		};
 	}
 }

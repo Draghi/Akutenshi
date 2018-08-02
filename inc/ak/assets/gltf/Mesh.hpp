@@ -24,7 +24,7 @@
 #include <ak/assets/gltf/Types.hpp>
 #include <ak/data/PValue.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/String.hpp>
+#include <ak/util/String.hpp>
 
 namespace akas {
 	namespace gltf {
@@ -61,7 +61,7 @@ namespace akas {
 			auto collectMultiAttrib = [](const std::string& name, const akd::PValue& attribs) {
 				std::vector<gltfID> result;
 				for(uint i = 0; true; i++) {
-					auto property = ak::buildString(name, i);
+					auto property = aku::buildString(name, i);
 					if (!attribs.exists(property)) break;
 					result.push_back(attribs.at(property).as<gltfID>());
 				}

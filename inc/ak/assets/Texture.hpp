@@ -40,7 +40,7 @@
 
 namespace akas {
 	struct ImageReference final {
-		akd::SUID image;
+		akd::SUID identifier;
 		ImageRotation rotate;
 		uint32 layer;
 		int32 offsetX, offsetY;
@@ -55,7 +55,7 @@ namespace akas {
 		akr::gl::TexFormat format;
 		akr::gl::TexStorage storage;
 
-		akr::gl::ClampDir clampHorz, clampVert, clampDepth;
+		akr::gl::ClampType clampHorz, clampVert, clampDepth;
 		akr::gl::FilterType filterMin, filterMax;
 		akr::gl::MipFilterType filterMip;
 	};
@@ -65,25 +65,25 @@ namespace akas {
 namespace akd {
 
 	inline void serialize(akd::PValue& dst, const akas::ImageReference& src) {
-		serialize(dst["image"],  src.image);
+		serialize(dst["identifier"],  src.identifier);
 		serialize(dst["rotate"], src.rotate);
-		  dst["layer"].setUInt(src.layer);
-		dst["offsetX"].setSInt( src.offsetX);
-		dst["offsetY"].setSInt( src.offsetY);
-		  dst["cropX"].setSInt( src.cropX);
-		  dst["cropY"].setSInt( src.cropY);
+		serialize(dst["layer"], src.layer);
+		serialize(dst["offsetX"], src.offsetX);
+		serialize(dst["offsetY"], src.offsetY);
+		serialize(dst["cropX"], src.cropX);
+		serialize(dst["cropY"], src.cropY);
 	}
 
 	inline bool deserialize(akas::ImageReference& dst, const akd::PValue& src) {
 		try {
 			akas::ImageReference result;
-			deserialize(result.image,  src["image"]);
-			deserialize(result.rotate, src["rotate"]);
-			result.layer =   src["layer"].as<uint32>();
-			result.offsetX = src["offsetX"].as<int32>();
-			result.offsetY = src["offsetY"].as<int32>();
-			result.cropX =   src["cropX"].as<int32>();
-			result.cropY =   src["cropY"].as<int32>();
+			if (!deserialize(result.identifier, src["identifier"])) return false;
+			if (!deserialize(result.rotate,     src.atOrDef("rotate" , PValue::from("None"))))    return false;
+			if (!deserialize(result.layer,      src.atOrDef("layer"  , PValue::from<uint64>(0)))) return false;
+			if (!deserialize(result.offsetX,    src.atOrDef("offsetX", PValue::from<int64> (0)))) return false;
+			if (!deserialize(result.offsetY,    src.atOrDef("offsetY", PValue::from<int64> (0)))) return false;
+			if (!deserialize(result.cropX,      src.atOrDef("cropX"  , PValue::from<int64> (0)))) return false;
+			if (!deserialize(result.cropY,      src.atOrDef("cropY"  , PValue::from<int64> (0)))) return false;
 			dst = result;
 			return true;
 		} catch(const std::logic_error&) {
@@ -111,16 +111,16 @@ namespace akd {
 	inline bool deserialize(akas::Texture& dst, const akd::PValue& src) {
 		try {
 			akas::Texture result;
-			deserialize(result.type,       src["type"]      );
-			deserialize(result.levels,     src["levels"]    );
-			deserialize(result.format,     src["format"]    );
-			deserialize(result.storage,    src["storage"]   );
-			deserialize(result.clampHorz,  src["clampHorz"] );
-			deserialize(result.clampVert,  src["clampVert"] );
-			deserialize(result.clampDepth, src["clampDepth"]);
-			deserialize(result.filterMin,  src["filterMin"] );
-			deserialize(result.filterMax,  src["filterMax"] );
-			deserialize(result.filterMip,  src["filterMip"] );
+			if (!deserialize(result.type,       src["type"]      )) return false;
+			if (!deserialize(result.levels,     src["levels"]    )) return false;
+			if (!deserialize(result.format,     src["format"]    )) return false;
+			if (!deserialize(result.storage,    src["storage"]   )) return false;
+			if (!deserialize(result.clampHorz,  src.atOrDef("clampHorz" , PValue::from("Edge"))))    return false;
+			if (!deserialize(result.clampVert,  src.atOrDef("clampVert" , PValue::from("Edge"))))    return false;
+			if (!deserialize(result.clampDepth, src.atOrDef("clampDepth", PValue::from("Edge"))))    return false;
+			if (!deserialize(result.filterMin,  src.atOrDef("filterMin" , PValue::from("Nearest")))) return false;
+			if (!deserialize(result.filterMax,  src.atOrDef("filterMax" , PValue::from("Nearest")))) return false;
+			if (!deserialize(result.filterMip,  src.atOrDef("filterMip" , PValue::from("None"))))    return false;
 			dst = result;
 			return true;
 		} catch(const std::logic_error&) {

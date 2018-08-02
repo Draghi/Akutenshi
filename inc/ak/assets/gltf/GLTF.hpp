@@ -23,7 +23,7 @@
 namespace akas {
 	namespace gltf {
 
-		bool convertGLTFFile(akas::ConversionHelper& convertHelper, const akfs::Path& root, akd::PValue& cfg);
+		bool convertGLTFFile(akas::ConversionHelper& convertHelper, const akfs::Path& cfgPath, akd::PValue& cfg);
 	}
 }
 

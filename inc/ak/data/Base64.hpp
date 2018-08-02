@@ -46,9 +46,10 @@
 #include <cctype>
 #include <string>
 #include <string_view>
+#include <vector>
 
-#include <ak/Macros.hpp>
 #include <ak/PrimitiveTypes.hpp>
+#include <ak/util/String.hpp>
 
 namespace akd {
 	namespace base64 {

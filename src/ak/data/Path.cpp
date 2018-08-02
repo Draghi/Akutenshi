@@ -21,7 +21,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <ak/String.hpp>
+#include <ak/util/String.hpp>
 
 using namespace akd;
 
@@ -31,7 +31,7 @@ TreePath akd::parseObjectDotNotation(const std::string& path) {
 	TreePath result;
 
 	bool parsingIndex = false;
-	ak::split(path, {".", "["}, [&](const std::string& delimStr, const std::string& str) {
+	aku::split(path, {".", "["}, [&](const std::string& delimStr, const std::string& str) {
 
 		if (parsingIndex) {
 			if (str.empty()) {

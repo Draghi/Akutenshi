@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-#include <ak/String.hpp>
+#include <ak/util/String.hpp>
 
 #include <stddef.h>
 #include <tuple>
@@ -23,7 +23,7 @@
 static bool containsString(const std::string& src, const std::string& substr, akSize start);
 static std::tuple<bool, akSize> searchForDelim(const std::string& src, const std::vector<std::string>& delims, akSize pos);
 
-void ak::split(const std::string& src, const std::vector<std::string>& delims, std::function<void(const std::string&, const std::string&)> out) {
+void aku::split(const std::string& src, const std::vector<std::string>& delims, std::function<void(const std::string&, const std::string&)> out) {
 	if (src.size() <= 0) return;
 
 	akSize pos = 0;

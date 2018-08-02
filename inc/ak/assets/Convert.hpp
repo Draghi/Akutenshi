@@ -29,19 +29,21 @@
 #include <ak/assets/AssetRegistry.hpp>
 #include <ak/assets/Material.hpp>
 #include <ak/assets/Mesh.hpp>
+#include <ak/assets/Texture.hpp>
 #include <ak/container/SlotMap.hpp>
 #include <ak/data/Rand.hpp>
 #include <ak/data/SUID.hpp>
 #include <ak/filesystem/Path.hpp>
 #include <ak/Log.hpp>
-#include <ak/Macros.hpp>
 #include <ak/PrimitiveTypes.hpp>
+#include <ak/data/SmartEnum.hpp>
 
 namespace akas {
 
-	AK_DEFINE_SMART_TENUM_CLASS_KV(AssetSourceType, uint64,
-		GLTF,  100,
-		Image, 0
+	AK_SMART_TENUM_CLASS_KV(AssetSourceType, uint64,
+		GLTF,    100,
+		Texture,   1,
+		Image,     0
 	)
 
 	struct ConversionInfo {
@@ -58,6 +60,7 @@ namespace akas {
 			akc::SlotMap<std::pair<ConversionInfo, akfs::Path>> m_images;
 			akc::SlotMap<std::pair<ConversionInfo, akas::Mesh>> m_meshes;
 			akc::SlotMap<std::pair<ConversionInfo, akas::Material>> m_materials;
+			akc::SlotMap<std::pair<ConversionInfo, akas::Texture>> m_textures;
 
 			std::map<akfs::Path, std::pair<akas::AssetType, akc::SlotID>> m_assetsBySource;
 			std::map<akfs::Path, std::pair<akas::AssetType, akc::SlotID>> m_assetsByDestination;
@@ -98,7 +101,7 @@ namespace akas {
 				return result;
 			}
 
-			void registerAsset(ConversionInfo info, const akfs::Path& path, const std::optional<akfs::Path>& source) {
+			void registerImage(ConversionInfo info, const akfs::Path& path, const std::optional<akfs::Path>& source) {
 				auto id = m_images.insert({info, path}).first;
 				if (!m_assetsByDestination.emplace(info.destination, std::make_pair(AssetType::Image, id)).second)  throw std::logic_error("Destination conflict for: " + info.destination.str());
 				if (!m_assetsByIdentifier.emplace( info.identifier,  std::make_pair(AssetType::Image, id)).second)  throw std::logic_error("Identifier conflict for: "  + info.destination.str());
@@ -107,7 +110,7 @@ namespace akas {
 				}
 			}
 
-			void registerAsset(ConversionInfo info, const akas::Mesh& mesh, const std::optional<akfs::Path>& source) {
+			void registerMesh(ConversionInfo info, const akas::Mesh& mesh, const std::optional<akfs::Path>& source) {
 				auto id = m_meshes.insert({info, mesh}).first;
 				if (!m_assetsByDestination.emplace(info.destination,  std::make_pair(AssetType::Mesh, id)).second)  throw std::logic_error("Path conflict for: "       + info.destination.str());
 				if (!m_assetsByIdentifier.emplace( info.identifier,   std::make_pair(AssetType::Mesh, id)).second)  throw std::logic_error("Identifier conflict for: " + info.destination.str());
@@ -116,12 +119,21 @@ namespace akas {
 				}
 			}
 
-			void registerAsset(ConversionInfo info, const akas::Material& material, const std::optional<akfs::Path>& source) {
+			void registerMaterial(ConversionInfo info, const akas::Material& material, const std::optional<akfs::Path>& source) {
 				auto id = m_materials.insert({info, material}).first;
 				if (!m_assetsByDestination.emplace(info.destination, std::make_pair(AssetType::Material, id)).second)  throw std::logic_error("Path conflict for: "       + info.destination.str());
 				if (!m_assetsByIdentifier.emplace( info.identifier,  std::make_pair(AssetType::Material, id)).second)  throw std::logic_error("Identifier conflict for: " + info.destination.str());
 				if (source) {
 					akl::Logger("ConvertionHelper").test_warn(m_assetsBySource.emplace(*source,  std::make_pair(AssetType::Material, id)).second, "Source conflict for: " + info.destination.str());
+				}
+			}
+
+			void registerTexture(ConversionInfo info, const akas::Texture& texture, const std::optional<akfs::Path>& source) {
+				auto id = m_textures.insert({info, texture}).first;
+				if (!m_assetsByDestination.emplace(info.destination, std::make_pair(AssetType::Texture, id)).second)  throw std::logic_error("Path conflict for: "       + info.destination.str());
+				if (!m_assetsByIdentifier.emplace( info.identifier,  std::make_pair(AssetType::Texture, id)).second)  throw std::logic_error("Identifier conflict for: " + info.destination.str());
+				if (source) {
+					akl::Logger("ConvertionHelper").test_warn(m_assetsBySource.emplace(*source,  std::make_pair(AssetType::Texture, id)).second, "Source conflict for: " + info.destination.str());
 				}
 			}
 
@@ -134,14 +146,14 @@ namespace akas {
 				auto lookupIter = m_assetsByIdentifier.find(identifier);
 				if (lookupIter == m_assetsByIdentifier.end()) return {};
 				switch(lookupIter->second.first) {
-					case AssetType::Mesh:      return     m_meshes[lookupIter->second.second].first;
-					case AssetType::Material:  return  m_materials[lookupIter->second.second].first;
-					case AssetType::Image:      return m_images[lookupIter->second.second].first;
+					case AssetType::Mesh:      return    m_meshes[lookupIter->second.second].first;
+					case AssetType::Material:  return m_materials[lookupIter->second.second].first;
+					case AssetType::Image:     return    m_images[lookupIter->second.second].first;
 					case AssetType::Animation: [[fallthrough]];
 					case AssetType::Prefab:    [[fallthrough]];
 					case AssetType::Scene:     [[fallthrough]];
 					case AssetType::Sound:     [[fallthrough]];
-					case AssetType::Texture:   [[fallthrough]];
+					case AssetType::Texture:   return  m_textures[lookupIter->second.second].first;
 					default: return {};
 				}
 			}
@@ -153,14 +165,14 @@ namespace akas {
 				auto lookupIter = m_assetsByDestination.find(path);
 				if (lookupIter == m_assetsByDestination.end()) return {};
 				switch(lookupIter->second.first) {
-					case AssetType::Mesh:      return     m_meshes[lookupIter->second.second].first;
-					case AssetType::Material:  return  m_materials[lookupIter->second.second].first;
-					case AssetType::Image:      return m_images[lookupIter->second.second].first;
+					case AssetType::Mesh:      return    m_meshes[lookupIter->second.second].first;
+					case AssetType::Material:  return m_materials[lookupIter->second.second].first;
+					case AssetType::Image:     return    m_images[lookupIter->second.second].first;
 					case AssetType::Animation: [[fallthrough]];
 					case AssetType::Prefab:    [[fallthrough]];
 					case AssetType::Scene:     [[fallthrough]];
 					case AssetType::Sound:     [[fallthrough]];
-					case AssetType::Texture:   [[fallthrough]];
+					case AssetType::Texture:   return  m_textures[lookupIter->second.second].first;
 					default: return {};
 				}
 			}
@@ -172,14 +184,14 @@ namespace akas {
 				auto lookupIter = m_assetsBySource.find(path);
 				if (lookupIter == m_assetsBySource.end()) return {};
 				switch(lookupIter->second.first) {
-					case AssetType::Mesh:      return     m_meshes[lookupIter->second.second].first;
-					case AssetType::Material:  return  m_materials[lookupIter->second.second].first;
-					case AssetType::Image:      return m_images[lookupIter->second.second].first;
+					case AssetType::Mesh:      return    m_meshes[lookupIter->second.second].first;
+					case AssetType::Material:  return m_materials[lookupIter->second.second].first;
+					case AssetType::Image:     return    m_images[lookupIter->second.second].first;
 					case AssetType::Animation: [[fallthrough]];
 					case AssetType::Prefab:    [[fallthrough]];
 					case AssetType::Scene:     [[fallthrough]];
 					case AssetType::Sound:     [[fallthrough]];
-					case AssetType::Texture:   [[fallthrough]];
+					case AssetType::Texture:   return  m_textures[lookupIter->second.second].first;
 					default: return {};
 				}
 			}
@@ -187,6 +199,7 @@ namespace akas {
 			const akc::SlotMap<std::pair<ConversionInfo, akfs::Path>>& copies() const { return m_images; }
 			const akc::SlotMap<std::pair<ConversionInfo, akas::Mesh>>& meshes() const { return m_meshes; }
 			const akc::SlotMap<std::pair<ConversionInfo, akas::Material>>& materials() const { return m_materials; }
+			const akc::SlotMap<std::pair<ConversionInfo, akas::Texture>>& textures() const { return m_textures; }
 
 			auto& getImages(akSize i) { return m_images[i].second; }
 			const auto& getImages(akSize i) const { return m_images[i].second; }
@@ -199,12 +212,16 @@ namespace akas {
 			auto& getMaterial(akSize i) { return m_materials[i].second; }
 			const auto& getMaterial(akSize i) const { return m_materials[i].second; }
 			akSize materialCount() const { return m_materials.size(); }
+
+			auto& getTexture(akSize i) { return m_textures[i].second; }
+			const auto& getTexture(akSize i) const { return m_textures[i].second; }
+			akSize textureCount() const { return m_textures.size(); }
 	};
 
 	void convertDirectory(const akfs::Path& dir);
 
 }
 
-AK_DEFINE_SMART_ENUM_SERIALIZE(akas, AssetSourceType)
+AK_SMART_ENUM_SERIALIZE(akas, AssetSourceType)
 
 #endif /* AK_ASSETS_CONVERT_HPP_ */

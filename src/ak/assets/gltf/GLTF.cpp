@@ -68,12 +68,13 @@ static akas::ConversionInfo getAssetInfo(akd::PValue& cfg, const akas::Conversio
 	return info;
 }
 
-bool akas::gltf::convertGLTFFile(akas::ConversionHelper& convertHelper, const akfs::Path& root, akd::PValue& cfg) {
+bool akas::gltf::convertGLTFFile(akas::ConversionHelper& convertHelper, const akfs::Path& cfgPath, akd::PValue& cfg) {
 	akd::CMW4096Engine32d randomGenerator(akd::CMW4096Engine32d::default_seed ^ std::rand() ^ std::time(nullptr));
 	aku::Timer proccessTimer, stepTimer;
 
 	bool addedConversion = false;
 
+	auto root = akfs::Path(cfgPath).pop_back();
 	auto assetFilename = root/cfg["source"].getStr();
 	bool skipExisting = false;
 	{
@@ -123,7 +124,7 @@ bool akas::gltf::convertGLTFFile(akas::ConversionHelper& convertHelper, const ak
 
 		if ((skipExisting) && (akfs::exists(info.destination) && akfs::exists(akfs::Path(info.destination).clearExtension()))) continue;
 
-		convertHelper.registerAsset(
+		convertHelper.registerMaterial(
 			info,
 			proccessGLTFMaterial(asset, material, images),
 			{}
@@ -156,7 +157,7 @@ bool akas::gltf::convertGLTFFile(akas::ConversionHelper& convertHelper, const ak
 
 			if ((skipExisting) && (akfs::exists(info.destination)) && akfs::exists(akfs::Path(info.destination).clearExtension())) continue;
 
-			convertHelper.registerAsset(
+			convertHelper.registerMesh(
 				info,
 				processGLTFMesh(asset, mesh, materials),
 				{}

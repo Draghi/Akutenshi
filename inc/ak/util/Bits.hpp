@@ -14,20 +14,20 @@
  * limitations under the License.
  **/
 
-#ifndef AK_BITMANIPULATON_HPP_
-#define AK_BITMANIPULATON_HPP_
+#ifndef AK_BITS_HPP_
+#define AK_BITS_HPP_
 
 #include <climits>
 
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/Traits.hpp>
+#include <ak/util/Traits.hpp>
 
-namespace ak {
+namespace aku {
 	template<typename type_t> inline constexpr type_t bitmask(akSize count) {
 		return static_cast<type_t>(-(count != 0)) & (static_cast<type_t>(-1) >> ((sizeof(type_t) * CHAR_BIT) - count));
 	}
 
-	template<typename type_t> inline constexpr bool hasBitFlag(const type_t& val, const typename ak::traits::Identity<type_t>::type& flag) {
+	template<typename type_t> inline constexpr bool hasBitFlag(const type_t& val, const typename aku::traits::Identity<type_t>::type& flag) {
 		return (val & flag) == flag;
 	}
 }

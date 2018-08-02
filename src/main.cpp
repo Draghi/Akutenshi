@@ -15,7 +15,7 @@
 
 #include <ak/Log.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/String.hpp>
+#include <ak/util/String.hpp>
 
 [[noreturn]] static void termHandler();
 
@@ -42,7 +42,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
 
 		std::string rawName = typeid(e).name();
 		std::string whatString = e.what();
-		whatString = ak::buildString("'. Message: ", whatString.empty() ? "<Empty>" : "\n", whatString);
+		whatString = aku::buildString("'. Message: ", whatString.empty() ? "<Empty>" : "\n", whatString);
 
 #		ifdef __GNUC__
 			int status = 0;

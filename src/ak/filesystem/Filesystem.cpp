@@ -27,7 +27,7 @@
 
 #include <ak/filesystem/CFile.hpp>
 #include <ak/ScopeGuard.hpp>
-#include <ak/String.hpp>
+#include <ak/util/String.hpp>
 
 using namespace akfs;
 
@@ -69,7 +69,7 @@ class VFSMounts final {
 			if (vfsPoint.back() != '/') vfsPoint += '/';
 
 			auto iter = m_vfsToSys.find(vfsPoint);
-			if (iter == m_vfsToSys.end()) throw std::logic_error(ak::buildString("Unable to resolve vfsMountPoint: ", vfsPoint));
+			if (iter == m_vfsToSys.end()) throw std::logic_error(aku::buildString("Unable to resolve vfsMountPoint: ", vfsPoint));
 			return iter->second;
 		}
 };

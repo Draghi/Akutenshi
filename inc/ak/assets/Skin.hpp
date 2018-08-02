@@ -23,7 +23,7 @@
 #include <vector>
 
 #include <ak/data/PValue.hpp>
-#include <ak/Iterator.hpp>
+#include <ak/util/Iterator.hpp>
 #include <ak/math/Serialize.hpp>
 #include <ak/math/Types.hpp>
 #include <ak/PrimitiveTypes.hpp>
@@ -51,21 +51,21 @@ namespace akas {
 namespace akd {
 	inline bool deserialize(akas::Joint& dst, const akd::PValue& src) {
 		try {
-			dst = {
-				src["name"].getStr(),
-				ak::convert_to<std::vector<uint32>>(src["children"].getArr(), [](const auto& val){ return val.template as<uint32>(); }),
-				deserialize<akm::Mat4>(src["inverseBindMatrix"]),
-				deserialize<akm::Vec3>(src["position"]),
-				deserialize<akm::Quat>(src["rotation"]),
-				deserialize<akm::Vec3>(src["scale"])
-			};
+			akas::Joint result;
+			if (!deserialize(result.name             , src["name"]             )) return false;
+			if (!deserialize(result.children         , src["children"]         )) return false;
+			if (!deserialize(result.inverseBindMatrix, src["inverseBindMatrix"])) return false;
+			if (!deserialize(result.position         , src["position"]         )) return false;
+			if (!deserialize(result.rotation         , src["rotation"]         )) return false;
+			if (!deserialize(result.scale            , src["scale"]            )) return false;
+			dst = result;
 			return true;
 		} catch(const std::logic_error&) { return false; }
 	}
 
 	inline void serialize(akd::PValue& dst, const akas::Joint& src) {
-		dst["name"].setStr(src.name);
-		dst["children"].setArr(); for(auto child : src.children) dst["children"].getArr().push_back(akd::PValue::from<uint32>(child));
+		serialize(dst["name"],              src.name);
+		serialize(dst["children"],          src.children);
 		serialize(dst["inverseBindMatrix"], src.inverseBindMatrix);
 		serialize(dst["position"],          src.position);
 		serialize(dst["rotation"],          src.rotation);
@@ -76,8 +76,8 @@ namespace akd {
 		try {
 			dst = {
 				src["root"].as<int32>(),
-				ak::convert_to<std::vector<akas::Joint>>(src["joints"].getArr(), [](const auto& val){ return deserialize<akas::Joint>(val); }),
-				ak::convert_to<std::vector<uint32>>(src["mapping"].getArr(), [](const auto& val){ return val.template as<uint32>(); })
+				aku::convert_to<std::vector<akas::Joint>>(src["joints"].getArr(), [](const auto& val){ return deserialize<akas::Joint>(val); }),
+				aku::convert_to<std::vector<uint32>>(src["mapping"].getArr(), [](const auto& val){ return val.template as<uint32>(); })
 			};
 			return true;
 		} catch(const std::logic_error&) { return false; }

@@ -33,7 +33,7 @@
 
 #include <ak/data/Path.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/String.hpp>
+#include <ak/util/String.hpp>
 
 namespace akd {
 
@@ -102,14 +102,14 @@ namespace akd {
 
 			std::string toDebugString() const {
 				if (isNull()) return "<null>";
-				if (isObj())  return ak::buildString("<str:", getObj().size(), ">");
-				if (isArr())  return ak::buildString("<str:", getArr().size(), ">");
-				if (isBin())  return ak::buildString("<str:", getBin().size(), ">");
-				if (isStr())  return ak::buildString("<str:", getStr(), ">");
-				if (isSInt()) return ak::buildString("<sint:",getSInt(),">");
-				if (isUInt()) return ak::buildString("<uint:",getUInt(),">");
-				if (isDec())  return ak::buildString("<dec:", getDec(), ">");
-				if (isBool()) return ak::buildString("<bool:",getBool(),">");
+				if (isObj())  return aku::buildString("<str:", getObj().size(), ">");
+				if (isArr())  return aku::buildString("<str:", getArr().size(), ">");
+				if (isBin())  return aku::buildString("<str:", getBin().size(), ">");
+				if (isStr())  return aku::buildString("<str:", getStr(), ">");
+				if (isSInt()) return aku::buildString("<sint:",getSInt(),">");
+				if (isUInt()) return aku::buildString("<uint:",getUInt(),">");
+				if (isDec())  return aku::buildString("<dec:", getDec(), ">");
+				if (isBool()) return aku::buildString("<bool:",getBool(),">");
 				return "<error>";
 			}
 
@@ -334,7 +334,7 @@ namespace akd {
 
 			template<typename type_t> type_t get() const {
 				auto result = tryGet<type_t>();
-				throw std::logic_error(ak::buildString("Failed to get value from PValue containing ", toDebugString()));
+				throw std::logic_error(aku::buildString("Failed to get value from PValue containing ", toDebugString()));
 				return *result;
 			}
 
@@ -358,6 +358,7 @@ namespace akd {
 				if constexpr(std::is_same<type_t, arr_t>::value) return setArr(val);
 				if constexpr(std::is_same<type_t, bin_t>::value) return setBin(val);
 				if constexpr(std::is_same<type_t, str_t>::value) return setStr(val);
+				if constexpr(std::is_same<typename std::decay<type_t>::type, char*>::value) return setStr(val); // required to handle char*/char[] constants, otherwise they get converted.
 				if constexpr(std::is_same<type_t, bool_t>::value) return setBool(val); // Ensure ahead of implicit conversions (ie. ints)
 				if constexpr(std::is_integral<type_t>::value && std::is_signed<type_t>::value) return setSInt(val);
 				if constexpr(std::is_integral<type_t>::value && std::is_unsigned<type_t>::value) return setUInt(val);
@@ -408,7 +409,7 @@ namespace akd {
 
 			template<typename type_t> type_t as() const {
 				auto result = tryAs<type_t>();
-				if (!result) throw std::logic_error(ak::buildString("Failed to convert value from PValue containing ", toDebugString()));
+				if (!result) throw std::logic_error(aku::buildString("Failed to convert value from PValue containing ", toDebugString()));
 				return *result;
 			}
 
@@ -507,6 +508,11 @@ namespace akd {
 		for(const auto& entry : val) serialize(dst[entry.first.asStr()], entry.second);
 	}
 
+	template<typename type_t> void serialize(akd::PValue& dst, const std::optional<type_t>& val) {
+		if (!val) dst.setNull();
+		else serialize(dst, *val);
+	}
+
 	// Deserialize
 
 	template<typename type_t, typename alloc_t> bool deserialize(std::vector<type_t, alloc_t>& dst, const akd::PValue& val) {
@@ -566,6 +572,17 @@ namespace akd {
 		return true;
 	}
 
+	template<typename type_t> bool deserialize(std::optional<type_t>& dst, const akd::PValue& val) {
+		if (val.isNull()) {
+			dst = {};
+			return true;
+		}
+		type_t tmpVal;
+		if (!deserialize(tmpVal, val)) return false;
+		dst = std::move(tmpVal);
+		return true;
+	}
+
 	// /////////////////////// //
 	// // Serialize Helpers // //
 	// /////////////////////// //
@@ -574,6 +591,32 @@ namespace akd {
 		PValue result; serialize(result, val);
 		return result;
 	}
+
+	// ///////////////////////// //
+	// // Default Serialize // //
+	// ///////////////////////// //
+
+	namespace internal {
+		template<typename type_t> void methodSerialize(PValue& src, const type_t& dst) {
+			src = PValue::from<type_t>(dst);
+		}
+	}
+
+	inline void serialize(PValue& dst, const PValue::obj_t& src) { return internal::methodSerialize(dst, src); }
+	inline void serialize(PValue& dst, const PValue::arr_t& src) { return internal::methodSerialize(dst, src); }
+	inline void serialize(PValue& dst, const PValue::bin_t& src) { return internal::methodSerialize(dst, src); }
+	inline void serialize(PValue& dst, const PValue::str_t& src) { return internal::methodSerialize(dst, src); }
+	inline void serialize(PValue& dst, const int8&  src) { return internal::methodSerialize(dst, src); }
+	inline void serialize(PValue& dst, const int16& src) { return internal::methodSerialize(dst, src); }
+	inline void serialize(PValue& dst, const int32& src) { return internal::methodSerialize(dst, src); }
+	inline void serialize(PValue& dst, const int64& src) { return internal::methodSerialize(dst, src); }
+	inline void serialize(PValue& dst, const uint8&  src) { return internal::methodSerialize(dst, src); }
+	inline void serialize(PValue& dst, const uint16& src) { return internal::methodSerialize(dst, src); }
+	inline void serialize(PValue& dst, const uint32& src) { return internal::methodSerialize(dst, src); }
+	inline void serialize(PValue& dst, const uint64& src) { return internal::methodSerialize(dst, src); }
+	inline void serialize(PValue& dst, const fpSingle&   src) { return internal::methodSerialize(dst, src); }
+	inline void serialize(PValue& dst, const fpDouble&   src) { return internal::methodSerialize(dst, src); }
+	inline void serialize(PValue& dst, const PValue::bool_t&  src) { return internal::methodSerialize(dst, src); }
 
 	// ///////////////////////// //
 	// // Default Deserialize // //
@@ -587,14 +630,21 @@ namespace akd {
 		}
 	}
 
-	inline bool deserialize(PValue::obj_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::arr_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::bin_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::str_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::sint_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::uint_t& dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::dec_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::bool_t& dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::obj_t&   dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::arr_t&   dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::bin_t&   dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::str_t&   dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(int8&   dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(int16&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(int32&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(int64&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(uint8&   dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(uint16&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(uint32&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(uint64&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(fpSingle&   dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(fpDouble&   dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
+	inline bool deserialize(PValue::bool_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
 
 
 	// ///////////////////////// //
@@ -611,6 +661,18 @@ namespace akd {
 		auto result = tryDeserialize<type_t>(root);
 		if (result) return *result;
 		else throw std::logic_error("Failed to deserialize value.");
+	}
+
+	template<typename type_t> bool deserializeOrDefault(type_t& dst, const PValue& root, const type_t& def) {
+		auto result = tryDeserialize<type_t>(root);
+		dst = result.value_or(def);
+		return result;
+	}
+
+	template<typename type_t> type_t deserializeOrDefault(const PValue& root, const type_t& def) {
+		auto result = tryDeserialize<type_t>(root);
+		if (result) return *result;
+		else return def;
 	}
 }
 

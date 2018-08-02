@@ -32,7 +32,7 @@
 #include <ak/filesystem/Filesystem.hpp>
 #include <ak/filesystem/Path.hpp>
 #include <ak/Log.hpp>
-#include <ak/String.hpp>
+#include <ak/util/String.hpp>
 
 namespace akas {
 
@@ -53,9 +53,9 @@ namespace akas {
 				if (!assetInfo) { akl::Logger("AssetFinder").warn("Failed to parse asset info file: ", path.str()); return true; }
 
 				auto id = m_assetInfo.insert(std::make_pair(*assetInfo, path)).first;
-				if (!m_assetBySUID.emplace(assetInfo->identifier, id).second) throw std::runtime_error(ak::buildString("Asset SUID conflict for: ", path.str()));
+				if (!m_assetBySUID.emplace(assetInfo->identifier, id).second) throw std::runtime_error(aku::buildString("Asset SUID conflict for: ", path.str()));
 				if (!assetInfo->source.empty()) akl::Logger("AssetFinder").test_warn(m_assetBySource.emplace(assetInfo->source, id).second || m_supressWarnings, "Asset source conflict for: ", path.str());
-				if (!m_assetByDestination.emplace(path, id).second) throw std::runtime_error(ak::buildString("Asset destination conflict for: ", path.str()));
+				if (!m_assetByDestination.emplace(path, id).second) throw std::runtime_error(aku::buildString("Asset destination conflict for: ", path.str()));
 
 				return true;
 			}

@@ -27,13 +27,13 @@
 #include <ak/container/UnorderedVector.hpp>
 #include <ak/Log.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/Traits.hpp>
+#include <ak/util/Traits.hpp>
 
 namespace akc {
 
 	template<akSize l> struct SlotID_t final {
-		using storage_type = typename ak::traits::IntegerMinBytes<l>::type;
-		using value_type   = typename ak::traits::IntegerMinBytes<l*2>::type;
+		using storage_type = typename aku::traits::IntegerMinBytes<l>::type;
+		using value_type   = typename aku::traits::IntegerMinBytes<l*2>::type;
 
 		storage_type index;
 		storage_type generation;
