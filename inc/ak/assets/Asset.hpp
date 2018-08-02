@@ -17,23 +17,13 @@
 #ifndef AK_ASSETS_ASSET_HPP_
 #define AK_ASSETS_ASSET_HPP_
 
-#include <stdexcept>
 #include <string>
 
-#include <ak/data/PValue.hpp>
+#include <ak/data/SmartEnum.hpp>
 #include <ak/data/SUID.hpp>
 #include <ak/filesystem/Path.hpp>
-#include <ak/data/SmartEnum.hpp>
-
-namespace akas { struct AssetInfo; }
-
-namespace akd {
-	void serialize(akd::PValue& dst, const akas::AssetInfo& src);
-	bool deserialize(akas::AssetInfo& dst, const akd::PValue& src);
-}
 
 namespace akas {
-
 	AK_SMART_ENUM_CLASS(AssetType,
 		Animation,
 		Material,
@@ -45,40 +35,12 @@ namespace akas {
 		Image
 	)
 
-	// @todo Add source field
 	struct AssetInfo final {
 		akd::SUID identifier;
 		AssetType type;
 		std::string displayName;
 		akfs::Path source;
 	};
-}
-
-AK_SMART_ENUM_SERIALIZE(akas, AssetType)
-
-namespace akd {
-
-	inline void serialize(akd::PValue& dst, const akas::AssetInfo& src) {
-		serialize(dst["identifier"], src.identifier);
-		serialize(dst["type"], src.type);
-		dst["displayName"].setStr(src.displayName);
-		dst["source"].setStr(src.source.str());
-	}
-
-	inline bool deserialize(akas::AssetInfo& dst, const akd::PValue& src) {
-		try {
-			dst = akas::AssetInfo{
-				akd::deserialize<akd::SUID>(src["identifier"]),
-				akd::deserialize<akas::AssetType>(src["type"]),
-				src["displayName"].getStr(),
-				akfs::Path(src["source"].getStr())
-			};
-			return true;
-		} catch(const std::logic_error& /*e*/) {
-			return false;
-		}
-	}
-
 }
 
 #endif /* AK_ASSETS_ASSET_HPP_ */

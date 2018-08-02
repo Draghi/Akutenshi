@@ -17,6 +17,7 @@
 #ifndef AK_RENDER_TYPES_HPP_
 #define AK_RENDER_TYPES_HPP_
 
+#include <ak/data/SmartEnum.hpp>
 #include <ak/PrimitiveTypes.hpp>
 
 namespace akr {
@@ -34,21 +35,19 @@ namespace akr {
 			Fragment = 2,
 		};
 
-		enum class DrawType : uint8 {
+		AK_SMART_TENUM_CLASS(DrawType, uint8,
 			Points,
-
 			Lines,
 			LinesAdj,
 			LineStrip,
 			LineStripAdj,
 			LineLoop,
-
 			Triangles,
 			TrianglesAdj,
 			TriangleStrip,
 			TriangleStripAdj,
-			TriangleFan,
-		};
+			TriangleFan
+		);
 
 		enum class Face {
 			Front,
@@ -126,5 +125,7 @@ namespace akr {
 		template<> inline DataType getDataTypeOf<fpDouble>() { return DataType::Double; }
 	}
 }
+
+AK_SMART_ENUM_SERIALIZE(akr::gl, DrawType)
 
 #endif

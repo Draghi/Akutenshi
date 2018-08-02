@@ -14,21 +14,20 @@
  * limitations under the License.
  **/
 
-#include <ak/data/Path.hpp>
-
 #include <algorithm>
 #include <cctype>
 #include <sstream>
 #include <stdexcept>
 
+#include <ak/data/PVPath.hpp>
 #include <ak/util/String.hpp>
 
 using namespace akd;
 
-TreePath akd::parseObjectDotNotation(const std::string& path) {
-	if (path.size() <= 0) return TreePath();
+PVPath akd::parseObjectDotNotation(const std::string& path) {
+	if (path.size() <= 0) return PVPath();
 
-	TreePath result;
+	PVPath result;
 
 	bool parsingIndex = false;
 	aku::split(path, {".", "["}, [&](const std::string& delimStr, const std::string& str) {
@@ -61,7 +60,7 @@ TreePath akd::parseObjectDotNotation(const std::string& path) {
 	return result;
 }
 
-std::string akd::pathToObjectDotNotation(const TreePath& path) {
+std::string akd::pathToObjectDotNotation(const PVPath& path) {
 	std::stringstream sstream;
 
 	for(akSize i = 0; i < path.size(); i++) {

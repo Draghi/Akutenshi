@@ -32,14 +32,13 @@
 #include <ak/assets/Texture.hpp>
 #include <ak/container/SlotMap.hpp>
 #include <ak/data/Rand.hpp>
+#include <ak/data/SmartEnum.hpp>
 #include <ak/data/SUID.hpp>
 #include <ak/filesystem/Path.hpp>
 #include <ak/Log.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/data/SmartEnum.hpp>
 
 namespace akas {
-
 	AK_SMART_TENUM_CLASS_KV(AssetSourceType, uint64,
 		GLTF,    100,
 		Texture,   1,
@@ -221,7 +220,5 @@ namespace akas {
 	void convertDirectory(const akfs::Path& dir);
 
 }
-
-AK_SMART_ENUM_SERIALIZE(akas, AssetSourceType)
 
 #endif /* AK_ASSETS_CONVERT_HPP_ */

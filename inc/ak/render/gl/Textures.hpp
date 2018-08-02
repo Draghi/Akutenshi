@@ -20,7 +20,6 @@
 #include <limits>
 #include <optional>
 
-#include <ak/data/Image.hpp>
 #include <ak/math/Types.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/gl/Types.hpp>
@@ -147,42 +146,6 @@ namespace akr {
 		fpSingle getTexMaxAnsiotropy();
 		akSize getTexComponentsFromFormat(TexFormat format);
 		TexFormat getTexFormatFromComponents(akSize components);
-
-		template<typename type_t> std::optional<Texture> createTex1D(uint32 unit, TexStorage storageType, const akd::Image<type_t>& image, akSize maxMipmapLevels = std::numeric_limits<akSize>::max()) {
-			auto format = getTexFormatFromComponents(image.components());
-			auto dataType = getDataTypeOf<type_t>();
-			return createTex1D(unit, format, storageType, dataType, image.data(), image.width(), maxMipmapLevels);
-		}
-
-		template<typename type_t> std::optional<Texture> createTex2D(uint32 unit, TexStorage storageType, const akd::Image<type_t>& image, akSize maxMipmapLevels = std::numeric_limits<akSize>::max()) {
-			auto format = getTexFormatFromComponents(image.components());
-			auto dataType = getDataTypeOf<type_t>();
-			return createTex2D(unit, format, storageType, dataType, image.data(), image.width(), image.height(), maxMipmapLevels);
-		}
-
-		template<typename type_t> std::optional<Texture> createTex3D(uint32 unit, TexStorage storageType, const akd::Image<type_t>& image, akSize maxMipmapLevels = std::numeric_limits<akSize>::max()) {
-			auto format = getTexFormatFromComponents(image.components());
-			auto dataType = getDataTypeOf<type_t>();
-			return createTex3D(unit, format, storageType, dataType, image.data(), image.width(), image.height(), image.depth(), maxMipmapLevels);
-		}
-
-		template<typename type_t> std::optional<Texture> createTexCubemap(uint32 unit, TexStorage storageType, const akd::Image<type_t>& image, akSize maxMipmapLevels = std::numeric_limits<akSize>::max()) {
-			auto format = getTexFormatFromComponents(image.components());
-			auto dataType = getDataTypeOf<type_t>();
-			return createTexCubemap(unit, format, storageType, dataType, image.data(), image.width(), image.height(), maxMipmapLevels);
-		}
-
-		template<typename type_t> std::optional<Texture> createTex1DArray(uint32 unit, TexStorage storageType, const akd::Image<type_t>& image, akSize maxMipmapLevels = std::numeric_limits<akSize>::max()) {
-			auto format = getTexFormatFromComponents(image.components());
-			auto dataType = getDataTypeOf<type_t>();
-			return createTex1DArray(unit, format, storageType, dataType, image.data(), image.width(), image.height(), maxMipmapLevels);
-		}
-
-		template<typename type_t> std::optional<Texture> createTex2DArray(uint32 unit, TexStorage storageType, const akd::Image<type_t>& image, akSize maxMipmapLevels = std::numeric_limits<akSize>::max()) {
-			auto format = getTexFormatFromComponents(image.components());
-			auto dataType = getDataTypeOf<type_t>();
-			return createTex2DArray(unit, format, storageType, dataType, image.data(), image.width(), image.height(), image.depth(), maxMipmapLevels);
-		}
 	}
 }
 

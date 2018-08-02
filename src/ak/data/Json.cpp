@@ -38,8 +38,8 @@
 #include <vector>
 
 #include <ak/data/Base64.hpp>
-#include <ak/data/Path.hpp>
 #include <ak/data/PValue.hpp>
+#include <ak/data/PVPath.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/Log.hpp>
 #include <ak/PrimitiveTypes.hpp>
@@ -169,7 +169,7 @@ std::string akd::toJson(const akd::PValue& src, bool pretty) {
     rj::PrettyWriter<rj::StringBuffer> pWriter(s);
     pWriter.SetFormatOptions(rj::PrettyFormatOptions::kFormatSingleLineArray);
 
-	akd::traversePValue(src, [pretty, &nWriter, &pWriter](const akd::TreePath& path, const akd::TraverseAction traverseAction, const akd::PValue& value) {
+	akd::traversePValue(src, [pretty, &nWriter, &pWriter](const akd::PVPath& path, const akd::TraverseAction traverseAction, const akd::PValue& value) {
 
 
 		if ((path.size() > 0) && (!path[path.size() - 1].isIndex) && (traverseAction != akd::TraverseAction::ObjectEnd) && (traverseAction != akd::TraverseAction::ArrayEnd)) {

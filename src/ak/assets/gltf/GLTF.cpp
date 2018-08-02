@@ -37,6 +37,7 @@
 #include <ak/data/Json.hpp>
 #include <ak/data/PValue.hpp>
 #include <ak/data/Rand.hpp>
+#include <ak/data/Serialize.hpp>
 #include <ak/data/SUID.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Filesystem.hpp>

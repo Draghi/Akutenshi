@@ -63,33 +63,6 @@ namespace akas {
 		fpSingle alphaCutoff;
 		bool doubleSided;
 	};
-
 }
-
-AK_SMART_ENUM_SERIALIZE(akas, AlphaMode)
-
-AK_SMART_CLASS(akas::Sampler,
-	FIELD, imgAssetID,
-	FIELD, minFilter,
-	FIELD, minMipFilter,
-	FIELD, magFilter,
-	FIELD, clampS,
-	FIELD, clampT
-)
-
-AK_SMART_CLASS(akas::Material,
-	FIELD, baseColour,
-	FIELD, metallicFactor,
-	FIELD, roughnessFactor,
-	FIELD, emmisiveFactor,
-	FIELD, baseTexture,
-	FIELD, metalRoughTexture,
-	FIELD, normalTexture,
-	FIELD, occlusionTexture,
-	FIELD, emissiveTexture,
-	FIELD, alphaMode,
-	FIELD, alphaCutoff,
-	FIELD, doubleSided
-)
 
 #endif /* AK_ASSETS_MATERIAL_HPP_ */

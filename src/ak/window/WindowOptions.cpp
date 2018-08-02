@@ -49,7 +49,7 @@ static Monitor findTargetMonitor(const std::string& name, WindowCoord pos) {
 	return primaryMonitor();
 }
 
-template<> akw::WindowOptions akd::deserialize<akw::WindowOptions>(const akd::PValue& root) {
+bool akd::deserialize(akw::WindowOptions& dst, const akd::PValue& root) {
 	WindowCoord pos = {root["position"]["x"].as<int>(), root["position"]["y"].as<int>()};
 	WindowCoord winSize = {root["videoMode"]["resolution"]["x"].as<int>(), root["videoMode"]["resolution"]["y"].as<int>()};
 	VideoMode videoMode = {winSize, root["videoMode"]["refreshRate"].as<int>()};
@@ -63,7 +63,7 @@ template<> akw::WindowOptions akd::deserialize<akw::WindowOptions>(const akd::PV
 	else if (vsyncStr == "Half") vsyncType = VSync::HALF;
 	else if (vsyncStr == "Adaptive") vsyncType = VSync::ADAPTIVE;
 
-	return WindowOptions()
+	dst = WindowOptions()
 		.position(pos)
 		.title(root["title"].as<std::string>())
 
@@ -90,6 +90,8 @@ template<> akw::WindowOptions akd::deserialize<akw::WindowOptions>(const akd::PV
 		.glSRGB(root["glSRGB"].as<bool>())
 		.glDoubleBuffer(root["glDoubleBuffer"].as<bool>())
 		.glMSAA(root["glMSAA"].as<uint8>());
+
+	return true;
 }
 
 void akd::serialize(akd::PValue& root, const akw::WindowOptions& val) {

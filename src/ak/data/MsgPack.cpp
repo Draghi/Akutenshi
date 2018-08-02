@@ -34,8 +34,8 @@
 #include <utility>
 
 #include <ak/data/Brotli.hpp>
-#include <ak/data/Path.hpp>
 #include <ak/data/PValue.hpp>
+#include <ak/data/PVPath.hpp>
 #include <ak/filesystem/CFile.hpp>
 
 using namespace akd;
@@ -168,7 +168,7 @@ std::vector<uint8> akd::toMsgPack(const akd::PValue& src) {
     msgpack::sbuffer buffer;
     msgpack::packer<msgpack::sbuffer> pk(&buffer);
 
-	akd::traversePValue(src, [&pk](const akd::TreePath& path, const akd::TraverseAction traverseAction, const akd::PValue& value) {
+	akd::traversePValue(src, [&pk](const akd::PVPath& path, const akd::TraverseAction traverseAction, const akd::PValue& value) {
 		if ((path.size() > 0) && (!path[path.size() - 1].isIndex) && (traverseAction != akd::TraverseAction::ObjectEnd) && (traverseAction != akd::TraverseAction::ArrayEnd)) {
 			pk.pack(path[path.size()-1].path);
 		}

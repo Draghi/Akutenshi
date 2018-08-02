@@ -25,6 +25,7 @@
 #include <ak/animation/Type.hpp>
 #include <ak/math/Matrix.hpp>
 #include <ak/math/Quaternion.hpp>
+#include <ak/math/Vector.hpp>
 #include <ak/math/Scalar.hpp>
 #include <ak/math/Types.hpp>
 #include <ak/PrimitiveTypes.hpp>

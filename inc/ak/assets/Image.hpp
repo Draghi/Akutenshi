@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 #ifndef AK_ASSETS_IMAGE_HPP_
 #define AK_ASSETS_IMAGE_HPP_
 
@@ -24,12 +25,12 @@
 #include <utility>
 #include <vector>
 
+#include <ak/data/SmartEnum.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Path.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/render/gl/Textures.hpp>
 #include <ak/ScopeGuard.hpp>
-#include <ak/data/SmartEnum.hpp>
 
 namespace akas {
 
@@ -155,6 +156,5 @@ namespace akas {
 	}
 }
 
-AK_SMART_ENUM_SERIALIZE(akas, ImageRotation)
 
 #endif /* AK_ASSETS_IMAGE_HPP_ */

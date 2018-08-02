@@ -16,6 +16,7 @@
 
 #include <iomanip>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 
@@ -23,12 +24,12 @@
 #include <ak/assets/Convert.hpp>
 #include <ak/assets/Image.hpp>
 #include <ak/data/PValue.hpp>
+#include <ak/data/Serialize.hpp>
 #include <ak/engine/components/Behaviours.hpp>
 #include <ak/engine/components/Camera.hpp>
 #include <ak/engine/components/Transform.hpp>
 #include <ak/engine/Config.hpp>
 #include <ak/engine/EntityManager.hpp>
-#include <ak/engine/ResourceManager.hpp>
 #include <ak/engine/Scene.hpp>
 #include <ak/engine/SceneManager.hpp>
 #include <ak/event/Dispatcher.hpp>
@@ -43,13 +44,12 @@
 #include <ak/render/gl/Draw.hpp>
 #include <ak/render/gl/RenderTarget.hpp>
 #include <ak/render/gl/Textures.hpp>
+#include <ak/render/gl/Types.hpp>
 #include <ak/render/SceneRendererDefault.hpp>
 #include <ak/ScopeGuard.hpp>
-#include <ak/data/SmartEnum.hpp>
-
-#include <ak/data/SmartClass.hpp>
 #include <ak/thread/CurrentThread.hpp>
 #include <ak/util/FPSCounter.hpp>
+#include <ak/util/String.hpp>
 #include <ak/util/Time.hpp>
 #include <ak/util/Timer.hpp>
 #include <ak/window/Types.hpp>
@@ -95,7 +95,6 @@ static void startGame() {
 	// constexpr ak::log::Logger log(AK_STRING_VIEW("Main"));
 
 	akas::AssetRegistry assetRegistry(akfs::Path("data/"));
-	ake::ResourceManager resourceManager;
 	ake::SceneManager sceneManager;
 	auto& scene = sceneManager.getScene(sceneManager.newScene("World"));
 	auto& ecs = scene.entities();

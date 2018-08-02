@@ -295,7 +295,7 @@ PValue& PValue::setBin(const void* val, akSize size) {
 	return setBin(std::move(dst));
 }
 
-static void traversePValue_internal(TreePath& path, const PValue& cNode, const std::function<void(const TreePath& path, TraverseAction action, const PValue& value)>& callback) {
+static void traversePValue_internal(PVPath& path, const PValue& cNode, const std::function<void(const PVPath& path, TraverseAction action, const PValue& value)>& callback) {
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wswitch-enum"
 	switch(cNode.type()) {
@@ -338,8 +338,8 @@ static void traversePValue_internal(TreePath& path, const PValue& cNode, const s
 
 }
 
-void akd::traversePValue(const PValue& cNode, const std::function<void(const TreePath& path, TraverseAction action, const PValue& value)>& callback) {
-	TreePath path;
+void akd::traversePValue(const PValue& cNode, const std::function<void(const PVPath& path, TraverseAction action, const PValue& value)>& callback) {
+	PVPath path;
 	traversePValue_internal(path, cNode, callback);
 
 }

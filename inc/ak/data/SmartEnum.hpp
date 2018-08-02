@@ -18,6 +18,7 @@
 #define AK_DATA_SMARTENUM_HPP_
 
 #include <string_view>
+#include <ak/data/PValue.hpp>
 #include <ak/util/Macro.hpp>
 
 #define AK_INTERNAL_ENUM_KV_2( x, y) x = y,

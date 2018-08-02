@@ -26,17 +26,16 @@
 #include <ak/animation/Type.hpp>
 #include <ak/assets/gltf/GLTF.hpp>
 #include <ak/assets/Image.hpp>
+#include <ak/assets/Serialize.hpp>
 #include <ak/assets/Skin.hpp>
-#include <ak/assets/Texture.hpp>
-#include <ak/data/Image.hpp>
 #include <ak/data/Json.hpp>
 #include <ak/data/MsgPack.hpp>
 #include <ak/data/PValue.hpp>
+#include <ak/data/Serialize.hpp>
 #include <ak/filesystem/Filesystem.hpp>
 #include <ak/math/Serialize.hpp>
-#include <ak/math/SphericalCoord.hpp>
-#include <ak/math/Transform.hpp>
 #include <ak/render/gl/Textures.hpp>
+#include <ak/render/gl/Types.hpp>
 #include <ak/util/Timer.hpp>
 #include <ak/window/WindowOptions.hpp>
 

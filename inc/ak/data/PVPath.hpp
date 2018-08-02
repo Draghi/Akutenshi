@@ -14,8 +14,8 @@
  * limitations under the License.
  **/
 
-#ifndef AK_DATA_PATH_HPP_
-#define AK_DATA_PATH_HPP_
+#ifndef AK_DATA_PVPATH_HPP_
+#define AK_DATA_PVPATH_HPP_
 
 #include <iterator>
 #include <string>
@@ -30,48 +30,48 @@ namespace akd {
 		uint64 index;
 	};
 
-	class TreePath final {
+	class PVPath final {
 		private:
 			std::vector<PathEntry> m_path;
 
 			using diff_t = typename std::vector<PathEntry>::difference_type;
 
 		public:
-			TreePath() = default;
+			PVPath() = default;
 
-			TreePath& append(const std::string& path) {
+			PVPath& append(const std::string& path) {
 				m_path.push_back(PathEntry{false, path, 0});
 				return *this;
 			}
 
-			TreePath& append(uint64 index) {
+			PVPath& append(uint64 index) {
 				m_path.push_back(PathEntry{true, std::string(), index});
 				return *this;
 			}
 
-			TreePath& append(PathEntry entry) {
+			PVPath& append(PathEntry entry) {
 				m_path.push_back(entry);
 				return *this;
 			}
 
-			TreePath& append(const TreePath& entry) {
+			PVPath& append(const PVPath& entry) {
 				for(auto iter = entry.m_path.begin(); iter != entry.m_path.end(); iter++) {
 					m_path.push_back(*iter);
 				}
 				return *this;
 			}
 
-			TreePath& pop(uint64 count = 1) {
+			PVPath& pop(uint64 count = 1) {
 				for(uint64 i = 0; i < count; i++) m_path.pop_back();
 				return *this;
 			}
 
-			TreePath& remove(diff_t index) {
+			PVPath& remove(diff_t index) {
 				m_path.erase(m_path.begin() + index);
 				return *this;
 			}
 
-			TreePath& clear() {
+			PVPath& clear() {
 				m_path.clear();
 				return *this;
 			}
@@ -98,17 +98,17 @@ namespace akd {
 			PathEntry& operator[](uint64 index) { return entry(index); }
 			PathEntry operator[](uint64 index) const { return entry(index); }
 
-			TreePath& operator<<(const std::string& path) { return append(path); }
-			TreePath& operator<<(uint64 index) { return append(index); }
-			TreePath& operator<<(PathEntry entry) { return append(entry); }
+			PVPath& operator<<(const std::string& path) { return append(path); }
+			PVPath& operator<<(uint64 index) { return append(index); }
+			PVPath& operator<<(PathEntry entry) { return append(entry); }
 
 			akSize size() const { return m_path.size(); }
 			bool empty() const { return m_path.size() <= 0; }
 
 	};
 
-	TreePath parseObjectDotNotation(const std::string& path);
-	std::string pathToObjectDotNotation(const TreePath& path);
+	PVPath parseObjectDotNotation(const std::string& path);
+	std::string pathToObjectDotNotation(const PVPath& path);
 }
 
 #endif

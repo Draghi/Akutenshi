@@ -18,7 +18,6 @@
 #define AK_DATA_PVALUE_HPP_
 
 #include <algorithm>
-#include <array>
 #include <cstddef>
 #include <deque>
 #include <functional>
@@ -27,11 +26,10 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include <ak/data/Path.hpp>
+#include <ak/data/PVPath.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/util/String.hpp>
 
@@ -59,7 +57,7 @@ namespace akd {
 		Binary,
 	};
 
-	void traversePValue(const PValue& cNode, const std::function<void(const TreePath& path, TraverseAction action, const PValue& value)>& callback);
+	void traversePValue(const PValue& cNode, const std::function<void(const PVPath& path, TraverseAction action, const PValue& value)>& callback);
 
 	class PValue final {
 		public:
@@ -73,7 +71,7 @@ namespace akd {
 			using bool_t = bool;
 			using bin_t = std::vector<uint8>;
 
-			using traverse_f = std::function<bool(const TreePath&, const PValue&)>;
+			using traverse_f = std::function<bool(const PVPath&, const PValue&)>;
 
 		private:
 			union ValueContainer {
@@ -95,8 +93,8 @@ namespace akd {
 			PType m_type;
 			ValueContainer m_value;
 
-			static PValue& navigate_internal(PValue& cNode, const TreePath& path);
-			static const PValue* navigate_internal(const PValue* currentNode, const TreePath& path);
+			static PValue& navigate_internal(PValue& cNode, const PVPath& path);
+			static const PValue* navigate_internal(const PValue* currentNode, const PVPath& path);
 
 			PValue& setPValue(const PValue& val);
 
@@ -469,211 +467,6 @@ namespace akd {
 	};
 }
 
-namespace akd {
-	// /////////////////////// //
-	// // Container Helpers // //
-	// /////////////////////// //
 
-	// Serialize
-
-	template<typename type_t, typename alloc_t> void serialize(akd::PValue& dst, const std::vector<type_t, alloc_t>& val) {
-		if (!dst.isArr()) dst.setArr();
-		for(akSize i = 0; i < val.size(); i++) serialize(dst[i], val[i]);
-	}
-
-	template<typename type_t, size_t l> void serialize(akd::PValue& dst, const std::array<type_t, l>& val) {
-		if (!dst.isArr()) dst.setArr();
-		for(akSize i = 0; i < val.size(); i++) serialize(dst[i], val[i]);
-	}
-
-	template<typename type_t, typename alloc_t> void serialize(akd::PValue& dst, const std::deque<type_t, alloc_t>& val) {
-		if (!dst.isArr()) dst.setArr();
-		for(akSize i = 0; i < val.size(); i++) serialize(dst[i], val[i]);
-	}
-
-	template<typename type_t, typename type2_t> void serialize(akd::PValue& dst, const std::pair<type_t, type2_t>& val, akSize offset = 0) {
-		if (!dst.isArr()) dst.setArr();
-		if (dst.size() < offset + 2) dst.getArr().resize(offset + 2);
-		serialize(dst[offset + 0], val.first);
-		serialize(dst[offset + 1], val.second);
-	}
-
-	template<typename type_t, typename alloc_t> void serialize(akd::PValue& dst, const std::map<std::string, type_t>& val) {
-		if (!dst.isArr()) dst.setArr();
-		for(const auto& entry : val) serialize(dst[entry.first.asStr()], entry.second);
-	}
-
-	template<typename type_t, typename alloc_t> void serialize(akd::PValue& dst, const std::unordered_map<std::string, type_t>& val) {
-		if (!dst.isArr()) dst.setArr();
-		for(const auto& entry : val) serialize(dst[entry.first.asStr()], entry.second);
-	}
-
-	template<typename type_t> void serialize(akd::PValue& dst, const std::optional<type_t>& val) {
-		if (!val) dst.setNull();
-		else serialize(dst, *val);
-	}
-
-	// Deserialize
-
-	template<typename type_t, typename alloc_t> bool deserialize(std::vector<type_t, alloc_t>& dst, const akd::PValue& val) {
-		if (!val.isArr()) return false;
-		for(akSize i = 0; i < val.size(); i++) {
-			if (i >= dst.size()) dst.push_back(type_t());
-			if (!deserialize(dst[i], val[i])) return false;
-		}
-		return true;
-	}
-
-	template<typename type_t, size_t l> bool deserialize(std::array<type_t, l>& dst, const akd::PValue& val) {
-		if (!val.isArr()) return false;
-		for(akSize i = 0; i < val.size(); i++) {
-			if (!deserialize(dst[i], val[i])) return false;
-		}
-		return true;
-	}
-
-	template<typename type_t, typename alloc_t> bool deserialize(std::deque<type_t, alloc_t>& dst, const akd::PValue& val) {
-		if (!val.isArr()) return false;
-		for(akSize i = 0; i < val.size(); i++) {
-			if (i >= dst.size()) dst.push_back(type_t());
-			if (!deserialize(dst[i], val[i])) return false;
-		}
-		return true;
-	}
-
-	template<typename type_t, typename type2_t> bool deserialize(std::pair<type_t, type2_t>& dst, const akd::PValue& val, akSize offset = 0) {
-		if ((!val.isArr()) || (val.size() < offset + 2)) return false;
-
-		std::pair<type_t, type2_t> result;
-		if (!deserialize(result.first,  val[offset + 0])) return false;
-		if (!deserialize(result.second, val[offset + 1])) return false;
-
-		dst = result;
-		return true;
-	}
-
-	template<typename type_t, typename type2_t> bool deserialize(std::map<type_t, type2_t>& dst, const akd::PValue& val) {
-		if (!val.isObj()) return false;
-
-		std::map<type_t, type2_t> result;
-		for(auto& entry : dst.asObj()) result.emplace(deserialize<type_t>(entry.first), deserialize<type2_t>(entry.second));
-
-		dst = result;
-		return true;
-	}
-
-	template<typename type_t, typename type2_t> bool deserialize(std::unordered_map<type_t, type2_t>& dst, const akd::PValue& val) {
-		if (!val.isObj()) return false;
-
-		std::unordered_map<type_t, type2_t> result;
-		for(auto& entry : dst.asObj()) result.emplace(deserialize<type_t>(entry.first), deserialize<type2_t>(entry.second));
-
-		dst = result;
-		return true;
-	}
-
-	template<typename type_t> bool deserialize(std::optional<type_t>& dst, const akd::PValue& val) {
-		if (val.isNull()) {
-			dst = {};
-			return true;
-		}
-		type_t tmpVal;
-		if (!deserialize(tmpVal, val)) return false;
-		dst = std::move(tmpVal);
-		return true;
-	}
-
-	// /////////////////////// //
-	// // Serialize Helpers // //
-	// /////////////////////// //
-
-	template<typename type_t> PValue serialize(const type_t& val) {
-		PValue result; serialize(result, val);
-		return result;
-	}
-
-	// ///////////////////////// //
-	// // Default Serialize // //
-	// ///////////////////////// //
-
-	namespace internal {
-		template<typename type_t> void methodSerialize(PValue& src, const type_t& dst) {
-			src = PValue::from<type_t>(dst);
-		}
-	}
-
-	inline void serialize(PValue& dst, const PValue::obj_t& src) { return internal::methodSerialize(dst, src); }
-	inline void serialize(PValue& dst, const PValue::arr_t& src) { return internal::methodSerialize(dst, src); }
-	inline void serialize(PValue& dst, const PValue::bin_t& src) { return internal::methodSerialize(dst, src); }
-	inline void serialize(PValue& dst, const PValue::str_t& src) { return internal::methodSerialize(dst, src); }
-	inline void serialize(PValue& dst, const int8&  src) { return internal::methodSerialize(dst, src); }
-	inline void serialize(PValue& dst, const int16& src) { return internal::methodSerialize(dst, src); }
-	inline void serialize(PValue& dst, const int32& src) { return internal::methodSerialize(dst, src); }
-	inline void serialize(PValue& dst, const int64& src) { return internal::methodSerialize(dst, src); }
-	inline void serialize(PValue& dst, const uint8&  src) { return internal::methodSerialize(dst, src); }
-	inline void serialize(PValue& dst, const uint16& src) { return internal::methodSerialize(dst, src); }
-	inline void serialize(PValue& dst, const uint32& src) { return internal::methodSerialize(dst, src); }
-	inline void serialize(PValue& dst, const uint64& src) { return internal::methodSerialize(dst, src); }
-	inline void serialize(PValue& dst, const fpSingle&   src) { return internal::methodSerialize(dst, src); }
-	inline void serialize(PValue& dst, const fpDouble&   src) { return internal::methodSerialize(dst, src); }
-	inline void serialize(PValue& dst, const PValue::bool_t&  src) { return internal::methodSerialize(dst, src); }
-
-	// ///////////////////////// //
-	// // Default Deserialize // //
-	// ///////////////////////// //
-
-	namespace internal {
-		template<typename type_t> bool methodDeserialize(type_t& dst, const PValue& src) {
-			auto tmp = src.tryAs<type_t>();
-			if (tmp) dst = *tmp;
-			return tmp.has_value();
-		}
-	}
-
-	inline bool deserialize(PValue::obj_t&   dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::arr_t&   dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::bin_t&   dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::str_t&   dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(int8&   dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(int16&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(int32&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(int64&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(uint8&   dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(uint16&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(uint32&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(uint64&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(fpSingle&   dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(fpDouble&   dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-	inline bool deserialize(PValue::bool_t&  dst, const PValue& src) { return internal::methodDeserialize(dst, src); }
-
-
-	// ///////////////////////// //
-	// // Deserialize Helpers // //
-	// ///////////////////////// //
-
-
-	template<typename type_t> std::optional<type_t> tryDeserialize(const PValue& root) {
-		type_t result;
-		return deserialize(result, root) ?  std::optional<type_t>{result} :  std::optional<type_t>{};
-	}
-
-	template<typename type_t> type_t deserialize(const PValue& root) {
-		auto result = tryDeserialize<type_t>(root);
-		if (result) return *result;
-		else throw std::logic_error("Failed to deserialize value.");
-	}
-
-	template<typename type_t> bool deserializeOrDefault(type_t& dst, const PValue& root, const type_t& def) {
-		auto result = tryDeserialize<type_t>(root);
-		dst = result.value_or(def);
-		return result;
-	}
-
-	template<typename type_t> type_t deserializeOrDefault(const PValue& root, const type_t& def) {
-		auto result = tryDeserialize<type_t>(root);
-		if (result) return *result;
-		else return def;
-	}
-}
 
 #endif
