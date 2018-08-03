@@ -9,5 +9,6 @@
 /Debug/
 
 dist/bin/
-dist/data/logs/
+dist/data/
 dist/lib/
+dist/data/
