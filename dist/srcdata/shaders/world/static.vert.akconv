@@ -1,0 +1,7 @@
+{
+    "destination": "data/shaders/world/skinned.vert.akres",
+    "identifier": [9571529376037284139, 9643014164123480756],
+    "remapPaths": true,
+    "source": "skinned.vert",
+    "type": "ShaderStage"
+}

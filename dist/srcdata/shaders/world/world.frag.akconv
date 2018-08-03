@@ -1,0 +1,7 @@
+{
+    "destination": "data/shaders/world/world.frag.akres",
+    "identifier": [13079883241473181213, 4609642055219467042],
+    "remapPaths": true,
+    "source": "world.frag",
+    "type": "ShaderStage"
+}

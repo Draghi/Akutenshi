@@ -1,6 +1,0 @@
-{
-    "displayName": "skybox.frag.akres",
-    "identifier": [3529938710335673728, 13097392444596228680],
-    "source": "./srcdata/shaders/skybox/skybox.frag",
-    "type": "ShaderStage"
-}

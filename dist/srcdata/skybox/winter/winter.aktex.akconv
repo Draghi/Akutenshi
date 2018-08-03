@@ -1,0 +1,36 @@
+{
+    "config": {
+        "clampHorz": "Edge",
+        "clampVert": "Edge",
+        "filterMax": "Linear",
+        "filterMin": "Linear",
+        "filterMip": "None",
+        "format": "RGB",
+        "levels": [[{
+                    "identifier": [17051337245395712179, 3624242007020858821],
+                    "source": "pX.jpg.akconv"
+                }, {
+                    "identifier": [8428960719827093573, 9188785667881481146],
+                    "source": "pY.jpg.akconv"
+                }, {
+                    "identifier": [6063431257615784922, 13023471011176948358],
+                    "source": "pZ.jpg.akconv"
+                }, {
+                    "identifier": [16554694945074769948, 16442909521195540570],
+                    "source": "nX.jpg.akconv"
+                }, {
+                    "identifier": [6080645458975401717, 40382476910519038],
+                    "source": "nY.jpg.akconv"
+                }, {
+                    "identifier": [4095118598694345700, 940765669129696907],
+                    "source": "nZ.jpg.akconv"
+                }]],
+        "storage": "Byte_sRGB",
+        "type": "TexCubemap"
+    },
+    "destination": "data/skybox/winter/winter.aktex.akres",
+    "identifier": [687517877988969517, 13022011813478014719],
+    "name": "winter",
+    "remapPaths": true,
+    "type": "Texture"
+}

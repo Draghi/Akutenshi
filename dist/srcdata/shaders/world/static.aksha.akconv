@@ -1,0 +1,18 @@
+{
+    "config": {
+        "stages": {
+            "Fragment": {
+                "identifier": [13079883241473181213, 4609642055219467042],
+                "source": "world.frag.akconv"
+            },
+            "Vertex": {
+                "identifier": [9571529376037284139, 9643014164123480756],
+                "source": "static.vert.akconv"
+            }
+        }
+    },
+    "destination": "data/shaders/world/static.aksha.akres",
+    "identifier": [14748759976327818867, 2648866861466306276],
+    "remapPaths": true,
+    "type": "ShaderProgram"
+}

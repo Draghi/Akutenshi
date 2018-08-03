@@ -1,0 +1,7 @@
+{
+    "destination": "data/shaders/world/static.vert.akres",
+    "identifier": [1990981014588853201, 2038091532875515879],
+    "remapPaths": true,
+    "source": "static.vert",
+    "type": "ShaderStage"
+}

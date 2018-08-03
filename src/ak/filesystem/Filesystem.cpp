@@ -31,6 +31,8 @@
 
 using namespace akfs;
 
+static void makeDir(const std::string& path);
+
 class VFSMounts final {
 	private:
 		std::unordered_map<std::string, std::string> m_vfsToSys = {
@@ -70,6 +72,7 @@ class VFSMounts final {
 
 			auto iter = m_vfsToSys.find(vfsPoint);
 			if (iter == m_vfsToSys.end()) throw std::logic_error(aku::buildString("Unable to resolve vfsMountPoint: ", vfsPoint));
+			makeDir(iter->second);
 			return iter->second;
 		}
 };

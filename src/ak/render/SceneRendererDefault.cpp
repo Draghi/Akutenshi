@@ -63,8 +63,8 @@ SceneRendererDefault::SceneRendererDefault(std::shared_ptr<gl::Texture> skyboxTe
 
 	// Skybox
 	m_data->skybox.shader = akr::gl::util::buildShaderProgram({
-		{akr::gl::StageType::Vertex,   "data/shaders/skybox.vert"},
-		{akr::gl::StageType::Fragment, "data/shaders/skybox.frag"},
+		{akr::gl::StageType::Vertex,   "data/shaders/skybox/skybox.vert"},
+		{akr::gl::StageType::Fragment, "data/shaders/skybox/skybox.frag"},
 	});
 
 	m_data->skybox.texture = skyboxTexture;
