@@ -29,11 +29,11 @@ namespace akr {
 			INDEX,
 		};
 
-		enum class StageType : uint8 {
-			Vertex = 0,
-			Geometry = 1,
-			Fragment = 2,
-		};
+		AK_SMART_TENUM_CLASS(StageType, uint8,
+			Vertex,
+			Geometry,
+			Fragment
+		)
 
 		AK_SMART_TENUM_CLASS(DrawType, uint8,
 			Points,
@@ -127,5 +127,6 @@ namespace akr {
 }
 
 AK_SMART_ENUM_SERIALIZE(akr::gl, DrawType)
+AK_SMART_ENUM_SERIALIZE(akr::gl, StageType)
 
 #endif

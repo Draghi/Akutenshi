@@ -176,18 +176,16 @@ namespace akd {
 
 // Map
 namespace akd {
-	template<typename type_t, typename alloc_t> void serialize(akd::PValue& dst, const std::map<std::string, type_t>& val) {
-		if (!dst.isArr()) dst.setArr();
-		for(const auto& entry : val) {
-			serialize(dst[entry.first.asStr()], entry.second);
-		}
+	template<typename type_t, typename type2_t> void serialize(akd::PValue& dst, const std::map<type_t, type2_t>& val) {
+		if (!dst.isObj()) dst.setObj();
+		for(const auto& entry : val) serialize(dst[serialize(entry.first).getStr()], entry.second);
 	}
 
 	template<typename type_t, typename type2_t> bool deserialize(std::map<type_t, type2_t>& dst, const akd::PValue& val) {
 		if (!val.isObj()) return false;
 
 		std::map<type_t, type2_t> result;
-		for(auto& entry : dst.asObj()) result.emplace(deserialize<type_t>(entry.first), deserialize<type2_t>(entry.second));
+		for(auto& entry : val.getObj()) result.emplace(deserialize<type_t>(akd::PValue::from(entry.first)), deserialize<type2_t>(entry.second));
 
 		dst = result;
 		return true;
@@ -196,18 +194,16 @@ namespace akd {
 
 // Unordered Map
 namespace akd {
-	template<typename type_t, typename alloc_t> void serialize(akd::PValue& dst, const std::unordered_map<std::string, type_t>& val) {
-		if (!dst.isArr()) dst.setArr();
-		for(const auto& entry : val) {
-			serialize(dst[entry.first.asStr()], entry.second);
-		}
+	template<typename type_t, typename type2_t> void serialize(akd::PValue& dst, const std::unordered_map<type_t, type2_t>& val) {
+		if (!dst.isObj()) dst.setObj();
+		for(const auto& entry : val) serialize(dst[serialize(entry.first).getStr()], entry.second);
 	}
 
 	template<typename type_t, typename type2_t> bool deserialize(std::unordered_map<type_t, type2_t>& dst, const akd::PValue& val) {
 		if (!val.isObj()) return false;
 
 		std::unordered_map<type_t, type2_t> result;
-		for(auto& entry : dst.asObj()) result.emplace(deserialize<type_t>(entry.first), deserialize<type2_t>(entry.second));
+		for(auto& entry : val.getObj()) result.emplace(deserialize<type_t>(akd::PValue::from(entry.first)), deserialize<type2_t>(entry.second));
 
 		dst = result;
 		return true;

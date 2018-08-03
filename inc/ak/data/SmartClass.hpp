@@ -17,6 +17,9 @@
 #define AK_DATA_SMARTCLASS_HPP_
 
 #include "ak/util/Macro.hpp"
+#include "ak/data/PValue.hpp"
+#include "ak/data/Serialize.hpp"
+#include "ak/Log.hpp"
 
 #define AK_SMART_CLASS_SERIALIZE_FIELD(fieldName) serialize(dst[#fieldName], src.fieldName);
 

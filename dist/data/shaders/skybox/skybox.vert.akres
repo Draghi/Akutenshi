@@ -1,0 +1,6 @@
+{
+    "displayName": "skybox.vert.akres",
+    "identifier": [8834498993452312122, 10279314910205952472],
+    "source": "./srcdata/shaders/skybox/skybox.vert",
+    "type": "ShaderStage"
+}

@@ -30,6 +30,8 @@ namespace akas {
 		Mesh,
 		Prefab,
 		Scene,
+		ShaderStage,
+		ShaderProgram,
 		Sound,
 		Texture,
 		Image

@@ -1,0 +1,7 @@
+{
+    "destination": "data/shaders/skybox/skybox.frag.akres",
+    "identifier": [3529938710335673728, 13097392444596228680],
+    "remapPaths": true,
+    "source": "skybox.frag",
+    "type": "ShaderStage"
+}

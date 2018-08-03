@@ -3,37 +3,44 @@
 ++======================================++
 
 {
-	"type": <ENUM["GLTF", "TEXTURE"]>,                                           // The type of file to convert from
-
+	"type": <ENUM["GLTF", "Texture", "Image", "VertexShader", "FragmentShader"]>, // The type of file to convert from
+	(Opt[false])"remapPaths":<BOOL>,                                              // Should string paths be modified if the file is relocated
+	
 	(Section:["type":"GLTF"])		
-		"source": <STR>,                                                         // The file to convert, relative to this file
-		(Gen, Opt[min(INT)]) "modifiedTime": <INT>,                              // The last modified date of the file, in unix time. Used to identify modifications.
+		"source": <STR>,                                                          // The file to convert, relative to this file
+		(Gen, Opt[min(INT)]) "modifiedTime": <INT>,                               // The last modified date of the file, in unix time. Used to identify modifications.
 
-		(Opt]) "meshes":{                                                        // Map of mesh names to destination (Path/SUID)
-			(Opt) <STR>: {                                                       // Mesh name
-				(Opt) "identifier": <SUID>,                                      // SUID of asset
-				(Opt) "destination": <STR>                                       // Destination of asset .akres file.
+		(Opt]) "meshes":{                                                         // Map of mesh names to destination (Path/SUID)
+			(Opt) <STR>: {                                                        // Mesh name
+				(Opt) "identifier": <SUID>,                                       // SUID of asset
+				(Opt) "destination": <STR>                                        // Destination of asset .akres file.
 			},
 			[...]
 		},
 		
-		(Opt) "materials":{                                                      // Map of material names to destination (Path/SUID)
-			(Opt) <STR>: {                                                       // Material name
-				(Opt) "identifier": <SUID>,                                      // SUID of asset
-				(Opt) "destination": <STR>                                       // Destination of asset .akres file.
+		(Opt) "materials":{                                                       // Map of material names to destination (Path/SUID)
+			(Opt) <STR>: {                                                        // Material name
+				(Opt) "identifier": <SUID>,                                       // SUID of asset
+				(Opt) "destination": <STR>                                        // Destination of asset .akres file.
 			},			
 			[...]
 		},
 		
-		(Opt) "images":{                                                         // Map of image names to destination (Path/SUID)
-			(Opt) <STR>: {                                                       // Image name
-				(Opt) "identifier": <SUID>,                                      // SUID of asset
-				(Opt) "destination": <STR>                                       // Destination of asset .akres file.
+		(Opt) "images":{                                                          // Map of image names to destination (Path/SUID)
+			(Opt) <STR>: {                                                        // Image name
+				(Opt) "identifier": <SUID>,                                       // SUID of asset
+				(Opt) "destination": <STR>                                        // Destination of asset .akres file.
 			},			
 			[...]
 		},
 		
-	(Section:["type":"TEXTURE"])
+		
+	(Section:["type":"Image"])
+	(Opt) "identifier": <SUID>,                                                  // SUID of asset
+	(Opt) "destination": <STR>                                                   // Destination of asset .akres file.
+	"source":<STR>,                                                              // The source image file 
+	
+	(Section:["type":"Texture"])
 		"config": {
 			"type": <ENUM["Tex1D", "Tex2D", "Tex3D", "Tex1D_Array", "Tex2D_Array", "TexCubemap"]>,
 			"levels":[
@@ -48,9 +55,9 @@
 						(Opt[0]) "cropX":<INT>,                                               // Negative values flip, 0 = image size
 						(Opt[0]) "cropY":<INT>                                                // Negative values flip, 0 = image size
 					},
-					...
+				[...]
 				],
-				...
+				[...]
 			],
 			(Opt["Edge"]) "clampHorz":  <ENUM["Edge", "Border", "Wrap", "Mirror"],
 			(Opt["Edge"]) "clampVert":  <ENUM["Edge", "Border", "Wrap", "Mirror"],
@@ -59,7 +66,23 @@
 			(Opt["Nearest"]) "filterMin": <ENUM["Nearest", "Linear"]>,
 			(Opt["Nearest"]) "filterMax": <ENUM["Nearest", "Linear"]>,
 			(Opt["None"])"filterMip": <ENUM["None", "Nearest", "Linear"]>,
-		}
+		}                                                             
+		
+	(Section:["type":"ShaderStage"])
+	(Opt) "identifier": <SUID>,                                                  // SUID of asset
+	(Opt) "destination": <STR>                                                   // Destination of asset .akres file.
+	"source":<STR>,                                                              // The source shader file 
+	
+	(Section:["type":"Shader Program"])
+		"config": {
+			"stages":[
+				(Opt["Fragment" && "Vertex"]) <ENUM["Fragment", "Geometry", "Vertex"]> {
+					(Opt["source"])_"identifier": <SUID>,                                 // Asset ID of shader stage
+					(Opt["identifier"]) "source": <STR>                                   // Source akconv file of shader stage
+				}
+				[...]
+			],
+		} 
 }
 
 ++=============================++
@@ -68,7 +91,7 @@
 
 {
 	"identifier": <SUID>,                                                                    // SUID of file
-	"type": <ENUM["Animation", "Material", "Mesh", "Prefab", "Scene", "Sound", "Texture"]>,  // The type of data the file contains
+	"type": <ENUM["Animation", "Material", "Mesh", "Prefab", "Scene", "ShaderStage", "ShaderProgram", "Sound", "Texture"]>,  // The type of data the file contains
 	"displayName: <STR>                                                                      // The display name of the file
 }
 
@@ -89,9 +112,9 @@
 				(Opt[0]) "cropX":<INT>,                                               // Negative values flip, 0 = image size
 				(Opt[0]) "cropY":<INT>                                                // Negative values flip, 0 = image size
 			},
-			...
+			[...]
 		],
-		...
+		[...]
 	],
 	(Opt["Edge"]) "clampHorz":  <ENUM["Edge", "Border", "Wrap", "Mirror"],
 	(Opt["Edge"]) "clampVert":  <ENUM["Edge", "Border", "Wrap", "Mirror"],
@@ -102,3 +125,26 @@
 	(Opt["None"])"filterMip": <ENUM["None", "Nearest", "Linear"]>,
 	
 }
+
+++============================++
+|| Akutenshi Texture (.aksha) ||
+++============================++
+{
+	"stages":[
+		(Opt["Fragment" && "Vertex"]) <ENUM["Fragment", "Geometry", "Vertex"]> {
+			"identifier": <SUID>,                                                // Asset ID of shader stage
+		}
+		[...]
+	],
+} 
+
+
+
+
+
+
+
+
+
+
+

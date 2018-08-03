@@ -1,0 +1,18 @@
+{
+    "config": {
+        "stages": {
+            "Fragment": {
+                "identifier": [3529938710335673728, 13097392444596228680],
+                "source": "skybox.frag.akconv"
+            },
+            "Vertex": {
+                "identifier": [8834498993452312122, 10279314910205952472],
+                "source": "skybox.vert.akconv"
+            }
+        }
+    },
+    "destination": "data/shaders/skybox/skybox.akshader.akres",
+    "identifier": [16504828186618260760, 6577168585942283580],
+    "remapPaths": true,
+    "type": "ShaderProgram"
+}

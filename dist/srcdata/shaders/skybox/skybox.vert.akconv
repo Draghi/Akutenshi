@@ -1,0 +1,7 @@
+{
+    "destination": "data/shaders/skybox/skybox.vert.akres",
+    "identifier": [8834498993452312122, 10279314910205952472],
+    "remapPaths": true,
+    "source": "skybox.vert",
+    "type": "ShaderStage"
+}

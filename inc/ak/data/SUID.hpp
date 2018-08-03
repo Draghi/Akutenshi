@@ -18,11 +18,10 @@
 #define AK_DATA_SUID_HPP_
 
 #include <cstddef>
-#include <stdexcept>
 #include <unordered_map>
 
-#include <ak/data/PValue.hpp>
 #include <ak/PrimitiveTypes.hpp>
+#include <ak/data/SmartClass.hpp>
 
 namespace akd {
 
@@ -42,6 +41,18 @@ namespace akd {
 		bool operator!=(const SUID& o) const { return (high != o.high) || (low != o.low); }
 		bool operator<=(const SUID& o) const { return (high <  o.high) || ((high == o.high) && (low <= o.low)); }
 		bool operator>=(const SUID& o) const { return (high >  o.high) || ((high == o.high) && (low >= o.low)); }
+
+		const uint64& operator[](akSize i) const {
+			if (i == 0) return high;
+			if (i == 1) return low;
+			throw std::out_of_range("Attempt to index out of range in SUID.");
+		}
+
+		uint64& operator[](akSize i) {
+			if (i == 0) return high;
+			if (i == 1) return low;
+			throw std::out_of_range("Attempt to index out of range in SUID.");
+		}
 	};
 
 	template<typename rand_t> SUID generateSUID(rand_t& randSource) {
@@ -56,22 +67,9 @@ namespace akd {
 			randSource.nextInt()                                                                                     // 64 Rand-Bits
 		);
 	}
-
-	inline void serialize(akd::PValue& dest, const SUID& val) {
-		dest.setArr();
-		dest[0].setUInt(val.high);
-		dest[1].setUInt(val.low);
-	}
-
-	inline bool deserialize(SUID& dest, const akd::PValue& val) {
-		try {
-			dest = SUID(val[0].as<uint64>(), val[1].as<uint64>());
-			return true;
-		} catch(const std::logic_error& /*e*/) {
-			return false;
-		}
-	}
 }
+
+AK_SMART_CLASS_ARRAY(akd::SUID, 2);
 
 namespace std {
 	template<> struct hash<akd::SUID> {

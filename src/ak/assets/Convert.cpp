@@ -27,6 +27,7 @@
 #include <ak/assets/gltf/GLTF.hpp>
 #include <ak/assets/Image.hpp>
 #include <ak/assets/Serialize.hpp>
+#include <ak/assets/ShaderProgram.hpp>
 #include <ak/assets/Skin.hpp>
 #include <ak/data/Json.hpp>
 #include <ak/data/MsgPack.hpp>
@@ -44,10 +45,16 @@ using namespace akas;
 static void writeMeshes(ConversionHelper& state);
 static void writeMaterials(ConversionHelper& state);
 static void writeImages(ConversionHelper& state);
+static void writeShaderStages(ConversionHelper& state);
+static void writeShaderPrograms(ConversionHelper& state);
 static void writeTextures(ConversionHelper& state);
 
+template<auto func_f> static bool convertCopyOnly(const std::string& assetTypeName, ConversionHelper& state, const akfs::Path& cfgPath, akd::PValue& cfg);
+
 static bool convertTexture(ConversionHelper& state, const akfs::Path& cfgPath, akd::PValue& cfg);
-static bool convertImage(ConversionHelper& state, const akfs::Path& cfgPath, akd::PValue& cfg);
+static bool convertShaderProgram(ConversionHelper& conversionHelper, const akfs::Path& cfgPath, akd::PValue& cfg);
+static bool convertImage(ConversionHelper& state, const akfs::Path& cfgPath, akd::PValue& cfg) { return convertCopyOnly<&akas::ConversionHelper::registerImage>("image", state, cfgPath, cfg); }
+static bool convertShaderStage(ConversionHelper& state, const akfs::Path& cfgPath, akd::PValue& cfg) { return convertCopyOnly<&akas::ConversionHelper::registerShaderStage>("shader stage", state, cfgPath, cfg); }
 
 static auto writeAssetMetaFile = [](const akfs::Path& dst, const akd::SUID& suid, akas::AssetType assetType, const std::string& name, const akfs::Path& source){
 	akd::PValue dstData; akd::serialize(dstData, akas::AssetInfo{suid, assetType, name, source});
@@ -64,7 +71,9 @@ using callback_t = bool(ConversionHelper&, const akfs::Path&, akd::PValue&);
 static const std::map<std::string, callback_t*> proccessFunctions{{
 	{"GLTF", &akas::gltf::convertGLTFFile},
 	{"Texture", &convertTexture},
-	{"Image", &convertImage}
+	{"Image", &convertImage},
+	{"ShaderStage", &convertShaderStage},
+	{"ShaderProgram", &convertShaderProgram}
 }};
 
 void akas::convertDirectory(const akfs::Path& dir) {
@@ -90,6 +99,8 @@ void akas::convertDirectory(const akfs::Path& dir) {
 	akSize materialCount = 0;
 	akSize    imageCount = 0;
 	akSize  textureCount = 0;
+	akSize shaderStageCount = 0;
+	akSize shaderProgramCount = 0;
 
 	for(auto assetTypeIter = collectedAssets.begin(); assetTypeIter != collectedAssets.end(); assetTypeIter++) {
 		for(auto assetPathIter = assetTypeIter->second.begin(); assetPathIter != assetTypeIter->second.end(); assetPathIter++) {
@@ -110,18 +121,22 @@ void akas::convertDirectory(const akfs::Path& dir) {
 			writeMeshes(convertHelper);
 			writeMaterials(convertHelper);
 			writeImages(convertHelper);
+			writeShaderStages(convertHelper);
+			writeShaderPrograms(convertHelper);
 			writeTextures(convertHelper);
 
 			meshCount     += convertHelper.meshCount();
 			materialCount += convertHelper.materialCount();
-			imageCount    += convertHelper.imageCount();
+			imageCount    += convertHelper.imageCount();;
+			shaderStageCount   += convertHelper.shaderStageCount();
+			shaderProgramCount += convertHelper.shaderProgramCount();
 			textureCount  += convertHelper.textureCount();
 		}
 	}
 
 	akl::Logger("Convert").info("Converted ", proccessCount, " out of ", fileCount, " assets in ", convertTimer.markAndReset().msecs() , "ms.");
-	akl::Logger("Convert").info("Created ", meshCount, " meshes, ", materialCount, " materials, ", textureCount, " and ", imageCount, " images.");
-	akl::Logger("Convert").info("Modified ", modifiedCount, "  of the *.akconv files.");
+	akl::Logger("Convert").info("Created ", meshCount, " meshes, ", materialCount, " materials, ", textureCount, " textures ", shaderStageCount, " shader stages, ", shaderProgramCount, " shader programs and ", imageCount, " images.");
+	akl::Logger("Convert").info("Modified ", modifiedCount, " *.akconv files.");
 }
 
 static void writeMeshes(ConversionHelper& state) {
@@ -139,9 +154,23 @@ static void writeMaterials(ConversionHelper& state) {
 }
 
 static void writeImages(ConversionHelper& state) {
-	for(auto& copy : state.copies()) {
+	for(auto& copy : state.images()) {
 		if (!writeAssetMetaFile(copy.first.destination, copy.first.identifier, akas::AssetType::Image, copy.first.displayName, copy.second)) continue;
 		if (!akfs::copy(copy.second, akfs::Path(copy.first.destination).clearExtension())) continue;
+	}
+}
+
+static void writeShaderStages(ConversionHelper& state) {
+	for(auto& copy : state.shaderStages()) {
+		if (!writeAssetMetaFile(copy.first.destination, copy.first.identifier, akas::AssetType::ShaderStage, copy.first.displayName, copy.second)) continue;
+		if (!akfs::copy(copy.second, akfs::Path(copy.first.destination).clearExtension())) continue;
+	}
+}
+
+static void writeShaderPrograms(ConversionHelper& state) {
+	for(auto& shader : state.shaderPrograms()) {
+		if (!writeAssetMetaFile(shader.first.destination, shader.first.identifier, akas::AssetType::ShaderProgram, shader.first.displayName, {})) continue;
+		if (!writeAssetFile(akfs::Path(shader.first.destination).clearExtension(), shader.second, true)) continue;
 	}
 }
 
@@ -191,6 +220,12 @@ static bool convertTexture(ConversionHelper& convertHelper, const akfs::Path& cf
 		convertHelper.getDestinationSuggestionFor(root, akfs::Path(cfgPath).clearExtension().filename())
 	);
 
+	if (akfs::exists(info.destination) && akfs::exists(akfs::Path(info.destination).clearExtension())) {
+		auto srcModifiedTime = akfs::modifiedTime(cfgPath);
+		auto dstModifiedTime = akfs::modifiedTime(akfs::Path(info.destination).clearExtension());
+		if (dstModifiedTime >= srcModifiedTime) return false;
+	}
+
 	akd::serialize(cfg.atOrSet("identifier"), info.identifier);
 	if (cfg.atOrDef("remapPaths").asOrDef<bool>(false)) cfg.atOrSet("destination").setStr(info.destination.str());
 
@@ -199,7 +234,59 @@ static bool convertTexture(ConversionHelper& convertHelper, const akfs::Path& cf
 	return true;
 }
 
-static bool convertImage(ConversionHelper& state, const akfs::Path& cfgPath, akd::PValue& cfg) {
+
+static bool convertShaderProgram(ConversionHelper& conversionHelper, const akfs::Path& cfgPath, akd::PValue& cfg) {
+	auto root = akfs::Path(cfgPath).pop_back();
+
+	auto& shaderCfg = cfg["config"];
+	auto& stagesCfg = shaderCfg["stages"].getObj();
+	for(auto stageCfg = stagesCfg.begin(); stageCfg != stagesCfg.end(); stageCfg++) {
+		const auto shaderPath = root/akd::deserialize<akfs::Path>(stageCfg->second.at("source"));
+
+		const auto tryGetIdentifier = [&]{
+			auto imgConv = akd::fromJsonFile(shaderPath);
+			if (!imgConv.exists("identifier")) {
+				akl::Logger("ConvShaderProgram").warn("Could not find source shader stage file identifier: ", shaderPath.str());
+				return false;
+			}
+			stageCfg->second.atOrSet("identifier") = imgConv["identifier"];
+			return true;
+		};
+
+		if ((!stageCfg->second.exists("identifier")) && (!tryGetIdentifier())) return false;
+		akd::SUID id = akd::tryDeserialize<akd::SUID>(stageCfg->second.at("identifier")).value_or(akd::SUID());
+		if (!conversionHelper.tryFindAssetInfoByID(id).has_value()) {
+			if (!tryGetIdentifier()) return false;
+			id = akd::tryDeserialize<akd::SUID>(stageCfg->second.at("identifier")).value_or(akd::SUID());
+		}
+
+		akl::Logger("ConvTex").test_warn(conversionHelper.tryFindAssetInfoByID(id).has_value(), "Could not locate referenced file, the shader may not load correctly.");
+	}
+
+	auto result = akd::deserialize<akas::ShaderProgram>(shaderCfg);
+	auto info = conversionHelper.findConversionInfo(
+		akfs::Path(cfgPath).clearExtension().filename(),
+		akd::tryDeserialize<akd::SUID>(cfg.atOrDef("identifier")),
+		cfgPath,
+		cfg.atOrDef("destination").tryAs<std::string>(),
+		conversionHelper.getDestinationSuggestionFor(root, akfs::Path(cfgPath).clearExtension().filename())
+	);
+
+	if (akfs::exists(info.destination) && akfs::exists(akfs::Path(info.destination).clearExtension())) {
+		auto srcModifiedTime = akfs::modifiedTime(cfgPath);
+		auto dstModifiedTime = akfs::modifiedTime(akfs::Path(info.destination).clearExtension());
+		if (dstModifiedTime >= srcModifiedTime) return false;
+	}
+
+	akd::serialize(cfg.atOrSet("identifier"), info.identifier);
+	if (cfg.atOrDef("remapPaths").asOrDef<bool>(false)) cfg.atOrSet("destination").setStr(info.destination.str());
+
+	conversionHelper.registerShaderProgram(info, result, cfgPath);
+
+	return true;
+}
+
+template<auto func_f> static bool convertCopyOnly(const std::string& assetTypeName, ConversionHelper& state, const akfs::Path& cfgPath, akd::PValue& cfg) {
 	auto root = akfs::Path(cfgPath).pop_back();
 	auto srcPath = root/akfs::Path(cfg.at("source").getStr());
 
@@ -215,7 +302,7 @@ static bool convertImage(ConversionHelper& state, const akfs::Path& cfgPath, akd
 	if (cfg.atOrDef("remapPaths").asOrDef<bool>(false)) cfg.atOrSet("destination").setStr(info.destination.str());
 
 	if (!akfs::exists(srcPath)) {
-		akl::Logger("Image").warn("Missing image asset: ", srcPath.str());
+		akl::Logger("Image").warn("Missing ", assetTypeName, " asset: ", srcPath.str());
 		return false;
 	}
 
@@ -225,6 +312,6 @@ static bool convertImage(ConversionHelper& state, const akfs::Path& cfgPath, akd
 		if (dstModifiedTime >= srcModifiedTime) return false;
 	}
 
-	state.registerImage(info, srcPath, srcPath);
+	(state.*func_f)(info, srcPath, srcPath);
 	return true;
 }

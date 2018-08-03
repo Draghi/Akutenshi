@@ -29,6 +29,7 @@
 #include <ak/assets/AssetRegistry.hpp>
 #include <ak/assets/Material.hpp>
 #include <ak/assets/Mesh.hpp>
+#include <ak/assets/ShaderProgram.hpp>
 #include <ak/assets/Texture.hpp>
 #include <ak/container/SlotMap.hpp>
 #include <ak/data/Rand.hpp>
@@ -40,9 +41,13 @@
 
 namespace akas {
 	AK_SMART_TENUM_CLASS_KV(AssetSourceType, uint64,
-		GLTF,    100,
-		Texture,   1,
-		Image,     0
+		GLTF,          100,
+
+		ShaderProgram,   3,
+		ShaderStage,     2,
+
+		Texture,         1,
+		Image,           0
 	)
 
 	struct ConversionInfo {
@@ -60,6 +65,8 @@ namespace akas {
 			akc::SlotMap<std::pair<ConversionInfo, akas::Mesh>> m_meshes;
 			akc::SlotMap<std::pair<ConversionInfo, akas::Material>> m_materials;
 			akc::SlotMap<std::pair<ConversionInfo, akas::Texture>> m_textures;
+			akc::SlotMap<std::pair<ConversionInfo, akfs::Path>> m_shaderStages;
+			akc::SlotMap<std::pair<ConversionInfo, akas::ShaderProgram>> m_shaderPrograms;
 
 			std::map<akfs::Path, std::pair<akas::AssetType, akc::SlotID>> m_assetsBySource;
 			std::map<akfs::Path, std::pair<akas::AssetType, akc::SlotID>> m_assetsByDestination;
@@ -109,6 +116,24 @@ namespace akas {
 				}
 			}
 
+			void registerShaderStage(ConversionInfo info, const akfs::Path& path, const std::optional<akfs::Path>& source) {
+				auto id = m_shaderStages.insert({info, path}).first;
+				if (!m_assetsByDestination.emplace(info.destination, std::make_pair(AssetType::ShaderStage, id)).second)  throw std::logic_error("Destination conflict for: " + info.destination.str());
+				if (!m_assetsByIdentifier.emplace( info.identifier,  std::make_pair(AssetType::ShaderStage, id)).second)  throw std::logic_error("Identifier conflict for: "  + info.destination.str());
+				if (source) {
+					akl::Logger("ConvertionHelper").test_warn(m_assetsBySource.emplace(*source,  std::make_pair(AssetType::ShaderStage, id)).second, "Source conflict for: " + info.destination.str());
+				}
+			}
+
+			void registerShaderProgram(ConversionInfo info, const akas::ShaderProgram& shaderProgram, const std::optional<akfs::Path>& source) {
+				auto id = m_shaderPrograms.insert({info, shaderProgram}).first;
+				if (!m_assetsByDestination.emplace(info.destination, std::make_pair(AssetType::ShaderStage, id)).second)  throw std::logic_error("Destination conflict for: " + info.destination.str());
+				if (!m_assetsByIdentifier.emplace( info.identifier,  std::make_pair(AssetType::ShaderStage, id)).second)  throw std::logic_error("Identifier conflict for: "  + info.destination.str());
+				if (source) {
+					akl::Logger("ConvertionHelper").test_warn(m_assetsBySource.emplace(*source,  std::make_pair(AssetType::ShaderProgram, id)).second, "Source conflict for: " + info.destination.str());
+				}
+			}
+
 			void registerMesh(ConversionInfo info, const akas::Mesh& mesh, const std::optional<akfs::Path>& source) {
 				auto id = m_meshes.insert({info, mesh}).first;
 				if (!m_assetsByDestination.emplace(info.destination,  std::make_pair(AssetType::Mesh, id)).second)  throw std::logic_error("Path conflict for: "       + info.destination.str());
@@ -145,14 +170,16 @@ namespace akas {
 				auto lookupIter = m_assetsByIdentifier.find(identifier);
 				if (lookupIter == m_assetsByIdentifier.end()) return {};
 				switch(lookupIter->second.first) {
-					case AssetType::Mesh:      return    m_meshes[lookupIter->second.second].first;
-					case AssetType::Material:  return m_materials[lookupIter->second.second].first;
-					case AssetType::Image:     return    m_images[lookupIter->second.second].first;
-					case AssetType::Animation: [[fallthrough]];
-					case AssetType::Prefab:    [[fallthrough]];
-					case AssetType::Scene:     [[fallthrough]];
-					case AssetType::Sound:     [[fallthrough]];
-					case AssetType::Texture:   return  m_textures[lookupIter->second.second].first;
+					case AssetType::Mesh:        return    m_meshes[lookupIter->second.second].first;
+					case AssetType::Material:    return m_materials[lookupIter->second.second].first;
+					case AssetType::Image:       return    m_images[lookupIter->second.second].first;
+					case AssetType::Animation:   [[fallthrough]];
+					case AssetType::Prefab:      [[fallthrough]];
+					case AssetType::Scene:       [[fallthrough]];
+					case AssetType::ShaderStage: return m_shaderStages[lookupIter->second.second].first;
+					case AssetType::ShaderProgram: return m_shaderPrograms[lookupIter->second.second].first;
+					case AssetType::Sound:       [[fallthrough]];
+					case AssetType::Texture:     return m_textures[lookupIter->second.second].first;
 					default: return {};
 				}
 			}
@@ -170,8 +197,10 @@ namespace akas {
 					case AssetType::Animation: [[fallthrough]];
 					case AssetType::Prefab:    [[fallthrough]];
 					case AssetType::Scene:     [[fallthrough]];
+					case AssetType::ShaderStage: return m_shaderStages[lookupIter->second.second].first;
+					case AssetType::ShaderProgram: return m_shaderPrograms[lookupIter->second.second].first;
 					case AssetType::Sound:     [[fallthrough]];
-					case AssetType::Texture:   return  m_textures[lookupIter->second.second].first;
+					case AssetType::Texture:   return m_textures[lookupIter->second.second].first;
 					default: return {};
 				}
 			}
@@ -183,19 +212,23 @@ namespace akas {
 				auto lookupIter = m_assetsBySource.find(path);
 				if (lookupIter == m_assetsBySource.end()) return {};
 				switch(lookupIter->second.first) {
-					case AssetType::Mesh:      return    m_meshes[lookupIter->second.second].first;
-					case AssetType::Material:  return m_materials[lookupIter->second.second].first;
-					case AssetType::Image:     return    m_images[lookupIter->second.second].first;
-					case AssetType::Animation: [[fallthrough]];
-					case AssetType::Prefab:    [[fallthrough]];
-					case AssetType::Scene:     [[fallthrough]];
-					case AssetType::Sound:     [[fallthrough]];
-					case AssetType::Texture:   return  m_textures[lookupIter->second.second].first;
+					case AssetType::Mesh:        return    m_meshes[lookupIter->second.second].first;
+					case AssetType::Material:    return m_materials[lookupIter->second.second].first;
+					case AssetType::Image:       return    m_images[lookupIter->second.second].first;
+					case AssetType::Animation:   [[fallthrough]];
+					case AssetType::Prefab:      [[fallthrough]];
+					case AssetType::Scene:       [[fallthrough]];
+					case AssetType::ShaderStage: return m_shaderStages[lookupIter->second.second].first;
+					case AssetType::ShaderProgram: return m_shaderPrograms[lookupIter->second.second].first;
+					case AssetType::Sound:       [[fallthrough]];
+					case AssetType::Texture:     return m_textures[lookupIter->second.second].first;
 					default: return {};
 				}
 			}
 
-			const akc::SlotMap<std::pair<ConversionInfo, akfs::Path>>& copies() const { return m_images; }
+			const akc::SlotMap<std::pair<ConversionInfo, akfs::Path>>& images() const { return m_images; }
+			const akc::SlotMap<std::pair<ConversionInfo, akfs::Path>>& shaderStages() const { return m_shaderStages; }
+			const akc::SlotMap<std::pair<ConversionInfo, akas::ShaderProgram>>& shaderPrograms() const { return m_shaderPrograms; }
 			const akc::SlotMap<std::pair<ConversionInfo, akas::Mesh>>& meshes() const { return m_meshes; }
 			const akc::SlotMap<std::pair<ConversionInfo, akas::Material>>& materials() const { return m_materials; }
 			const akc::SlotMap<std::pair<ConversionInfo, akas::Texture>>& textures() const { return m_textures; }
@@ -203,6 +236,14 @@ namespace akas {
 			auto& getImages(akSize i) { return m_images[i].second; }
 			const auto& getImages(akSize i) const { return m_images[i].second; }
 			akSize imageCount() const { return m_images.size(); }
+
+			auto& getShaderStages(akSize i) { return m_shaderStages[i].second; }
+			const auto& getShaderStages(akSize i) const { return m_shaderStages[i].second; }
+			akSize shaderStageCount() const { return m_shaderStages.size(); }
+
+			auto& getShaderPrograms(akSize i) { return m_shaderPrograms[i].second; }
+			const auto& getShaderPrograms(akSize i) const { return m_shaderPrograms[i].second; }
+			akSize shaderProgramCount() const { return m_shaderPrograms.size(); }
 
 			auto& getMesh(akSize i) { return m_meshes[i].second; }
 			const auto& getMesh(akSize i) const { return m_meshes[i].second; }
