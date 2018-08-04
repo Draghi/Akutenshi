@@ -1,4 +1,15 @@
 {
+    "animations": {
+        "": "data/human/animations/",
+        "FemMAction": {
+            "destination": "data/human/animations/FemMAction.akanim.akres",
+            "identifier": [17526622137821049924, 11456654928740505998]
+        },
+        "Wave": {
+            "destination": "data/human/animations/Wave.akanim.akres",
+            "identifier": [9254522835912411179, 12197627708045802756]
+        }
+    },
     "images": {
         "": "data/human/textures/",
         "Test": {

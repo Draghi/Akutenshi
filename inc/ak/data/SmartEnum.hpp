@@ -19,6 +19,7 @@
 
 #include <string_view>
 #include <ak/data/PValue.hpp>
+#include <ak/data/Serialize.hpp>
 #include <ak/util/Macro.hpp>
 
 #define AK_INTERNAL_ENUM_KV_2( x, y) x = y,
@@ -457,6 +458,7 @@
 			catch(const std::logic_error&) { return false; } \
 			return true; \
 		} \
+		template<> constexpr akd::PType serializesTo<qualification::enumName>() { return PType::String; } \
 	}
 
 // Defines serialization/deserialization methods in the akd namespace for a unqualified smart enums
@@ -468,6 +470,7 @@
 			catch(const std::logic_error&) { return false; } \
 			return true; \
 		} \
+		template<> constexpr akd::PType serializesTo<qualification::enumName>() { return PType::String; } \
 	}
 
 // //////////////////////////// //

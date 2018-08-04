@@ -25,8 +25,10 @@
 #include <unordered_map>
 #include <vector>
 
+#include <ak/assets/Animation.hpp>
 #include <ak/assets/gltf/Asset.hpp>
 #include <ak/assets/gltf/Buffer.hpp>
+#include <ak/assets/gltf/internal/GLTFAnimation.hpp>
 #include <ak/assets/gltf/internal/GLTFMaterial.hpp>
 #include <ak/assets/gltf/internal/GLTFMesh.hpp>
 #include <ak/assets/gltf/internal/GLTFSkin.hpp>
@@ -148,13 +150,11 @@ bool akas::gltf::convertGLTFFile(akas::ConversionHelper& convertHelper, const ak
 	// /////////////////////// //
 	// // Processing Meshes // //
 	// /////////////////////// //
-		std::vector<akas::ConversionInfo> meshes;
 		for(auto& nodeID : meshNodes) {
 			auto& node = asset.nodes[nodeID];
 			auto& mesh = asset.meshes[node.meshID];
 
 			auto info = getAssetInfo(cfg, convertHelper, "meshes", mesh.name, mesh.name + ".akmesh.akres");
-			meshes.push_back(info);
 
 			if ((skipExisting) && (akfs::exists(info.destination)) && akfs::exists(akfs::Path(info.destination).clearExtension())) continue;
 
@@ -172,7 +172,24 @@ bool akas::gltf::convertGLTFFile(akas::ConversionHelper& convertHelper, const ak
 			}
 		}
 
+	// /////////////////////////// //
+	// // Processing Animations // //
+	// /////////////////////////// //
+	for(auto& animation : asset.animations) {
+		auto info = getAssetInfo(cfg, convertHelper, "animations", animation.name, animation.name + ".akanim.akres");
+		if ((skipExisting) && (akfs::exists(info.destination)) && akfs::exists(akfs::Path(info.destination).clearExtension())) continue;
+
+		convertHelper.registerAnimation(
+			info,
+			gltf::proccessGLTFAnimation(asset, animation),
+			{}
+		);
+
+		addedConversion = true;
+	}
+
 	return addedConversion;
+
 }
 
 static Asset loadAsset(const akfs::Path& filename) {

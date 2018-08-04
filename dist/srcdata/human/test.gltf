@@ -214,13 +214,13 @@
             "count" : 8,
             "max" : [
                 0.0,
-                1.0,
-                -0.0
+                0.0,
+                1.0
             ],
             "min" : [
                 0.0,
-                -1.0,
-                -0.0
+                0.0,
+                -1.0
             ],
             "type" : "VEC3"
         },
@@ -366,13 +366,13 @@
             "count" : 8,
             "max" : [
                 0.0,
-                0.0,
-                1.0
+                1.0,
+                -0.0
             ],
             "min" : [
                 0.0,
-                0.0,
-                -1.0
+                -1.0,
+                -0.0
             ],
             "type" : "VEC3"
         },
@@ -7279,29 +7279,9 @@
                         "node" : 98,
                         "path" : "scale"
                     }
-                },
-                {
-                    "sampler" : 188,
-                    "target" : {
-                        "node" : 2,
-                        "path" : "translation"
-                    }
-                },
-                {
-                    "sampler" : 189,
-                    "target" : {
-                        "node" : 2,
-                        "path" : "rotation"
-                    }
-                },
-                {
-                    "sampler" : 190,
-                    "target" : {
-                        "node" : 2,
-                        "path" : "scale"
-                    }
                 }
             ],
+            "name" : "Wave",
             "samplers" : [
                 {
                     "input" : 27,
@@ -8242,7 +8222,35 @@
                     "input" : 401,
                     "interpolation" : "LINEAR",
                     "output" : 402
+                }
+            ]
+        },
+        {
+            "channels" : [
+                {
+                    "sampler" : 0,
+                    "target" : {
+                        "node" : 2,
+                        "path" : "translation"
+                    }
                 },
+                {
+                    "sampler" : 1,
+                    "target" : {
+                        "node" : 2,
+                        "path" : "rotation"
+                    }
+                },
+                {
+                    "sampler" : 2,
+                    "target" : {
+                        "node" : 2,
+                        "path" : "scale"
+                    }
+                }
+            ],
+            "name" : "FemMAction",
+            "samplers" : [
                 {
                     "input" : 403,
                     "interpolation" : "CUBICSPLINE",
@@ -10441,7 +10449,7 @@
                         "TEXCOORD_0" : 15
                     },
                     "indices" : 11,
-                    "material" : 3
+                    "material" : 1
                 },
                 {
                     "attributes" : {
@@ -10461,7 +10469,7 @@
                         "TEXCOORD_0" : 25
                     },
                     "indices" : 21,
-                    "material" : 1
+                    "material" : 3
                 }
             ]
         }

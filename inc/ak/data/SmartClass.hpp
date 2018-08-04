@@ -852,6 +852,7 @@
 			AK_CONCATENATE(AK_CONCATENATE(AK_SMART_CLASS_DESERIALIZE_, nextOp), AK_NARGS(__VA_ARGS__))(qualifiedClass, __VA_ARGS__) \
 			return true; \
 		} \
+		template<> constexpr akd::PType serializesTo<qualifiedClass>() { return PType::Object; } \
 	}
 
 #define AK_SMART_CLASS_ARRAY(qualifiedClass, size) \
@@ -874,6 +875,7 @@
 			dst = result; \
 			return true; \
 		} \
+		template<> constexpr akd::PType serializesTo<qualifiedClass>() { return PType::Array; } \
 	}
 
 #endif /* AK_DATA_SMARTCLASS_HPP_ */

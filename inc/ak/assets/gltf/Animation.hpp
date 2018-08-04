@@ -17,10 +17,10 @@
 #ifndef AK_ASSETS_GLTF_ANIMATION_HPP_
 #define AK_ASSETS_GLTF_ANIMATION_HPP_
 
+#include <ak/assets/Animation.hpp>
+
 #include <deque>
 #include <stdexcept>
-#include <string>
-#include <vector>
 
 #include <ak/assets/gltf/Types.hpp>
 #include <ak/data/PValue.hpp>
@@ -28,16 +28,10 @@
 namespace akas {
 	namespace gltf {
 
-		enum class Interpolation {
-			Step,
-			Linear,
-			Cubic
-		};
-
 		struct AnimationSampler final {
 			gltfID input; // seconds
 			Interpolation interpolation;
-			gltfID output; // seconds
+			gltfID output; // transformation data
 		};
 
 		enum class AnimationType {
@@ -66,6 +60,7 @@ namespace akas {
 		inline AnimationSampler extractAnimationSampler(const akd::PValue& animationSamplerData) {
 			Interpolation interpolationType;
 			std::string interpolationTypeStr = animationSamplerData.atOrDef("interpolation").getStrOrDef("LINEAR");
+
 
 			if (interpolationTypeStr == "LINEAR") interpolationType = Interpolation::Linear;
 			else if (interpolationTypeStr == "STEP") interpolationType = Interpolation::Step;

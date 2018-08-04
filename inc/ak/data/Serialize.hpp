@@ -32,6 +32,31 @@
 #include <ak/Log.hpp>
 #include <ak/PrimitiveTypes.hpp>
 
+// /////////////////// //
+// // Introspection // //
+// /////////////////// //
+namespace akd {
+	template<typename type_t> constexpr akd::PType serializesTo();
+
+	template<> constexpr akd::PType serializesTo<PValue::obj_t>() { return PType::Object; }
+	template<> constexpr akd::PType serializesTo<PValue::arr_t>() { return PType::Array; }
+	template<> constexpr akd::PType serializesTo<PValue::str_t>() { return PType::String; }
+	template<> constexpr akd::PType serializesTo<PValue::bin_t>() { return PType::Binary; }
+
+	template<> constexpr akd::PType serializesTo<uint8>() { return PType::Unsigned; }
+	template<> constexpr akd::PType serializesTo<uint16>() { return PType::Unsigned; }
+	template<> constexpr akd::PType serializesTo<uint32>() { return PType::Unsigned; }
+	template<> constexpr akd::PType serializesTo<uint64>() { return PType::Unsigned; }
+
+	template<> constexpr akd::PType serializesTo<int8>() { return PType::Signed; }
+	template<> constexpr akd::PType serializesTo<int16>() { return PType::Signed; }
+	template<> constexpr akd::PType serializesTo<int32>() { return PType::Signed; }
+	template<> constexpr akd::PType serializesTo<int64>() { return PType::Signed; }
+
+	template<> constexpr akd::PType serializesTo<fpSingle>() { return PType::Decimal; }
+	template<> constexpr akd::PType serializesTo<fpDouble>() { return PType::Decimal; }
+}
+
 // ///////////// //
 // // Helpers // //
 // ///////////// //
@@ -177,16 +202,34 @@ namespace akd {
 // Map
 namespace akd {
 	template<typename type_t, typename type2_t> void serialize(akd::PValue& dst, const std::map<type_t, type2_t>& val) {
-		if (!dst.isObj()) dst.setObj();
-		for(const auto& entry : val) serialize(dst[serialize(entry.first).getStr()], entry.second);
+		if constexpr (serializesTo<type_t>() == PType::String) {
+			if (!dst.isObj()) dst.setObj();
+			for(const auto& entry : val) serialize(dst[serialize(entry.first).getStr()], entry.second);
+		} else {
+			if (!dst.isArr()) dst.setArr();
+			for(const auto& entry : val) dst.getArr().push_back(serialize(entry));
+		}
 	}
 
 	template<typename type_t, typename type2_t> bool deserialize(std::map<type_t, type2_t>& dst, const akd::PValue& val) {
-		if (!val.isObj()) return false;
-
 		std::map<type_t, type2_t> result;
-		for(auto& entry : val.getObj()) result.emplace(deserialize<type_t>(akd::PValue::from(entry.first)), deserialize<type2_t>(entry.second));
-
+		if constexpr (serializesTo<type_t>() == PType::String) {
+			if (!val.isObj()) return false;
+			for(const auto& entry : val.getObj()) result.emplace(deserialize<type_t>(akd::PValue::from(entry.first)), deserialize<type2_t>(entry.second));
+		} else {
+			if (!val.isArr()) return false;
+			for(const auto& entry : val.getArr()) {
+				std::pair<type_t, type2_t> entryVal;
+				if (!deserialize(entryVal, entry)) {
+					akl::Logger("Map").error("Could not deserialize entry in non-string map");
+					return false;
+				}
+				if (!result.insert(entryVal).second) {
+					akl::Logger("Map").error("Key conflict in non-string map");
+					return false;
+				}
+			}
+		}
 		dst = result;
 		return true;
 	}
@@ -195,16 +238,34 @@ namespace akd {
 // Unordered Map
 namespace akd {
 	template<typename type_t, typename type2_t> void serialize(akd::PValue& dst, const std::unordered_map<type_t, type2_t>& val) {
-		if (!dst.isObj()) dst.setObj();
-		for(const auto& entry : val) serialize(dst[serialize(entry.first).getStr()], entry.second);
+		if constexpr (serializesTo<type_t>() == PType::String) {
+			if (!dst.isObj()) dst.setObj();
+			for(const auto& entry : val) serialize(dst[serialize(entry.first).getStr()], entry.second);
+		} else {
+			if (!dst.isArr()) dst.setArr();
+			for(const auto& entry : val) dst.getArr().push_back(serialize(entry));
+		}
 	}
 
 	template<typename type_t, typename type2_t> bool deserialize(std::unordered_map<type_t, type2_t>& dst, const akd::PValue& val) {
-		if (!val.isObj()) return false;
-
 		std::unordered_map<type_t, type2_t> result;
-		for(auto& entry : val.getObj()) result.emplace(deserialize<type_t>(akd::PValue::from(entry.first)), deserialize<type2_t>(entry.second));
-
+		if constexpr (serializesTo<type_t>() == PType::String) {
+			if (!val.isObj()) return false;
+			for(const auto& entry : val.getObj()) result.emplace(deserialize<type_t>(akd::PValue::from(entry.first)), deserialize<type2_t>(entry.second));
+		} else {
+			if (!val.isArr()) return false;
+			for(const auto& entry : val.getArr()) {
+				std::pair<type_t, type2_t> entryVal;
+				if (!deserialize(entryVal, entry)) {
+					akl::Logger("UnorderedMap").error("Could not deserialize entry in non-string map");
+					return false;
+				}
+				if (!result.insert(entryVal).second) {
+					akl::Logger("UnorderedMap").error("Key conflict in non-string map");
+					return false;
+				}
+			}
+		}
 		dst = result;
 		return true;
 	}

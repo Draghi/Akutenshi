@@ -46,10 +46,10 @@ namespace akas {
 			std::unique_ptr<uint8[]> m_data;
 			akr::gl::TexFormat m_format;
 			akr::gl::TexStorage m_storage;
-			akSize m_width, m_height, m_depth;
+			akSize m_width, m_height;
 
 		public:
-			Image(uint8* data, akr::gl::TexFormat format, akr::gl::TexStorage storage, akSize width, akSize height, akSize depth) : m_data(), m_format(format), m_storage(storage), m_width(width), m_height(height), m_depth(depth) {
+			Image(uint8* data, akr::gl::TexFormat format, akr::gl::TexStorage storage, akSize width, akSize height) : m_data(), m_format(format), m_storage(storage), m_width(width), m_height(height) {
 				m_data.reset(new uint8[dataSize()]);
 				std::memcpy(m_data.get(), data, dataSize());
 			}
@@ -61,10 +61,9 @@ namespace akas {
 
 			akSize width() const { return m_width; }
 			akSize height() const { return m_height; }
-			akSize depth() const { return m_depth; }
 
 			akSize pixelSize() const { return pixelSize(m_format, m_storage); }
-			akSize  dataSize() const { return pixelSize() * m_width * m_height * m_depth; }
+			akSize  dataSize() const { return pixelSize() * m_width * m_height; }
 
 			static akSize pixelSize(akr::gl::TexFormat format, akr::gl::TexStorage storage) {
 				switch(storage) {
@@ -152,7 +151,7 @@ namespace akas {
 		if (cropY == 0) cropY = h;
 
 		auto croppedData = transformImageData(imageData.first, Image::pixelSize(format, storage), w, h, rotate, offsetX, offsetY, cropX, cropY, flipX, flipY);
-		return Image(croppedData.get(), format, storage, cropX, cropY, 1);
+		return Image(croppedData.get(), format, storage, cropX, cropY);
 	}
 }
 

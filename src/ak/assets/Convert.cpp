@@ -47,6 +47,7 @@ static void writeMaterials(ConversionHelper& state);
 static void writeImages(ConversionHelper& state);
 static void writeShaderStages(ConversionHelper& state);
 static void writeShaderPrograms(ConversionHelper& state);
+static void writeAnimations(ConversionHelper& state);
 static void writeTextures(ConversionHelper& state);
 
 template<auto func_f> static bool convertCopyOnly(const std::string& assetTypeName, ConversionHelper& state, const akfs::Path& cfgPath, akd::PValue& cfg);
@@ -99,6 +100,7 @@ void akas::convertDirectory(const akfs::Path& dir) {
 	akSize materialCount = 0;
 	akSize    imageCount = 0;
 	akSize  textureCount = 0;
+	akSize animationCount = 0;
 	akSize shaderStageCount = 0;
 	akSize shaderProgramCount = 0;
 
@@ -121,13 +123,15 @@ void akas::convertDirectory(const akfs::Path& dir) {
 			writeMeshes(convertHelper);
 			writeMaterials(convertHelper);
 			writeImages(convertHelper);
+			writeAnimations(convertHelper);
 			writeShaderStages(convertHelper);
 			writeShaderPrograms(convertHelper);
 			writeTextures(convertHelper);
 
 			meshCount     += convertHelper.meshCount();
 			materialCount += convertHelper.materialCount();
-			imageCount    += convertHelper.imageCount();;
+			imageCount    += convertHelper.imageCount();
+			animationCount += convertHelper.animationCount();
 			shaderStageCount   += convertHelper.shaderStageCount();
 			shaderProgramCount += convertHelper.shaderProgramCount();
 			textureCount  += convertHelper.textureCount();
@@ -135,7 +139,7 @@ void akas::convertDirectory(const akfs::Path& dir) {
 	}
 
 	akl::Logger("Convert").info("Converted ", proccessCount, " out of ", fileCount, " assets in ", convertTimer.markAndReset().msecs() , "ms.");
-	akl::Logger("Convert").info("Created ", meshCount, " meshes, ", materialCount, " materials, ", textureCount, " textures ", shaderStageCount, " shader stages, ", shaderProgramCount, " shader programs and ", imageCount, " images.");
+	akl::Logger("Convert").info("Created ", meshCount, " meshes, ", materialCount, " materials, ", textureCount, " textures, ", animationCount, " animations, ", shaderStageCount, " shader stages, ", shaderProgramCount, " shader programs and ", imageCount, " images.");
 	akl::Logger("Convert").info("Modified ", modifiedCount, " *.akconv files.");
 }
 
@@ -171,6 +175,13 @@ static void writeShaderPrograms(ConversionHelper& state) {
 	for(auto& shader : state.shaderPrograms()) {
 		if (!writeAssetMetaFile(shader.first.destination, shader.first.identifier, akas::AssetType::ShaderProgram, shader.first.displayName, {})) continue;
 		if (!writeAssetFile(akfs::Path(shader.first.destination).clearExtension(), shader.second, true)) continue;
+	}
+}
+
+static void writeAnimations(ConversionHelper& state) {
+	for(auto& animation : state.animations()) {
+		if (!writeAssetMetaFile(animation.first.destination, animation.first.identifier, akas::AssetType::Animation, animation.first.displayName, {})) continue;
+		if (!writeAssetFile(akfs::Path(animation.first.destination).clearExtension(), animation.second, false)) continue;
 	}
 }
 

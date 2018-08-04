@@ -25,6 +25,7 @@
 #include <string>
 #include <utility>
 
+#include <ak/assets/Animation.hpp>
 #include <ak/assets/Asset.hpp>
 #include <ak/assets/AssetRegistry.hpp>
 #include <ak/assets/Material.hpp>
@@ -64,6 +65,7 @@ namespace akas {
 			akc::SlotMap<std::pair<ConversionInfo, akfs::Path>> m_images;
 			akc::SlotMap<std::pair<ConversionInfo, akas::Mesh>> m_meshes;
 			akc::SlotMap<std::pair<ConversionInfo, akas::Material>> m_materials;
+			akc::SlotMap<std::pair<ConversionInfo, akas::Animation>> m_animations;
 			akc::SlotMap<std::pair<ConversionInfo, akas::Texture>> m_textures;
 			akc::SlotMap<std::pair<ConversionInfo, akfs::Path>> m_shaderStages;
 			akc::SlotMap<std::pair<ConversionInfo, akas::ShaderProgram>> m_shaderPrograms;
@@ -143,6 +145,15 @@ namespace akas {
 				}
 			}
 
+			void registerAnimation(ConversionInfo info, const akas::Animation& mesh, const std::optional<akfs::Path>& source) {
+				auto id = m_animations.insert({info, mesh}).first;
+				if (!m_assetsByDestination.emplace(info.destination,  std::make_pair(AssetType::Animation, id)).second)  throw std::logic_error("Path conflict for: "       + info.destination.str());
+				if (!m_assetsByIdentifier.emplace( info.identifier,   std::make_pair(AssetType::Animation, id)).second)  throw std::logic_error("Identifier conflict for: " + info.destination.str());
+				if (source) {
+					akl::Logger("ConvertionHelper").test_warn(m_assetsBySource.emplace(*source,  std::make_pair(AssetType::Animation, id)).second, "Source conflict for: " + info.destination.str());
+				}
+			}
+
 			void registerMaterial(ConversionInfo info, const akas::Material& material, const std::optional<akfs::Path>& source) {
 				auto id = m_materials.insert({info, material}).first;
 				if (!m_assetsByDestination.emplace(info.destination, std::make_pair(AssetType::Material, id)).second)  throw std::logic_error("Path conflict for: "       + info.destination.str());
@@ -170,10 +181,10 @@ namespace akas {
 				auto lookupIter = m_assetsByIdentifier.find(identifier);
 				if (lookupIter == m_assetsByIdentifier.end()) return {};
 				switch(lookupIter->second.first) {
-					case AssetType::Mesh:        return    m_meshes[lookupIter->second.second].first;
-					case AssetType::Material:    return m_materials[lookupIter->second.second].first;
-					case AssetType::Image:       return    m_images[lookupIter->second.second].first;
-					case AssetType::Animation:   [[fallthrough]];
+					case AssetType::Mesh:        return     m_meshes[lookupIter->second.second].first;
+					case AssetType::Material:    return  m_materials[lookupIter->second.second].first;
+					case AssetType::Image:       return     m_images[lookupIter->second.second].first;
+					case AssetType::Animation:   return m_animations[lookupIter->second.second].first;
 					case AssetType::Prefab:      [[fallthrough]];
 					case AssetType::Scene:       [[fallthrough]];
 					case AssetType::ShaderStage: return m_shaderStages[lookupIter->second.second].first;
@@ -191,10 +202,10 @@ namespace akas {
 				auto lookupIter = m_assetsByDestination.find(path);
 				if (lookupIter == m_assetsByDestination.end()) return {};
 				switch(lookupIter->second.first) {
-					case AssetType::Mesh:      return    m_meshes[lookupIter->second.second].first;
-					case AssetType::Material:  return m_materials[lookupIter->second.second].first;
-					case AssetType::Image:     return    m_images[lookupIter->second.second].first;
-					case AssetType::Animation: [[fallthrough]];
+					case AssetType::Mesh:      return     m_meshes[lookupIter->second.second].first;
+					case AssetType::Material:  return  m_materials[lookupIter->second.second].first;
+					case AssetType::Image:     return     m_images[lookupIter->second.second].first;
+					case AssetType::Animation: return m_animations[lookupIter->second.second].first;
 					case AssetType::Prefab:    [[fallthrough]];
 					case AssetType::Scene:     [[fallthrough]];
 					case AssetType::ShaderStage: return m_shaderStages[lookupIter->second.second].first;
@@ -212,10 +223,10 @@ namespace akas {
 				auto lookupIter = m_assetsBySource.find(path);
 				if (lookupIter == m_assetsBySource.end()) return {};
 				switch(lookupIter->second.first) {
-					case AssetType::Mesh:        return    m_meshes[lookupIter->second.second].first;
-					case AssetType::Material:    return m_materials[lookupIter->second.second].first;
-					case AssetType::Image:       return    m_images[lookupIter->second.second].first;
-					case AssetType::Animation:   [[fallthrough]];
+					case AssetType::Mesh:        return     m_meshes[lookupIter->second.second].first;
+					case AssetType::Material:    return  m_materials[lookupIter->second.second].first;
+					case AssetType::Image:       return     m_images[lookupIter->second.second].first;
+					case AssetType::Animation:   return m_animations[lookupIter->second.second].first;
 					case AssetType::Prefab:      [[fallthrough]];
 					case AssetType::Scene:       [[fallthrough]];
 					case AssetType::ShaderStage: return m_shaderStages[lookupIter->second.second].first;
@@ -231,6 +242,7 @@ namespace akas {
 			const akc::SlotMap<std::pair<ConversionInfo, akas::ShaderProgram>>& shaderPrograms() const { return m_shaderPrograms; }
 			const akc::SlotMap<std::pair<ConversionInfo, akas::Mesh>>& meshes() const { return m_meshes; }
 			const akc::SlotMap<std::pair<ConversionInfo, akas::Material>>& materials() const { return m_materials; }
+			const akc::SlotMap<std::pair<ConversionInfo, akas::Animation>>& animations() const { return m_animations; }
 			const akc::SlotMap<std::pair<ConversionInfo, akas::Texture>>& textures() const { return m_textures; }
 
 			auto& getImages(akSize i) { return m_images[i].second; }
@@ -248,6 +260,10 @@ namespace akas {
 			auto& getMesh(akSize i) { return m_meshes[i].second; }
 			const auto& getMesh(akSize i) const { return m_meshes[i].second; }
 			akSize meshCount() const { return m_meshes.size(); }
+
+			auto& getAnimation(akSize i) { return m_animations[i].second; }
+			const auto& getAnimations(akSize i) const { return m_animations[i].second; }
+			akSize animationCount() const { return m_animations.size(); }
 
 			auto& getMaterial(akSize i) { return m_materials[i].second; }
 			const auto& getMaterial(akSize i) const { return m_materials[i].second; }
