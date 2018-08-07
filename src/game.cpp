@@ -46,6 +46,7 @@
 #include <ak/render/gl/Textures.hpp>
 #include <ak/render/gl/Types.hpp>
 #include <ak/render/SceneRendererDefault.hpp>
+#include <ak/sound/Context.hpp>
 #include <ak/ScopeGuard.hpp>
 #include <ak/thread/CurrentThread.hpp>
 #include <ak/util/FPSCounter.hpp>
@@ -81,6 +82,7 @@ int akGameMain() {
 
 	akw::setCursorMode(akw::CursorMode::Captured);
 	akr::gl::init();
+	if (!aks::init()) log.error("Failed to initialize audio subsystem.");
 
 	akas::convertDirectory(akfs::Path("./srcdata/"));
 

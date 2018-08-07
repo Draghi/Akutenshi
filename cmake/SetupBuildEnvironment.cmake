@@ -108,6 +108,7 @@ set(GL4_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/GL4/inc")
 set(MSGPACK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/msgpack-c/include")
 set(RAPIDJSON_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/rapidjson/include")
 set(STB_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/stb")
+set(MINI_AL_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/mini_al")
 
 
 

@@ -11,6 +11,7 @@ sugar_include(filesystem)
 sugar_include(input)
 sugar_include(render)
 sugar_include(thread)
+sugar_include(sound)
 sugar_include(util)
 sugar_include(window)
 

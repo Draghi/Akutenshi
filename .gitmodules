@@ -28,3 +28,6 @@
 [submodule "cmake/memory"]
 	path = cmake/memory
 	url = https://github.com/foonathan/memory
+[submodule "cmake/mini_al"]
+	path = cmake/mini_al
+	url = https://github.com/Draghi/mini_al.git
