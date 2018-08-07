@@ -17,7 +17,6 @@
 #ifndef AK_FILESYSTEM_CFILE_HPP_
 #define AK_FILESYSTEM_CFILE_HPP_
 
-#include <bits/types/FILE.h>
 #include <stddef.h>
 #include <sys/types.h>
 #include <cstdio>

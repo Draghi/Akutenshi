@@ -14,12 +14,6 @@
  * limitations under the License.
  **/
 
-#include <iomanip>
-#include <memory>
-#include <optional>
-#include <sstream>
-#include <stdexcept>
-
 #include <ak/assets/AssetRegistry.hpp>
 #include <ak/assets/Convert.hpp>
 #include <ak/assets/Image.hpp>
@@ -33,7 +27,6 @@
 #include <ak/engine/Scene.hpp>
 #include <ak/engine/SceneManager.hpp>
 #include <ak/event/Dispatcher.hpp>
-#include <ak/event/Event.hpp>
 #include <ak/filesystem/Path.hpp>
 #include <ak/input/Keyboard.hpp>
 #include <ak/input/Mouse.hpp>
@@ -47,6 +40,7 @@
 #include <ak/render/gl/Types.hpp>
 #include <ak/render/SceneRendererDefault.hpp>
 #include <ak/sound/Context.hpp>
+#include <ak/sound/Device.hpp>
 #include <ak/ScopeGuard.hpp>
 #include <ak/thread/CurrentThread.hpp>
 #include <ak/util/FPSCounter.hpp>
@@ -57,6 +51,11 @@
 #include <ak/window/Window.hpp>
 #include <ak/window/WindowOptions.hpp>
 #include <akgame/CameraControllerBehaviour.hpp>
+#include <iomanip>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <vector>
 
 
 int akGameMain();
@@ -83,6 +82,10 @@ int akGameMain() {
 	akw::setCursorMode(akw::CursorMode::Captured);
 	akr::gl::init();
 	if (!aks::init()) log.error("Failed to initialize audio subsystem.");
+	log.info("Context Name: ", aks::getContextInfo().name);
+
+	auto devices = aks::getAvailableDevices();
+	for(auto& device : devices) log.info("Device found: ", device.name);
 
 	akas::convertDirectory(akfs::Path("./srcdata/"));
 

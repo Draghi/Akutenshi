@@ -41,6 +41,12 @@ namespace aks {
 	bool init();
 	bool init(const std::vector<Backend>& backends);
 
+	struct ContextInfo {
+		std::string name;
+	};
+
+	ContextInfo getContextInfo();
+
 	namespace internal {
 		void* getContext();
 	}

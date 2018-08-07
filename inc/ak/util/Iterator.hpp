@@ -50,6 +50,21 @@ namespace aku {
 		}
 	}
 
+	template<typename result_t, typename iter_t, typename transform_t> result_t convert_to(const iter_t start, const iter_t end, const transform_t& transformFunc) {
+		result_t result; result.reserve(std::distance(start, end));
+		for(auto iter = start; iter != end; iter++) result.push_back(transformFunc(*iter));
+		return result;
+	}
+
+	template<typename result_t, typename iter_t, typename transform_t> result_t convert_to_if(const iter_t start, const iter_t end, const transform_t& transformFunc) {
+		result_t result; result.reserve(std::distance(start, end));
+		for(auto iter = start; iter != end; iter++) {
+			auto transformResult = transformFunc(*iter);
+			if (transformResult) result.push_back(*transformResult);
+		}
+		return result;
+	}
+
 	template<typename result_t, typename container_t, typename transform_t> result_t convert_to(const container_t& container, const transform_t& transformFunc) {
 		result_t result; result.reserve(container.size());
 		for(const auto& entry : container) result.push_back(transformFunc(entry));

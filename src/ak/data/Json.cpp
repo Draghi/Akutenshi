@@ -16,8 +16,6 @@
 
 #include <ak/data/Json.hpp>
 
-#include <bits/stdint-intn.h>
-#include <bits/stdint-uintn.h>
 #include <rapidjson/encodings.h>
 #include <rapidjson/error/en.h>
 #include <rapidjson/error/error.h>

@@ -28,17 +28,18 @@
 using namespace aks;
 
 static const std::vector<Backend> DEFAULT_BACKENDS = {
-	Backend::WASAPI, Backend::DSound,  Backend::WinMM,  Backend::CoreAudio,
-	Backend::SndIO,  Backend::AudioIO, Backend::OSS,    Backend::PulseAudio,
-	Backend::ALSA,   Backend::JACK,    Backend::OpenSL, Backend::OpenAL,
-	Backend::SDL,    Backend::Null
+	Backend::WASAPI, Backend::DSound,    Backend::WinMM,      // Windows
+	Backend::JACK,   Backend::ALSA,      Backend::PulseAudio, // Linux
+	Backend::SndIO,  Backend::AudioIO,   Backend::OSS,        // BSD
+	Backend::OpenAL, Backend::SDL,                            // Fallbacks
+	Backend::OpenSL, Backend::CoreAudio, Backend::Null        // Other OSes
 };
 
 static std::atomic<bool> malIsInit = false;
 static mal_context malContext;
 
 static void recvMalMessage(mal_context* /*pContext*/, mal_device* /*pDevice*/, const char* message) {
-	akl::Logger("MAL").info(AK_STRING_VIEW(message));
+	akl::Logger("MAL").info(message);
 }
 
 static mal_backend toMalBackend(Backend backend){
@@ -85,11 +86,30 @@ bool aks::init(const std::vector<Backend>& backends) {
 	return true;
 }
 
+ContextInfo aks::getContextInfo() {
+	switch(malContext.backend) {
+		case mal_backend::mal_backend_null:       return {"Null"};
+		case mal_backend::mal_backend_wasapi:     return {"WASAPI"};
+		case mal_backend::mal_backend_dsound:     return {"DirectSound"};
+		case mal_backend::mal_backend_winmm:      return {"WinMM"};
+		case mal_backend::mal_backend_alsa:       return {"ALSA"};
+		case mal_backend::mal_backend_pulseaudio: return {"PulseAudio"};
+		case mal_backend::mal_backend_jack:       return {"JACK"};
+		case mal_backend::mal_backend_coreaudio:  return {"CoreAudio"};
+		case mal_backend::mal_backend_sndio:      return {"SndIO"};
+		case mal_backend::mal_backend_audioio:    return {"AudioIO"};
+		case mal_backend::mal_backend_oss:        return {"OSS"};
+		case mal_backend::mal_backend_opensl:     return {"OpenSL"};
+		case mal_backend::mal_backend_openal:     return {"OpenAL"};
+		case mal_backend::mal_backend_sdl:        return {"SDL"};
+	}
+}
+
 void* aks::internal::getContext() {
 	return &malContext;
 }
 
-std::vector<std::pair<std::string>> aks::getDeviceNames() {
+/*std::vector<std::pair<std::string>> aks::getDeviceNames() {
 	static auto processDevices = [](mal_context* pContext, mal_device_type type, const mal_device_info* pInfo, void* pUserData) -> mal_uint32 {
 		if (type != mal_device_type::mal_device_type_playback) return MAL_TRUE;
 		auto& result = *static_cast<std::vector<std::string>*>(pUserData);
@@ -100,4 +120,4 @@ std::vector<std::pair<std::string>> aks::getDeviceNames() {
 	std::vector<std::string> result;
 	mal_context_enumerate_devices(&malContext, +processDevices, &result);
 	return result;
-}
+}*/

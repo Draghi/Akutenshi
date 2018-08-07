@@ -16,7 +16,6 @@
 
 #include <ak/data/Brotli.hpp>
 
-#include <bits/stdint-uintn.h>
 #include <brotli/decode.h>
 #include <brotli/encode.h>
 #include <algorithm>

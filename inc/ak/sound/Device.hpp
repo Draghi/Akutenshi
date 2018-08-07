@@ -25,15 +25,19 @@
 namespace aks {
 	namespace internal {
 		struct DeviceIdentifier;
+		struct DeviceIdentifierDeletetor final {
+			DeviceIdentifierDeletetor() = default;
+		    void operator()(DeviceIdentifier* p) const;
+		};
 	}
 
-	using DeviceIdentifier = std::unique_ptr<aks::DeviceIdentifier>;
+	using DeviceIdentifier = std::unique_ptr<aks::internal::DeviceIdentifier, internal::DeviceIdentifierDeletetor>;
 
 	enum class DeviceFormat {
 		UInt8,
-		UInt16,
-		UInt24,
-		UInt32,
+		SInt16,
+		SInt24,
+		SInt32,
 		FPSingle,
 	};
 
@@ -41,9 +45,11 @@ namespace aks {
 		DeviceIdentifier identifier;
 		std::string name;
 		std::vector<DeviceFormat> nativeFormats;
-		struct { uint32 min, max; } chanelLimits;
+		struct { uint32 min, max; } channelLimits;
 		struct { uint32 min, max; } sampleRange;
 	};
+
+	std::vector<DeviceInfo> getAvailableDevices();
 
 }
 

@@ -16,8 +16,6 @@
 
 #include <ak/data/MsgPack.hpp>
 
-#include <bits/stdint-intn.h>
-#include <bits/stdint-uintn.h>
 #include <msgpack/v1/object.hpp>
 #include <msgpack/v1/pack.hpp>
 #include <msgpack/v1/sbuffer.hpp>
