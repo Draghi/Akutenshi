@@ -39,8 +39,7 @@
 #include <ak/render/gl/Textures.hpp>
 #include <ak/render/gl/Types.hpp>
 #include <ak/render/SceneRendererDefault.hpp>
-#include <ak/sound/Context.hpp>
-#include <ak/sound/Device.hpp>
+#include <ak/sound/Backend.hpp>
 #include <ak/ScopeGuard.hpp>
 #include <ak/thread/CurrentThread.hpp>
 #include <ak/util/FPSCounter.hpp>
@@ -81,11 +80,26 @@ int akGameMain() {
 
 	akw::setCursorMode(akw::CursorMode::Captured);
 	akr::gl::init();
-	if (!aks::init()) log.error("Failed to initialize audio subsystem.");
-	log.info("Context Name: ", aks::getContextInfo().name);
 
-	auto devices = aks::getAvailableDevices();
-	for(auto& device : devices) log.info("Device found: ", device.name);
+	constexpr akSize AUDIO_SAMPLE_RATE = 48000; // The sample rate for audio playback
+	aks::init(nullptr, AUDIO_SAMPLE_RATE, aks::DeviceFormat::FPSingle, aks::ChannelMap::Stereo2,
+		[](void* audioFrames, akSize frameCount, aks::DeviceFormat /*format*/, const std::vector<aks::Channel>& /*channels*/) {
+			constexpr float AUDIO_VOLUME   = 1;           // The factor to scale the audio output by
+			constexpr float WAVE_FREQUENCY = 40.f;        // The frequency of the wave to produce
+			constexpr float SINE_PERIOD    = 2.f*akm::PI; // The base period of a sine wave
+
+			static akSize totalFrameCount = 0;
+
+			float* floatFrames = static_cast<float*>(audioFrames);
+			for(size_t i = 0; i < frameCount; i++, totalFrameCount++) {
+				floatFrames[i*2]     = akm::sin((SINE_PERIOD*WAVE_FREQUENCY)/AUDIO_SAMPLE_RATE * totalFrameCount) * AUDIO_VOLUME;
+				floatFrames[i*2 + 1] = floatFrames[i*2];
+			}
+
+			return frameCount;
+		}
+	);
+	aks::startDevice();
 
 	akas::convertDirectory(akfs::Path("./srcdata/"));
 
