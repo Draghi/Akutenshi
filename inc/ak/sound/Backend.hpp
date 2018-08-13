@@ -33,13 +33,23 @@ namespace aks {
 		OpenSL, OpenAL, SDL
 	};
 
-	enum class DeviceFormat {
+	enum class Format {
 		UInt8,
 		SInt16,
 		SInt24,
 		SInt32,
 		FPSingle,
 	};
+
+	inline akSize getFormatElementSize(Format format) {
+		switch(format) {
+			case Format::UInt8:    return 1;
+			case Format::SInt16:   return 2;
+			case Format::SInt24:   return 3;
+			case Format::SInt32:   return 4;
+			case Format::FPSingle: return 4;
+		}
+	}
 
 	enum class Channel : uint8 {
 		None = 0,
@@ -90,7 +100,7 @@ namespace aks {
 	struct DeviceInfo {
 		DeviceIdentifier identifier;
 		std::string name;
-		std::vector<DeviceFormat> nativeFormats;
+		std::vector<Format> nativeFormats;
 		struct { uint32 min, max; } channelLimits;
 		struct { uint32 min, max; } sampleRange;
 	};
@@ -99,15 +109,23 @@ namespace aks {
 		std::string name;
 	};
 
-	using upload_callback_f = akSize(void* audioFrames, akSize frameCount, DeviceFormat format, const std::vector<Channel>& channels);
-	bool init(const DeviceIdentifier& deviceID, uint32 sampleRate, DeviceFormat format, const std::vector<Channel>& channels, const std::function<upload_callback_f>& callback);
-	bool init(const std::vector<Backend>& backends, const DeviceIdentifier& deviceID, uint32 sampleRate, DeviceFormat format, const std::vector<Channel>& channels, const std::function<upload_callback_f>& callback);
+	using upload_callback_f = akSize(void* audioFrames, akSize frameCount, aks::Format format, const std::vector<aks::Channel>& channels);
+	bool init(const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, const std::vector<Channel>& channels, const std::function<upload_callback_f>& callback);
+	bool init(const std::vector<Backend>& backends, const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, const std::vector<Channel>& channels, const std::function<upload_callback_f>& callback);
 
 	void startDevice();
 	void stopDevice();
 	bool isDeviceStarted();
 
 	ContextInfo getContextInfo();
+
+	enum class DitherMode {
+		None,
+		Rectangular,
+		Trianglar
+	};
+
+	void convertPCMSamples(void* sampleOut, Format formatOut, const void* sampleIn, Format formatIn, akSize sampleCount, DitherMode dither = DitherMode::Trianglar);
 
 	std::vector<DeviceInfo> getAvailableDevices(Backend backends);
 	std::vector<DeviceInfo> getAvailableDevices();

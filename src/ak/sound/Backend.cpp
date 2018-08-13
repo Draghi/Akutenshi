@@ -35,13 +35,16 @@ static const std::vector<Backend> DEFAULT_BACKENDS = {
 };
 
 static void recvMalMessage(mal_context* /*pContext*/, mal_device* /*pDevice*/, const char* message);
+
 static mal_backend toMalBackend(Backend backend);
-static std::optional<aks::DeviceFormat> malToFormat(mal_format v);
-static mal_format formatToMal(aks::DeviceFormat v);
+static mal_dither_mode toMalDitherMode(DitherMode ditherMode);
+static std::optional<aks::Format> fromMalFormat(mal_format v);
+static mal_format toMalFormat(aks::Format v);
+
 static mal_uint32 malCallback_internal(mal_device* /*device*/, mal_uint32 frameCount, void* dst);
 
 static bool initContext(mal_context* context, const std::vector<Backend>& backends);
-static bool initDevice(mal_context* context, mal_device* device, const DeviceIdentifier& deviceID, uint32 sampleRate, DeviceFormat format, const std::vector<Channel>& channels);
+static bool initDevice(mal_context* context, mal_device* device, const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, const std::vector<Channel>& channels);
 
 namespace aks {
 	namespace internal {
@@ -56,13 +59,13 @@ static mal_device  malDevice;
 
 static std::function<upload_callback_f> malCallback;
 static std::vector<Channel> malChannels;
-static DeviceFormat malFormat;
+static Format malFormat;
 
-bool aks::init(const DeviceIdentifier& deviceID, uint32 sampleRate, DeviceFormat format, const std::vector<Channel>& channels, const std::function<upload_callback_f>& callback) {
+bool aks::init(const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, const std::vector<Channel>& channels, const std::function<upload_callback_f>& callback) {
 	return aks::init(DEFAULT_BACKENDS, deviceID, sampleRate, format, channels, callback);
 }
 
-bool aks::init(const std::vector<Backend>& backends, const DeviceIdentifier& deviceID, uint32 sampleRate, DeviceFormat format, const std::vector<Channel>& channels, const std::function<upload_callback_f>& callback) {
+bool aks::init(const std::vector<Backend>& backends, const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, const std::vector<Channel>& channels, const std::function<upload_callback_f>& callback) {
 	if (malIsInit.exchange(true)) return false;
 	ak::ScopeGuard resetInitFlag([&]{malIsInit = false;});
 
@@ -103,13 +106,17 @@ static std::vector<DeviceInfo> getAvailableDevicesForContext(mal_context* contex
 		result.push_back(DeviceInfo{
 			DeviceIdentifier(new internal::DeviceIdentifier{device.id}),
 			std::string(device.name),
-			aku::convert_to_if<std::vector<aks::DeviceFormat>>(device.formats, device.formats+device.formatCount, malToFormat),
+			aku::convert_to_if<std::vector<aks::Format>>(device.formats, device.formats+device.formatCount, fromMalFormat),
 			{device.minChannels, device.maxChannels},
 			{device.minSampleRate, device.maxSampleRate}
 		});
 	}
 
 	return result;
+}
+
+void aks::convertPCMSamples(void* sampleOut, Format formatOut, const void* sampleIn, Format formatIn, akSize sampleCount, DitherMode dither) {
+	mal_pcm_convert(sampleOut, toMalFormat(formatOut), sampleIn, toMalFormat(formatIn), sampleCount, toMalDitherMode(dither));
 }
 
 std::vector<DeviceInfo> aks::getAvailableDevices(Backend backend) {
@@ -167,7 +174,7 @@ static bool initContext(mal_context* context, const std::vector<Backend>& backen
 	return true;
 }
 
-static bool initDevice(mal_context* context, mal_device* device, const DeviceIdentifier& deviceID, uint32 sampleRate, DeviceFormat format, const std::vector<Channel>& channels) {
+static bool initDevice(mal_context* context, mal_device* device, const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, const std::vector<Channel>& channels) {
 	if (channels.size() > MAL_MAX_CHANNELS) {
 		akl::Logger("MAL").error("Number of channels(", channels.size() ,") greater than max allowed: ", MAL_MAX_CHANNELS);
 		return false;
@@ -175,7 +182,7 @@ static bool initDevice(mal_context* context, mal_device* device, const DeviceIde
 
 	auto bufferFrames = mal_calculate_default_buffer_size_in_frames(mal_performance_profile::mal_performance_profile_low_latency, sampleRate, 1);
 	mal_device_config cfg{
-		formatToMal(format),   // mal_format format;
+		toMalFormat(format),   // mal_format format;
 		channels.size(),       // mal_uint32 channels;
 		sampleRate,            // mal_uint32 sampleRate;
 		{},                    // mal_channel channelMap[MAL_MAX_CHANNELS];
@@ -242,26 +249,35 @@ static mal_backend toMalBackend(Backend backend){
 	}
 }
 
-static std::optional<aks::DeviceFormat> malToFormat(mal_format v) {
+static mal_dither_mode toMalDitherMode(DitherMode ditherMode) {
+	switch(ditherMode) {
+		case DitherMode::None:        return mal_dither_mode_none;
+		case DitherMode::Rectangular: return mal_dither_mode_rectangle;
+		case DitherMode::Trianglar:   return mal_dither_mode_triangle;
+		default: throw std::invalid_argument("Unhandled dither mode type.");
+	}
+}
+
+static std::optional<aks::Format> fromMalFormat(mal_format v) {
 	switch(v) {
-		case mal_format::mal_format_u8:  return {aks::DeviceFormat::UInt8};
-		case mal_format::mal_format_s16: return {aks::DeviceFormat::SInt16};
-		case mal_format::mal_format_s24: return {aks::DeviceFormat::SInt24};
-		case mal_format::mal_format_s32: return {aks::DeviceFormat::SInt32};
-		case mal_format::mal_format_f32: return {aks::DeviceFormat::FPSingle};
+		case mal_format::mal_format_u8:  return {aks::Format::UInt8};
+		case mal_format::mal_format_s16: return {aks::Format::SInt16};
+		case mal_format::mal_format_s24: return {aks::Format::SInt24};
+		case mal_format::mal_format_s32: return {aks::Format::SInt32};
+		case mal_format::mal_format_f32: return {aks::Format::FPSingle};
 		case mal_format::mal_format_count:   [[fallthrough]];
 		case mal_format::mal_format_unknown: [[fallthrough]];
 		default: return {};
 	}
 }
 
-static mal_format formatToMal(aks::DeviceFormat v) {
+static mal_format toMalFormat(aks::Format v) {
 	switch(v) {
-		case aks::DeviceFormat::UInt8:    return mal_format::mal_format_u8;
-		case aks::DeviceFormat::SInt16:   return mal_format::mal_format_s16;
-		case aks::DeviceFormat::SInt24:   return mal_format::mal_format_s24;
-		case aks::DeviceFormat::SInt32:   return mal_format::mal_format_s32;
-		case aks::DeviceFormat::FPSingle: return mal_format::mal_format_f32;
+		case aks::Format::UInt8:    return mal_format::mal_format_u8;
+		case aks::Format::SInt16:   return mal_format::mal_format_s16;
+		case aks::Format::SInt24:   return mal_format::mal_format_s24;
+		case aks::Format::SInt32:   return mal_format::mal_format_s32;
+		case aks::Format::FPSingle: return mal_format::mal_format_f32;
 		default: throw std::invalid_argument("Unhandled audio format.");
 	}
 }

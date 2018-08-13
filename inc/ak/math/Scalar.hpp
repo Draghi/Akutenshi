@@ -17,12 +17,10 @@
 #ifndef AK_MATH_SCALAR_HPP_
 #define AK_MATH_SCALAR_HPP_
 
-#include <bits/std_abs.h>
-#include <glm/common.hpp>
-#include <glm/ext/vec1.hpp>
-#include <cmath>
-
 #include <ak/math/Types.hpp>
+#include <glm/common.hpp>
+#include <glm/glm.hpp>
+#include <cmath>
 
 namespace akm {
 	constexpr scalar_t PI = static_cast<scalar_t>(3.141592653589793238462643);
@@ -77,6 +75,9 @@ namespace akm {
 
 	inline scalar_t remainder(scalar_t x, scalar_t y) { return std::remainder(x, y); }
 
+	inline scalar_t remap(scalar_t v, scalar_t oMin, scalar_t oMax, scalar_t nMin, scalar_t nMax) {
+		return (v - oMin)/(oMax - oMin) * (nMax - nMin) + nMin;
+	}
 }
 
 
