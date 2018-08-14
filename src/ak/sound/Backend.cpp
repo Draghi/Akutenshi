@@ -16,35 +16,18 @@
  **/
 
 #include <ak/Log.hpp>
+#include <ak/sound/Types.hpp>
 #include <ak/sound/Backend.hpp>
+#include <ak/sound/internal/MalUtil.hpp>
 #include <ak/ScopeGuard.hpp>
 #include <ak/util/Iterator.hpp>
 #include <mini_al.h>
 #include <algorithm>
 #include <atomic>
-#include <stdexcept>
+#include <memory>
+#include <string>
 
 using namespace aks;
-
-static const std::vector<Backend> DEFAULT_BACKENDS = {
-	Backend::WASAPI, Backend::DSound,    Backend::WinMM,      // Windows
-	Backend::JACK,   Backend::ALSA,      Backend::PulseAudio, // Linux
-	Backend::SndIO,  Backend::AudioIO,   Backend::OSS,        // BSD
-	Backend::OpenAL, Backend::SDL,                            // Fallbacks
-	Backend::OpenSL, Backend::CoreAudio, Backend::Null        // Other OSes
-};
-
-static void recvMalMessage(mal_context* /*pContext*/, mal_device* /*pDevice*/, const char* message);
-
-static mal_backend toMalBackend(Backend backend);
-static mal_dither_mode toMalDitherMode(DitherMode ditherMode);
-static std::optional<aks::Format> fromMalFormat(mal_format v);
-static mal_format toMalFormat(aks::Format v);
-
-static mal_uint32 malCallback_internal(mal_device* /*device*/, mal_uint32 frameCount, void* dst);
-
-static bool initContext(mal_context* context, const std::vector<Backend>& backends);
-static bool initDevice(mal_context* context, mal_device* device, const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, const std::vector<Channel>& channels);
 
 namespace aks {
 	namespace internal {
@@ -52,6 +35,12 @@ namespace aks {
 		void DeviceIdentifierDeletetor::operator()(DeviceIdentifier* p) const { delete p; }
 	}
 }
+
+static bool initContext(mal_context* context, const std::vector<Backend>& backends);
+static bool initDevice(mal_context* context, mal_device* device, const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, const std::vector<Channel>& channels);
+
+static void recvMalMessage(mal_context* /*pContext*/, mal_device* /*pDevice*/, mal_uint32 logLevel, const char* message);
+static mal_uint32 malCallback_internal(mal_device* /*device*/, mal_uint32 frameCount, void* dst);
 
 static std::atomic<bool> malIsInit = false;
 static mal_context malContext;
@@ -62,7 +51,7 @@ static std::vector<Channel> malChannels;
 static Format malFormat;
 
 bool aks::init(const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, const std::vector<Channel>& channels, const std::function<upload_callback_f>& callback) {
-	return aks::init(DEFAULT_BACKENDS, deviceID, sampleRate, format, channels, callback);
+	return aks::init(aks::internal::DEFAULT_BACKENDS, deviceID, sampleRate, format, channels, callback);
 }
 
 bool aks::init(const std::vector<Backend>& backends, const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, const std::vector<Channel>& channels, const std::function<upload_callback_f>& callback) {
@@ -72,29 +61,15 @@ bool aks::init(const std::vector<Backend>& backends, const DeviceIdentifier& dev
 	if (!initContext(&malContext, backends)) return false;
 	if (!initDevice(&malContext, &malDevice, deviceID, sampleRate, format, channels)) { mal_context_uninit(&malContext); return false; }
 
+	malCallback = callback; malChannels = channels; malFormat = format;
 	resetInitFlag.clear();
-
-	malCallback = callback;
-	malChannels = channels;
-	malFormat   = format;
-
 	return true;
 }
 
-void aks::startDevice() {
-	if (!malIsInit) return;
-	mal_device_start(&malDevice);
-}
+void aks::startDevice() { if (malIsInit) mal_device_start(&malDevice); }
+void  aks::stopDevice() { if (malIsInit) mal_device_stop(&malDevice); }
 
-void aks::stopDevice() {
-	if (!malIsInit) return;
-	mal_device_stop(&malDevice);
-}
-
-bool aks::isDeviceStarted() {
-	if (!malIsInit) return false;
-	return mal_device_is_started(&malDevice) == MAL_TRUE;
-}
+bool aks::isDeviceStarted() { return (malIsInit) && (mal_device_is_started(&malDevice) == MAL_TRUE); }
 
 static std::vector<DeviceInfo> getAvailableDevicesForContext(mal_context* context) {
 	mal_device_info* deviceInfo = nullptr; mal_uint32 deviceCount = 0;
@@ -106,31 +81,13 @@ static std::vector<DeviceInfo> getAvailableDevicesForContext(mal_context* contex
 		result.push_back(DeviceInfo{
 			DeviceIdentifier(new internal::DeviceIdentifier{device.id}),
 			std::string(device.name),
-			aku::convert_to_if<std::vector<aks::Format>>(device.formats, device.formats+device.formatCount, fromMalFormat),
+			aku::convert_to_if<std::vector<aks::Format>>(device.formats, device.formats+device.formatCount, internal::fromMalFormat),
 			{device.minChannels, device.maxChannels},
 			{device.minSampleRate, device.maxSampleRate}
 		});
 	}
 
 	return result;
-}
-
-void aks::convertPCMSamples(void* sampleOut, Format formatOut, const void* sampleIn, Format formatIn, akSize sampleCount, DitherMode dither) {
-	mal_pcm_convert(sampleOut, toMalFormat(formatOut), sampleIn, toMalFormat(formatIn), sampleCount, toMalDitherMode(dither));
-}
-
-std::vector<DeviceInfo> aks::getAvailableDevices(Backend backend) {
-	if ((malIsInit) && (malContext.backend == toMalBackend(backend))) return getAvailableDevicesForContext(&malContext);
-	mal_context tmpContext;
-	if (!initContext(&tmpContext, std::vector<Backend>({backend}))) return std::vector<DeviceInfo>();
-	auto result = getAvailableDevicesForContext(&tmpContext);
-	mal_context_uninit(&tmpContext);
-	return result;
-}
-
-std::vector<DeviceInfo> aks::getAvailableDevices() {
-	if (!malIsInit) return std::vector<DeviceInfo>();
-	return getAvailableDevicesForContext(&malContext);
 }
 
 ContextInfo aks::getContextInfo() {
@@ -152,11 +109,19 @@ ContextInfo aks::getContextInfo() {
 	}
 }
 
-
+std::vector<DeviceInfo> aks::getAvailableDevices() { return malIsInit ? getAvailableDevicesForContext(&malContext) : std::vector<DeviceInfo>(); }
+std::vector<DeviceInfo> aks::getAvailableDevices(Backend backend) {
+	if ((malIsInit) && (malContext.backend == internal::toMalBackend(backend))) return getAvailableDevicesForContext(&malContext);
+	mal_context tmpContext;
+	if (!initContext(&tmpContext, std::vector<Backend>({backend}))) return std::vector<DeviceInfo>();
+	auto result = getAvailableDevicesForContext(&tmpContext);
+	mal_context_uninit(&tmpContext);
+	return result;
+}
 
 static bool initContext(mal_context* context, const std::vector<Backend>& backends) {
 	std::vector<mal_backend> malBackends; malBackends.reserve(backends.size());
-	std::for_each(backends.begin(), backends.end(), [&](Backend backend){ malBackends.push_back(toMalBackend(backend)); });
+	std::for_each(backends.begin(), backends.end(), [&](Backend backend){ malBackends.push_back(internal::toMalBackend(backend)); });
 
 	mal_context_config malConfig = {
 		&recvMalMessage,
@@ -182,20 +147,21 @@ static bool initDevice(mal_context* context, mal_device* device, const DeviceIde
 
 	auto bufferFrames = mal_calculate_default_buffer_size_in_frames(mal_performance_profile::mal_performance_profile_low_latency, sampleRate, 1);
 	mal_device_config cfg{
-		toMalFormat(format),   // mal_format format;
-		channels.size(),       // mal_uint32 channels;
-		sampleRate,            // mal_uint32 sampleRate;
-		{},                    // mal_channel channelMap[MAL_MAX_CHANNELS];
-		bufferFrames,          // mal_uint32 bufferSizeInFrames;
-		2,                     // mal_uint32 periods;
-		mal_share_mode_shared, // mal_share_mode shareMode;
+		internal::toMalFormat(format),       // mal_format format;
+		channels.size(),                     // mal_uint32 channels;
+		sampleRate,                          // mal_uint32 sampleRate;
+		{},                                  // mal_channel channelMap[MAL_MAX_CHANNELS];
+		bufferFrames,                        // mal_uint32 bufferSizeInFrames;
+		2,                                   // mal_uint32 periods;
+		mal_share_mode_shared,               // mal_share_mode shareMode;
 		mal_performance_profile_low_latency, // mal_performance_profile performanceProfile;
-		nullptr, // mal_recv_proc onRecvCallback;
-		malCallback_internal, // mal_send_proc onSendCallback;
-		nullptr, // mal_stop_proc onStopCallback;
-		{false}, // struct {  mal_bool32 noMMap;  // Disables MMap mode. } alsa;
-		{nullptr}// struct { const char* pStreamName; } pulse;
+		nullptr,                             // mal_recv_proc onRecvCallback;
+		malCallback_internal,                // mal_send_proc onSendCallback;
+		nullptr,                             // mal_stop_proc onStopCallback;
+		{false},                             // struct {  mal_bool32 noMMap;  // Disables MMap mode. } alsa;
+		{nullptr}                            // struct { const char* pStreamName; } pulse;
 	};
+
 	for(akSize i = 0; i < channels.size(); i++) cfg.channelMap[i] = static_cast<uint8>(channels[i]);
 
 	if (mal_device_init(context, mal_device_type::mal_device_type_playback, deviceID ? &deviceID->id : nullptr, &cfg, nullptr, device) != MAL_SUCCESS) {
@@ -206,82 +172,16 @@ static bool initDevice(mal_context* context, mal_device* device, const DeviceIde
 	return true;
 }
 
+static void recvMalMessage(mal_context* /*pContext*/, mal_device* /*pDevice*/, mal_uint32 logLevel, const char* message) {
+	switch(logLevel) {
+		case MAL_LOG_LEVEL_ERROR:   akl::Logger("MAL").error(message); return;
+		case MAL_LOG_LEVEL_WARNING: akl::Logger("MAL").warn(message);  return;
+		case MAL_LOG_LEVEL_INFO: akl::Logger("MAL").info(message);  return;
+		case MAL_LOG_LEVEL_VERBOSE: akl::Logger("MAL").debug(message); return;
 
-const std::vector<Channel> ChannelMap::Mono1      ({Channel::Mono});
-const std::vector<Channel> ChannelMap::Stereo2    ({Channel::FrontLeft, Channel::FrontRight});
-const std::vector<Channel> ChannelMap::Stereo3    ({Channel::FrontLeft, Channel::FrontRight, Channel::FrontCenter});
-const std::vector<Channel> ChannelMap::Surround3  ({Channel::FrontLeft, Channel::FrontRight, Channel::BackCenter});
-const std::vector<Channel> ChannelMap::Surround4  ({Channel::FrontLeft, Channel::FrontRight, Channel::FrontCenter, Channel::BackCenter});
-const std::vector<Channel> ChannelMap::Surround5  ({Channel::FrontLeft, Channel::FrontRight, Channel::FrontCenter, Channel::BackLeft, Channel::BackRight});
-const std::vector<Channel> ChannelMap::Surround6  ({Channel::FrontLeft, Channel::FrontRight, Channel::FrontCenter, Channel::BackLeft, Channel::BackRight, Channel::BackCenter});
-const std::vector<Channel> ChannelMap::Surround7  ({Channel::FrontLeft, Channel::FrontRight, Channel::FrontCenter, Channel::BackLeft, Channel::BackRight, Channel::SideLeft, Channel::SideRight});
-
-const std::vector<Channel> ChannelMap::Mono1LF    ({Channel::Mono,      Channel::LFE});
-const std::vector<Channel> ChannelMap::Stereo2LF  ({Channel::FrontLeft, Channel::FrontRight, Channel::LFE});
-const std::vector<Channel> ChannelMap::Stereo3LF  ({Channel::FrontLeft, Channel::FrontRight, Channel::FrontCenter, Channel::LFE});
-const std::vector<Channel> ChannelMap::Surround3LF({Channel::FrontLeft, Channel::FrontRight, Channel::BackCenter,  Channel::LFE});
-const std::vector<Channel> ChannelMap::Surround4LF({Channel::FrontLeft, Channel::FrontRight, Channel::FrontCenter, Channel::BackCenter, Channel::LFE});
-const std::vector<Channel> ChannelMap::Surround5LF({Channel::FrontLeft, Channel::FrontRight, Channel::FrontCenter, Channel::BackLeft,   Channel::BackRight, Channel::LFE});
-const std::vector<Channel> ChannelMap::Surround6LF({Channel::FrontLeft, Channel::FrontRight, Channel::FrontCenter, Channel::BackLeft,   Channel::BackRight, Channel::BackCenter, Channel::LFE});
-const std::vector<Channel> ChannelMap::Surround7LF({Channel::FrontLeft, Channel::FrontRight, Channel::FrontCenter, Channel::BackLeft,   Channel::BackRight, Channel::SideLeft,   Channel::SideRight, Channel::LFE});
-
-static void recvMalMessage(mal_context* /*pContext*/, mal_device* /*pDevice*/, const char* message) {
-	akl::Logger("MAL").info(message);
-}
-
-static mal_backend toMalBackend(Backend backend){
-	switch(backend) {
-		case Backend::Null:       return mal_backend::mal_backend_null;
-		case Backend::WASAPI:     return mal_backend::mal_backend_wasapi;
-		case Backend::DSound:     return mal_backend::mal_backend_dsound;
-		case Backend::WinMM:      return mal_backend::mal_backend_winmm;
-		case Backend::ALSA:       return mal_backend::mal_backend_alsa;
-		case Backend::PulseAudio: return mal_backend::mal_backend_pulseaudio;
-		case Backend::JACK:       return mal_backend::mal_backend_jack;
-		case Backend::CoreAudio:  return mal_backend::mal_backend_coreaudio;
-		case Backend::SndIO:      return mal_backend::mal_backend_sndio;
-		case Backend::AudioIO:    return mal_backend::mal_backend_audioio;
-		case Backend::OSS:        return mal_backend::mal_backend_oss;
-		case Backend::OpenSL:     return mal_backend::mal_backend_opensl;
-		case Backend::OpenAL:     return mal_backend::mal_backend_openal;
-		case Backend::SDL:        return mal_backend::mal_backend_sdl;
-		default: throw std::invalid_argument("Unhandled backend type.");
+		default: akl::Logger("MAL").info(message); return;
 	}
+
 }
 
-static mal_dither_mode toMalDitherMode(DitherMode ditherMode) {
-	switch(ditherMode) {
-		case DitherMode::None:        return mal_dither_mode_none;
-		case DitherMode::Rectangular: return mal_dither_mode_rectangle;
-		case DitherMode::Trianglar:   return mal_dither_mode_triangle;
-		default: throw std::invalid_argument("Unhandled dither mode type.");
-	}
-}
-
-static std::optional<aks::Format> fromMalFormat(mal_format v) {
-	switch(v) {
-		case mal_format::mal_format_u8:  return {aks::Format::UInt8};
-		case mal_format::mal_format_s16: return {aks::Format::SInt16};
-		case mal_format::mal_format_s24: return {aks::Format::SInt24};
-		case mal_format::mal_format_s32: return {aks::Format::SInt32};
-		case mal_format::mal_format_f32: return {aks::Format::FPSingle};
-		case mal_format::mal_format_count:   [[fallthrough]];
-		case mal_format::mal_format_unknown: [[fallthrough]];
-		default: return {};
-	}
-}
-
-static mal_format toMalFormat(aks::Format v) {
-	switch(v) {
-		case aks::Format::UInt8:    return mal_format::mal_format_u8;
-		case aks::Format::SInt16:   return mal_format::mal_format_s16;
-		case aks::Format::SInt24:   return mal_format::mal_format_s24;
-		case aks::Format::SInt32:   return mal_format::mal_format_s32;
-		case aks::Format::FPSingle: return mal_format::mal_format_f32;
-		default: throw std::invalid_argument("Unhandled audio format.");
-	}
-}
-
-static mal_uint32 malCallback_internal(mal_device* /*device*/, mal_uint32 frameCount, void* dst) {
-	return malCallback(dst, frameCount, malFormat, malChannels);
-}
+static mal_uint32 malCallback_internal(mal_device* /*device*/, mal_uint32 frameCount, void* dst) { return malCallback(dst, frameCount, malFormat, malChannels); }

@@ -41,8 +41,9 @@
 #include <ak/render/SceneRendererDefault.hpp>
 #include <ak/sound/Backend.hpp>
 #include <ak/sound/Buffer.hpp>
-#include <ak/sound/Sine.hpp>
+#include <ak/sound/Enums.hpp>
 #include <ak/sound/Source.hpp>
+#include <ak/sound/Util.hpp>
 #include <ak/ScopeGuard.hpp>
 #include <ak/thread/CurrentThread.hpp>
 #include <ak/util/FPSCounter.hpp>
@@ -55,7 +56,6 @@
 #include <akgame/CameraControllerBehaviour.hpp>
 #include <functional>
 #include <iomanip>
-#include <limits>
 #include <memory>
 #include <sstream>
 #include <stdexcept>

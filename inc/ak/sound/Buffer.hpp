@@ -18,7 +18,8 @@
 #define AK_SOUND_BUFFER_HPP_
 
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/sound/Backend.hpp>
+#include <ak/sound/Enums.hpp>
+#include <ak/sound/Util.hpp>
 #include <cstring>
 #include <vector>
 
