@@ -82,7 +82,8 @@ ConfigLoadResult ake::loadConfig() {
 }
 
 bool ake::saveConfig() {
-	if (!backupConfig()) return false;
+	bool alreadyExists = akfs::exists(CONFIG_PATH);
+	if (alreadyExists && !backupConfig()) return false;
 
 	akfs::CFile configFile(CONFIG_PATH, akfs::Out | akfs::Truncate);
 	if (!configFile) return false;
@@ -95,11 +96,11 @@ bool ake::saveConfig() {
 
 	if (configFile.write(contents.data(), contents.size()) <= 0) {
 		configFile = akfs::CFile();
-		restoreBackup();
+		if (alreadyExists) restoreBackup();
 		return false;
 	}
 
-	deleteBackup();
+	if (alreadyExists) deleteBackup();
 	return true;
 }
 

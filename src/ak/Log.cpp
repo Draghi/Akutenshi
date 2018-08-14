@@ -30,21 +30,21 @@
 #include <ak/thread/DoubleBuffer.hpp>
 #include <ak/thread/Spinlock.hpp>
 
-using namespace ak::log;
+using namespace akl;
 
 static akt::Thread loggingThread("Log");
 
 static akt::Spinlock messageQueueProcessLock;
 static akt::DoubleBuffer<std::pair<Level, std::string>> logMessageBuffer;
-static Level consoleFilterLevel = Level::ALL;
-static Level fileFilterLevel = Level::ALL;
+static Level consoleFilterLevel = Level::Debug;
+static Level fileFilterLevel = Level::Debug;
 
 static std::atomic<bool> isRedirrectingStd = false;
 
 static akt::Spinlock logFileLock;
 static akfs::CFile logFile;
 
-bool ak::log::startProcessing(uint64 delayUS) {
+bool akl::startProcessing(uint64 delayUS) {
 	if (loggingThread.isRunning()) return false;
 
 	loggingThread.execute([=]{
@@ -57,19 +57,19 @@ bool ak::log::startProcessing(uint64 delayUS) {
 	return true;
 }
 
-bool ak::log::stopProcessing() {
+bool akl::stopProcessing() {
 	if (!loggingThread.isRunning()) return false;
 	loggingThread.requestClose();
 	loggingThread.join();
 	return true;
 }
 
-bool ak::log::isProcessing() {
+bool akl::isProcessing() {
 	return loggingThread.isRunning();
 }
 
 
-void ak::log::processMessageQueue() {
+void akl::processMessageQueue() {
 	auto processLock = messageQueueProcessLock.lock();
 
 	logMessageBuffer.swap();
@@ -93,7 +93,7 @@ void ak::log::processMessageQueue() {
 }
 
 
-bool ak::log::enableFileOutput() {
+bool akl::enableFileOutput() {
 	auto fileLock = logFileLock.lock();
 
 	auto utc = aku::utcTimestamp();
@@ -107,64 +107,63 @@ bool ak::log::enableFileOutput() {
 	return true;
 }
 
-void ak::log::disableFileOutput() {
+void akl::disableFileOutput() {
 	auto fileLock = logFileLock.lock();
 	logFile = akfs::CFile();
 }
 
-void ak::log::setConsoleFilterLevel(Level logLevel) {
+void akl::setConsoleLevel(Level logLevel) {
 	consoleFilterLevel = logLevel;
 }
 
-bool ak::log::isConsoleFilterLevelEnabled(Level logLevel) {
+bool akl::isConsoleFilterLevelEnabled(Level logLevel) {
 	return static_cast<uint8>(logLevel) <= static_cast<uint8>(consoleFilterLevel);
 }
 
-Level ak::log::getConsoleFilterLevel() {
+Level akl::getConsoleFilterLevel() {
 	return consoleFilterLevel;
 }
 
 
-void ak::log::setFileFilterLevel(Level logLevel) {
+void akl::setFileLevel(Level logLevel) {
 	fileFilterLevel = logLevel;
 }
 
-bool ak::log::isFileFilterLevelEnabled(Level logLevel) {
+bool akl::isFileFilterLevelEnabled(Level logLevel) {
 	return static_cast<uint8>(logLevel) <= static_cast<uint8>(fileFilterLevel);
 }
 
-Level ak::log::getFileFilterLevel() {
+Level akl::getFileFilterLevel() {
 	return fileFilterLevel;
 }
 
-bool ak::log::isFilterLevelEnabled(Level logLevel) {
+bool akl::isFilterLevelEnabled(Level logLevel) {
 	return isFileFilterLevelEnabled(logLevel) || isConsoleFilterLevelEnabled(logLevel);
 }
 
-void ak::log::captureStandardStreams() {
+void akl::captureStandardStreams() {
 	//@todo Implement
 }
 
-void ak::log::restoreStandardStreams() {
+void akl::restoreStandardStreams() {
 	//@todo Implement
 }
 
 
 
-void Logger::printMessage(Level logLevel, const std::string& str) {
+void akl::internal::printMessage(Level logLevel, const std::string& str) {
 	logMessageBuffer.push_back(std::make_pair(logLevel, str));
 }
 
-
 static akev::SubscriberID logSInitRegenerateConfigHook = ake::regenerateConfigDispatch().subscribe([](ake::RegenerateConfigEvent& event){
-	// @todo replace indicies with names
-	event.data()["log"]["consoleFilterLevel"].set<uint8>(static_cast<int8>(ak::log::Level::DEBUG));
-	event.data()["log"]["fileFilterLevel"].set<uint8>(static_cast<int8>(ak::log::Level::DEBUG));
+	akd::serialize(event.data()["log"]["consoleLevel"], akl::Level::Debug);
+	akd::serialize(event.data()["log"]["fileLevel"],   akl::Level::Debug);
 });
 
-static akev::SubscriberID logSInitRegisterConfigHooks = ake::setConfigDispatch().subscribe([](ake::SetConfigEvent& event){
-	ak::log::setConsoleFilterLevel(static_cast<ak::log::Level>(event.data().atOrDef("log").atOrDef("consoleFilterLevel", akd::PValue::from(static_cast<int8>(ak::log::Level::DEBUG))).as<uint8>()));
-	ak::log::setFileFilterLevel(static_cast<ak::log::Level>(event.data().atOrDef("log").atOrDef("fileFilterLevel", akd::PValue::from(static_cast<int8>(ak::log::Level::DEBUG))).as<uint8>()));
+static akev::SubscriberID logSInitRegisterConfigHooks = ake::setConfigDispatch().subscribe([](ake::SetConfigEvent& event) {
+	akl::Level tmp;
+	if (akd::deserialize(tmp, event.data().atOrDef("log").atOrDef("consoleLevel"))) setConsoleLevel(tmp);
+	if (akd::deserialize(tmp, event.data().atOrDef("log").atOrDef("fileLevel"))) setFileLevel(tmp);
 });
 
 

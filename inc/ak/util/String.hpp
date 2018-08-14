@@ -20,11 +20,12 @@
 #include <functional>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <ak/PrimitiveTypes.hpp>
 
-#define AK_STRING_VIEW(str) std::string_view(str, sizeof(str) - 1)
+#define AK_STRING_VIEW(str) ::std::string_view(str, sizeof(str) - 1)
 
 namespace aku {
 

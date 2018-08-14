@@ -176,7 +176,7 @@ static void recvMalMessage(mal_context* /*pContext*/, mal_device* /*pDevice*/, m
 	switch(logLevel) {
 		case MAL_LOG_LEVEL_ERROR:   akl::Logger("MAL").error(message); return;
 		case MAL_LOG_LEVEL_WARNING: akl::Logger("MAL").warn(message);  return;
-		case MAL_LOG_LEVEL_INFO: akl::Logger("MAL").info(message);  return;
+		case MAL_LOG_LEVEL_INFO:    akl::Logger("MAL").info(message);  return;
 		case MAL_LOG_LEVEL_VERBOSE: akl::Logger("MAL").debug(message); return;
 
 		default: akl::Logger("MAL").info(message); return;

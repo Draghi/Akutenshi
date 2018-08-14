@@ -14,20 +14,39 @@
  * limitations under the License.
  **/
 
+#include <ak/animation/Fwd.hpp>
+#include <ak/animation/Serialize.hpp>
+#include <ak/animation/Type.hpp>
+#include <ak/assets/Animation.hpp>
+#include <ak/assets/Asset.hpp>
+#include <ak/assets/Convert.hpp>
+#include <ak/assets/Image.hpp>
+#include <ak/assets/Material.hpp>
+#include <ak/assets/Mesh.hpp>
+#include <ak/assets/Serialize.hpp>
+#include <ak/assets/ShaderProgram.hpp>
+#include <ak/assets/Skin.hpp>
+#include <ak/assets/Texture.hpp>
+#include <ak/data/PValue.hpp>
+#include <ak/data/Serialize.hpp>
+#include <ak/data/SUID.hpp>
+#include <ak/engine/Config.hpp>
+#include <ak/event/Dispatcher.hpp>
+#include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Filesystem.hpp>
-
+#include <ak/math/Serialize.hpp>
+#include <ak/render/gl/Textures.hpp>
+#include <ak/render/gl/Types.hpp>
+#include <ak/ScopeGuard.hpp>
+#include <ak/util/String.hpp>
+#include <ak/window/WindowOptions.hpp>
 #include <dirent.h>
+#include <io.h>
 #include <sys/stat.h>
-#include <cstdio>
-#include <initializer_list>
 #include <memory>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
-
-#include <ak/filesystem/CFile.hpp>
-#include <ak/ScopeGuard.hpp>
-#include <ak/util/String.hpp>
 
 using namespace akfs;
 
@@ -43,7 +62,6 @@ class VFSMounts final {
 			{"meta/", "./meta/"},
 			{"src/",  "./src/"},
 		};
-		std::unordered_map<std::string, std::string> m_sysToVfs;
 
 	public:
 		bool mount(std::string mountPoint, std::string systemPath) {
@@ -51,21 +69,22 @@ class VFSMounts final {
 			if (systemPath.back() != '/') systemPath += '/';
 
 			if (!m_vfsToSys.emplace(mountPoint, systemPath).second) return false;
-			if (!m_sysToVfs.emplace(systemPath, mountPoint).second) {
-				m_vfsToSys.erase(mountPoint);
-				return false;
-			}
 			return true;
 		}
 
 		void unmount(std::string mountPoint) {
 			if (mountPoint.back() != '/') mountPoint += '/';
-
 			auto iter = m_vfsToSys.find(mountPoint);
 			if (iter == m_vfsToSys.end()) return;
-			m_sysToVfs.erase(iter->second);
 			m_vfsToSys.erase(iter);
 		}
+
+		bool remount(const std::string& mountPoint, const std::string& systemPath) {
+			unmount(mountPoint);
+			return mount(mountPoint, systemPath);
+		}
+
+		void clear() { m_vfsToSys.clear(); }
 
 		std::string vfsToSys(std::string vfsPoint) const {
 			if (vfsPoint.back() != '/') vfsPoint += '/';
@@ -75,6 +94,8 @@ class VFSMounts final {
 			makeDir(iter->second);
 			return iter->second;
 		}
+
+		const std::unordered_map<std::string, std::string>& mapping() const { return m_vfsToSys; }
 };
 
 static VFSMounts& vfsMounts() {
@@ -176,3 +197,13 @@ std::string akfs::toSystemPath(const akfs::Path& path) {
 	return vfsMounts().vfsToSys(path.front()) + Path(path).pop_front().str();
 }
 
+static akev::SubscriberID fsSInitRegenerateConfigHook = ake::regenerateConfigDispatch().subscribe([](ake::RegenerateConfigEvent& event){
+	akd::serialize(event.data()["filesystem"], vfsMounts().mapping());
+});
+
+static akev::SubscriberID fsSInitRegisterConfigHooks = ake::setConfigDispatch().subscribe([](ake::SetConfigEvent& event){
+	auto mapping = akd::tryDeserialize<std::unordered_map<std::string, std::string>>(event.data().atOrDef("filesystem"));
+	if (!mapping) return;
+	vfsMounts().clear();
+	for(const auto& mountMapping : *mapping) vfsMounts().mount(mountMapping.first, mountMapping.second);
+});

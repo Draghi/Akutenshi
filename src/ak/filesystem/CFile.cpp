@@ -73,7 +73,6 @@ CFile::CFile(const akfs::Path& path, uint8 openFlags) : m_handle(nullptr), m_ope
 	if (hasOutFlag && !hasNoCreateFlag) akfs::makeDirectory(path.parent(), true);
 
 	m_handle = std::fopen(akfs::toSystemPath(m_path).c_str(), cFlags.c_str());
-	if (!m_handle) akl::Logger("").warn(akfs::toSystemPath(m_path));
 }
 
 CFile::CFile(CFile&& other) : m_handle(std::move(other.m_handle)), m_openFlags(std::move(other.m_openFlags)), m_path(std::move(other.m_path)) {

@@ -64,13 +64,13 @@
 
 int akGameMain();
 
-static void printLogHeader(const ak::log::Logger& logger);
+static void printLogHeader(const akl::Logger& logger);
 static ak::ScopeGuard startup();
 
 static void startGame();
 
 int akGameMain() {
-	constexpr ak::log::Logger log(AK_STRING_VIEW("Main"));
+	constexpr akl::Logger log(AK_STRING_VIEW("Main"));
 	auto shutdownScope = startup();
 
 	log.info("Engine started.");
@@ -221,7 +221,7 @@ static void startGame() {
 	}
 }
 
-static void printLogHeader(const ak::log::Logger& logger) {
+static void printLogHeader(const akl::Logger& logger) {
 	auto utc = aku::utcTimestamp();
 
 	std::stringstream dateStream;
@@ -248,7 +248,7 @@ static void printLogHeader(const ak::log::Logger& logger) {
 }
 
 static void startupConfig() {
-	constexpr ak::log::Logger log(AK_STRING_VIEW("Config"));
+	constexpr akl::Logger log(AK_STRING_VIEW("Config"));
 
 	auto result = ake::loadConfig();
 	if (result == ake::ConfigLoadResult::CannotOpen) {
@@ -265,7 +265,7 @@ static void startupConfig() {
 }
 
 static ak::ScopeGuard startup() {
-	constexpr ak::log::Logger startLog(AK_STRING_VIEW("Start"));
+	constexpr akl::Logger startLog(AK_STRING_VIEW("Start"));
 
 	akt::current().setName("Main");
 
@@ -273,7 +273,7 @@ static ak::ScopeGuard startup() {
 	startupConfig();
 
 	startLog.info("Starting log system.");
-	ak::log::startProcessing();
+	akl::startProcessing();
 	//ak::log::enableFileOutput();
 
 	startLog.info("Starting ECS system.");
@@ -283,15 +283,15 @@ static ak::ScopeGuard startup() {
 	akw::init();
 
 	return [](){
-		constexpr ak::log::Logger stopLog(AK_STRING_VIEW("Stop"));
+		constexpr akl::Logger stopLog(AK_STRING_VIEW("Stop"));
 
 		stopLog.info("Saving config.");
 		if (!ake::saveConfig()) stopLog.warn("Failed to save config.");
 
 		stopLog.info("Flushing log system.");
-		ak::log::stopProcessing();
-		ak::log::processMessageQueue();
-		ak::log::processMessageQueue();
+		akl::stopProcessing();
+		akl::processMessageQueue();
+		akl::processMessageQueue();
 	};
 }
 

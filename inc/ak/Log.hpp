@@ -17,116 +17,128 @@
 #ifndef AK_LOG_LOGGER_HPP_
 #define AK_LOG_LOGGER_HPP_
 
-#include <iomanip>
-#include <limits>
-#include <sstream>
-#include <string>
-#include <string_view>
-
+#include <ak/data/PValue.hpp>
+#include <ak/data/SmartEnum.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/thread/CurrentThread.hpp>
-#include <ak/thread/Thread.hpp>
-#include <ak/util/Time.hpp>
 #include <ak/util/String.hpp>
+#include <ak/util/Time.hpp>
+#include <array>
+#include <iomanip>
+#include <sstream>
+#include <string>
 
-namespace ak {
-	namespace log {
+namespace akl {
+	AK_SMART_TENUM_CLASS_KV(Level, uint8,
+		None,  0,
+		Raw,   1,
+		Fatal, 2,
+		Error, 3,
+		Warn,  4,
+		Info,  5,
+		Debug, 6
+	)
 
-		/**
-		 * The level to filter the log at
-		 */
-		enum class Level : uint8 {
-			NONE  = 0,                                //!< NONE Don't log anything, you won't get any info from the program at all. Not reccomended.
+	class Logger final {
+		private:
+			std::string_view m_name;
 
-			RAW   = 1,                                //!< RAW Raw output, unfiltered unless the log level is set to none. Doesn't include level, tag, thread or logger name.
-			FATAL = 2,                                //!< FATAL An unrecoverable error has occurred, the program will likely be terminated after this is received.
-			ERROR = 3,                                //!< ERROR An unexpected error has occurred and steps have been taken to mitigate it's effect, however it may still be fatal.
-			WARN  = 4,                                //!< WARN A recoverable/expected error has occurred and steps have been taken to mitigate it's effect.
-			INFO  = 5,                                //!< INFO General information, useful for general debugging in the case of a crash.
-			DEBUG = 6,                                //!< DEBUG Debug specific information. Information that is only useful for developers, generally should be disabled in user configs.
+		public:
+			constexpr Logger(const std::string_view& name);
 
-			ALL   = std::numeric_limits<uint8>::max() //!< ALL Log everything. Practically the same as setting the log level to debug, except that it will accounts for adding new levels.
-		};
+			template<typename... vargs_t> bool test_fatal(bool cond, const vargs_t&... vargs) const;
+			template<typename... vargs_t> bool test_error(bool cond, const vargs_t&... vargs) const;
+			template<typename... vargs_t> bool test_warn( bool cond, const vargs_t&... vargs) const;
+			template<typename... vargs_t> bool test_info( bool cond, const vargs_t&... vargs) const;
+			template<typename... vargs_t> bool test_debug(bool cond, const vargs_t&... vargs) const;
+			template<typename... vargs_t> bool test_raw(  bool cond, const vargs_t&... vargs) const;
 
-		bool startProcessing(uint64 delayUS = 1e3);
-		bool stopProcessing();
-		bool isProcessing();
+			template<typename... vargs_t> void fatal(const vargs_t&... vargs) const;
+			template<typename... vargs_t> void error(const vargs_t&... vargs) const;
+			template<typename... vargs_t> void warn( const vargs_t&... vargs) const;
+			template<typename... vargs_t> void info( const vargs_t&... vargs) const;
+			template<typename... vargs_t> void debug(const vargs_t&... vargs) const;
 
-		void processMessageQueue();
+			template<typename... vargs_t> void raw(const vargs_t&... vargs) const;
 
-		bool enableFileOutput();
-		void disableFileOutput();
+			static constexpr std::array<std::string_view, 7> LevelTags {{
+				std::string_view(),
+				std::string_view(),
+				std::string_view("FATAL", 5),
+				std::string_view("ERROR", 5),
+				std::string_view("WARN",  4),
+				std::string_view("INFO",  4),
+				std::string_view("DEBUG", 5)
+			}};
+	};
 
-		void setConsoleFilterLevel(Level logLevel);
-		bool isConsoleFilterLevelEnabled(Level logLevel);
-		Level getConsoleFilterLevel();
+	bool startProcessing(uint64 delayUS = 1e3);
+	bool stopProcessing();
+	bool isProcessing();
 
-		void setFileFilterLevel(Level logLevel);
-		bool isFileFilterLevelEnabled(Level logLevel);
-		Level getFileFilterLevel();
+	void processMessageQueue();
 
-		bool isFilterLevelEnabled(Level logLevel);
+	bool enableFileOutput();
+	void disableFileOutput();
 
-		void captureStandardStreams();
-		void restoreStandardStreams();
+	void setConsoleLevel(Level logLevel);
+	bool isConsoleFilterLevelEnabled(Level logLevel);
+	Level getConsoleFilterLevel();
 
-		class Logger final {
-			private:
-				static constexpr std::string_view LevelTags[] = {
-					std::string_view(),
-					std::string_view(),
-					std::string_view("FATAL", 5),
-					std::string_view("ERROR", 5),
-					std::string_view("WARN",  4),
-					std::string_view("INFO",  4),
-					std::string_view("DEBUG", 5)
-				};
+	void setFileLevel(Level logLevel);
+	bool isFileFilterLevelEnabled(Level logLevel);
+	Level getFileFilterLevel();
 
-				std::string_view m_name;
+	bool isFilterLevelEnabled(Level logLevel);
 
-				static void printMessage(Level logLevel, const std::string& str);
-
-				template<typename... vargs_t> void build(Level level, const vargs_t&... vargs) const {
-					auto utc = aku::utcTimestamp();
-
-					std::stringstream sstream;
-					sstream << "[" << std::put_time(&utc.ctime, "%H:%M:%S");
-					sstream << "." << std::setfill('0') << std::setw(3) << utc.milliseconds;
-					sstream  << "][" << akt::current().name() << "][" << m_name << "][" << LevelTags[static_cast<uint8>(level)] << "]";
-
-					std::stringstream vargStream;
-					aku::buildString(vargStream, vargs...);
-
-					if (vargStream.str().front() != '[') sstream << " ";
-
-					sstream << vargStream.str() << std::endl;
-
-					printMessage(level, sstream.str());
-				}
-
-			public:
-				constexpr Logger(const std::string_view& name) : m_name(name) {}
-
-				template<typename... vargs_t> bool test_fatal(bool cond, const vargs_t&... vargs) const { if (!cond) fatal(vargs...); return cond; }
-				template<typename... vargs_t> bool test_error(bool cond, const vargs_t&... vargs) const { if (!cond) error(vargs...); return cond; }
-				template<typename... vargs_t> bool test_warn( bool cond, const vargs_t&... vargs) const { if (!cond)  warn(vargs...); return cond; }
-				template<typename... vargs_t> bool test_info( bool cond, const vargs_t&... vargs) const { if (!cond)  info(vargs...); return cond; }
-				template<typename... vargs_t> bool test_debug(bool cond, const vargs_t&... vargs) const { if (!cond) debug(vargs...); return cond; }
-				template<typename... vargs_t> bool test_raw(  bool cond, const vargs_t&... vargs) const { if (!cond)   raw(vargs...); return cond; }
-
-				template<typename... vargs_t> void fatal(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::FATAL)) build(Level::FATAL, vargs...); }
-				template<typename... vargs_t> void error(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::ERROR)) build(Level::ERROR, vargs...); }
-				template<typename... vargs_t> void warn( const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::WARN))  build(Level::WARN,  vargs...); }
-				template<typename... vargs_t> void info( const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::INFO))  build(Level::INFO,  vargs...); }
-				template<typename... vargs_t> void debug(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::DEBUG)) build(Level::DEBUG, vargs...); }
-
-				template<typename... vargs_t> void raw(const vargs_t&... vargs) const { if (!isFilterLevelEnabled(Level::RAW)) return; printMessage(Level::RAW, aku::buildString(vargs...)); }
-		};
-	}
+	void captureStandardStreams();
+	void restoreStandardStreams();
 }
 
-#if not(defined(AK_NAMESPACE_ALIAS_DISABLE) || defined(AK_LOG_ALIAS_DISABLE))
-namespace akl = ak::log;
-#endif
+AK_SMART_ENUM_SERIALIZE(akl, Level)
+
+/* ****************** *
+ * * Implementation * *
+ * ****************** */
+namespace akl {
+	namespace internal {
+		void printMessage(Level logLevel, const std::string& str);
+
+		template<typename... vargs_t> void build(Level level, const std::string_view& logName, const vargs_t&... vargs) {
+			auto utc = aku::utcTimestamp();
+
+			std::stringstream sstream;
+			sstream << "[" << std::put_time(&utc.ctime, "%H:%M:%S");
+			sstream << "." << std::setfill('0') << std::setw(3) << utc.milliseconds;
+			sstream  << "][" << akt::current().name() << "][" << logName << "][" << Logger::LevelTags[static_cast<uint8>(level)] << "]";
+
+			std::stringstream vargStream;
+			aku::buildString(vargStream, vargs...);
+
+			if (vargStream.str().front() != '[') sstream << " ";
+
+			sstream << vargStream.str() << std::endl;
+
+			printMessage(level, sstream.str());
+		}
+	}
+
+	constexpr Logger::Logger(const std::string_view& name) : m_name(name) {}
+
+	template<typename... vargs_t> bool Logger::test_fatal(bool cond, const vargs_t&... vargs) const { if (!cond) fatal(vargs...); return cond; }
+	template<typename... vargs_t> bool Logger::test_error(bool cond, const vargs_t&... vargs) const { if (!cond) error(vargs...); return cond; }
+	template<typename... vargs_t> bool Logger::test_warn( bool cond, const vargs_t&... vargs) const { if (!cond)  warn(vargs...); return cond; }
+	template<typename... vargs_t> bool Logger::test_info( bool cond, const vargs_t&... vargs) const { if (!cond)  info(vargs...); return cond; }
+	template<typename... vargs_t> bool Logger::test_debug(bool cond, const vargs_t&... vargs) const { if (!cond) debug(vargs...); return cond; }
+	template<typename... vargs_t> bool Logger::test_raw(  bool cond, const vargs_t&... vargs) const { if (!cond)   raw(vargs...); return cond; }
+
+	template<typename... vargs_t> void Logger::fatal(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::Fatal)) internal::build(Level::Fatal, m_name, vargs...); }
+	template<typename... vargs_t> void Logger::error(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::Error)) internal::build(Level::Error, m_name, vargs...); }
+	template<typename... vargs_t> void Logger::warn( const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::Warn))  internal::build(Level::Warn,  m_name, vargs...); }
+	template<typename... vargs_t> void Logger::info( const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::Info))  internal::build(Level::Info,  m_name, vargs...); }
+	template<typename... vargs_t> void Logger::debug(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::Debug)) internal::build(Level::Debug, m_name, vargs...); }
+
+	template<typename... vargs_t> void Logger::raw(const vargs_t&... vargs) const { if (!isFilterLevelEnabled(Level::Raw)) return; internal::printMessage(Level::Raw, aku::buildString(vargs...)); }
+}
 
 #endif

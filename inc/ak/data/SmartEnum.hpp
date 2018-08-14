@@ -173,18 +173,20 @@
 #define AK_INTERNAL_ENUM_TO_ENUM_KV_98(enumName, x, y, ...) if(val == #x) return enumName::x; AK_INTERNAL_ENUM_TO_ENUM_KV_96(enumName, __VA_ARGS__)
 
 #define AK_INTERNAL_ENUM_CONV_KV(enumName, ...) \
-	inline constexpr std::string_view convert##enumName##ToStringView(enumName val) { switch(val) { AK_CONCATENATE(AK_INTERNAL_ENUM_TO_STR_KV_,  AK_NARGS(__VA_ARGS__))(enumName, __VA_ARGS__) } } \
-	inline std::string convert##enumName##ToString(enumName val) { return std::string(convert##enumName##ToStringView(val)); } \
-	inline constexpr enumName convertStringTo##enumName(std::string_view val) { \
-		AK_CONCATENATE(AK_INTERNAL_ENUM_TO_ENUM_KV_, AK_NARGS(__VA_ARGS__))(enumName, __VA_ARGS__) \
-		throw std::logic_error(std::string("Invalid identifier for enum '"#enumName"': ") + std::string(val)); \
-	} \
-	inline enumName convertStringTo##enumName(const std::string& val) { \
-		AK_CONCATENATE(AK_INTERNAL_ENUM_TO_ENUM_KV_, AK_NARGS(__VA_ARGS__))(enumName, __VA_ARGS__) \
-		throw std::logic_error(std::string("Invalid identifier for enum '"#enumName"': ") + val); \
+	namespace se_internal { \
+		inline constexpr ::std::string_view convert##enumName##ToStringView(enumName val) { switch(val) { AK_CONCATENATE(AK_INTERNAL_ENUM_TO_STR_KV_,  AK_NARGS(__VA_ARGS__))(enumName, __VA_ARGS__) } } \
+		inline ::std::string convert##enumName##ToString(enumName val) { return ::std::string(convert##enumName##ToStringView(val)); } \
+		inline constexpr enumName convertStringTo##enumName(::std::string_view val) { \
+			AK_CONCATENATE(AK_INTERNAL_ENUM_TO_ENUM_KV_, AK_NARGS(__VA_ARGS__))(enumName, __VA_ARGS__) \
+			throw ::std::logic_error(::std::string("Invalid identifier for enum '"#enumName"': ") + ::std::string(val)); \
+		} \
+		inline enumName convertStringTo##enumName(const ::std::string& val) { \
+			AK_CONCATENATE(AK_INTERNAL_ENUM_TO_ENUM_KV_, AK_NARGS(__VA_ARGS__))(enumName, __VA_ARGS__) \
+			throw ::std::logic_error(::std::string("Invalid identifier for enum '"#enumName"': ") + val); \
+		} \
 	}
 
-#define AK_INTERNAL_ENUM_TO_STR_1( enumName, x     ) case enumName::x: return AK_STRING_VIEW(#x); default: throw std::logic_error(aku::buildString("Unhandled enum in auto generated enum converter: ", static_cast<int64>(val)));
+#define AK_INTERNAL_ENUM_TO_STR_1( enumName, x)      case enumName::x: return AK_STRING_VIEW(#x); default: throw ::std::logic_error(aku::buildString("Unhandled enum in auto generated enum converter: ", static_cast<int64>(val)));
 #define AK_INTERNAL_ENUM_TO_STR_2( enumName, x, ...) case enumName::x: return AK_STRING_VIEW(#x); AK_INTERNAL_ENUM_TO_STR_1( enumName, __VA_ARGS__)
 #define AK_INTERNAL_ENUM_TO_STR_3( enumName, x, ...) case enumName::x: return AK_STRING_VIEW(#x); AK_INTERNAL_ENUM_TO_STR_2( enumName, __VA_ARGS__)
 #define AK_INTERNAL_ENUM_TO_STR_4( enumName, x, ...) case enumName::x: return AK_STRING_VIEW(#x); AK_INTERNAL_ENUM_TO_STR_3( enumName, __VA_ARGS__)
@@ -284,7 +286,7 @@
 #define AK_INTERNAL_ENUM_TO_STR_98(enumName, x, ...) case enumName::x: return AK_STRING_VIEW(#x); AK_INTERNAL_ENUM_TO_STR_97(enumName, __VA_ARGS__)
 #define AK_INTERNAL_ENUM_TO_STR_99(enumName, x, ...) case enumName::x: return AK_STRING_VIEW(#x); AK_INTERNAL_ENUM_TO_STR_98(enumName, __VA_ARGS__)
 
-#define AK_INTERNAL_ENUM_TO_ENUM_1( enumName, x     ) if(val == #x) return enumName::x; throw std::logic_error(aku::buildString("Unhandled enum in auto generated enum converter: ", val));
+#define AK_INTERNAL_ENUM_TO_ENUM_1( enumName, x     ) if(val == #x) return enumName::x; throw ::std::logic_error(aku::buildString("Unhandled enum in auto generated enum converter: ", val));
 #define AK_INTERNAL_ENUM_TO_ENUM_2( enumName, x, ...) if(val == #x) return enumName::x; AK_INTERNAL_ENUM_TO_ENUM_1( enumName, __VA_ARGS__)
 #define AK_INTERNAL_ENUM_TO_ENUM_3( enumName, x, ...) if(val == #x) return enumName::x; AK_INTERNAL_ENUM_TO_ENUM_2( enumName, __VA_ARGS__)
 #define AK_INTERNAL_ENUM_TO_ENUM_4( enumName, x, ...) if(val == #x) return enumName::x; AK_INTERNAL_ENUM_TO_ENUM_3( enumName, __VA_ARGS__)
@@ -385,15 +387,17 @@
 #define AK_INTERNAL_ENUM_TO_ENUM_99(enumName, x, ...) if(val == #x) return enumName::x; AK_INTERNAL_ENUM_TO_ENUM_98(enumName, __VA_ARGS__)
 
 #define AK_INTERNAL_ENUM_CONV(enumName, ...) \
-	inline constexpr std::string_view convert##enumName##ToStringView(enumName val) { switch(val) { AK_CONCATENATE(AK_INTERNAL_ENUM_TO_STR_, AK_NARGS(__VA_ARGS__))(enumName, __VA_ARGS__) } } \
-	inline std::string convert##enumName##ToString(enumName val) { return std::string(convert##enumName##ToStringView(val)); } \
-	inline constexpr enumName convertStringTo##enumName(std::string_view val) { \
-		AK_CONCATENATE(AK_INTERNAL_ENUM_TO_ENUM_, AK_NARGS(__VA_ARGS__))(enumName, __VA_ARGS__) \
-		throw std::logic_error(std::string("Invalid identifier for enum '"#enumName"': ") + std::string(val)); \
-	} \
-	inline enumName convertStringTo##enumName(const std::string& val) { \
-		AK_CONCATENATE(AK_INTERNAL_ENUM_TO_ENUM_, AK_NARGS(__VA_ARGS__))(enumName, __VA_ARGS__) \
-		throw std::logic_error(std::string("Invalid identifier for enum '"#enumName"': ") + val); \
+	namespace se_internal { \
+		inline constexpr ::std::string_view convert##enumName##ToStringView(enumName val) { switch(val) { AK_CONCATENATE(AK_INTERNAL_ENUM_TO_STR_, AK_NARGS(__VA_ARGS__))(enumName, __VA_ARGS__) } } \
+		inline ::std::string convert##enumName##ToString(enumName val) { return ::std::string(convert##enumName##ToStringView(val)); } \
+		inline constexpr enumName convertStringTo##enumName(::std::string_view val) { \
+			AK_CONCATENATE(AK_INTERNAL_ENUM_TO_ENUM_, AK_NARGS(__VA_ARGS__))(enumName, __VA_ARGS__) \
+			throw ::std::logic_error(::std::string("Invalid identifier for enum '"#enumName"': ") + ::std::string(val)); \
+		} \
+		inline enumName convertStringTo##enumName(const ::std::string& val) { \
+			AK_CONCATENATE(AK_INTERNAL_ENUM_TO_ENUM_, AK_NARGS(__VA_ARGS__))(enumName, __VA_ARGS__) \
+			throw ::std::logic_error(::std::string("Invalid identifier for enum '"#enumName"': ") + val); \
+		}\
 	}
 
 // /////////////////////// //
@@ -452,36 +456,25 @@
 // Defines serialization/deserialization methods in the akd namespace for a qualified smart enums
 #define AK_SMART_ENUM_SERIALIZE(qualification, enumName) \
 	namespace akd { \
-		inline void serialize(akd::PValue& dst, const qualification::enumName& val) { dst.setStr(qualification::convert##enumName##ToString(val)); } \
-		inline bool deserialize(qualification::enumName& dst, const akd::PValue& val) { \
-			try { dst = qualification::convert##StringTo##enumName(val.getStr()); } \
-			catch(const std::logic_error&) { return false; } \
+		inline void serialize(akd::PValue& dst, const ::qualification::enumName& val) { dst.setStr(::qualification::se_internal::convert##enumName##ToString(val)); } \
+		inline bool deserialize(::qualification::enumName& dst, const akd::PValue& val) { \
+			try { dst = ::qualification::se_internal::convert##StringTo##enumName(val.getStr()); } \
+			catch(const ::std::logic_error&) { return false; } \
 			return true; \
 		} \
-		template<> constexpr akd::PType serializesTo<qualification::enumName>() { return PType::String; } \
+		template<> constexpr akd::PType serializesTo<::qualification::enumName>() { return PType::String; } \
 	}
 
 // Defines serialization/deserialization methods in the akd namespace for a unqualified smart enums
 #define AK_SMART_ENUM_SERIALIZE_NQ(enumName) \
 	namespace akd { \
-		inline void serialize(akd::PValue& dst, const ::enumName& val) { dst.setStr(::convert##enumName##ToString(val)); } \
+		inline void serialize(akd::PValue& dst, const ::enumName& val) { dst.setStr(::se_internal::convert##enumName##ToString(val)); } \
 		inline bool deserialize(::enumName& dst, const akd::PValue& val) { \
-			try { dst = ::convert##StringTo##enumName(val.asStr()); } \
-			catch(const std::logic_error&) { return false; } \
+			try { dst = ::se_internal::convert##StringTo##enumName(val.asStr()); } \
+			catch(const ::std::logic_error&) { return false; } \
 			return true; \
 		} \
-		template<> constexpr akd::PType serializesTo<qualification::enumName>() { return PType::String; } \
+		template<> constexpr akd::PType serializesTo<::qualification::enumName>() { return PType::String; } \
 	}
-
-// //////////////////////////// //
-// // SmartSerialize Section // //
-// //////////////////////////// //
-
-/*
-template<typename type_t> class SerializationHelper final {
-	private:
-
-};
-*/
 
 #endif

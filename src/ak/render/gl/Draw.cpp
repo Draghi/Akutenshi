@@ -84,7 +84,7 @@ static void APIENTRY ogl_logErrorCallback(GLenum source, GLenum type, GLuint id,
 }
 
 void akr::gl::init() {
-	constexpr ak::log::Logger log("Render::Init");
+	constexpr akl::Logger log("Render::Init");
 
 	static bool hasInit = false;
 	if (hasInit) return;

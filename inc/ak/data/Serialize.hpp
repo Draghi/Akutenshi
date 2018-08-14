@@ -29,8 +29,15 @@
 
 #include <ak/data/PValue.hpp>
 #include <ak/filesystem/Path.hpp>
-#include <ak/Log.hpp>
 #include <ak/PrimitiveTypes.hpp>
+
+namespace akd {
+	namespace internal {
+		// Break circular dependency
+		void logError(const std::string& name, const std::string& message);
+		template<typename... vargs_t> void logError(const std::string& name, const vargs_t&... vargs) { logError(name, aku::buildString(vargs...));  }
+	}
+}
 
 // /////////////////// //
 // // Introspection // //
@@ -110,7 +117,7 @@ namespace akd {
 		for(akSize i = 0; i < val.size(); i++) {
 			if (i >= result.size()) result.push_back(type_t());
 			if (!deserialize(result[i], val[i])) {
-				akl::Logger("Pair").error("Failed to deserialize entry: ", i);
+				internal::logError("Pair", "Failed to deserialize entry: ", i);
 				return false;
 			}
 		}
@@ -133,7 +140,7 @@ namespace akd {
 		std::array<type_t, l> result;
 		for(akSize i = 0; i < val.size(); i++) {
 			if (!deserialize(result[i], val[i])) {
-				akl::Logger("Array").error("Failed to deserialize entry: ", i);
+				internal::logError("Array", "Failed to deserialize entry: ", i);
 				return false;
 			}
 		}
@@ -157,7 +164,7 @@ namespace akd {
 		for(akSize i = 0; i < val.size(); i++) {
 			if (i >= result.size()) result.push_back(type_t());
 			if (!deserialize(result[i], val[i])) {
-				akl::Logger("Pair").error("Failed to deserialize entry: ", i);
+				internal::logError("Pair", "Failed to deserialize entry: ", i);
 				return false;
 			}
 		}
@@ -177,19 +184,19 @@ namespace akd {
 
 	template<typename type_t, typename type2_t> bool deserialize(std::pair<type_t, type2_t>& dst, const akd::PValue& val) {
 		if (!val.isNull() && !val.isArr()) {
-			akl::Logger("Pair").error("PValue is not null or an array.");
+			internal::logError("Pair", "PValue is not null or an array.");
 			return false;
 		}
 
 		std::pair<type_t, type2_t> result;
 
 		if (!deserialize(result.first, val.atOrDef(0))) {
-			akl::Logger("Pair").error("Failed to deserialize entry: ", 0);
+			internal::logError("Pair", "Failed to deserialize entry: ", 0);
 			return false;
 		}
 
 		if (!deserialize(result.second, val.atOrDef(1))) {
-			akl::Logger("Pair").error("Failed to deserialize entry: ", 1);
+			internal::logError("Pair", "Failed to deserialize entry: ", 1);
 			return false;
 		}
 
@@ -221,11 +228,11 @@ namespace akd {
 			for(const auto& entry : val.getArr()) {
 				std::pair<type_t, type2_t> entryVal;
 				if (!deserialize(entryVal, entry)) {
-					akl::Logger("Map").error("Could not deserialize entry in non-string map");
+					internal::logError("Map", "Could not deserialize entry in non-string map");
 					return false;
 				}
 				if (!result.insert(entryVal).second) {
-					akl::Logger("Map").error("Key conflict in non-string map");
+					internal::logError("Map", "Key conflict in non-string map");
 					return false;
 				}
 			}
@@ -257,11 +264,11 @@ namespace akd {
 			for(const auto& entry : val.getArr()) {
 				std::pair<type_t, type2_t> entryVal;
 				if (!deserialize(entryVal, entry)) {
-					akl::Logger("UnorderedMap").error("Could not deserialize entry in non-string map");
+					internal::logError("UnorderedMap", "Could not deserialize entry in non-string map");
 					return false;
 				}
 				if (!result.insert(entryVal).second) {
-					akl::Logger("UnorderedMap").error("Key conflict in non-string map");
+					internal::logError("UnorderedMap", "Key conflict in non-string map");
 					return false;
 				}
 			}
