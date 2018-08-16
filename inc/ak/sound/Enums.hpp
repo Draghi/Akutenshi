@@ -49,7 +49,27 @@ namespace aks {
 		Left  = FrontLeft,
 		Right = FrontRight
 
-		/* FrontLeftCenter  = 8, FrontRightCenter = 9, TopCenter = 13, TopFrontLeft = 14, TopFrontCenter = 15, TopFrontRight = 16, TopBackLeft = 17, TopBackCenter = 18, TopBackRight = 19,*/
+		 // FrontLeftCenter  = 8, FrontRightCenter = 9, TopCenter = 13, TopFrontLeft = 14, TopFrontCenter = 15, TopFrontRight = 16, TopBackLeft = 17, TopBackCenter = 18, TopBackRight = 19,
+	};
+
+	enum class ChannelMap : uint8 {
+		Mono,
+		Stereo,
+		Stereo3,
+		Surround3,
+		Surround4,
+		Surround5,
+		Surround6,
+		Surround7,
+
+		Mono_LF,
+		Stereo_LF,
+		Stereo3_LF,
+		Surround3_LF,
+		Surround4_LF,
+		Surround5_LF,
+		Surround6_LF,
+		Surround7_LF,
 	};
 
 	enum class DitherMode {

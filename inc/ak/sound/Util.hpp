@@ -26,17 +26,14 @@ namespace aks {
 }
 
 namespace aks {
-	struct ChannelMap final {
-		ChannelMap() = delete;
-		static const std::vector<Channel> Mono1,   Stereo2,   Stereo3,   Surround3,   Surround4,   Surround5,   Surround6,   Surround7;
-		static const std::vector<Channel> Mono1LF, Stereo2LF, Stereo3LF, Surround3LF, Surround4LF, Surround5LF, Surround6LF, Surround7LF;
-	};
+	bool convertSamples(void* samplesOut, Format formatOut, akSize sampleRateOut, ChannelMap channelMapOut,
+		          const void* samplesIn,  Format formatIn,  akSize sampleRateIn,  ChannelMap channelMapIn,
+		          akSize frameCount, DitherMode dither = DitherMode::Trianglar);
 
-	void convertPCMSamples(void* sampleOut, Format formatOut, const void* sampleIn, Format formatIn, akSize sampleCount, DitherMode dither = DitherMode::Trianglar);
-
-	aks::Buffer generateSineWave(akSize sampleRate, fpSingle frequency, Format format);
+	aks::Buffer generateSineWave(akSize sampleRate, fpSingle frequency, Format format, DitherMode dither = DitherMode::Trianglar);
 
 	akSize getFormatElementSize(Format format);
+	const std::vector<Channel>& getChannelLayoutFor(ChannelMap channelMap);
 }
 
 #endif /* AK_SOUND_UTIL_HPP_ */

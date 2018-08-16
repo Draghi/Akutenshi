@@ -46,7 +46,7 @@ namespace aks {
 		std::string name;
 	};
 
-	using upload_callback_f = akSize(void* audioFrames, akSize frameCount, aks::Format format, const std::vector<aks::Channel>& channels);
+	using upload_callback_f = akSize(void* audioFrames, akSize frameCount, aks::Format format, aks::ChannelMap channelMap);
 }
 
 

@@ -16,9 +16,9 @@
  **/
 
 #include <ak/Log.hpp>
-#include <ak/sound/Types.hpp>
 #include <ak/sound/Backend.hpp>
 #include <ak/sound/internal/MalUtil.hpp>
+#include <ak/sound/Util.hpp>
 #include <ak/ScopeGuard.hpp>
 #include <ak/util/Iterator.hpp>
 #include <mini_al.h>
@@ -37,7 +37,7 @@ namespace aks {
 }
 
 static bool initContext(mal_context* context, const std::vector<Backend>& backends);
-static bool initDevice(mal_context* context, mal_device* device, const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, const std::vector<Channel>& channels);
+static bool initDevice(mal_context* context, mal_device* device, const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, ChannelMap channelMap);
 
 static void recvMalMessage(mal_context* /*pContext*/, mal_device* /*pDevice*/, mal_uint32 logLevel, const char* message);
 static mal_uint32 malCallback_internal(mal_device* /*device*/, mal_uint32 frameCount, void* dst);
@@ -47,21 +47,21 @@ static mal_context malContext;
 static mal_device  malDevice;
 
 static std::function<upload_callback_f> malCallback;
-static std::vector<Channel> malChannels;
+static ChannelMap malChannelMap;
 static Format malFormat;
 
-bool aks::init(const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, const std::vector<Channel>& channels, const std::function<upload_callback_f>& callback) {
-	return aks::init(aks::internal::DEFAULT_BACKENDS, deviceID, sampleRate, format, channels, callback);
+bool aks::init(const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, ChannelMap channelMap, const std::function<upload_callback_f>& callback) {
+	return aks::init(aks::internal::DEFAULT_BACKENDS, deviceID, sampleRate, format, channelMap, callback);
 }
 
-bool aks::init(const std::vector<Backend>& backends, const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, const std::vector<Channel>& channels, const std::function<upload_callback_f>& callback) {
+bool aks::init(const std::vector<Backend>& backends, const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, ChannelMap channelMap, const std::function<upload_callback_f>& callback) {
 	if (malIsInit.exchange(true)) return false;
 	ak::ScopeGuard resetInitFlag([&]{malIsInit = false;});
 
 	if (!initContext(&malContext, backends)) return false;
-	if (!initDevice(&malContext, &malDevice, deviceID, sampleRate, format, channels)) { mal_context_uninit(&malContext); return false; }
+	if (!initDevice(&malContext, &malDevice, deviceID, sampleRate, format, channelMap)) { mal_context_uninit(&malContext); return false; }
 
-	malCallback = callback; malChannels = channels; malFormat = format;
+	malCallback = callback; malChannelMap = channelMap; malFormat = format;
 	resetInitFlag.clear();
 	return true;
 }
@@ -139,7 +139,9 @@ static bool initContext(mal_context* context, const std::vector<Backend>& backen
 	return true;
 }
 
-static bool initDevice(mal_context* context, mal_device* device, const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, const std::vector<Channel>& channels) {
+static bool initDevice(mal_context* context, mal_device* device, const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, ChannelMap channelMap) {
+	const auto& channels = getChannelLayoutFor(channelMap);
+
 	if (channels.size() > MAL_MAX_CHANNELS) {
 		akl::Logger("MAL").error("Number of channels(", channels.size() ,") greater than max allowed: ", MAL_MAX_CHANNELS);
 		return false;
@@ -184,4 +186,4 @@ static void recvMalMessage(mal_context* /*pContext*/, mal_device* /*pDevice*/, m
 
 }
 
-static mal_uint32 malCallback_internal(mal_device* /*device*/, mal_uint32 frameCount, void* dst) { return malCallback(dst, frameCount, malFormat, malChannels); }
+static mal_uint32 malCallback_internal(mal_device* /*device*/, mal_uint32 frameCount, void* dst) { return malCallback(dst, frameCount, malFormat, malChannelMap); }

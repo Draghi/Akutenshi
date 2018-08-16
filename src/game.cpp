@@ -27,6 +27,7 @@
 #include <ak/engine/Scene.hpp>
 #include <ak/engine/SceneManager.hpp>
 #include <ak/event/Dispatcher.hpp>
+#include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Path.hpp>
 #include <ak/input/Keyboard.hpp>
 #include <ak/input/Mouse.hpp>
@@ -41,9 +42,9 @@
 #include <ak/render/SceneRendererDefault.hpp>
 #include <ak/sound/Backend.hpp>
 #include <ak/sound/Buffer.hpp>
+#include <ak/sound/Decode.hpp>
 #include <ak/sound/Enums.hpp>
 #include <ak/sound/Source.hpp>
-#include <ak/sound/Util.hpp>
 #include <ak/ScopeGuard.hpp>
 #include <ak/thread/CurrentThread.hpp>
 #include <ak/util/FPSCounter.hpp>
@@ -88,17 +89,21 @@ int akGameMain() {
 
 	constexpr akSize AUDIO_SAMPLE_RATE = 48000; // The sample rate for audio playback
 	constexpr float WAVE_FREQUENCY = 40.f;      // The frequency of the wave to produce
-	auto buffer = std::make_shared<aks::Buffer>(aks::generateSineWave(AUDIO_SAMPLE_RATE, WAVE_FREQUENCY, aks::Format::SInt16));
+	//auto buffer = std::make_shared<aks::Buffer>(aks::generateSineWave(AUDIO_SAMPLE_RATE, WAVE_FREQUENCY, aks::Format::SInt16));
+	std::vector<uint8> fileData; akfs::CFile("srcdata/test.flac").readAll(fileData);
+	auto buffer = std::make_shared<aks::Buffer>(*aks::decode(fileData, aks::Format::SInt16, aks::ChannelMap::Stereo, AUDIO_SAMPLE_RATE, aks::DitherMode::Trianglar));
 
 	aks::Source source;
 	source.playSound(buffer, true, 1.f, 1.f);
 
-	aks::init(nullptr, AUDIO_SAMPLE_RATE, aks::Format::SInt16, aks::ChannelMap::Mono1, [&](void* audioFrames, akSize frameCount, aks::Format format, const std::vector<aks::Channel>& channels){
-		akSize writtenFrames = source.fillBuffer(audioFrames, frameCount, AUDIO_SAMPLE_RATE, format, channels);
-		fpSingle* fAudioFrames = static_cast<fpSingle*>(audioFrames);
-		for(akSize i = 0; i < writtenFrames - frameCount; i++) fAudioFrames[writtenFrames + 1] = 0.f;
-		return frameCount;
-	});
+	aks::init(nullptr, AUDIO_SAMPLE_RATE, aks::Format::SInt16, aks::ChannelMap::Stereo,
+		[&](void* audioFrames, akSize frameCount, aks::Format format, aks::ChannelMap channelMap){
+			akSize writtenFrames = source.fillBuffer(audioFrames, frameCount, AUDIO_SAMPLE_RATE, format, channelMap);
+			fpSingle* fAudioFrames = static_cast<fpSingle*>(audioFrames);
+			for(akSize i = 0; i < writtenFrames - frameCount; i++) fAudioFrames[writtenFrames + 1] = 0.f;
+			return frameCount;
+		}
+	);
 	aks::startDevice();
 
 	akas::convertDirectory(akfs::Path("./srcdata/"));

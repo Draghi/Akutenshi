@@ -61,7 +61,7 @@ namespace aks {
 		public: //protected:
 			Source() : m_audioBuffer(), m_isLooping(false), m_volume(1.f), m_playbackSpeed(1.f) {}
 
-			akSize fillBuffer(void* audioFrames, akSize frameCount, fpSingle sampleRate, Format format, const std::vector<Channel>& channelMap) {
+			akSize fillBuffer(void* audioFrames, akSize frameCount, fpSingle sampleRate, Format format, ChannelMap channelMap) {
 				bool formatMatches = m_audioBuffer->format() == format;
 				bool channelMapMatches = m_audioBuffer->channelMap() == channelMap;
 				bool skipResampling = m_audioBuffer->sampleRate() == sampleRate && (m_currentFrame == static_cast<akSize>(m_currentFrame)) && (m_playbackSpeed == 1.f);
@@ -89,7 +89,6 @@ namespace aks {
 			}
 
 	};
-
 }
 
 #endif /* AK_SOUND_SOURCE_HPP_ */

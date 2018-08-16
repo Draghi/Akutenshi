@@ -24,8 +24,8 @@
 #include <vector>
 
 namespace aks {
-	bool init(const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, const std::vector<Channel>& channels, const std::function<upload_callback_f>& callback);
-	bool init(const std::vector<Backend>& backends, const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, const std::vector<Channel>& channels, const std::function<upload_callback_f>& callback);
+	bool init(const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, ChannelMap channelMap, const std::function<upload_callback_f>& callback);
+	bool init(const std::vector<Backend>& backends, const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, ChannelMap channelMap, const std::function<upload_callback_f>& callback);
 
 	void startDevice();
 	void stopDevice();

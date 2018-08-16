@@ -17,8 +17,19 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#define DR_FLAC_IMPLEMENTATION
+#include <extras/dr_flac.h>
+
+#define DR_MP3_IMPLEMENTATION
+#include <extras/dr_mp3.h>
+
+#define DR_WAV_IMPLEMENTATION
+#include <extras/dr_wav.h>
+
+#include <extras/stb_vorbis.c>
+
 #define MAL_IMPLEMENTATION
-#include "mini_al.h"
+#include <mini_al.h>
 
 
 

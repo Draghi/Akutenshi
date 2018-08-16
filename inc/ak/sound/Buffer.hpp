@@ -30,12 +30,13 @@ namespace aks {
 			std::vector<uint8> m_data;
 			akSize m_sampleRate;
 			Format m_format;
-			std::vector<Channel> m_channelMap;
+			ChannelMap m_channelMap;
 
 		public:
-			Buffer(const void* source, akSize frameCount, akSize sampleRate, Format format, const std::vector<Channel>& channelMap) {
+			Buffer(const void* source, akSize frameCount, akSize sampleRate, Format format, ChannelMap channelMap) {
+				if ((source == nullptr) || (frameCount == 0)) return;
 				m_sampleRate = sampleRate; m_format = format; m_channelMap = channelMap;
-				m_data.resize(frameCount*frameSize());
+				m_data.resize(frameCount*getChannelLayoutFor(channelMap).size()*getFormatElementSize(format));
 				std::memcpy(m_data.data(), source, m_data.size());
 			}
 
@@ -44,9 +45,9 @@ namespace aks {
 
 			akSize sampleRate() const { return m_sampleRate; }
 			Format format()     const { return m_format; }
-			const std::vector<Channel>& channelMap() const { return m_channelMap; }
+			ChannelMap channelMap() const { return m_channelMap; }
 
-			akSize frameSize() const { return m_channelMap.size()*getFormatElementSize(m_format); }
+			akSize frameSize() const { return getChannelLayoutFor(m_channelMap).size()*getFormatElementSize(m_format); }
 			akSize frameCount() const { return m_data.size()/frameSize(); }
 			fpSingle duration() const { return m_data.size()/static_cast<fpSingle>(frameSize()*m_sampleRate); }
 	};

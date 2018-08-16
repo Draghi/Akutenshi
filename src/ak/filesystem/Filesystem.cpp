@@ -56,11 +56,8 @@ class VFSMounts final {
 	private:
 		std::unordered_map<std::string, std::string> m_vfsToSys = {
 			{"./",    "./"},
-			{"bin/",  "./bin/"},
-			{"lib/",  "./lib/"},
 			{"data/", "./data/"},
-			{"meta/", "./meta/"},
-			{"src/",  "./src/"},
+			{"srcdata/",  "./srcdata/"},
 		};
 
 	public:
