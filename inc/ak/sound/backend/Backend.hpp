@@ -18,24 +18,25 @@
 #define AK_SOUND_BACKEND_HPP_
 
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/sound/Enums.hpp>
-#include <ak/sound/Types.hpp>
+#include <ak/sound/backend/Types.hpp>
 #include <functional>
 #include <vector>
 
 namespace aks {
-	bool init(const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, ChannelMap channelMap, const std::function<upload_callback_f>& callback);
-	bool init(const std::vector<Backend>& backends, const DeviceIdentifier& deviceID, uint32 sampleRate, Format format, ChannelMap channelMap, const std::function<upload_callback_f>& callback);
+	namespace backend {
+		bool init(const DeviceIdentifier& deviceID, StreamFormat streamFormat, const std::function<upload_callback_f>& callback);
+		bool init(const std::vector<Backend>& backends, const DeviceIdentifier& deviceID, StreamFormat streamFormat, const std::function<upload_callback_f>& callback);
 
-	void startDevice();
-	void stopDevice();
-	bool isDeviceStarted();
+		void startDevice();
+		void stopDevice();
+		bool isDeviceStarted();
 
-	ContextInfo getContextInfo();
+		std::optional<ContextInfo> getContextInfo();
+		std::optional<DeviceInfo> getDeviceInfo();
 
-	std::vector<DeviceInfo> getAvailableDevices();
-	std::vector<DeviceInfo> getAvailableDevices(Backend backends);
-
+		std::vector<DeviceCapabilities> getAvailableDevices();
+		std::vector<DeviceCapabilities> getAvailableDevices(Backend backends);
+	}
 }
 
 #endif /* AK_SOUND_BACKEND_HPP_ */

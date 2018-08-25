@@ -17,36 +17,30 @@
 #ifndef AK_SOUND_TYPES_HPP_
 #define AK_SOUND_TYPES_HPP_
 
-#include <ak/PrimitiveTypes.hpp>
-#include <ak/sound/Enums.hpp>
-#include <memory>
-#include <string>
-#include <vector>
-
 namespace aks {
-	namespace internal {
-		struct DeviceIdentifier;
-		struct DeviceIdentifierDeletetor final {
-			DeviceIdentifierDeletetor() = default;
-			void operator()(DeviceIdentifier* p) const;
-		};
-	}
+	enum class Channel : uint8 {
+		None = 0,
 
-	using DeviceIdentifier = std::unique_ptr<aks::internal::DeviceIdentifier, internal::DeviceIdentifierDeletetor>;
+		Mono = 1,
 
-	struct DeviceInfo {
-		DeviceIdentifier identifier;
-		std::string name;
-		std::vector<Format> nativeFormats;
-		struct { uint32 min, max; } channelLimits;
-		struct { uint32 min, max; } sampleRange;
+		FrontLeft = 2,  FrontCenter = 4, FrontRight = 3,
+		SideLeft  = 11,         LFE = 5,  SideRight = 12,
+		BackLeft  = 6,  BackCenter = 10,  BackRight = 7,
+
+		Left  = FrontLeft,
+		Right = FrontRight,
+
+		// Not officially supported.
+		FrontLeftCenter  = 8,
+		FrontRightCenter = 9,
+		TopCenter = 13,
+		TopFrontLeft = 14,
+		TopFrontCenter = 15,
+		TopFrontRight = 16,
+		TopBackLeft = 17,
+		TopBackCenter = 18,
+		TopBackRight = 19,
 	};
-
-	struct ContextInfo {
-		std::string name;
-	};
-
-	using upload_callback_f = akSize(void* audioFrames, akSize frameCount, aks::Format format, aks::ChannelMap channelMap);
 }
 
 

@@ -18,22 +18,31 @@
 #define AK_SOUND_UTIL_HPP_
 
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/sound/Enums.hpp>
-#include <vector>
+#include <ak/sound/Buffer.hpp>
 
 namespace aks {
-	class Buffer;
-}
+	aks::Buffer generateSineWave(fpSingle frequency, fpSingle ampitude);
 
-namespace aks {
-	bool convertSamples(void* samplesOut, Format formatOut, akSize sampleRateOut, ChannelMap channelMapOut,
-		          const void* samplesIn,  Format formatIn,  akSize sampleRateIn,  ChannelMap channelMapIn,
-		          akSize frameCount, DitherMode dither = DitherMode::Trianglar);
+	inline aks::Buffer generateWindowedSinc(fpSingle frequency, akSize sampleRate) {
+		const fpSingle freqStep = (2*akm::PI*frequency)/sampleRate;
 
-	aks::Buffer generateSineWave(akSize sampleRate, fpSingle frequency, Format format, DitherMode dither = DitherMode::Trianglar);
+		akSize count = aku::nearestPowerOfTwo(static_cast<akSize>(akm::ceil(4/(frequency/sampleRate))*100));
 
-	akSize getFormatElementSize(Format format);
-	const std::vector<Channel>& getChannelLayoutFor(ChannelMap channelMap);
+		std::vector<fpSingle> result;
+		result.resize(count, 0);
+
+		fpSingle maxVal = 0;
+
+		fpSingle countDiv = count - 1;
+		for(akSize i = 0; i < count; i++) {
+			result[i] = akm::sinc(freqStep*(i-(countDiv/2.f))) * (0.42 - 0.5  * akm::cos((2*akm::PI*i)/countDiv) + 0.08 * akm::cos((4*akm::PI*i)/countDiv));
+			maxVal = akm::max(result[i], maxVal);
+		}
+
+		//for(akSize i = 0; i < count; i++) result[i] /= maxVal;
+
+		return aks::Buffer(result.data(), result.size(), true);
+	}
 }
 
 #endif /* AK_SOUND_UTIL_HPP_ */

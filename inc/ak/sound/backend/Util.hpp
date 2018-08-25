@@ -14,20 +14,22 @@
  * limitations under the License.
  **/
 
-#ifndef AK_SOUND_DECODE_HPP_
-#define AK_SOUND_DECODE_HPP_
+#ifndef AK_SOUND_UTIL_HPP_
+#define AK_SOUND_UTIL_HPP_
 
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/sound/backend/Types.hpp>
-#include <ak/sound/Buffer.hpp>
 #include <ak/sound/Types.hpp>
-#include <unordered_map>
 #include <vector>
 
 namespace aks {
-	class Sound;
-
-	std::unordered_map<Channel, aks::Buffer> decode(const std::vector<uint8>& data, bool shouldLoop = false, aks::backend::DitherMode ditherMode = aks::backend::DitherMode::Trianglar);
+	namespace backend {
+		akSize resampleStream(void* samplesOut, akSize frameCountOut, StreamFormat streamFormatOut, const void* samplesIn, akSize frameCountIn, StreamFormat streamFormatIn, DitherMode ditherMode = DitherMode::Trianglar);
+		const std::vector<Channel>& channelLayoutOf(ChannelMap channelMap);
+		akSize frameSizeOf(StreamFormat streamFormat);
+		akSize elementSizeOf(Format format);
+		akSize calcResampledFrameCount(akSize sampleRateOld, akSize sampleRateNew, akSize frameCount);
+	}
 }
 
-#endif /* AK_SOUND_DECODE_HPP_ */
+#endif /* AK_SOUND_UTIL_HPP_ */

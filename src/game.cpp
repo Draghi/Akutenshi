@@ -27,6 +27,7 @@
 #include <ak/engine/Scene.hpp>
 #include <ak/engine/SceneManager.hpp>
 #include <ak/event/Dispatcher.hpp>
+#include <ak/event/Event.hpp>
 #include <ak/filesystem/CFile.hpp>
 #include <ak/filesystem/Path.hpp>
 #include <ak/input/Keyboard.hpp>
@@ -40,14 +41,17 @@
 #include <ak/render/gl/Textures.hpp>
 #include <ak/render/gl/Types.hpp>
 #include <ak/render/SceneRendererDefault.hpp>
-#include <ak/sound/Backend.hpp>
+#include <ak/sound/backend/Backend.hpp>
+#include <ak/sound/backend/Types.hpp>
 #include <ak/sound/Buffer.hpp>
 #include <ak/sound/Decode.hpp>
-#include <ak/sound/Enums.hpp>
-#include <ak/sound/Source.hpp>
+#include <ak/sound/FIRFilter.hpp>
+#include <ak/sound/Types.hpp>
+#include <ak/sound/Util.hpp>
 #include <ak/ScopeGuard.hpp>
 #include <ak/thread/CurrentThread.hpp>
 #include <ak/util/FPSCounter.hpp>
+#include <ak/util/FreqDomainFilter.hpp>
 #include <ak/util/String.hpp>
 #include <ak/util/Time.hpp>
 #include <ak/util/Timer.hpp>
@@ -55,11 +59,15 @@
 #include <ak/window/Window.hpp>
 #include <ak/window/WindowOptions.hpp>
 #include <akgame/CameraControllerBehaviour.hpp>
+#include <algorithm>
+#include <array>
 #include <functional>
 #include <iomanip>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
+#include <unordered_map>
 #include <vector>
 
 
@@ -88,23 +96,53 @@ int akGameMain() {
 	akr::gl::init();
 
 	constexpr akSize AUDIO_SAMPLE_RATE = 48000; // The sample rate for audio playback
-	constexpr float WAVE_FREQUENCY = 40.f;      // The frequency of the wave to produce
-	//auto buffer = std::make_shared<aks::Buffer>(aks::generateSineWave(AUDIO_SAMPLE_RATE, WAVE_FREQUENCY, aks::Format::SInt16));
-	std::vector<uint8> fileData; akfs::CFile("srcdata/test.flac").readAll(fileData);
-	auto buffer = std::make_shared<aks::Buffer>(*aks::decode(fileData, aks::Format::SInt16, aks::ChannelMap::Stereo, AUDIO_SAMPLE_RATE, aks::DitherMode::Trianglar));
+	constexpr float WAVE_FREQUENCY = 100.f;    // The frequency of the wave to produce
+	aks::Buffer sound, sound2;
+	std::unordered_map<aks::Channel, aks::Buffer> trainSounds;
 
-	aks::Source source;
-	source.playSound(buffer, true, 1.f, 1.f);
+	aks::FreqDomainFilter domainFilter;
 
-	aks::init(nullptr, AUDIO_SAMPLE_RATE, aks::Format::SInt16, aks::ChannelMap::Stereo,
-		[&](void* audioFrames, akSize frameCount, aks::Format format, aks::ChannelMap channelMap){
-			akSize writtenFrames = source.fillBuffer(audioFrames, frameCount, AUDIO_SAMPLE_RATE, format, channelMap);
-			fpSingle* fAudioFrames = static_cast<fpSingle*>(audioFrames);
-			for(akSize i = 0; i < writtenFrames - frameCount; i++) fAudioFrames[writtenFrames + 1] = 0.f;
-			return frameCount;
+	aks::backend::init(nullptr, {aks::backend::Format::FPSingle, aks::backend::ChannelMap::Stereo, AUDIO_SAMPLE_RATE},
+		[&](void* audioFrames, akSize frameCount, aks::backend::StreamFormat /*streamFormat*/){
+			/*if (!sound) return 0u;
+			static akSize cFrame = 0;
+			auto writtenFrames = sound->sample(static_cast<fpSingle*>(audioFrames), cFrame, frameCount);
+			cFrame += writtenFrames;
+			return writtenFrames;*/
+			if (trainSounds.empty()) return 0u;
+
+			static akSize cFrame = 0;
+			akSize writtenFrames = 0;
+
+			std::array<std::vector<fpSingle>, 2> buffer; buffer[0].resize(frameCount, 0.f); buffer[1].resize(frameCount, 0.f);
+			//writtenFrames = std::max(writtenFrames, aks::FIRFilter(trainSounds[aks::Channel::Left],  aks::generateLowPassFilterAvg(AUDIO_SAMPLE_RATE)).sample(buffer[0].data(), cFrame, frameCount));
+			//writtenFrames = std::max(writtenFrames, aks::FIRFilter(trainSounds[aks::Channel::Right], aks::generateLowPassFilterAvg(800)).sample(buffer[1].data(), cFrame, frameCount));
+			//writtenFrames = std::max(writtenFrames, aks::KernalFilter(sound,  aks::generateLowPassFilterAvg(WAVE_FREQUENCY*10)).sample(buffer[0].data(), cFrame, frameCount));
+			//writtenFrames = std::max(writtenFrames, aks::KernalFilter(sound2, aks::generateLowPassFilterAvg(WAVE_FREQUENCY*10)).sample(buffer[1].data(), cFrame, frameCount));
+			writtenFrames = std::max(writtenFrames, domainFilter.sample(buffer[0].data(), cFrame, frameCount));
+			//writtenFrames = std::max(writtenFrames, sound2.sample(buffer[0].data(), cFrame, frameCount));
+			if (akw::keyboard().isDown(akin::Key::P)) writtenFrames = std::max(writtenFrames, aks::FIRFilter(trainSounds[aks::Channel::Right], aks::generateLowPassFilterAvg(800)).sample(buffer[1].data(), cFrame, frameCount));
+			else if (!akw::keyboard().isDown(akin::Key::O)) writtenFrames = std::max(writtenFrames,trainSounds[aks::Channel::Right].sample(buffer[1].data(), cFrame, frameCount));
+
+			cFrame += writtenFrames;
+
+			for(akSize i = 0; i < writtenFrames; i++) {
+				static_cast<fpSingle*>(audioFrames)[i*2 + 0] = akm::clamp(buffer[0][i], -1, 1);
+				static_cast<fpSingle*>(audioFrames)[i*2 + 1] = akm::clamp(buffer[1][i], -1, 1);
+			}
+
+			return writtenFrames;
 		}
 	);
-	aks::startDevice();
+
+	sound  = aks::generateSineWave(WAVE_FREQUENCY,    1.0f);
+	sound2 = aks::generateWindowedSinc(800, aks::backend::getDeviceInfo()->streamFormat.sampleRate); // aks::generateSineWave(WAVE_FREQUENCY*10, 1.0f);
+	std::vector<uint8> fileData; akfs::CFile("srcdata/test.flac").readAll(fileData);
+	trainSounds = aks::decode(fileData);
+
+	domainFilter = aks::FreqDomainFilter(trainSounds[aks::Channel::Left], aks::generateWindowedSinc(800, aks::backend::getDeviceInfo()->streamFormat.sampleRate));
+
+	aks::backend::startDevice();
 
 	akas::convertDirectory(akfs::Path("./srcdata/"));
 
@@ -140,30 +178,27 @@ static void startGame() {
 	auto skyboxTexture = std::make_shared<akr::gl::Texture>(akr::gl::TexTarget::TexCubemap);
 	akr::gl::setActiveTexUnit(0);
 	akr::gl::bindTexture(0, *skyboxTexture);
-	akr::gl::newTexStorageCubemap(akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte, 2048, 2048, akr::gl::calcTexMaxMipmaps(2048, 2048));
 	{
-		auto image = akas::loadImageAndTransform("data/skybox/winter/pX.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
-		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::PosX, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, image->data(), image->width(), image->height(), 0, 0);
-	}
-	{
-		auto image = akas::loadImageAndTransform("data/skybox/winter/pY.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
-		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::PosY, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, image->data(), image->width(), image->height(), 0, 0);
-	}
-	{
-		auto image = akas::loadImageAndTransform("data/skybox/winter/pZ.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
-		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::PosZ, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, image->data(), image->width(), image->height(), 0, 0);
-	}
-	{
-		auto image = akas::loadImageAndTransform("data/skybox/winter/nX.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
-		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::NegX, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, image->data(), image->width(), image->height(), 0, 0);
-	}
-	{
-		auto image = akas::loadImageAndTransform("data/skybox/winter/nY.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
-		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::NegY, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, image->data(), image->width(), image->height(), 0, 0);
-	}
-	{
-		auto image = akas::loadImageAndTransform("data/skybox/winter/nZ.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
-		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::NegZ, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, image->data(), image->width(), image->height(), 0, 0);
+		auto pX = akas::loadImageAndTransform("data/skybox/winter/pX.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
+		auto pY = akas::loadImageAndTransform("data/skybox/winter/pY.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
+		auto pZ = akas::loadImageAndTransform("data/skybox/winter/pZ.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
+		auto nX = akas::loadImageAndTransform("data/skybox/winter/nX.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
+		auto nY = akas::loadImageAndTransform("data/skybox/winter/nY.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
+		auto nZ = akas::loadImageAndTransform("data/skybox/winter/nZ.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
+
+		if ((pX->width() != pY->width()) || (pY->width() != pZ->width()) || (pZ->width() != nX->width()) || (nX->width() != nY->width()) || (nY->width() != nZ->width()) ||
+			(pX->height() != pY->height()) || (pY->height() != pZ->height()) || (pZ->height() != nX->height()) || (nX->height() != nY->height()) || (nY->height() != nZ->height())) {
+			throw std::runtime_error("Cubemap images don't have matching sizes!");
+		}
+
+		akr::gl::newTexStorageCubemap(akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte, pX->width(), pY->height(), akr::gl::calcTexMaxMipmaps(pY->width(), pY->height()));
+
+		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::PosX, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, pX->data(), pX->width(), pX->height(), 0, 0);
+		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::PosY, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, pY->data(), pY->width(), pY->height(), 0, 0);
+		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::PosZ, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, pZ->data(), pZ->width(), pZ->height(), 0, 0);
+		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::NegX, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, nX->data(), nX->width(), nX->height(), 0, 0);
+		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::NegY, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, nY->data(), nY->width(), nY->height(), 0, 0);
+		akr::gl::loadTexDataCubemap(akr::gl::CubemapTarget::NegZ, 0, akr::gl::TexFormat::RGBA, akr::gl::DataType::UInt8, nZ->data(), nZ->width(), nZ->height(), 0, 0);
 	}
 	akr::gl::setTexFilters(akr::gl::TexTarget::TexCubemap, akr::gl::FilterType::Linear, akr::gl::MipFilterType::Linear, akr::gl::FilterType::Linear);
 	akr::gl::genTexMipmaps(akr::gl::TexTarget::TexCubemap);

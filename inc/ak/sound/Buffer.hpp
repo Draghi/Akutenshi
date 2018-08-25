@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,40 +18,52 @@
 #define AK_SOUND_BUFFER_HPP_
 
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/sound/Enums.hpp>
-#include <ak/sound/Util.hpp>
-#include <cstring>
+#include <ak/sound/Sampler.hpp>
+#include <ak/util/Memory.hpp>
+#include <cstdlib>
 #include <vector>
 
 namespace aks {
-
-	class Buffer final {
+	class Buffer final : public Sampler {
 		private:
-			std::vector<uint8> m_data;
-			akSize m_sampleRate;
-			Format m_format;
-			ChannelMap m_channelMap;
+			std::vector<fpSingle> m_buffer;
+			akSize m_sampleCount;
+			bool m_loops;
 
 		public:
-			Buffer(const void* source, akSize frameCount, akSize sampleRate, Format format, ChannelMap channelMap) {
-				if ((source == nullptr) || (frameCount == 0)) return;
-				m_sampleRate = sampleRate; m_format = format; m_channelMap = channelMap;
-				m_data.resize(frameCount*getChannelLayoutFor(channelMap).size()*getFormatElementSize(format));
-				std::memcpy(m_data.data(), source, m_data.size());
+			Buffer() : m_buffer(), m_sampleCount(0), m_loops(false) {}
+			Buffer(fpSingle* src, akSize sampleCount, bool loops) : m_buffer(), m_sampleCount(sampleCount), m_loops(loops) {
+				m_buffer.resize(sampleCount);
+				aku::memcpy(m_buffer.data(), src, sampleCount);
 			}
 
-			const void* data() const { return m_data.data(); }
-			akSize size() const { return m_data.size(); }
+			Buffer(const Buffer&) = default;
+			Buffer& operator=(const Buffer&) = default;
 
-			akSize sampleRate() const { return m_sampleRate; }
-			Format format()     const { return m_format; }
-			ChannelMap channelMap() const { return m_channelMap; }
+			akSize sample(fpSingle* out, akSSize start, akSize count) const override {
+				if (count == 0) return 0;
 
-			akSize frameSize() const { return getChannelLayoutFor(m_channelMap).size()*getFormatElementSize(m_format); }
-			akSize frameCount() const { return m_data.size()/frameSize(); }
-			fpSingle duration() const { return m_data.size()/static_cast<fpSingle>(frameSize()*m_sampleRate); }
+				akSize copiedSamples = 0;
+
+				if (!m_loops && (start < 0)) {
+					aku::memset(out, 0.f, std::abs(start));
+					copiedSamples += std::abs(start);
+				} else while(start < 0) start += m_sampleCount;
+
+				do {
+					akSize curFrameStart = (start + copiedSamples) % m_sampleCount;
+					akSize framesToCopy = (curFrameStart + (count - copiedSamples)) >= m_sampleCount ? (m_sampleCount - curFrameStart) : count - copiedSamples;
+					aku::memcpy(out + copiedSamples, m_buffer.data() + curFrameStart, framesToCopy);
+					copiedSamples += framesToCopy;
+				} while(m_loops && (copiedSamples < count));
+				return copiedSamples;
+			}
+
+			akSize sampleCount() const override { return m_sampleCount; }
+
+			void setLoops(bool v) { m_loops = v; }
+			bool loops() const override { return m_loops; }
 	};
-
 }
 
 #endif /* AK_SOUND_BUFFER_HPP_ */

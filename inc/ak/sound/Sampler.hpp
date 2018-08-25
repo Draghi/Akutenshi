@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Michael J. Baker
+ * Copyright 2018 Michael J. Baker
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,33 @@
  * limitations under the License.
  **/
 
-#ifndef AK_SOUND_DECODE_HPP_
-#define AK_SOUND_DECODE_HPP_
+#ifndef AK_SOUND_SAMPLER_HPP_
+#define AK_SOUND_SAMPLER_HPP_
 
+#include <ak/math/FourierTransform.hpp>
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/sound/backend/Types.hpp>
-#include <ak/sound/Buffer.hpp>
-#include <ak/sound/Types.hpp>
-#include <unordered_map>
+#include <ak/util/Bits.hpp>
+#include <ak/util/Memory.hpp>
+#include <stdexcept>
 #include <vector>
 
 namespace aks {
-	class Sound;
+	class Sampler {
+		protected:
+			Sampler() = default;
+			Sampler(const Sampler&) = default;
+			Sampler& operator=(const Sampler&) = default;
 
-	std::unordered_map<Channel, aks::Buffer> decode(const std::vector<uint8>& data, bool shouldLoop = false, aks::backend::DitherMode ditherMode = aks::backend::DitherMode::Trianglar);
+		public:
+			virtual ~Sampler() = default;
+
+			virtual akSize sample(fpSingle* out, akSSize start, akSize count) const = 0;
+
+			virtual akSize sampleCount() const = 0;
+			virtual bool loops() const = 0;
+	};
 }
 
-#endif /* AK_SOUND_DECODE_HPP_ */
+
+
+#endif /* AK_SOUND_SAMPLER_HPP_ */

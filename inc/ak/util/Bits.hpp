@@ -17,18 +17,28 @@
 #ifndef AK_BITS_HPP_
 #define AK_BITS_HPP_
 
-#include <climits>
-
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/util/Traits.hpp>
+#include <climits>
 
 namespace aku {
 	template<typename type_t> inline constexpr type_t bitmask(akSize count) {
 		return static_cast<type_t>(-(count != 0)) & (static_cast<type_t>(-1) >> ((sizeof(type_t) * CHAR_BIT) - count));
 	}
 
-	template<typename type_t> inline constexpr bool hasBitFlag(const type_t& val, const typename aku::traits::Identity<type_t>::type& flag) {
+	template<typename type_t> inline constexpr bool hasBitFlag(type_t val, const typename aku::traits::Identity<type_t>::type& flag) {
 		return (val & flag) == flag;
+	}
+
+	template<typename type_t> inline constexpr bool isPowerOfTwo(type_t val) {
+		return (val == 1) || ((val & (val-1)) == 0);
+	}
+
+	template<typename type_t> inline constexpr akSize nearestPowerOfTwo(type_t val) {
+		if (isPowerOfTwo(val)) return val;
+		type_t power = 1;
+		while(power < val) power *= 2;
+		return power;
 	}
 }
 

@@ -59,6 +59,11 @@ namespace akm {
 	inline scalar_t cos(scalar_t val) { return std::cos(val); }
 	inline scalar_t tan(scalar_t val) { return std::tan(val); }
 
+	inline scalar_t sinc(scalar_t val) {
+		if (val == 0.f) return 1.f;
+		return std::sin(val)/val;
+	}
+
 	inline scalar_t asin(scalar_t val) { return std::asin(val); }
 	inline scalar_t acos(scalar_t val) { return std::acos(val); }
 	inline scalar_t atan(scalar_t val) { return std::atan(val); }
