@@ -26,20 +26,23 @@ namespace aks {
 	inline aks::Buffer generateWindowedSinc(fpSingle frequency, akSize sampleRate) {
 		const fpSingle freqStep = (2*akm::PI*frequency)/sampleRate;
 
-		akSize count = aku::nearestPowerOfTwo(static_cast<akSize>(akm::ceil(4/(frequency/sampleRate))*100));
+		akSize count = aku::nearestPowerOfTwo(static_cast<akSize>(akm::ceil(4/(frequency/sampleRate))*400));
 
 		std::vector<fpSingle> result;
 		result.resize(count, 0);
 
 		fpSingle maxVal = 0;
 
+		fpSingle sum = 0;
+
 		fpSingle countDiv = count - 1;
 		for(akSize i = 0; i < count; i++) {
 			result[i] = akm::sinc(freqStep*(i-(countDiv/2.f))) * (0.42 - 0.5  * akm::cos((2*akm::PI*i)/countDiv) + 0.08 * akm::cos((4*akm::PI*i)/countDiv));
 			maxVal = akm::max(result[i], maxVal);
+			sum += result[i];
 		}
 
-		//for(akSize i = 0; i < count; i++) result[i] /= maxVal;
+		for(akSize i = 0; i < count; i++) result[i] /= sum;
 
 		return aks::Buffer(result.data(), result.size(), true);
 	}

@@ -49,8 +49,6 @@ namespace akm {
 		}
 	}
 
-	inline akSize calcFFTOutputSize(akSize inputSize)  { return aku::nearestPowerOfTwo(inputSize)/2; }
-
 	class FTTBuffer;
 
 	bool fft(const scalar_t* signal, scalar_t* rPart, scalar_t* iPart, akSize count, FTTBuffer& buffer);
@@ -77,11 +75,12 @@ namespace akm {
 				internal::makect(size4, ip.data(), w.data() + size4);
 			}
 
-			akSize bufSize() const { return size; }
+			akSize signalSize() const { return size; }
+			akSize filterSize() const { return size/2; }
 	};
 
 	inline bool fft(const scalar_t* signal, scalar_t* rPart, scalar_t* iPart, akSize count, FTTBuffer& buffer) {
-		if (count != buffer.bufSize()) return false;
+		if (count != buffer.signalSize()) return false;
 
 		// Convert internal representation
 		for (size_t i = 0; i < buffer.size; ++i) buffer.buffer[i] = static_cast<fpDouble>(signal[i]);
@@ -115,7 +114,7 @@ namespace akm {
 	}
 
 	inline bool ifft(scalar_t* signal, const scalar_t* rPart, const scalar_t* iPart, akSize count, FTTBuffer& buffer) {
-		if (count != buffer.bufSize()) return false;
+		if (count != buffer.signalSize()) return false;
 
 		/* Convert internal representation */ {
 			fpDouble* b = buffer.buffer.data();

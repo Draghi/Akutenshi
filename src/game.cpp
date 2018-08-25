@@ -45,7 +45,7 @@
 #include <ak/sound/backend/Types.hpp>
 #include <ak/sound/Buffer.hpp>
 #include <ak/sound/Decode.hpp>
-#include <ak/sound/FIRFilter.hpp>
+#include <ak/sound/SemiFixedBlockSampler.hpp>
 #include <ak/sound/Types.hpp>
 #include <ak/sound/Util.hpp>
 #include <ak/ScopeGuard.hpp>
@@ -101,28 +101,25 @@ int akGameMain() {
 	std::unordered_map<aks::Channel, aks::Buffer> trainSounds;
 
 	aks::FreqDomainFilter domainFilter;
+	aks::SemiFixedBlockSampler fixedBlockSampler(domainFilter, domainFilter.signalSize());
 
 	aks::backend::init(nullptr, {aks::backend::Format::FPSingle, aks::backend::ChannelMap::Stereo, AUDIO_SAMPLE_RATE},
 		[&](void* audioFrames, akSize frameCount, aks::backend::StreamFormat /*streamFormat*/){
-			/*if (!sound) return 0u;
-			static akSize cFrame = 0;
-			auto writtenFrames = sound->sample(static_cast<fpSingle*>(audioFrames), cFrame, frameCount);
-			cFrame += writtenFrames;
-			return writtenFrames;*/
 			if (trainSounds.empty()) return 0u;
 
 			static akSize cFrame = 0;
 			akSize writtenFrames = 0;
 
-			std::array<std::vector<fpSingle>, 2> buffer; buffer[0].resize(frameCount, 0.f); buffer[1].resize(frameCount, 0.f);
+			std::array<std::vector<fpSingle>, 2> buffer{std::vector<fpSingle>(frameCount, 0.f), std::vector<fpSingle>(frameCount, 0.f)};
+
 			//writtenFrames = std::max(writtenFrames, aks::FIRFilter(trainSounds[aks::Channel::Left],  aks::generateLowPassFilterAvg(AUDIO_SAMPLE_RATE)).sample(buffer[0].data(), cFrame, frameCount));
 			//writtenFrames = std::max(writtenFrames, aks::FIRFilter(trainSounds[aks::Channel::Right], aks::generateLowPassFilterAvg(800)).sample(buffer[1].data(), cFrame, frameCount));
+
 			//writtenFrames = std::max(writtenFrames, aks::KernalFilter(sound,  aks::generateLowPassFilterAvg(WAVE_FREQUENCY*10)).sample(buffer[0].data(), cFrame, frameCount));
 			//writtenFrames = std::max(writtenFrames, aks::KernalFilter(sound2, aks::generateLowPassFilterAvg(WAVE_FREQUENCY*10)).sample(buffer[1].data(), cFrame, frameCount));
-			writtenFrames = std::max(writtenFrames, domainFilter.sample(buffer[0].data(), cFrame, frameCount));
-			//writtenFrames = std::max(writtenFrames, sound2.sample(buffer[0].data(), cFrame, frameCount));
-			if (akw::keyboard().isDown(akin::Key::P)) writtenFrames = std::max(writtenFrames, aks::FIRFilter(trainSounds[aks::Channel::Right], aks::generateLowPassFilterAvg(800)).sample(buffer[1].data(), cFrame, frameCount));
-			else if (!akw::keyboard().isDown(akin::Key::O)) writtenFrames = std::max(writtenFrames,trainSounds[aks::Channel::Right].sample(buffer[1].data(), cFrame, frameCount));
+
+			writtenFrames = std::max(writtenFrames,                fixedBlockSampler.sample(buffer[0].data(), cFrame, frameCount));
+			writtenFrames = std::max(writtenFrames, trainSounds[aks::Channel::Right].sample(buffer[1].data(), cFrame, frameCount));
 
 			cFrame += writtenFrames;
 
@@ -140,7 +137,7 @@ int akGameMain() {
 	std::vector<uint8> fileData; akfs::CFile("srcdata/test.flac").readAll(fileData);
 	trainSounds = aks::decode(fileData);
 
-	domainFilter = aks::FreqDomainFilter(trainSounds[aks::Channel::Left], aks::generateWindowedSinc(800, aks::backend::getDeviceInfo()->streamFormat.sampleRate));
+	domainFilter = aks::FreqDomainFilter(trainSounds[aks::Channel::Right], aks::generateWindowedSinc(800, aks::backend::getDeviceInfo()->streamFormat.sampleRate));
 
 	aks::backend::startDevice();
 

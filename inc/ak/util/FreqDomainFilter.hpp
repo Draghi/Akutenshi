@@ -18,12 +18,16 @@
 #define AK_UTIL_FREQDOMAINFILTER_HPP_
 
 #include <ak/math/FourierTransform.hpp>
+#include <ak/math/Scalar.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/sound/Sampler.hpp>
 #include <ak/util/Bits.hpp>
 #include <ak/util/Memory.hpp>
 #include <algorithm>
 #include <complex>
+#include <limits>
+#include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace aks {
@@ -35,39 +39,26 @@ namespace aks {
 			std::vector<fpSingle> m_filterI;
 
 			//akSize m_lastStart, m_lastCount;
-			mutable std::vector<fpSingle> m_bufferR;
-			mutable std::vector<fpSingle> m_bufferI;
+			mutable akSSize m_lastStart;
+			mutable std::vector<fpSingle> m_outputBuffer,  m_bufferR, m_bufferI;
+			mutable bool m_isOutputReady;
 
 			mutable akm::FTTBuffer m_fftBuffer;
-
-			void freqDomainInplace(fpSingle* inputR, fpSingle* inputI, const fpSingle* filterR, const fpSingle* filterI, akSize count) const {
-				for(akSize i = 0; i < count; i++) {
-					auto result = std::complex<fpSingle>(inputR[i], inputI[i]) * std::complex<fpSingle>(filterR[i], filterI[i]);
-					inputR[i] = result.real();
-					inputI[i] = result.imag();
-				}
-			}
 
 		public:
 			FreqDomainFilter() : m_src(nullptr), m_fftBuffer(1024) {}
 
-			FreqDomainFilter(const Sampler& src, const Sampler& filter) : m_src(&src), m_filterR(), m_filterI(), m_bufferR(), m_bufferI(), m_fftBuffer(aku::nearestPowerOfTwo(filter.sampleCount())) {
-				m_bufferR.resize(akm::calcFFTOutputSize(m_fftBuffer.bufSize()), 0);
-				m_bufferI.resize(akm::calcFFTOutputSize(m_fftBuffer.bufSize()), 0);
+			FreqDomainFilter(const Sampler& src, const Sampler& filter) : m_src(&src), m_filterR(), m_filterI(), m_lastStart(-1), m_outputBuffer(), m_isOutputReady(false), m_fftBuffer(aku::nearestPowerOfTwo(filter.sampleCount())) {
+				std::vector<fpSingle> signalBuffer(m_fftBuffer.signalSize(), 0);
+				filter.sample(signalBuffer.data(), 0, m_fftBuffer.signalSize());
 
-				std::vector<fpSingle> signalBuffer;
-				signalBuffer.resize(m_fftBuffer.bufSize(), 0);
-				filter.sample(signalBuffer.data(), 0, m_fftBuffer.bufSize());
+				m_filterR.resize(m_fftBuffer.filterSize(), 0);
+				m_filterI.resize(m_fftBuffer.filterSize(), 0);
+				akm::fft(signalBuffer.data(), m_filterR.data(), m_filterI.data(), m_fftBuffer.signalSize(), m_fftBuffer);
 
-				m_filterR.resize(akm::calcFFTOutputSize(m_fftBuffer.bufSize()), 0);
-				m_filterI.resize(akm::calcFFTOutputSize(m_fftBuffer.bufSize()), 0);
-				akm::fft(signalBuffer.data(), m_filterR.data(), m_filterI.data(), m_fftBuffer.bufSize(), m_fftBuffer);
-			}
-
-			FreqDomainFilter(const Sampler& src, const std::vector<fpSingle>& filterR, const std::vector<fpSingle>& filterI) : m_src(&src), m_filterR(filterR), m_filterI(filterI), m_bufferR(), m_bufferI(), m_fftBuffer(filterR.size()) {
-				m_bufferR.resize(akm::calcFFTOutputSize(m_fftBuffer.bufSize()), 0);
-				m_bufferI.resize(akm::calcFFTOutputSize(m_fftBuffer.bufSize()), 0);
-				if (filterR.size() != filterI.size()) throw std::logic_error("Filter size mismatch.");
+				m_bufferR.resize(m_fftBuffer.filterSize(), 0);
+				m_bufferI.resize(m_fftBuffer.filterSize(), 0);
+				m_outputBuffer.resize(m_fftBuffer.signalSize(), 0);
 			}
 
 			FreqDomainFilter(const FreqDomainFilter&) = default;
@@ -76,33 +67,30 @@ namespace aks {
 			akSize sample(fpSingle* out, akSSize start, akSize count) const override {
 				if (!m_src) return 0;
 
+				start -= (m_fftBuffer.signalSize() - 1)/2;
 				akSize writtenSamples = 0;
 				while(writtenSamples < count) {
+					if (m_src->sample(m_outputBuffer.data(), start + writtenSamples, m_fftBuffer.signalSize()) == 0) return writtenSamples;
 
-					std::vector<fpSingle> signalBuffer;
-					signalBuffer.resize(m_fftBuffer.bufSize(), 0);
-					if (m_src->sample(signalBuffer.data(), start + writtenSamples, m_fftBuffer.bufSize()) == 0) return writtenSamples;
+					akm::fft(m_outputBuffer.data(), m_bufferR.data(), m_bufferI.data(), m_fftBuffer.signalSize(), m_fftBuffer);
 
-					fpSingle maxMag = 0.f;
-					for(akSize i = 0; i < m_fftBuffer.bufSize(); i++) maxMag = akm::max(maxMag, akm::abs(signalBuffer[i]));
+					for(akSize i = 0; i < m_fftBuffer.filterSize(); i++) {
+						auto result = std::complex<fpSingle>(m_bufferR[i], m_bufferI[i]) * std::complex<fpSingle>(m_filterR[i], m_filterI[i]);
+						m_bufferR[i] = result.real(); m_bufferI[i] = result.imag();
+					}
 
-					akm::fft(signalBuffer.data(), m_bufferR.data(), m_bufferI.data(), m_fftBuffer.bufSize(), m_fftBuffer);
-					freqDomainInplace(m_bufferR.data(), m_bufferI.data(), m_filterR.data(), m_filterI.data(), m_bufferR.size());
-					akm::ifft(signalBuffer.data(), m_bufferR.data(), m_bufferI.data(), m_fftBuffer.bufSize(), m_fftBuffer);
+					akm::ifft(m_outputBuffer.data(), m_bufferR.data(), m_bufferI.data(), m_fftBuffer.signalSize(), m_fftBuffer);
 
-					fpSingle maxMagNew = 0.f;
-					for(akSize i = 0; i < m_fftBuffer.bufSize(); i++) maxMagNew = akm::max(maxMagNew, akm::abs(signalBuffer[i]));
-
-					fpSingle scaleFactor = maxMag/maxMagNew;
-					for(akSize i = 0; i < m_fftBuffer.bufSize(); i++) signalBuffer[i] *= scaleFactor;
-
-					writtenSamples += aku::memcpy(out + writtenSamples, signalBuffer.data(), std::min<akSize>(count, signalBuffer.size()));
+					m_lastStart = start + writtenSamples;
+					writtenSamples += aku::memcpy(out + writtenSamples, m_outputBuffer.data(), std::min<akSize>(count - writtenSamples, m_outputBuffer.size()));
 				}
+
 				return writtenSamples;
 			}
 
 			void setSrc(const aks::Sampler& src) {
 				m_src = &src;
+				m_lastStart = -1;
 			}
 
 			akSize sampleCount() const override {
@@ -111,6 +99,10 @@ namespace aks {
 
 			bool loops() const override {
 				return m_src->loops();
+			}
+
+			akSize signalSize() const {
+				return m_fftBuffer.signalSize();
 			}
 	};
 }
