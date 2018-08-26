@@ -44,9 +44,10 @@ namespace akas {
 	AK_SMART_TENUM_CLASS_KV(AssetSourceType, uint64,
 		GLTF,          100,
 
-		ShaderProgram,   3,
-		ShaderStage,     2,
+		ShaderProgram,   4,
+		ShaderStage,     3,
 
+		Sound,           2,
 		Texture,         1,
 		Image,           0
 	)
@@ -69,6 +70,7 @@ namespace akas {
 			akc::SlotMap<std::pair<ConversionInfo, akas::Texture>> m_textures;
 			akc::SlotMap<std::pair<ConversionInfo, akfs::Path>> m_shaderStages;
 			akc::SlotMap<std::pair<ConversionInfo, akas::ShaderProgram>> m_shaderPrograms;
+			akc::SlotMap<std::pair<ConversionInfo, akfs::Path>> m_sounds;
 
 			std::map<akfs::Path, std::pair<akas::AssetType, akc::SlotID>> m_assetsBySource;
 			std::map<akfs::Path, std::pair<akas::AssetType, akc::SlotID>> m_assetsByDestination;
@@ -172,6 +174,15 @@ namespace akas {
 				}
 			}
 
+			void registerSound(ConversionInfo info, const akfs::Path& sound, const std::optional<akfs::Path>& source) {
+				auto id = m_sounds.insert({info, sound}).first;
+				if (!m_assetsByDestination.emplace(info.destination, std::make_pair(AssetType::Sound, id)).second)  throw std::logic_error("Path conflict for: "       + info.destination.str());
+				if (!m_assetsByIdentifier.emplace( info.identifier,  std::make_pair(AssetType::Sound, id)).second)  throw std::logic_error("Identifier conflict for: " + info.destination.str());
+				if (source) {
+					akl::Logger("ConvertionHelper").test_warn(m_assetsBySource.emplace(*source,  std::make_pair(AssetType::Sound, id)).second, "Source conflict for: " + info.destination.str());
+				}
+			}
+
 			void rescan() { m_assetRegistry.rescan(); }
 
 			std::optional<ConversionInfo> tryFindAssetInfoByID(const akd::SUID& identifier) const {
@@ -210,7 +221,7 @@ namespace akas {
 					case AssetType::Scene:     [[fallthrough]];
 					case AssetType::ShaderStage: return m_shaderStages[lookupIter->second.second].first;
 					case AssetType::ShaderProgram: return m_shaderPrograms[lookupIter->second.second].first;
-					case AssetType::Sound:     [[fallthrough]];
+					case AssetType::Sound:     return m_sounds[lookupIter->second.second].first;
 					case AssetType::Texture:   return m_textures[lookupIter->second.second].first;
 					default: return {};
 				}
@@ -231,7 +242,7 @@ namespace akas {
 					case AssetType::Scene:       [[fallthrough]];
 					case AssetType::ShaderStage: return m_shaderStages[lookupIter->second.second].first;
 					case AssetType::ShaderProgram: return m_shaderPrograms[lookupIter->second.second].first;
-					case AssetType::Sound:       [[fallthrough]];
+					case AssetType::Sound:       return m_sounds[lookupIter->second.second].first;
 					case AssetType::Texture:     return m_textures[lookupIter->second.second].first;
 					default: return {};
 				}
@@ -244,6 +255,7 @@ namespace akas {
 			const akc::SlotMap<std::pair<ConversionInfo, akas::Material>>& materials() const { return m_materials; }
 			const akc::SlotMap<std::pair<ConversionInfo, akas::Animation>>& animations() const { return m_animations; }
 			const akc::SlotMap<std::pair<ConversionInfo, akas::Texture>>& textures() const { return m_textures; }
+			const akc::SlotMap<std::pair<ConversionInfo, akfs::Path>>& sounds() const { return m_sounds; }
 
 			auto& getImages(akSize i) { return m_images[i].second; }
 			const auto& getImages(akSize i) const { return m_images[i].second; }
@@ -272,6 +284,10 @@ namespace akas {
 			auto& getTexture(akSize i) { return m_textures[i].second; }
 			const auto& getTexture(akSize i) const { return m_textures[i].second; }
 			akSize textureCount() const { return m_textures.size(); }
+
+			auto& getSound(akSize i) { return m_sounds[i].second; }
+			const auto& getSound(akSize i) const { return m_sounds[i].second; }
+			akSize soundCount() const { return m_sounds.size(); }
 	};
 
 	void convertDirectory(const akfs::Path& dir);

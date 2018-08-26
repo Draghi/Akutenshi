@@ -49,6 +49,7 @@ static void writeShaderStages(ConversionHelper& state);
 static void writeShaderPrograms(ConversionHelper& state);
 static void writeAnimations(ConversionHelper& state);
 static void writeTextures(ConversionHelper& state);
+static void writeSounds(ConversionHelper& state);
 
 template<auto func_f> static bool convertCopyOnly(const std::string& assetTypeName, ConversionHelper& state, const akfs::Path& cfgPath, akd::PValue& cfg);
 
@@ -56,6 +57,7 @@ static bool convertTexture(ConversionHelper& state, const akfs::Path& cfgPath, a
 static bool convertShaderProgram(ConversionHelper& conversionHelper, const akfs::Path& cfgPath, akd::PValue& cfg);
 static bool convertImage(ConversionHelper& state, const akfs::Path& cfgPath, akd::PValue& cfg) { return convertCopyOnly<&akas::ConversionHelper::registerImage>("image", state, cfgPath, cfg); }
 static bool convertShaderStage(ConversionHelper& state, const akfs::Path& cfgPath, akd::PValue& cfg) { return convertCopyOnly<&akas::ConversionHelper::registerShaderStage>("shader stage", state, cfgPath, cfg); }
+static bool convertSound(ConversionHelper& state, const akfs::Path& cfgPath, akd::PValue& cfg) { return convertCopyOnly<&akas::ConversionHelper::registerSound>("sound", state, cfgPath, cfg); }
 
 static auto writeAssetMetaFile = [](const akfs::Path& dst, const akd::SUID& suid, akas::AssetType assetType, const std::string& name, const akfs::Path& source){
 	akd::PValue dstData; akd::serialize(dstData, akas::AssetInfo{suid, assetType, name, source});
@@ -74,7 +76,8 @@ static const std::map<std::string, callback_t*> proccessFunctions{{
 	{"Texture", &convertTexture},
 	{"Image", &convertImage},
 	{"ShaderStage", &convertShaderStage},
-	{"ShaderProgram", &convertShaderProgram}
+	{"ShaderProgram", &convertShaderProgram},
+	{"Sound", &convertSound},
 }};
 
 void akas::convertDirectory(const akfs::Path& dir) {
@@ -103,6 +106,7 @@ void akas::convertDirectory(const akfs::Path& dir) {
 	akSize animationCount = 0;
 	akSize shaderStageCount = 0;
 	akSize shaderProgramCount = 0;
+	akSize soundCount = 0;
 
 	for(auto assetTypeIter = collectedAssets.begin(); assetTypeIter != collectedAssets.end(); assetTypeIter++) {
 		for(auto assetPathIter = assetTypeIter->second.begin(); assetPathIter != assetTypeIter->second.end(); assetPathIter++) {
@@ -127,6 +131,7 @@ void akas::convertDirectory(const akfs::Path& dir) {
 			writeShaderStages(convertHelper);
 			writeShaderPrograms(convertHelper);
 			writeTextures(convertHelper);
+			writeSounds(convertHelper);
 
 			meshCount     += convertHelper.meshCount();
 			materialCount += convertHelper.materialCount();
@@ -135,11 +140,12 @@ void akas::convertDirectory(const akfs::Path& dir) {
 			shaderStageCount   += convertHelper.shaderStageCount();
 			shaderProgramCount += convertHelper.shaderProgramCount();
 			textureCount  += convertHelper.textureCount();
+			soundCount  += convertHelper.soundCount();
 		}
 	}
 
 	akl::Logger("Convert").info("Converted ", proccessCount, " out of ", fileCount, " assets in ", convertTimer.markAndReset().msecs() , "ms.");
-	akl::Logger("Convert").info("Created ", meshCount, " meshes, ", materialCount, " materials, ", textureCount, " textures, ", animationCount, " animations, ", shaderStageCount, " shader stages, ", shaderProgramCount, " shader programs and ", imageCount, " images.");
+	akl::Logger("Convert").info("Created ", meshCount, " meshes, ", materialCount, " materials, ", textureCount, " textures, ", animationCount, " animations, ", shaderStageCount, " shader stages, ", shaderProgramCount, " shader programs, ", soundCount, " sounds and ", imageCount, " images.");
 	akl::Logger("Convert").info("Modified ", modifiedCount, " *.akconv files.");
 }
 
@@ -189,6 +195,13 @@ static void writeTextures(ConversionHelper& state) {
 	for(auto& texture : state.textures()) {
 		if (!writeAssetMetaFile(texture.first.destination, texture.first.identifier, akas::AssetType::Texture, texture.first.displayName, {})) continue;
 		if (!writeAssetFile(akfs::Path(texture.first.destination).clearExtension(), texture.second, true)) continue;
+	}
+}
+
+static void writeSounds(ConversionHelper& state) {
+	for(auto& copy : state.sounds()) {
+		if (!writeAssetMetaFile(copy.first.destination, copy.first.identifier, akas::AssetType::Sound, copy.first.displayName, copy.second)) continue;
+		if (!akfs::copy(copy.second, akfs::Path(copy.first.destination).clearExtension())) continue;
 	}
 }
 
@@ -313,7 +326,7 @@ template<auto func_f> static bool convertCopyOnly(const std::string& assetTypeNa
 	if (cfg.atOrDef("remapPaths").asOrDef<bool>(false)) cfg.atOrSet("destination").setStr(info.destination.str());
 
 	if (!akfs::exists(srcPath)) {
-		akl::Logger("Image").warn("Missing ", assetTypeName, " asset: ", srcPath.str());
+		akl::Logger("Conv").warn("Missing ", assetTypeName, " asset: ", srcPath.str());
 		return false;
 	}
 

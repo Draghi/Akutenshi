@@ -1,0 +1,7 @@
+{
+    "destination": "data/test.flac.akres",
+    "identifier": [12822174923487567375, 6949566362621486029],
+    "remapPaths": true,
+    "source": "test.flac",
+    "type": "Sound"
+}

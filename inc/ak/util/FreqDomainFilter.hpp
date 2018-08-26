@@ -38,17 +38,14 @@ namespace aks {
 			std::vector<fpSingle> m_filterR;
 			std::vector<fpSingle> m_filterI;
 
-			//akSize m_lastStart, m_lastCount;
-			mutable akSSize m_lastStart;
-			mutable std::vector<fpSingle> m_outputBuffer,  m_bufferR, m_bufferI;
-			mutable bool m_isOutputReady;
+			mutable std::vector<fpSingle> m_outputBuffer, m_bufferR, m_bufferI;
 
 			mutable akm::FTTBuffer m_fftBuffer;
 
 		public:
 			FreqDomainFilter() : m_src(nullptr), m_fftBuffer(1024) {}
 
-			FreqDomainFilter(const Sampler& src, const Sampler& filter) : m_src(&src), m_filterR(), m_filterI(), m_lastStart(-1), m_outputBuffer(), m_isOutputReady(false), m_fftBuffer(aku::nearestPowerOfTwo(filter.sampleCount())) {
+			FreqDomainFilter(const Sampler& src, const Sampler& filter) : m_src(&src), m_filterR(), m_filterI(), m_outputBuffer(), m_fftBuffer(aku::nearestPowerOfTwo(filter.sampleCount())) {
 				std::vector<fpSingle> signalBuffer(m_fftBuffer.signalSize(), 0);
 				filter.sample(signalBuffer.data(), 0, m_fftBuffer.signalSize());
 
@@ -81,7 +78,6 @@ namespace aks {
 
 					akm::ifft(m_outputBuffer.data(), m_bufferR.data(), m_bufferI.data(), m_fftBuffer.signalSize(), m_fftBuffer);
 
-					m_lastStart = start + writtenSamples;
 					writtenSamples += aku::memcpy(out + writtenSamples, m_outputBuffer.data(), std::min<akSize>(count - writtenSamples, m_outputBuffer.size()));
 				}
 
@@ -90,7 +86,6 @@ namespace aks {
 
 			void setSrc(const aks::Sampler& src) {
 				m_src = &src;
-				m_lastStart = -1;
 			}
 
 			akSize sampleCount() const override {

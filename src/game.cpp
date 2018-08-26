@@ -45,6 +45,7 @@
 #include <ak/sound/backend/Types.hpp>
 #include <ak/sound/Buffer.hpp>
 #include <ak/sound/Decode.hpp>
+#include <ak/sound/FIRFilter.hpp>
 #include <ak/sound/SemiFixedBlockSampler.hpp>
 #include <ak/sound/Types.hpp>
 #include <ak/sound/Util.hpp>
@@ -112,14 +113,14 @@ int akGameMain() {
 
 			std::array<std::vector<fpSingle>, 2> buffer{std::vector<fpSingle>(frameCount, 0.f), std::vector<fpSingle>(frameCount, 0.f)};
 
-			//writtenFrames = std::max(writtenFrames, aks::FIRFilter(trainSounds[aks::Channel::Left],  aks::generateLowPassFilterAvg(AUDIO_SAMPLE_RATE)).sample(buffer[0].data(), cFrame, frameCount));
-			//writtenFrames = std::max(writtenFrames, aks::FIRFilter(trainSounds[aks::Channel::Right], aks::generateLowPassFilterAvg(800)).sample(buffer[1].data(), cFrame, frameCount));
+			writtenFrames = std::max(writtenFrames, aks::FIRFilter(trainSounds[aks::Channel::Left],  aks::generateLowPassFilterAvg(AUDIO_SAMPLE_RATE)).sample(buffer[0].data(), cFrame, frameCount));
+			writtenFrames = std::max(writtenFrames, aks::FIRFilter(trainSounds[aks::Channel::Right], aks::generateLowPassFilterAvg(800)).sample(buffer[1].data(), cFrame, frameCount));
 
 			//writtenFrames = std::max(writtenFrames, aks::KernalFilter(sound,  aks::generateLowPassFilterAvg(WAVE_FREQUENCY*10)).sample(buffer[0].data(), cFrame, frameCount));
 			//writtenFrames = std::max(writtenFrames, aks::KernalFilter(sound2, aks::generateLowPassFilterAvg(WAVE_FREQUENCY*10)).sample(buffer[1].data(), cFrame, frameCount));
 
-			writtenFrames = std::max(writtenFrames,                fixedBlockSampler.sample(buffer[0].data(), cFrame, frameCount));
-			writtenFrames = std::max(writtenFrames, trainSounds[aks::Channel::Right].sample(buffer[1].data(), cFrame, frameCount));
+			//writtenFrames = std::max(writtenFrames,                fixedBlockSampler.sample(buffer[0].data(), cFrame, frameCount));
+			//writtenFrames = std::max(writtenFrames, trainSounds[aks::Channel::Right].sample(buffer[1].data(), cFrame, frameCount));
 
 			cFrame += writtenFrames;
 
