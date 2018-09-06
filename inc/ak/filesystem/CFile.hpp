@@ -154,6 +154,8 @@ namespace akfs {
 				return result;
 			}
 
+			std::vector<uint8> readAll() { std::vector<uint8> result; readAll(result); return result; }
+
 			/**
 			 * Attempts to write *count* entries in given src array as as type_t sized blocks of data
 			 * @param src The source array, must contain atleast count * sizeof(type_t) entries

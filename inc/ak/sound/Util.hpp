@@ -18,12 +18,12 @@
 #define AK_SOUND_UTIL_HPP_
 
 #include <ak/PrimitiveTypes.hpp>
-#include <ak/sound/Buffer.hpp>
+#include <ak/sound/SamplerBuffer.hpp>
 
 namespace aks {
-	aks::Buffer generateSineWave(fpSingle frequency, fpSingle ampitude);
+	aks::SamplerBuffer generateSineWave(fpSingle frequency, fpSingle ampitude);
 
-	inline aks::Buffer generateWindowedSinc(fpSingle frequency, akSize sampleRate) {
+	inline aks::SamplerBuffer generateWindowedSinc(fpSingle frequency, akSize sampleRate) {
 		const fpSingle freqStep = (2*akm::PI*frequency)/sampleRate;
 
 		akSize count = aku::nearestPowerOfTwo(static_cast<akSize>(akm::ceil(4/(frequency/sampleRate))*400));
@@ -44,7 +44,7 @@ namespace aks {
 
 		for(akSize i = 0; i < count; i++) result[i] /= sum;
 
-		return aks::Buffer(result.data(), result.size(), true);
+		return aks::SamplerBuffer(result.data(), result.size(), true);
 	}
 }
 

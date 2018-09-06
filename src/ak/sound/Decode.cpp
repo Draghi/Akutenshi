@@ -24,7 +24,7 @@
 
 using namespace aks;
 
-static std::unordered_map<Channel, aks::Buffer> decode(const std::vector<uint8>& data, mal_format format, akSize sampleRate, bool shouldLoop, mal_dither_mode ditherMode) {
+static std::unordered_map<Channel, aks::SamplerBuffer> decode(const std::vector<uint8>& data, mal_format format, akSize sampleRate, bool shouldLoop, mal_dither_mode ditherMode) {
 
 	// Configure
 	mal_decoder_config cfg = {
@@ -43,7 +43,7 @@ static std::unordered_map<Channel, aks::Buffer> decode(const std::vector<uint8>&
 	void* bufferData = nullptr;
 	auto bufferDataGuard = ak::ScopeGuard([&]{if (bufferData != nullptr) mal_free(bufferData); });
 	if (mal_decode_memory(data.data(), data.size(), &cfg, &frameCount, &bufferData) != MAL_SUCCESS) {
-		return std::unordered_map<Channel, aks::Buffer>();
+		return std::unordered_map<Channel, aks::SamplerBuffer>();
 	}
 
 	// Deinterleave
@@ -56,12 +56,12 @@ static std::unordered_map<Channel, aks::Buffer> decode(const std::vector<uint8>&
 	}
 
 	// Convert
-	std::unordered_map<Channel, aks::Buffer> result;
-	for(auto channel : samples) result[static_cast<Channel>(channel.first)] = aks::Buffer(channel.second.data(), channel.second.size(), shouldLoop);
+	std::unordered_map<Channel, aks::SamplerBuffer> result;
+	for(auto channel : samples) result[static_cast<Channel>(channel.first)] = aks::SamplerBuffer(channel.second.data(), channel.second.size(), shouldLoop);
 	return result;
 }
 
-std::unordered_map<Channel, aks::Buffer> aks::decode(const std::vector<uint8>& data, bool shouldLoop, backend::DitherMode ditherMode) {
+std::unordered_map<Channel, aks::SamplerBuffer> aks::decode(const std::vector<uint8>& data, bool shouldLoop, backend::DitherMode ditherMode) {
 	return decode(data, mal_format_f32, backend::getDeviceInfo()->streamFormat.sampleRate, shouldLoop, aks::backend::internal::toMalDitherMode(ditherMode));
 }
 

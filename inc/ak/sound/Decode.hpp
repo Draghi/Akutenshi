@@ -19,7 +19,7 @@
 
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/sound/backend/Types.hpp>
-#include <ak/sound/Buffer.hpp>
+#include <ak/sound/SamplerBuffer.hpp>
 #include <ak/sound/Types.hpp>
 #include <unordered_map>
 #include <vector>
@@ -27,7 +27,7 @@
 namespace aks {
 	class Sound;
 
-	std::unordered_map<Channel, aks::Buffer> decode(const std::vector<uint8>& data, bool shouldLoop = false, aks::backend::DitherMode ditherMode = aks::backend::DitherMode::Trianglar);
+	std::unordered_map<Channel, aks::SamplerBuffer> decode(const std::vector<uint8>& data, bool shouldLoop = false, aks::backend::DitherMode ditherMode = aks::backend::DitherMode::Trianglar);
 }
 
 #endif /* AK_SOUND_DECODE_HPP_ */

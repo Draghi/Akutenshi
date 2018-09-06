@@ -17,6 +17,7 @@
 #include <ak/assets/AssetRegistry.hpp>
 #include <ak/assets/Convert.hpp>
 #include <ak/assets/Image.hpp>
+#include <ak/container/RingBuffer.hpp>
 #include <ak/data/PValue.hpp>
 #include <ak/data/Serialize.hpp>
 #include <ak/engine/components/Behaviours.hpp>
@@ -29,6 +30,7 @@
 #include <ak/event/Dispatcher.hpp>
 #include <ak/event/Event.hpp>
 #include <ak/filesystem/CFile.hpp>
+#include <ak/filesystem/Filesystem.hpp>
 #include <ak/filesystem/Path.hpp>
 #include <ak/input/Keyboard.hpp>
 #include <ak/input/Mouse.hpp>
@@ -43,16 +45,18 @@
 #include <ak/render/SceneRendererDefault.hpp>
 #include <ak/sound/backend/Backend.hpp>
 #include <ak/sound/backend/Types.hpp>
-#include <ak/sound/Buffer.hpp>
 #include <ak/sound/Decode.hpp>
-#include <ak/sound/FIRFilter.hpp>
-#include <ak/sound/SemiFixedBlockSampler.hpp>
+#include <ak/sound/FilterFIRFreq.hpp>
+#include <ak/sound/FilterVolume.hpp>
+#include <ak/sound/hrtf/HRTFFilterLookup.hpp>
+#include <ak/sound/MixerBasic.hpp>
+#include <ak/sound/SamplerBuffer.hpp>
 #include <ak/sound/Types.hpp>
 #include <ak/sound/Util.hpp>
 #include <ak/ScopeGuard.hpp>
 #include <ak/thread/CurrentThread.hpp>
 #include <ak/util/FPSCounter.hpp>
-#include <ak/util/FreqDomainFilter.hpp>
+#include <ak/util/Memory.hpp>
 #include <ak/util/String.hpp>
 #include <ak/util/Time.hpp>
 #include <ak/util/Timer.hpp>
@@ -62,12 +66,15 @@
 #include <akgame/CameraControllerBehaviour.hpp>
 #include <algorithm>
 #include <array>
+#include <cstdlib>
 #include <functional>
 #include <iomanip>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -78,6 +85,8 @@ static void printLogHeader(const akl::Logger& logger);
 static ak::ScopeGuard startup();
 
 static void startGame();
+
+static akc::RingBuffer<fpSingle> audioChannelLeft(1), audioChannelRight(1);
 
 int akGameMain() {
 	constexpr akl::Logger log(AK_STRING_VIEW("Main"));
@@ -96,49 +105,67 @@ int akGameMain() {
 	akw::setCursorMode(akw::CursorMode::Captured);
 	akr::gl::init();
 
-	constexpr akSize AUDIO_SAMPLE_RATE = 48000; // The sample rate for audio playback
-	constexpr float WAVE_FREQUENCY = 100.f;    // The frequency of the wave to produce
-	aks::Buffer sound, sound2;
-	std::unordered_map<aks::Channel, aks::Buffer> trainSounds;
-
-	aks::FreqDomainFilter domainFilter;
-	aks::SemiFixedBlockSampler fixedBlockSampler(domainFilter, domainFilter.signalSize());
-
-	aks::backend::init(nullptr, {aks::backend::Format::FPSingle, aks::backend::ChannelMap::Stereo, AUDIO_SAMPLE_RATE},
+	aks::backend::init(nullptr, {aks::backend::Format::FPSingle, aks::backend::ChannelMap::Stereo, 48000},
 		[&](void* audioFrames, akSize frameCount, aks::backend::StreamFormat /*streamFormat*/){
-			if (trainSounds.empty()) return 0u;
+			//static akSize cFrame = 0;
+			//akSize writtenFrames = 0;
 
-			static akSize cFrame = 0;
+			//std::array<std::vector<fpSingle>, 2> buffer{std::vector<fpSingle>(frameCount, 0.f), std::vector<fpSingle>(frameCount, 0.f)};
+			//writtenFrames = std::max(writtenFrames, leftMixer.sample(buffer[0].data(), cFrame, frameCount));
+			//writtenFrames = std::max(writtenFrames, rightMixer.sample(buffer[1].data(), cFrame, frameCount));
+			//cFrame += writtenFrames;
+
+			//for(akSize i = 0; i < writtenFrames; i++) {
+				//static_cast<fpSingle*>(audioFrames)[i*2 + 0] = akm::clamp(buffer[0][i], -1, 1);
+				//static_cast<fpSingle*>(audioFrames)[i*2 + 1] = akm::clamp(buffer[1][i], -1, 1);
+			//}
+
+			/*static akSize frameReadOffset = 0;
 			akSize writtenFrames = 0;
+			auto lock = audioQueueLock.lock();
+			while((!audioQueue.empty()) && (writtenFrames < frameCount)) {
+				auto& audioFrame = audioQueue.front();
+				auto& leftBuffer = audioFrame.at(aks::Channel::Left);
+				auto& rightBuffer = audioFrame.at(aks::Channel::Right);
+
+				if (leftBuffer.size() != rightBuffer.size()) throw std::logic_error("Submitted audio frames must be the same size.");
+
+				static_cast<fpSingle*>(audioFrames)[writtenFrames*2 + 0] = -0.1f;
+				static_cast<fpSingle*>(audioFrames)[writtenFrames*2 + 1] = -0.1f;
+
+				for(akSize oIndex = writtenFrames + 1; (frameReadOffset < rightBuffer.size()) && (writtenFrames < frameCount); oIndex++, frameReadOffset++, writtenFrames++) {
+					static_cast<fpSingle*>(audioFrames)[oIndex*2 + 0] = akm::clamp( leftBuffer[frameReadOffset], -1, 1);
+					static_cast<fpSingle*>(audioFrames)[oIndex*2 + 1] = akm::clamp(rightBuffer[frameReadOffset], -1, 1);
+				}
+
+				if ((frameReadOffset < rightBuffer.size()) && (writtenFrames >= frameCount)) break;
+				frameReadOffset = 0;
+				audioQueue.pop_front();
+			}*/
 
 			std::array<std::vector<fpSingle>, 2> buffer{std::vector<fpSingle>(frameCount, 0.f), std::vector<fpSingle>(frameCount, 0.f)};
+			akSize leftRead  =  audioChannelLeft.read(buffer[0].data(), frameCount);
+			akSize rightRead = audioChannelRight.read(buffer[1].data(), frameCount);
+			if (leftRead != rightRead) throw std::logic_error("Inconsistent audio channel read.");
 
-			writtenFrames = std::max(writtenFrames, aks::FIRFilter(trainSounds[aks::Channel::Left],  aks::generateLowPassFilterAvg(AUDIO_SAMPLE_RATE)).sample(buffer[0].data(), cFrame, frameCount));
-			writtenFrames = std::max(writtenFrames, aks::FIRFilter(trainSounds[aks::Channel::Right], aks::generateLowPassFilterAvg(800)).sample(buffer[1].data(), cFrame, frameCount));
+			akl::Logger("").info("Req: ", frameCount, " Recv: ", leftRead);
 
-			//writtenFrames = std::max(writtenFrames, aks::KernalFilter(sound,  aks::generateLowPassFilterAvg(WAVE_FREQUENCY*10)).sample(buffer[0].data(), cFrame, frameCount));
-			//writtenFrames = std::max(writtenFrames, aks::KernalFilter(sound2, aks::generateLowPassFilterAvg(WAVE_FREQUENCY*10)).sample(buffer[1].data(), cFrame, frameCount));
-
-			//writtenFrames = std::max(writtenFrames,                fixedBlockSampler.sample(buffer[0].data(), cFrame, frameCount));
-			//writtenFrames = std::max(writtenFrames, trainSounds[aks::Channel::Right].sample(buffer[1].data(), cFrame, frameCount));
-
-			cFrame += writtenFrames;
-
-			for(akSize i = 0; i < writtenFrames; i++) {
-				static_cast<fpSingle*>(audioFrames)[i*2 + 0] = akm::clamp(buffer[0][i], -1, 1);
-				static_cast<fpSingle*>(audioFrames)[i*2 + 1] = akm::clamp(buffer[1][i], -1, 1);
+			for(akSize i = 0; i < leftRead; i++) {
+				if (i == 0) {
+					static_cast<fpSingle*>(audioFrames)[i*2 + 0] = -0.1;
+					static_cast<fpSingle*>(audioFrames)[i*2 + 1] = -0.1;
+				} else {
+					static_cast<fpSingle*>(audioFrames)[i*2 + 0] = akm::clamp(buffer[0][i], -1, 1);
+					static_cast<fpSingle*>(audioFrames)[i*2 + 1] = akm::clamp(buffer[1][i], -1, 1);
+				}
 			}
 
-			return writtenFrames;
+			return leftRead;
 		}
 	);
 
-	sound  = aks::generateSineWave(WAVE_FREQUENCY,    1.0f);
-	sound2 = aks::generateWindowedSinc(800, aks::backend::getDeviceInfo()->streamFormat.sampleRate); // aks::generateSineWave(WAVE_FREQUENCY*10, 1.0f);
-	std::vector<uint8> fileData; akfs::CFile("srcdata/test.flac").readAll(fileData);
-	trainSounds = aks::decode(fileData);
-
-	domainFilter = aks::FreqDomainFilter(trainSounds[aks::Channel::Right], aks::generateWindowedSinc(800, aks::backend::getDeviceInfo()->streamFormat.sampleRate));
+	audioChannelLeft  = akc::RingBuffer<fpSingle>(aks::backend::getDeviceInfo()->streamFormat.sampleRate * 4);
+	audioChannelRight = akc::RingBuffer<fpSingle>(aks::backend::getDeviceInfo()->streamFormat.sampleRate * 4);
 
 	aks::backend::startDevice();
 
@@ -151,17 +178,71 @@ int akGameMain() {
 	return 0;
 }
 
+static aks::MixerBasic leftMixer, rightMixer;
+
+static aks::hrtf::HRTFFilterLookup leftHRTFLookup;
+static aks::hrtf::HRTFFilterLookup rightHRTFLookup;
+
+static aks::SamplerBuffer sineWave;
+static aks::FilterFIRFreq leftHRTF, rightHRTF;
+static aks::FilterVolume leftVolume, rightVolume;
+
 static void startGame() {
 	// constexpr ak::log::Logger log(AK_STRING_VIEW("Main"));
+
+/*	static auto trainSound = aks::decode(akfs::CFile("data/test.flac").readAll(), true);
+	static auto volTrainSoundLeft = aks::FilterVolume(trainSound.at(aks::Channel::Left), 0.25f);
+	static auto volTrainSoundRight = aks::FilterVolume(trainSound.at(aks::Channel::Right), 1.f);
+	leftMixer.addSource(volTrainSoundLeft);
+	rightMixer.addSource(volTrainSoundRight);*/
+
+	sineWave = aks::generateSineWave(100, 1.f);
+	leftVolume  = aks::FilterVolume(leftHRTF, 0.125f/8.f);
+	rightVolume = aks::FilterVolume(rightHRTF, 0.125f/8.f);
+
+	static const std::string hrtfDir = "IRC_1002_C";
+	akfs::iterateDirectory(akfs::Path("data/")/hrtfDir, [&](const akfs::Path& path, bool isDir) {
+		if (isDir) return true;
+
+		std::string filename = akfs::Path(path).clearExtension().filename();
+		if (filename.find(hrtfDir) != 0) {
+			akl::Logger("").info("Skipping: ", path.filename());
+			return true;
+		}
+
+		std::string nameData = filename.substr(hrtfDir.size() + 1) + '_';
+
+		auto radius    = std::strtol(nameData.data() + nameData.find_first_of('R') + 1, nullptr, 10);
+		auto azimuth   = std::strtol(nameData.data() + nameData.find_first_of('T') + 1, nullptr, 10);
+		auto elevation = std::strtol(nameData.data() + nameData.find_first_of('P') + 1, nullptr, 10);
+
+		auto data = aks::decode(akfs::CFile(path).readAll(), true);
+		leftHRTFLookup.addEntryByAngle(
+			aku::make_unique<aks::Sampler, aks::SamplerBuffer>(data.at(aks::Channel::Left)),
+			azimuth,
+			elevation
+		);
+
+		rightHRTFLookup.addEntryByAngle(
+			aku::make_unique<aks::Sampler, aks::SamplerBuffer>(data.at(aks::Channel::Right)),
+			azimuth,
+			elevation
+		);
+
+		return true;
+	}, false);
+
+	leftMixer.addSource(leftVolume);
+	rightMixer.addSource(rightVolume);
+
 
 	akas::AssetRegistry assetRegistry(akfs::Path("data/"));
 	ake::SceneManager sceneManager;
 	auto& scene = sceneManager.getScene(sceneManager.newScene("World"));
 	auto& ecs = scene.entities();
 
-	//if (!ecs.registerComponentManager(std::make_unique<ake::SceneGraphManager>())) throw std::runtime_error("Failed to register SceneGraphComponent.");
-	if (!ecs.registerComponentManager(std::make_unique<ake::TransformManager>())) throw std::runtime_error("Failed to register TransformComponent.");
-	if (!ecs.registerComponentManager(std::make_unique<ake::CameraManager>())) throw std::runtime_error("Failed to register CameraManager.");
+	if (!ecs.registerComponentManager(std::make_unique<ake::TransformManager>()))  throw std::runtime_error("Failed to register TransformComponent.");
+	if (!ecs.registerComponentManager(std::make_unique<ake::CameraManager>()))     throw std::runtime_error("Failed to register CameraManager.");
 	if (!ecs.registerComponentManager(std::make_unique<ake::BehavioursManager>())) throw std::runtime_error("Failed to register BehavioursManager.");
 
 	auto cameraEID = ecs.newEntity("Camera");
@@ -170,8 +251,6 @@ static void startGame() {
 	cameraEID.createComponent<ake::Behaviours>();
 	cameraEID.component<ake::Camera>().setPerspectiveH(akm::degToRad(90), akw::size(), {0.1f, 65525.0f});
 	cameraEID.component<ake::Behaviours>().addBehaviour(std::make_unique<akgame::CameraControllerBehaviour>());
-
-	//auto skyboxTexture = resourceManager.loadUniqueTexture("data/textures/cubemap_snowy_street.aktex");
 
 	auto skyboxTexture = std::make_shared<akr::gl::Texture>(akr::gl::TexTarget::TexCubemap);
 	akr::gl::setActiveTexUnit(0);
@@ -225,6 +304,40 @@ static void startGame() {
 		fpDouble delta = updateEventData.data();
 		static fpSingle time = 0;
 		time += delta;
+
+		akm::Vec3 pos = {akm::sin(time/5.f), 0, akm::cos(time/5.f)};
+
+		auto leftFilter = leftHRTFLookup.findClosestFiltersByPos(pos, 1).front();
+		auto rightFilter = rightHRTFLookup.findClosestFiltersByPos(pos, 1).front();
+		 leftHRTF = aks::FilterFIRFreq(sineWave, *(leftFilter.second));
+		rightHRTF = aks::FilterFIRFreq(sineWave, *(rightFilter.second));
+
+
+		static akSize cFrame = 0;
+		akSize expectedFrames = time * aks::backend::getDeviceInfo()->streamFormat.sampleRate;
+		if (cFrame < expectedFrames) {
+			akSize framesToBuffer = (expectedFrames - cFrame);
+			akSize writtenFrames = std::numeric_limits<akSize>::max();
+
+			std::array<std::vector<fpSingle>, 2> buffer{std::vector<fpSingle>(framesToBuffer, 0.f), std::vector<fpSingle>(framesToBuffer, 0.f)};
+			writtenFrames = std::min(writtenFrames,  leftMixer.sample(buffer[0].data(), cFrame, buffer[0].size()));
+			writtenFrames = std::min(writtenFrames, rightMixer.sample(buffer[1].data(), cFrame, buffer[1].size()));
+
+			 audioChannelLeft.write(buffer[0].data(), writtenFrames);
+			audioChannelRight.write(buffer[1].data(), writtenFrames);
+
+			cFrame += writtenFrames;
+		} else akl::Logger("Up to date").info("");
+
+
+		/*{
+			auto lock = audioQueueLock.lock();
+			audioQueue.push_back(std::unordered_map<aks::Channel, std::vector<fpSingle>>{
+				{aks::Channel::Left,  std::move(buffer[0])},
+				{aks::Channel::Right, std::move(buffer[1])},
+			});
+		}*/
+
 	});
 
 	fpSingle updateAccum = 0.f;
@@ -261,13 +374,8 @@ static void startGame() {
 
 static void printLogHeader(const akl::Logger& logger) {
 	auto utc = aku::utcTimestamp();
-
-	std::stringstream dateStream;
-	dateStream << std::put_time(&utc.ctime, "%Y-%m-%d");
-
-	std::stringstream timeStream;
-	timeStream << std::put_time(&utc.ctime, "%H:%M:%S") << "." << std::setw(3) << std::setfill('0') << utc.milliseconds;
-
+	std::stringstream dateStream; dateStream << std::put_time(&utc.ctime, "%Y-%m-%d");
+	std::stringstream timeStream; timeStream << std::put_time(&utc.ctime, "%H:%M:%S") << "." << std::setw(3) << std::setfill('0') << utc.milliseconds;
 	logger.raw(R"(+-----------------------------------------------------------------------------+)", '\n',
 		       R"(|     _____    __               __                            __       __     |)", '\n',
 		       R"(|    // __ \  || |             || |                          || |     ((_)    |)", '\n',

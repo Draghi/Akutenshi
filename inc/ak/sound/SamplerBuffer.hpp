@@ -14,8 +14,8 @@
  * limitations under the License.
  **/
 
-#ifndef AK_SOUND_BUFFER_HPP_
-#define AK_SOUND_BUFFER_HPP_
+#ifndef AK_SOUND_SAMPLERBUFFER_HPP_
+#define AK_SOUND_SAMPLERBUFFER_HPP_
 
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/sound/Sampler.hpp>
@@ -24,21 +24,21 @@
 #include <vector>
 
 namespace aks {
-	class Buffer final : public Sampler {
+	class SamplerBuffer final : public Sampler {
 		private:
 			std::vector<fpSingle> m_buffer;
 			akSize m_sampleCount;
 			bool m_loops;
 
 		public:
-			Buffer() : m_buffer(), m_sampleCount(0), m_loops(false) {}
-			Buffer(fpSingle* src, akSize sampleCount, bool loops) : m_buffer(), m_sampleCount(sampleCount), m_loops(loops) {
+			SamplerBuffer() : m_buffer(), m_sampleCount(0), m_loops(false) {}
+			SamplerBuffer(fpSingle* src, akSize sampleCount, bool loops) : m_buffer(), m_sampleCount(sampleCount), m_loops(loops) {
 				m_buffer.resize(sampleCount);
 				aku::memcpy(m_buffer.data(), src, sampleCount);
 			}
 
-			Buffer(const Buffer&) = default;
-			Buffer& operator=(const Buffer&) = default;
+			SamplerBuffer(const SamplerBuffer&) = default;
+			SamplerBuffer& operator=(const SamplerBuffer&) = default;
 
 			akSize sample(fpSingle* out, akSSize start, akSize count) const override {
 				if (count == 0) return 0;
@@ -66,4 +66,4 @@ namespace aks {
 	};
 }
 
-#endif /* AK_SOUND_BUFFER_HPP_ */
+#endif /* AK_SOUND_SAMPLERBUFFER_HPP_ */

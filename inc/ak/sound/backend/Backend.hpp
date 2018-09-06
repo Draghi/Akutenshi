@@ -36,6 +36,8 @@ namespace aks {
 
 		std::vector<DeviceCapabilities> getAvailableDevices();
 		std::vector<DeviceCapabilities> getAvailableDevices(Backend backends);
+
+		akSize audioBufferSize();
 	}
 }
 

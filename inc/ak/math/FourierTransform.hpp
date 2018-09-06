@@ -67,7 +67,7 @@ namespace akm {
 			FTTBuffer(akSize inSize) : size(inSize) {
 				if (!aku::isPowerOfTwo(size)) throw std::logic_error("FFT only works on POT buffer sizes.");
 				ip.resize(2 + static_cast<int32>(std::sqrt(static_cast<fpDouble>(size))));
-				w.resize(size / 2);
+				w.resize(size / 2 + 1);
 				buffer.resize(size);
 
 				const int32 size4 = static_cast<int32>(buffer.size()) / 4;
@@ -76,7 +76,7 @@ namespace akm {
 			}
 
 			akSize signalSize() const { return size; }
-			akSize filterSize() const { return size/2; }
+			akSize filterSize() const { return size/2 + 1; }
 	};
 
 	inline bool fft(const scalar_t* signal, scalar_t* rPart, scalar_t* iPart, akSize count, FTTBuffer& buffer) {

@@ -14,18 +14,19 @@
  * limitations under the License.
  **/
 
-#ifndef AK_SOUND_SEMIFIXEDBLOCKSAMPLER_HPP_
-#define AK_SOUND_SEMIFIXEDBLOCKSAMPLER_HPP_
+#ifndef AK_SOUND_SAMPLERFIXEDBLOCK_HPP_
+#define AK_SOUND_SAMPLERFIXEDBLOCK_HPP_
 
-#include <ak/math/Scalar.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/sound/Sampler.hpp>
 #include <ak/util/Memory.hpp>
+#include <algorithm>
+#include <cmath>
 #include <vector>
 
 namespace aks {
 
-	class SemiFixedBlockSampler final : public aks::Sampler {
+	class SamplerFixedBlock final : public aks::Sampler {
 		private:
 			const Sampler* m_src;
 
@@ -39,10 +40,10 @@ namespace aks {
 			}
 
 		public:
-			SemiFixedBlockSampler(const Sampler& src, akSize size) : m_src(&src), m_lastStart(0), m_bufferSize(0), m_buffer(size, 0) {}
+			SamplerFixedBlock(const Sampler& src, akSize size) : m_src(&src), m_lastStart(0), m_bufferSize(0), m_buffer(size, 0) {}
 
-			SemiFixedBlockSampler(const SemiFixedBlockSampler&) = default;
-			SemiFixedBlockSampler& operator=(const SemiFixedBlockSampler&) = default;
+			SamplerFixedBlock(const SamplerFixedBlock&) = default;
+			SamplerFixedBlock& operator=(const SamplerFixedBlock&) = default;
 
 			akSize sample(fpSingle* out, akSSize start, akSize count) const override {
 				if (!m_src) return 0;
@@ -52,13 +53,13 @@ namespace aks {
 				/* Sample from internal buffer */ {
 					akSSize offset = (start + writtenSamples) - m_lastStart;
 					if ((offset >= 0) && (offset < m_bufferSize)) {
-						writtenSamples += aku::memcpy(out + writtenSamples, m_buffer.data() + offset, akm::min(count - writtenSamples, m_bufferSize - offset));
+						writtenSamples += aku::memcpy(out + writtenSamples, m_buffer.data() + offset, std::min<akSize>(count - writtenSamples, m_bufferSize - offset));
 						if (writtenSamples >= count) return writtenSamples;
 					}
 				}
 
 				/* Sample in multiples of blocks */ {
-					akSize quickReadSize = akm::floor((count - writtenSamples)/m_buffer.size()) * m_buffer.size();
+					akSize quickReadSize = (count - writtenSamples)/m_buffer.size() * m_buffer.size();
 					writtenSamples += m_src->sample(out + writtenSamples, start + writtenSamples, quickReadSize);
 					if (writtenSamples >= count) return writtenSamples;
 				}
@@ -66,7 +67,7 @@ namespace aks {
 				/* Sample into internal buffer */ {
 					if (resampleBuffer(start + writtenSamples) == 0) return writtenSamples;
 					akSSize offset = (start + writtenSamples) - m_lastStart;
-					writtenSamples += aku::memcpy(out + writtenSamples, m_buffer.data() + offset, akm::min(count - writtenSamples, m_bufferSize - offset));
+					writtenSamples += aku::memcpy(out + writtenSamples, m_buffer.data() + offset, std::min<akSize>(count - writtenSamples, m_bufferSize - offset));
 				}
 
 				return writtenSamples;
@@ -87,4 +88,4 @@ namespace aks {
 
 }
 
-#endif /* AK_SOUND_SEMIFIXEDBLOCKSAMPLER_HPP_ */
+#endif /* AK_SOUND_SAMPLERFIXEDBLOCK_HPP_ */

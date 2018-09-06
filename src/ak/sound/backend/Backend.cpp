@@ -135,6 +135,11 @@ std::vector<DeviceCapabilities> aks::backend::getAvailableDevices(Backend backen
 	return result;
 }
 
+akSize aks::backend::audioBufferSize() {
+	if (!malIsInit) return 0;
+	return malDevice.bufferSizeInFrames;
+}
+
 static bool initContext(mal_context* context, const std::vector<Backend>& backends) {
 	std::vector<mal_backend> malBackends; malBackends.reserve(backends.size());
 	std::for_each(backends.begin(), backends.end(), [&](Backend backend){ malBackends.push_back(internal::toMalBackend(backend)); });
@@ -170,7 +175,7 @@ static bool initDevice(mal_context* context, mal_device* device, const DeviceIde
 		streamFormat.sampleRate,                    // mal_uint32 sampleRate;
 		{},                                         // mal_channel channelMap[MAL_MAX_CHANNELS];
 		bufferFrames,                               // mal_uint32 bufferSizeInFrames;
-		2,                                          // mal_uint32 periods;
+		4,                                          // mal_uint32 periods;
 		mal_share_mode_shared,                      // mal_share_mode shareMode;
 		mal_performance_profile_low_latency,        // mal_performance_profile performanceProfile;
 		nullptr,                                    // mal_recv_proc onRecvCallback;

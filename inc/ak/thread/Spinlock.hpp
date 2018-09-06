@@ -28,34 +28,34 @@ namespace akt {
 		private:
 			static constexpr auto LOCK_MEMORY_ORDER = std::memory_order_acq_rel;
 
-			std::atomic<bool> m_lock;
-			std::thread::id m_lastAcquiredThread;
+			mutable std::atomic<bool> m_lock;
+			mutable std::thread::id m_lastAcquiredThread;
 
 		protected:
-			void unlock() {
+			void unlock() const {
 				m_lock.exchange(false, LOCK_MEMORY_ORDER);
 			}
 
 		public:
 			Spinlock() : m_lock(false), m_lastAcquiredThread(std::this_thread::get_id()) {}
 
-			ak::ScopeGuard tryLock() {
+			ak::ScopeGuard tryLock() const {
 				if (m_lock.exchange(true, LOCK_MEMORY_ORDER)) return ak::ScopeGuard();
 				m_lastAcquiredThread = std::this_thread::get_id();
 				return [&](){unlock();};
 			}
 
-			ak::ScopeGuard lock() {
+			ak::ScopeGuard lock() const {
 				ak::ScopeGuard result;
 				while((result = tryLock()).empty()) std::this_thread::yield();
 				return result;
 			}
 
-			std::thread::id lastAcquiredThread() {
+			std::thread::id lastAcquiredThread() const {
 				return m_lastAcquiredThread;
 			}
 
-			bool wasLastAcquiredByThisThread() {
+			bool wasLastAcquiredByThisThread() const {
 				return m_lastAcquiredThread == std::this_thread::get_id();
 			}
 	};

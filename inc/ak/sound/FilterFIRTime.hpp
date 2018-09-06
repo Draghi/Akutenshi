@@ -14,8 +14,8 @@
  * limitations under the License.
  **/
 
-#ifndef AK_SOUND_FIRFILTER_HPP_
-#define AK_SOUND_FIRFILTER_HPP_
+#ifndef AK_SOUND_FILTERFIRTIME_HPP_
+#define AK_SOUND_FILTERFIRTIME_HPP_
 
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/sound/Sampler.hpp>
@@ -23,15 +23,15 @@
 
 namespace aks {
 
-	class FIRFilter : public Sampler {
+	class FilterFIRTime : public Sampler {
 		private:
 			const Sampler* m_sampler;
 			std::vector<fpSingle> m_kernal;
 
 		public:
-			FIRFilter(const Sampler& sampler, const std::vector<fpSingle>& kernal) : m_sampler(&sampler), m_kernal(kernal) {}
-			FIRFilter(const FIRFilter&) = default;
-			FIRFilter& operator=(const FIRFilter&) = default;
+			FilterFIRTime(const Sampler& sampler, const std::vector<fpSingle>& kernal) : m_sampler(&sampler), m_kernal(kernal) {}
+			FilterFIRTime(const FilterFIRTime&) = default;
+			FilterFIRTime& operator=(const FilterFIRTime&) = default;
 
 			akSize sample(fpSingle* out, akSSize start, akSize count) const override {
 				std::vector<fpSingle> buffer;
@@ -71,4 +71,4 @@ namespace aks {
 
 }
 
-#endif /* AK_SOUND_FIRFILTER_HPP_ */
+#endif /* AK_SOUND_FILTERFIRTIME_HPP_ */

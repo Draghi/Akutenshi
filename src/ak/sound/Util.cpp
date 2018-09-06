@@ -24,7 +24,7 @@
 
 using namespace aks;
 
-aks::Buffer aks::generateSineWave(fpSingle frequency, fpSingle ampitude) {
+aks::SamplerBuffer aks::generateSineWave(fpSingle frequency, fpSingle ampitude) {
 	akSize sampleRate = backend::getDeviceInfo()->streamFormat.sampleRate;
 	static constexpr float SINE_PERIOD = 2.f*akm::PI; // The base period of a sine wave
 	const fpDouble sineWaveStep = (SINE_PERIOD*frequency)/sampleRate;
@@ -32,5 +32,5 @@ aks::Buffer aks::generateSineWave(fpSingle frequency, fpSingle ampitude) {
 	std::vector<fpSingle> pcmData; pcmData.resize(static_cast<akSize>(sampleRate/frequency));
 	for(akSize i = 0; i < pcmData.size(); i++) pcmData[i] = ampitude * akm::sin(sineWaveStep * i);
 
-	return aks::Buffer(pcmData.data(), pcmData.size(), true);
+	return aks::SamplerBuffer(pcmData.data(), pcmData.size(), true);
 }

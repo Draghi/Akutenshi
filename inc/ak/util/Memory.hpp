@@ -46,6 +46,35 @@ namespace aku {
 		return count;
 	}
 
+	template<typename type_t> akSize memwrp(
+		      type_t* dst,  akSize dstSize, akSize dstOffset,
+		const type_t* src,  akSize srcSize, akSize srcOffset, akSize count) {
+
+		akSize remaining = count;
+
+		while(remaining > 0) {
+			akSize distEndDst = dstSize - (dstOffset % dstSize);
+			akSize distEndSrc = srcSize - (srcOffset % srcSize);
+
+			akSize copied = aku::memcpy(dst + dstOffset, src + srcOffset, std::min(remaining, std::min(distEndDst, distEndSrc)));
+
+			dstOffset += copied;
+			srcOffset += copied;
+
+			remaining -= copied;
+		}
+
+		return count;
+	}
+
+	template<typename type_t> akSize memwrp(type_t* dst, akSize dstSize, akSize dstOffset, const type_t* src, akSize count) {
+		return memwrp(dst, dstSize, dstOffset, src, count, 0, count);
+	}
+
+	template<typename type_t> akSize memwrp(type_t* dst, const type_t* src, akSize srcSize, akSize srcOffset, akSize count) {
+		return memwrp(dst, count, 0, src, srcSize, srcOffset, count);
+	}
+
 }
 
 #endif /* AK_UTIL_MEMORY_HPP_ */

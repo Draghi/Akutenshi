@@ -14,8 +14,8 @@
  * limitations under the License.
  **/
 
-#ifndef AK_UTIL_FREQDOMAINFILTER_HPP_
-#define AK_UTIL_FREQDOMAINFILTER_HPP_
+#ifndef AK_SOUND_FILTERFIRFREQ_HPP_
+#define AK_SOUND_FILTERFIRFREQ_HPP_
 
 #include <ak/math/FourierTransform.hpp>
 #include <ak/math/Scalar.hpp>
@@ -31,7 +31,7 @@
 #include <vector>
 
 namespace aks {
-	class FreqDomainFilter final : public Sampler {
+	class FilterFIRFreq final : public Sampler {
 		private:
 			const Sampler* m_src;
 
@@ -43,9 +43,9 @@ namespace aks {
 			mutable akm::FTTBuffer m_fftBuffer;
 
 		public:
-			FreqDomainFilter() : m_src(nullptr), m_fftBuffer(1024) {}
+			FilterFIRFreq() : m_src(nullptr), m_fftBuffer(1024) {}
 
-			FreqDomainFilter(const Sampler& src, const Sampler& filter) : m_src(&src), m_filterR(), m_filterI(), m_outputBuffer(), m_fftBuffer(aku::nearestPowerOfTwo(filter.sampleCount())) {
+			FilterFIRFreq(const Sampler& src, const Sampler& filter) : m_src(&src), m_filterR(), m_filterI(), m_outputBuffer(), m_fftBuffer(aku::nearestPowerOfTwo(filter.sampleCount())) {
 				std::vector<fpSingle> signalBuffer(m_fftBuffer.signalSize(), 0);
 				filter.sample(signalBuffer.data(), 0, m_fftBuffer.signalSize());
 
@@ -58,8 +58,8 @@ namespace aks {
 				m_outputBuffer.resize(m_fftBuffer.signalSize(), 0);
 			}
 
-			FreqDomainFilter(const FreqDomainFilter&) = default;
-			FreqDomainFilter& operator=(const FreqDomainFilter&) = default;
+			FilterFIRFreq(const FilterFIRFreq&) = default;
+			FilterFIRFreq& operator=(const FilterFIRFreq&) = default;
 
 			akSize sample(fpSingle* out, akSSize start, akSize count) const override {
 				if (!m_src) return 0;
@@ -89,11 +89,11 @@ namespace aks {
 			}
 
 			akSize sampleCount() const override {
-				return m_src->sampleCount();
+				return m_src ? m_src->sampleCount() : 0;
 			}
 
 			bool loops() const override {
-				return m_src->loops();
+				return  m_src ? m_src->loops() : false;
 			}
 
 			akSize signalSize() const {
