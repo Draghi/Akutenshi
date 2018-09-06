@@ -148,24 +148,19 @@ int akGameMain() {
 			akSize rightRead = audioChannelRight.read(buffer[1].data(), frameCount);
 			if (leftRead != rightRead) throw std::logic_error("Inconsistent audio channel read.");
 
-			akl::Logger("").info("Req: ", frameCount, " Recv: ", leftRead);
+			if (leftRead < frameCount) akl::Logger("").warn("Req: ", frameCount, " Recv: ", leftRead);
 
 			for(akSize i = 0; i < leftRead; i++) {
-				if (i == 0) {
-					static_cast<fpSingle*>(audioFrames)[i*2 + 0] = -0.1;
-					static_cast<fpSingle*>(audioFrames)[i*2 + 1] = -0.1;
-				} else {
-					static_cast<fpSingle*>(audioFrames)[i*2 + 0] = akm::clamp(buffer[0][i], -1, 1);
-					static_cast<fpSingle*>(audioFrames)[i*2 + 1] = akm::clamp(buffer[1][i], -1, 1);
-				}
+				static_cast<fpSingle*>(audioFrames)[i*2 + 0] = akm::clamp(buffer[0][i], -1, 1);
+				static_cast<fpSingle*>(audioFrames)[i*2 + 1] = akm::clamp(buffer[1][i], -1, 1);
 			}
 
 			return leftRead;
 		}
 	);
 
-	audioChannelLeft  = akc::RingBuffer<fpSingle>(aks::backend::getDeviceInfo()->streamFormat.sampleRate * 4);
-	audioChannelRight = akc::RingBuffer<fpSingle>(aks::backend::getDeviceInfo()->streamFormat.sampleRate * 4);
+	audioChannelLeft  = akc::RingBuffer<fpSingle>(aks::backend::getDeviceInfo()->streamFormat.sampleRate);
+	audioChannelRight = akc::RingBuffer<fpSingle>(aks::backend::getDeviceInfo()->streamFormat.sampleRate);
 
 	aks::backend::startDevice();
 
@@ -314,7 +309,21 @@ static void startGame() {
 
 
 		static akSize cFrame = 0;
-		akSize expectedFrames = time * aks::backend::getDeviceInfo()->streamFormat.sampleRate;
+		if (audioChannelLeft.remaining() - 1 > 0) {
+			akSize framesToBuffer = audioChannelLeft.remaining() - 1;
+			akSize writtenFrames = std::numeric_limits<akSize>::max();
+
+			std::array<std::vector<fpSingle>, 2> buffer{std::vector<fpSingle>(framesToBuffer, 0.f), std::vector<fpSingle>(framesToBuffer, 0.f)};
+			writtenFrames = std::min(writtenFrames,  leftMixer.sample(buffer[0].data(), cFrame, buffer[0].size()));
+			writtenFrames = std::min(writtenFrames, rightMixer.sample(buffer[1].data(), cFrame, buffer[1].size()));
+
+			 audioChannelLeft.write(buffer[0].data(), writtenFrames);
+			audioChannelRight.write(buffer[1].data(), writtenFrames);
+
+			cFrame += writtenFrames;
+		} else akl::Logger("Up to date").info("");
+
+		/*akSize expectedFrames = time * aks::backend::getDeviceInfo()->streamFormat.sampleRate;
 		if (cFrame < expectedFrames) {
 			akSize framesToBuffer = (expectedFrames - cFrame);
 			akSize writtenFrames = std::numeric_limits<akSize>::max();
@@ -328,16 +337,7 @@ static void startGame() {
 
 			cFrame += writtenFrames;
 		} else akl::Logger("Up to date").info("");
-
-
-		/*{
-			auto lock = audioQueueLock.lock();
-			audioQueue.push_back(std::unordered_map<aks::Channel, std::vector<fpSingle>>{
-				{aks::Channel::Left,  std::move(buffer[0])},
-				{aks::Channel::Right, std::move(buffer[1])},
-			});
-		}*/
-
+		*/
 	});
 
 	fpSingle updateAccum = 0.f;

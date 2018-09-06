@@ -29,11 +29,11 @@ namespace aks {
 	namespace backend {
 		namespace internal {
 			inline const std::vector<Backend> DEFAULT_BACKENDS = {
-				Backend::WASAPI, Backend::DSound,    Backend::WinMM,      // Windows
-				Backend::JACK,   Backend::ALSA,      Backend::PulseAudio, // Linux
-				Backend::SndIO,  Backend::AudioIO,   Backend::OSS,        // BSD
-				Backend::OpenAL, Backend::SDL,                            // Fallbacks
-				Backend::OpenSL, Backend::CoreAudio, Backend::Null        // Other OSes
+				Backend::WASAPI, Backend::DSound,     Backend::WinMM,   // Windows
+				Backend::ALSA,   Backend::PulseAudio, Backend::JACK,    // Linux
+				Backend::SndIO,  Backend::AudioIO,    Backend::OSS,     // BSD
+				Backend::OpenAL, Backend::SDL,                          // Fallbacks
+				Backend::OpenSL, Backend::CoreAudio,  Backend::Null     // Other OSes
 			};
 
 

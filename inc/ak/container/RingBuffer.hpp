@@ -68,20 +68,12 @@ namespace akc {
 			}
 
 			void write(const type_t* src, akSize count) {
-				if (count > m_capacity) {
-					m_writeOffset = 0;
-					m_readOffset = m_capacity - 1;
-					count = m_capacity;
-				}
-
-				aku::memwrp(m_data.data(), m_capacity, m_writeOffset.load(), src, count);
-				advanceWriteOffset(count);
+				aku::memwrp(m_data.data(), m_capacity, advanceWriteOffset(count), src, count);
 			}
 
 			akSize read(type_t* dst, akSize count) {
 				count = std::min(count, size());
-				aku::memwrp(dst, m_data.data(), m_capacity, m_readOffset.load(), count);
-				advanceReadOffset(count);
+				aku::memwrp(dst, m_data.data(), m_capacity, advanceReadOffset(count), count);
 				return count;
 			}
 

@@ -45,7 +45,10 @@ namespace aks {
 		public:
 			FilterFIRFreq() : m_src(nullptr), m_fftBuffer(1024) {}
 
-			FilterFIRFreq(const Sampler& src, const Sampler& filter) : m_src(&src), m_filterR(), m_filterI(), m_outputBuffer(), m_fftBuffer(aku::nearestPowerOfTwo(filter.sampleCount())) {
+			FilterFIRFreq(const Sampler& src, const Sampler& filter) : m_src(nullptr), m_fftBuffer(1024) {
+				m_src = &src;
+				m_fftBuffer = akm::FTTBuffer(aku::nearestPowerOfTwo(filter.sampleCount()));
+
 				std::vector<fpSingle> signalBuffer(m_fftBuffer.signalSize(), 0);
 				filter.sample(signalBuffer.data(), 0, m_fftBuffer.signalSize());
 

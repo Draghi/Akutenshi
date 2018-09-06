@@ -17,10 +17,12 @@
 #ifndef AK_UTIL_MEMORY_HPP_
 #define AK_UTIL_MEMORY_HPP_
 
-#include <ak/PrimitiveTypes.hpp>
+#include <algorithm>
 #include <memory>
-#include <cstring>
 #include <type_traits>
+
+#include <ak/Log.hpp>
+#include <ak/PrimitiveTypes.hpp>
 
 namespace aku {
 
@@ -53,10 +55,10 @@ namespace aku {
 		akSize remaining = count;
 
 		while(remaining > 0) {
-			akSize distEndDst = dstSize - (dstOffset % dstSize);
-			akSize distEndSrc = srcSize - (srcOffset % srcSize);
+			dstOffset %= dstSize;
+			srcOffset %= srcSize;
 
-			akSize copied = aku::memcpy(dst + dstOffset, src + srcOffset, std::min(remaining, std::min(distEndDst, distEndSrc)));
+			akSize copied = aku::memcpy(dst + dstOffset, src + srcOffset, std::min(remaining, std::min(dstSize - dstOffset, srcSize - srcOffset)));
 
 			dstOffset += copied;
 			srcOffset += copied;
