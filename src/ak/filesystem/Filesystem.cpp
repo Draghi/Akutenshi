@@ -41,7 +41,6 @@
 #include <ak/util/String.hpp>
 #include <ak/window/WindowOptions.hpp>
 #include <dirent.h>
-#include <io.h>
 #include <sys/stat.h>
 #include <memory>
 #include <stdexcept>

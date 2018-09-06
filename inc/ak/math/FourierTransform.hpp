@@ -32,7 +32,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <ak/math/Types.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/util/Bits.hpp>
-#include <crtdefs.h>
 #include <cmath>
 #include <stdexcept>
 #include <vector>
