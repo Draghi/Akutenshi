@@ -1,0 +1,13 @@
+{
+    "animations": {
+        "": "data/testInvCube/animations/",
+    },
+    "materials": {
+        "": "data/testInvCube/materials/",
+    },
+    "meshes": {
+        "": "data/testInvCube/meshes/",
+    },
+    "source": "testInvCube.gltf",
+    "type": "GLTF"
+}

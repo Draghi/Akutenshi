@@ -1,0 +1,7 @@
+{
+    "destination": "data/shaders/clustered/markClusters.vert.akres",
+    "identifier": [12005527078254162480, 5171634585767476082],
+    "remapPaths": true,
+    "source": "markClusters.vert",
+    "type": "ShaderStage"
+}

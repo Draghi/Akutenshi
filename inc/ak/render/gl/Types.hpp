@@ -24,9 +24,10 @@ namespace akr {
 	namespace gl {
 
 		enum class BufferTarget {
-			VARRYING,
-			UNIFORM,
-			INDEX,
+			Varrying,
+			Uniform,
+			Index,
+			ShaderStorage
 		};
 
 		AK_SMART_TENUM_CLASS(StageType, uint8,

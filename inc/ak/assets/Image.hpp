@@ -142,7 +142,7 @@ namespace akas {
 		return croppedData;
 	}
 
-	inline std::optional<Image> loadImageAndTransform(const akfs::Path& path, akr::gl::TexFormat format, akr::gl::TexStorage storage, ImageRotation rotate, uint32 offsetX, uint32 offsetY, uint32 cropX, uint32 cropY, bool flipX, bool flipY) {
+	inline std::optional<Image> loadImageAndTransform(const akfs::Path& path, akr::gl::TexFormat format, akr::gl::TexStorage storage, ImageRotation rotate = ImageRotation::None, uint32 offsetX = 0, uint32 offsetY = 0, uint32 cropX = 0, uint32 cropY = 0, bool flipX = false, bool flipY = false) {
 		int w, h;
 		auto imageData = loadImageDataFromFile(path, format, storage, w, h);
 		if (!imageData.first) return {};

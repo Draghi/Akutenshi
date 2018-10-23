@@ -39,6 +39,8 @@ namespace akas {
 	struct Sampler final {
 		akd::SUID imgAssetID;
 
+		akSize texCoordIndex;
+
 		akr::gl::FilterType    minFilter;
 		akr::gl::MipFilterType minMipFilter;
 		akr::gl::FilterType    magFilter;
@@ -48,13 +50,13 @@ namespace akas {
 	};
 
 	struct Material final {
-		akm::Vec3 baseColour;
+		akm::Vec4 baseColour;
 		fpSingle metallicFactor;
 		fpSingle roughnessFactor;
 		akm::Vec3 emmisiveFactor;
 
 		std::optional<Sampler> baseTexture;
-		std::optional<Sampler> metalRoughTexture;
+		std::optional<Sampler> metalRoughnessTexture;
 		std::optional<Sampler> normalTexture;
 		std::optional<Sampler> occlusionTexture;
 		std::optional<Sampler> emissiveTexture;

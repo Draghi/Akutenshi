@@ -1,0 +1,7 @@
+{
+    "destination": "data/shaders/prepass/prepass.frag.akres",
+    "identifier": [11911849679007861851, 13019532378421583768],
+    "remapPaths": true,
+    "source": "prepass.frag",
+    "type": "ShaderStage"
+}

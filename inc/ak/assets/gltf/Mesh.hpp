@@ -76,7 +76,7 @@ namespace akas {
 			return Primitive{
 				val.atOrDef("material").asOrDef<gltfID>(-1),
 				static_cast<PrimitiveMode>(val.atOrDef("mode").asOrDef<uint32>(4)),
-				val.atOrDef("indicies").asOrDef<gltfID>(-1),
+				val.atOrDef("indices").asOrDef<gltfID>(-1),
 				val.at("attributes").at("POSITION").as<gltfID>(),
 				val.at("attributes").at("NORMAL"  ).as<gltfID>(),
 				val.at("attributes").atOrDef("TANGENT").asOrDef<gltfID>(-1),

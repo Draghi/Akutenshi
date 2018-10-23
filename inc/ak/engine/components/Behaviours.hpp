@@ -39,6 +39,8 @@ namespace ake {
 	using BehaviourID = akc::SlotID;
 	class Behaviours;
 
+	class Entity;
+
 	class Behaviour {
 		friend Behaviours;
 		private:
@@ -52,12 +54,12 @@ namespace ake {
 			virtual void onStart();
 			virtual void onUpdate(fpSingle deltaTime);
 
+			Entity entity();
+			const Entity entity() const;
+
 		public:
 			Behaviour(const std::string& name);
 			virtual ~Behaviour();
-
-			Transform transform();
-			const Transform transform() const;
 
 			void setActive(bool active);
 			bool isActive() const;

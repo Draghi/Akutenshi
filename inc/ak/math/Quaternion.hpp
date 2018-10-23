@@ -29,8 +29,11 @@ namespace akm {
 
 	inline Quat quat_cast(const Mat3& x) { return glm::quat_cast(x); }
 	inline Quat quat_cast(const Mat4& x) { return glm::quat_cast(x); }
+	inline Quat quat_cast(const Mat4x3& x) { return quat_cast(akm::Mat3(x)); }
+
 	inline Mat3 mat3_cast(const Quat& x) { return glm::mat3_cast(x); }
 	inline Mat4 mat4_cast(const Quat& x) { return glm::mat4_cast(x); }
+	inline Mat4x3 mat4x3_cast(const Quat& x) { return Mat4x3(glm::mat4_cast(x)); }
 
 	inline Quat rotateQ(scalar_t angle, const akm::Vec3& axis) { return glm::rotate(akm::Quat(1,0,0,0), angle, axis); }
 

@@ -17,19 +17,20 @@
 #ifndef AK_ENGINE_COMPONENTS_CAMERA_HPP_
 #define AK_ENGINE_COMPONENTS_CAMERA_HPP_
 
-#include <stdexcept>
-#include <unordered_map>
-#include <utility>
-
 #include <ak/container/SlotMap.hpp>
-#include <ak/engine/components/Transform.hpp>
 #include <ak/engine/ComponentManager.hpp>
+#include <ak/engine/Entity.hpp>
 #include <ak/engine/EntityManager.hpp>
 #include <ak/engine/Type.hpp>
 #include <ak/event/Dispatcher.hpp>
 #include <ak/math/Matrix.hpp>
 #include <ak/math/Types.hpp>
 #include <ak/PrimitiveTypes.hpp>
+#include <glm/detail/type_mat4x4.hpp>
+#include <glm/detail/type_vec2.hpp>
+#include <stdexcept>
+#include <unordered_map>
+#include <utility>
 
 namespace ake {
 
@@ -97,6 +98,38 @@ namespace ake {
 				m_cache.isProjectionDirty = true;
 			}
 
+			fpSingle fovVert() const {
+				switch(m_projectionType) {
+					case Projection::PerspectiveH: return 2 * akm::atan((0.5 * m_projection.persp.size.y) / (0.5 * m_projection.persp.size.y / tan(m_projection.persp.fov/2)));
+					case Projection::PerspectiveV: return m_projection.persp.fov;
+					case Projection::Orthographic: return 0;
+				}
+			}
+
+			fpSingle fovHorz() const {
+				switch(m_projectionType) {
+					case Projection::PerspectiveH: return m_projection.persp.fov;
+					case Projection::PerspectiveV: return 2 * akm::atan((0.5 * m_projection.persp.size.x) / (0.5 * m_projection.persp.size.y / tan(m_projection.persp.fov/2)));
+					case Projection::Orthographic: return 0;
+				}
+			}
+
+			fpSingle planeNear() const {
+				switch(m_projectionType) {
+					case Projection::PerspectiveH: return m_projection.persp.zRange[0];
+					case Projection::PerspectiveV: return m_projection.persp.zRange[0];
+					case Projection::Orthographic: return m_projection.ortho.zRange[0];
+				}
+			}
+
+			fpSingle planeFar() const {
+				switch(m_projectionType) {
+					case Projection::PerspectiveH: return m_projection.persp.zRange[1];
+					case Projection::PerspectiveV: return m_projection.persp.zRange[1];
+					case Projection::Orthographic: return m_projection.ortho.zRange[1];
+				}
+			}
+
 			akm::Mat4 projectionMatrix() const {
 				if (std::exchange(m_cache.isProjectionDirty, false)) {
 					switch(m_projectionType) {
@@ -131,9 +164,7 @@ namespace ake {
 			// ////////// //
 
 			akm::Mat4 viewMatrix() const {
-				// @todo Remove when tracking implemented
-				if (std::exchange(m_cache.isViewDirty, false) || true) m_cache.viewMatrix = m_eManager.component<Transform>(m_id).worldToLocal();
-				return m_cache.viewMatrix;
+				return m_eManager.getEntity(m_id).worldToLocal();
 			}
 
 			// ////////////// //

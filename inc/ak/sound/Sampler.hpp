@@ -17,7 +17,6 @@
 #ifndef AK_SOUND_SAMPLER_HPP_
 #define AK_SOUND_SAMPLER_HPP_
 
-#include <ak/math/FourierTransform.hpp>
 #include <ak/PrimitiveTypes.hpp>
 #include <ak/util/Bits.hpp>
 #include <ak/util/Memory.hpp>

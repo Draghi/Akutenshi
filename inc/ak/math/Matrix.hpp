@@ -17,17 +17,19 @@
 #ifndef AK_MATH_MATRIX_HPP_
 #define AK_MATH_MATRIX_HPP_
 
+#include <ak/math/Scalar.hpp>
+#include <ak/math/Types.hpp>
+#include <ak/PrimitiveTypes.hpp>
+#include <glm/detail/qualifier.hpp>
 #include <glm/detail/setup.hpp>
 #include <glm/detail/type_mat3x3.hpp>
 #include <glm/gtc/matrix_access.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/transform.hpp>
-
-#include <ak/math/Scalar.hpp>
-#include <ak/math/Types.hpp>
-#include <ak/PrimitiveTypes.hpp>
+#include <glm/matrix.hpp>
 
 namespace akm {
 	// //////////////// //
@@ -54,27 +56,41 @@ namespace akm {
 
 	inline Vec3 row(const akm::Mat3& mat, akSize row) { return glm::row(mat, row); }
 	inline Vec4 row(const akm::Mat4& mat, akSize row) { return glm::row(mat, row); }
+	inline Vec4 row(const akm::Mat4x3& mat, akSize row) { return glm::row(mat, row); }
 
 	inline Vec3 column(const akm::Mat3& mat, akSize col) { return glm::column(mat, col); }
 	inline Vec4 column(const akm::Mat4& mat, akSize col) { return glm::column(mat, col); }
+	inline Vec3 column(const akm::Mat4x3& mat, akSize col) { return glm::column(mat, col); }
 
-	inline Mat4 scale(const akm::Vec3& scale) { return glm::scale(scale); }
+	inline akm::Mat4 toMat4(akm::Mat4x3 mat) {
+		return akm::Mat4{
+			akm::Vec4(akm::column(mat, 0), 0),
+			akm::Vec4(akm::column(mat, 1), 0),
+			akm::Vec4(akm::column(mat, 2), 0),
+			akm::Vec4(akm::column(mat, 3), 1)
+		};
+	}
+
 	inline Mat4 translate(const akm::Vec3& offset) { return glm::translate(offset); }
-	inline Mat4 rotate(scalar_t angle, const akm::Vec3& axis) { return glm::rotate(angle, axis); }
-
+	inline Mat4 scale (const akm::Vec3& scale) { return glm::scale(scale); }
 	inline Mat3 scale3(const akm::Vec3& scale)  { return Mat3(akm::scale(scale)); }
+	inline Mat4 rotate (scalar_t angle, const akm::Vec3& axis) { return glm::rotate(angle, axis); }
 	inline Mat3 rotate3(scalar_t angle, const akm::Vec3& axis) { return Mat3(akm::rotate(angle, axis)); }
 
-	template<glm::length_t l> scalar_t determinant(const Mat<l>& mat) { return glm::determinant(mat); }
-	template<glm::length_t l> Mat<l> inverse(const Mat<l>& mat) { return glm::inverse(mat); }
-	template<glm::length_t l> Mat<l> transpose(const Mat<l>& mat) { return glm::transpose(mat); }
+	template<glm::length_t l, glm::length_t m> scalar_t determinant(const Mat<l, m>& mat) { return glm::determinant(mat); }
+	template<glm::length_t l, glm::length_t m> Mat<l,m>     inverse(const Mat<l, m>& mat) { return glm::inverse(mat);     }
+
+	// Assumes that the 4x3 matrix provided is *actually* a 4x4 matrix with a last row of (0,0,0,1)
+	template<> inline Mat<4,3> inverse<4, 3>(const Mat<4, 3>& mat) {
+		return glm::inverse(toMat4(mat));
+	}
+	template<glm::length_t l, glm::length_t m> Mat<l,m>   transpose(const Mat<l, m>& mat) { return glm::transpose(mat);   }
 
 	inline Mat3 eulerOrient3(const Vec3& eulerAngles) { return glm::orientate3(eulerAngles); }
 	inline Mat4 eulerOrient4(const Vec3& eulerAngles) { return glm::orientate4(eulerAngles); }
 
 	inline void decompose(const Mat4& mat, Vec3& translation, Quat& rotation, Vec3& scale) {
-		akm::Vec3 skew;
-		akm::Vec4 persp;
+		akm::Vec3 skew; akm::Vec4 persp;
 		glm::decompose(mat, scale, rotation, translation, skew, persp);
 	}
 }

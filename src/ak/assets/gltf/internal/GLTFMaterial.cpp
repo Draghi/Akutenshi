@@ -31,7 +31,7 @@
 
 using namespace akas::gltf;
 
-static std::optional<akas::Sampler> extractTextureInfo(const Asset& asset, gltfID textureID, const std::vector<akas::ConversionInfo>& textureAssetIDs);
+static std::optional<akas::Sampler> extractTextureInfo(const Asset& asset, TextureInfo textureInfo, const std::vector<akas::ConversionInfo>& textureAssetIDs);
 
 akas::Material akas::gltf::proccessGLTFMaterial(const Asset& asset, const Material& material, const std::vector<akas::ConversionInfo>& textureAssetIDs) {
 
@@ -41,11 +41,11 @@ akas::Material akas::gltf::proccessGLTFMaterial(const Asset& asset, const Materi
 		material.metallicFactor,
 		material.emissiveFactor,
 
-		::extractTextureInfo(asset, material.baseTexture.index,              textureAssetIDs),
-		::extractTextureInfo(asset, material.metallicRoughnessTexture.index, textureAssetIDs),
-		::extractTextureInfo(asset, material.normalTexture.index,            textureAssetIDs),
-		::extractTextureInfo(asset, material.occlusionTexture.index,         textureAssetIDs),
-		::extractTextureInfo(asset, material.emissiveTexture.index,          textureAssetIDs),
+		::extractTextureInfo(asset, material.baseTexture,              textureAssetIDs),
+		::extractTextureInfo(asset, material.metallicRoughnessTexture, textureAssetIDs),
+		::extractTextureInfo(asset, material.normalTexture,            textureAssetIDs),
+		::extractTextureInfo(asset, material.occlusionTexture,         textureAssetIDs),
+		::extractTextureInfo(asset, material.emissiveTexture,          textureAssetIDs),
 
 		static_cast<akas::AlphaMode>(material.alphaMode),
 		material.alphaCutoff,
@@ -54,9 +54,9 @@ akas::Material akas::gltf::proccessGLTFMaterial(const Asset& asset, const Materi
 }
 
 
-static std::optional<akas::Sampler> extractTextureInfo(const Asset& asset, gltfID textureID, const std::vector<akas::ConversionInfo>& textureAssetIDs) {
-	if (textureID < 0) return {};
-	auto& texture = asset.textures[textureID];
+static std::optional<akas::Sampler> extractTextureInfo(const Asset& asset, TextureInfo textureInfo, const std::vector<akas::ConversionInfo>& textureAssetIDs) {
+	if (textureInfo.index < 0) return {};
+	auto& texture = asset.textures[textureInfo.index];
 
 	if (texture.sourceID < 0) return {};
 	auto& sampler = asset.samplers[texture.sourceID];
@@ -88,5 +88,5 @@ static std::optional<akas::Sampler> extractTextureInfo(const Asset& asset, gltfI
 	else if (sampler.wrapT == Wrap::Repeat        ) { wrapT = akr::gl::ClampType::Repeat; }
 	else throw std::runtime_error("Unsupported WrapT.");
 
-	return {{textureAssetIDs[texture.sourceID].identifier, minFilter, mipFilter, magFilter, wrapS, wrapT}};
+	return {{textureAssetIDs[texture.sourceID].identifier, textureInfo.texCoordSet, minFilter, mipFilter, magFilter, wrapS, wrapT}};
 }

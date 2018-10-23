@@ -1,0 +1,18 @@
+{
+    "config": {
+        "stages": {
+            "Fragment": {
+                "identifier": [2003419900937812587, 9812150550628065908],
+                "source": "markClusters.frag.akconv"
+            },
+            "Vertex": {
+                "identifier": [12005527078254162480, 5171634585767476082],
+                "source": "markClusters.vert.akconv"
+            }
+        }
+    },
+    "destination": "data/shaders/clustered/markClusters.aksha.akres",
+    "identifier": [6681725614041661099, 8955562977533014309],
+    "remapPaths": true,
+    "type": "ShaderProgram"
+}

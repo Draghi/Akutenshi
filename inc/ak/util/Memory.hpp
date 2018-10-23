@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <cstring>
 #include <type_traits>
 
 #include <ak/Log.hpp>
@@ -52,21 +53,19 @@ namespace aku {
 		      type_t* dst,  akSize dstSize, akSize dstOffset,
 		const type_t* src,  akSize srcSize, akSize srcOffset, akSize count) {
 
-		akSize remaining = count;
-
-		while(remaining > 0) {
+		akSize written = 0;
+		while(written < count) {
 			dstOffset %= dstSize;
 			srcOffset %= srcSize;
 
-			akSize copied = aku::memcpy(dst + dstOffset, src + srcOffset, std::min(remaining, std::min(dstSize - dstOffset, srcSize - srcOffset)));
+			akSize copied = aku::memcpy(dst + dstOffset, src + srcOffset, std::min(count - written, std::min(dstSize - dstOffset, srcSize - srcOffset)));
 
 			dstOffset += copied;
 			srcOffset += copied;
-
-			remaining -= copied;
+			written   += copied;
 		}
 
-		return count;
+		return written;
 	}
 
 	template<typename type_t> akSize memwrp(type_t* dst, akSize dstSize, akSize dstOffset, const type_t* src, akSize count) {

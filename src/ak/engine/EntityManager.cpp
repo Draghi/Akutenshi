@@ -15,11 +15,10 @@
  **/
 
 #include <ak/engine/EntityManager.hpp>
-
+#include <ak/engine/Entity.hpp>
 #include <algorithm>
+#include <stdexcept>
 #include <utility>
-
-#include <ak/engine/ComponentManager.hpp>
 
 using namespace ake;
 
@@ -27,9 +26,7 @@ using namespace ake;
 // // EntityManager // //
 // /////////////////// //
 
-EntityManager::EntityManager(ake::Scene& owner, std::function<EntityUIDGenerator_f> entityUIDGenerator) : m_owner(&owner), m_components(), m_entityUIDGenerator(entityUIDGenerator) {
-	for(auto& component : m_components) component.second->m_entityManager = this;
-}
+EntityManager::EntityManager(ake::Scene& owner, std::function<EntityUIDGenerator_f> entityUIDGenerator) : m_owner(&owner), m_components(), m_entityUIDGenerator(entityUIDGenerator), m_entityGraph(*this) {}
 
 // ////////////// //
 // // Entities // //
@@ -63,11 +60,19 @@ bool EntityManager::deleteEntity(EntityID entityID) {
 	m_entityNameStorage.deregisterEntity(entityID);
 	m_entityComponentIDs.erase(entityID);
 	m_entityUID.erase(entityID);
-	m_entityGraph.deregisterEntity(entityID);
+	m_entityGraph.unregisterEntity(entityID);
 
 	m_lookupEntityByUID.erase(m_entityUID[entityID]);
 
 	return true;
+}
+
+Entity EntityManager::getEntity(EntityID entityID) {
+	return Entity(*this, entityID);
+}
+
+const Entity EntityManager::getEntity(EntityID entityID) const {
+	return Entity(const_cast<EntityManager&>(*this), entityID);
 }
 
 const std::string& EntityManager::entityName(EntityID entityID) const {
@@ -82,28 +87,12 @@ EntityUID EntityManager::entityUID(EntityID entityID) const {
 	return m_lookupEntityByUID.at(entityID);
 }
 
-bool EntityManager::setEntityParentID(EntityID entityID, EntityID parentID) {
-	return m_entityGraph.setParent(entityID, parentID);
+EntityGraph& EntityManager::entityGraph() {
+	return m_entityGraph;
 }
 
-EntityID EntityManager::entityParentID(EntityID entityID) const {
-	return m_entityGraph.parent(entityID);
-}
-
-const akc::UnorderedVector<EntityID>& EntityManager::entityChildrenIDs(EntityID entityID) const {
-	return m_entityGraph.children(entityID);
-}
-
-EntityID EntityManager::entityFindFirstChildNamed(EntityID entityID, const std::string& name) const {
-	return m_entityGraph.findFirstNamed(entityID, name);
-}
-
-akc::UnorderedVector<EntityID> EntityManager::entityFindAllChildrenNamed(EntityID entityID, const std::string& name) const {
-	return m_entityGraph.findAllNamed(entityID, name);
-}
-
-const std::unordered_set<EntityID>& EntityManager::entityGraphRoot() const {
-	return m_entityGraph.root();
+const EntityGraph& EntityManager::entityGraph() const {
+	return m_entityGraph;
 }
 
 // ////////////// //
@@ -171,13 +160,13 @@ const ComponentManager& EntityManager::componentManager(ComponentID componentID)
 // // SceneGraph // //
 // //////////////// //
 
-const akev::DispatcherProxy<EntityParentChangedEvent> EntityManager::entityParentChanged() const {
+/*const akev::DispatcherProxy<EntityParentChangedEvent> EntityManager::entityParentChanged() const {
 	return m_entityGraph.entityGraphChanged();
 }
 
 const akev::DispatcherProxy<EntityParentChangedEvent> EntityManager::entityParentChanged(EntityID entityID) const {
 	return m_entityGraph.entityGraphChanged(entityID);
-}
+}*/
 
 
 

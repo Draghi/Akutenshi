@@ -80,19 +80,20 @@ Buffer& Buffer::operator=(Buffer&& other) {
 
 static GLenum akBufferTargetToOGL(BufferTarget target) {
 	switch(target) {
-		case BufferTarget::VARRYING: return GL_ARRAY_BUFFER;
-		case BufferTarget::UNIFORM: return GL_UNIFORM_BUFFER;
-		case BufferTarget::INDEX: return GL_ELEMENT_ARRAY_BUFFER;
+		case BufferTarget::Varrying: return GL_ARRAY_BUFFER;
+		case BufferTarget::Uniform: return GL_UNIFORM_BUFFER;
+		case BufferTarget::Index: return GL_ELEMENT_ARRAY_BUFFER;
+		case BufferTarget::ShaderStorage: return GL_SHADER_STORAGE_BUFFER;
 	}
 }
 
 void akr::gl::bindBuffer(BufferTarget target, const Buffer& buffer, uint32 index, akSize offset, akSize size) {
-	if (target != BufferTarget::UNIFORM) throw std::logic_error("Only uniform buffers have binding indicies.");
+	if ((target != BufferTarget::Uniform) && (target != BufferTarget::ShaderStorage)) throw std::logic_error("Only uniform buffers have binding indicies.");
 	glBindBufferRange(akBufferTargetToOGL(target), index, buffer.id(), offset, size);
 }
 
 void akr::gl::bindBuffer(BufferTarget target, const Buffer& buffer, uint32 index) {
-	if (target != BufferTarget::UNIFORM) throw std::logic_error("Only uniform buffers have binding indicies.");
+	if ((target != BufferTarget::Uniform) && (target != BufferTarget::ShaderStorage)) throw std::logic_error("Only uniform buffers have binding indicies.");
 	glBindBufferBase(akBufferTargetToOGL(target), index, buffer.id());
 }
 

@@ -1,0 +1,18 @@
+{
+    "config": {
+        "stages": {
+            "Fragment": {
+                "identifier": [11911849679007861851, 13019532378421583768],
+                "source": "prepass.frag.akconv"
+            },
+            "Vertex": {
+                "identifier": [11911849679007861851, 13019532378421583768],
+                "source": "prepass.vert.akconv"
+            }
+        }
+    },
+    "destination": "data/shaders/prepass/prepass.aksha.akres",
+    "identifier": [4132031560040016996, 4624098232565117837],
+    "remapPaths": true,
+    "type": "ShaderProgram"
+}

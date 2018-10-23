@@ -27,7 +27,7 @@ namespace akgame {
 			void onStart() override {}
 
 			void onUpdate(fpSingle deltaTime) override {
-				auto cameraTransform = transform();
+				auto cameraTransform = entity();
 
 				if (akw::keyboard().wasPressed(akin::Key::LALT)) akw::setCursorMode(akw::cursorMode() == akw::CursorMode::Captured ? akw::CursorMode::Normal : akw::CursorMode::Captured);
 
@@ -37,7 +37,7 @@ namespace akgame {
 					auto rotY =  akm::degToRad(mPos.x)/20.0f;
 					auto rotX = -akm::degToRad(mPos.y)/20.0f;
 
-					auto eulerRot = cameraTransform.rotationEuler();
+					auto eulerRot = akm::toEuler(cameraTransform.rotation());
 					eulerRot.x += rotX;
 					eulerRot.y += rotY * (akm::abs(eulerRot.x) > akm::degToRad(90) ? -1 : 1);
 					cameraTransform.setRotation(akm::fromEuler(eulerRot));
@@ -54,7 +54,7 @@ namespace akgame {
 				if (akm::sqrMagnitude(moveDir) > 0) {
 					moveDir = akm::normalize(moveDir);
 					fpSingle moveSpeed = (akw::keyboard().isDown(akin::Key::LSHIFT) ? 40 : 5) * deltaTime;
-					cameraTransform.moveLocal(moveDir * moveSpeed);
+					cameraTransform.localMove(moveDir * moveSpeed);
 				}
 			}
 

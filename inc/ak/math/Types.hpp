@@ -32,10 +32,11 @@ namespace akm {
 	using Vec3 = Vec<3>;
 	using Vec4 = Vec<4>;
 
-	template<glm::length_t l> using Mat = glm::mat<l, l, scalar_t, glm::highp>;
-	using Mat2 = Mat<2>;
-	using Mat3 = Mat<3>;
-	using Mat4 = Mat<4>;
+	template<glm::length_t l, glm::length_t m> using Mat = glm::mat<l, m, scalar_t, glm::highp>;
+	using Mat2 = Mat<2, 2>;
+	using Mat3 = Mat<3, 3>;
+	using Mat4 = Mat<4, 4>;
+	using Mat4x3 = Mat<4, 3>;
 
 	using Quat = glm::tquat<fpSingle, glm::highp>;
 }

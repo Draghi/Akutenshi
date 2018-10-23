@@ -35,7 +35,7 @@ namespace akas {
 	};
 
 	struct VertexWeightData final {
-		std::array<uint32, 4> bones;
+		std::array<uint32, 4> bones; // @TODO Change to something smaller? Maybe uint16?
 		akm::Vec4 weights;
 	};
 

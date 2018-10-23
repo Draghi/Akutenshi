@@ -149,7 +149,7 @@ namespace akc {
 
 					akSize cellCount = 1 + static_cast<akSize>(akm::sum(akm::abs(tileEnd - tilePos)));
 					for (akSize i = 0; i < cellCount; i++) {
-						auto advIndex = 0;
+						auto advIndex = 0; // @todo Double check this... In side project there's a degenerate case in lines that only move along one axis...
 						if (tileOffset[1] < tileOffset[advIndex]) advIndex = 1;
 						if (tileOffset[2] < tileOffset[advIndex]) advIndex = 2;
 

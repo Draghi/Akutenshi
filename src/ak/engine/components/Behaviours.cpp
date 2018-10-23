@@ -15,32 +15,25 @@
  **/
 
 #include <ak/engine/components/Behaviours.hpp>
-
+#include <ak/engine/Entity.hpp>
+#include <ak/engine/EntityManager.hpp>
+#include <ak/engine/Scene.hpp>
+#include <ak/event/Dispatcher.hpp>
+#include <ak/event/Event.hpp>
 #include <algorithm>
 #include <iterator>
 #include <utility>
-
-#include <ak/engine/EntityManager.hpp>
-#include <ak/engine/Scene.hpp>
-#include <ak/engine/components/Transform.hpp>
-#include <ak/event/Dispatcher.hpp>
-#include <ak/event/Event.hpp>
 
 using namespace ake;
 
 void Behaviour::onStart() {}
 void Behaviour::onUpdate(fpSingle /*deltaTime*/) {}
 
+Entity Behaviour::entity() { return Entity(m_owner->entityManager(), m_owner->id()); }
+const Entity Behaviour::entity() const { return Entity(m_owner->entityManager(), m_owner->id()); }
+
 Behaviour::Behaviour(const std::string& name) : m_owner(nullptr), m_behaviourID(), m_name(name) {}
 Behaviour::~Behaviour() {}
-
-Transform Behaviour::transform() {
-	return m_owner->entityManager().component<ake::Transform>(m_owner->id());
-}
-
-const Transform Behaviour::transform() const {
-	return m_owner->entityManager().component<ake::Transform>(m_owner->id());
-}
 
 void Behaviour::setActive(bool active) { m_isActive = active; }
 bool Behaviour::isActive() const { return m_isActive; }

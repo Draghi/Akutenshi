@@ -39,14 +39,14 @@ namespace akc {
 				return (from <= to) ? to - from : (size - from) + to;
 			}
 
-			akSize advanceReadOffset(akSize count) {
-				return m_readOffset.fetch_add(count);
+			void moveReadOffset(akSSize count) {
+				m_readOffset.fetch_add(count);
 			}
 
-			akSize advanceWriteOffset(akSize count) {
+			void moveWriteOffset(akSize count) {
 				akSize remainingDist = remaining();
-				if (remainingDist < count) advanceReadOffset(count - remainingDist);
-				return m_writeOffset.fetch_add(count);
+				if (remainingDist < count) moveReadOffset(count - remainingDist); // @TODO Threading issue? Start read, move read & start write. Could write catch up to read? Unlikely, unless cores have unbalanced loads.
+				m_writeOffset.fetch_add(count);
 			}
 
 		public:
@@ -68,12 +68,14 @@ namespace akc {
 			}
 
 			void write(const type_t* src, akSize count) {
-				aku::memwrp(m_data.data(), m_capacity, advanceWriteOffset(count), src, count);
+				aku::memwrp(m_data.data(), m_capacity, m_writeOffset, src, count);
+				moveWriteOffset(count);
 			}
 
 			akSize read(type_t* dst, akSize count) {
 				count = std::min(count, size());
-				aku::memwrp(dst, m_data.data(), m_capacity, advanceReadOffset(count), count);
+				aku::memwrp(dst, m_data.data(), m_capacity, m_readOffset, count);
+				moveReadOffset(count);
 				return count;
 			}
 

@@ -71,6 +71,11 @@ namespace akev {
 				}
 			}
 
+			template<typename... vargs_t> void sendEmplace(vargs_t... vargs) {
+				event_t event{std::forward<vargs_t...>(vargs...)};
+				send(event);
+			}
+
 			void mediate(const std::shared_ptr<event_type>& event) { m_mediator.schedule([this, event](){send(*event);}); }
 			template<typename... vargs_t> void mediate(vargs_t... vargs) { mediate(std::make_shared<event_type>(std::forward(vargs)...)); }
 

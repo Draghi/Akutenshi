@@ -1,0 +1,7 @@
+{
+    "destination": "data/shaders/prepass/prepass.vert.akres",
+    "identifier": [15309758699630382533, 1910791651217407364],
+    "remapPaths": true,
+    "source": "prepass.vert",
+    "type": "ShaderStage"
+}
