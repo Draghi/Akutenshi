@@ -1,21 +1,14 @@
-#include <fcntl.h>
-#include <stddef.h>
+#include <AkCommon/PrimitiveTypes.hpp>
+#include <AkCommon/String.hpp>
+#include <AkEngine/Log.hpp>
+#include <bits/exception.h>
+#include <process.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <csignal>
-#include <cstdio>
-#include <cstring>
 #include <exception>
-#include <iostream>
-#include <memory>
-#include <sstream>
 #include <string>
 #include <typeinfo>
-#include <vector>
-
-#include <ak/Log.hpp>
-#include <ak/PrimitiveTypes.hpp>
-#include <ak/util/String.hpp>
 
 [[noreturn]] static void termHandler();
 

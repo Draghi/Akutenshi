@@ -14,66 +14,56 @@
  * limitations under the License.
  **/
 
-#include <ak/animation/Fwd.hpp>
-#include <ak/animation/Serialize.hpp>
-#include <ak/animation/Type.hpp>
-#include <ak/assets/Animation.hpp>
-#include <ak/assets/Asset.hpp>
-#include <ak/assets/AssetRegistry.hpp>
-#include <ak/assets/Convert.hpp>
-#include <ak/assets/Image.hpp>
-#include <ak/assets/Material.hpp>
-#include <ak/assets/Mesh.hpp>
-#include <ak/assets/Serialize.hpp>
-#include <ak/assets/ShaderProgram.hpp>
-#include <ak/assets/Skin.hpp>
-#include <ak/assets/Texture.hpp>
-#include <ak/data/Json.hpp>
-#include <ak/data/MsgPack.hpp>
-#include <ak/data/PValue.hpp>
-#include <ak/data/Serialize.hpp>
-#include <ak/data/SUID.hpp>
-#include <ak/engine/components/Behaviours.hpp>
-#include <ak/engine/components/Camera.hpp>
-#include <ak/engine/Config.hpp>
-#include <ak/engine/Entity.hpp>
-#include <ak/engine/EntityManager.hpp>
-#include <ak/engine/Scene.hpp>
-#include <ak/engine/SceneManager.hpp>
-#include <ak/event/Dispatcher.hpp>
-#include <ak/event/Event.hpp>
-#include <ak/filesystem/Path.hpp>
-#include <ak/input/Keyboard.hpp>
-#include <ak/input/Mouse.hpp>
-#include <ak/Log.hpp>
-#include <ak/math/Matrix.hpp>
-#include <ak/math/Scalar.hpp>
-#include <ak/math/Serialize.hpp>
-#include <ak/math/Types.hpp>
-#include <ak/PrimitiveTypes.hpp>
-#include <ak/render/gl/Buffers.hpp>
-#include <ak/render/gl/Draw.hpp>
-#include <ak/render/gl/RenderTarget.hpp>
-#include <ak/render/gl/Shaders.hpp>
-#include <ak/render/gl/Textures.hpp>
-#include <ak/render/gl/Types.hpp>
-#include <ak/render/gl/Util.hpp>
-#include <ak/render/gl/VertexArrays.hpp>
-#include <ak/render/SceneRendererDefault.hpp>
-#include <ak/sound/FilterVolume.hpp>
-#include <ak/sound/MixerBasic.hpp>
-#include <ak/sound/SamplerBuffer.hpp>
-#include <ak/ScopeGuard.hpp>
-#include <ak/thread/CurrentThread.hpp>
-#include <ak/util/FPSCounter.hpp>
-#include <ak/util/String.hpp>
-#include <ak/util/Time.hpp>
-#include <ak/util/Timer.hpp>
-#include <ak/window/Types.hpp>
-#include <ak/window/Window.hpp>
-#include <ak/window/WindowOptions.hpp>
-#include <akgame/CameraControllerBehaviour.hpp>
+
+#include <AkAsset/AssetRegistry.hpp>
+#include <AkAsset/Convert.hpp>
+#include <AkAsset/Image.hpp>
+#include <AkAsset/Material.hpp>
+#include <AkAsset/Mesh.hpp>
+#include <AkAsset/Serialize.hpp>
+#include <AkCommon/FPSCounter.hpp>
+#include <AkCommon/PrimitiveTypes.hpp>
+#include <AkCommon/ScopeGuard.hpp>
+#include <AkCommon/String.hpp>
+#include <AkCommon/Time.hpp>
+#include <AkCommon/Timer.hpp>
+#include <AkEngine/data/Json.hpp>
+#include <AkEngine/data/MsgPack.hpp>
+#include <AkEngine/data/PValue.hpp>
+#include <AkEngine/data/Serialize.hpp>
+#include <AkEngine/component/Behaviours.hpp>
+#include <AkEngine/component/Camera.hpp>
+#include <AkEngine/entity/Config.hpp>
+#include <AkEngine/entity/Entity.hpp>
+#include <AkEngine/entity/EntityManager.hpp>
+#include <AkEngine/event/Dispatcher.hpp>
+#include <AkEngine/event/Event.hpp>
+#include <AkEngine/filesystem/Path.hpp>
+#include <AkEngine/Log.hpp>
+#include <AkEngine/scene/Scene.hpp>
+#include <AkEngine/scene/SceneManager.hpp>
+#include <AkEngine/thread/CurrentThread.hpp>
+#include <AkGame/CameraControllerBehaviour.hpp>
+#include <AkInput/keyboard/Keyboard.hpp>
+#include <AkInput/mouse/Mouse.hpp>
+#include <AkMath/Matrix.hpp>
+#include <AkMath/Scalar.hpp>
+#include <AkMath/Types.hpp>
+#include <AkRender/gl/Buffers.hpp>
+#include <AkRender/gl/Draw.hpp>
+#include <AkRender/gl/RenderTarget.hpp>
+#include <AkRender/gl/Shaders.hpp>
+#include <AkRender/gl/Textures.hpp>
+#include <AkRender/gl/Types.hpp>
+#include <AkRender/gl/Util.hpp>
+#include <AkRender/gl/VertexArrays.hpp>
+#include <AkRender/SceneRendererDefault.hpp>
+#include <AkRender/window/Types.hpp>
+#include <AkRender/window/Window.hpp>
+#include <AkRender/window/WindowOptions.hpp>
 #include <glm/detail/type_mat4x4.hpp>
+#include <glm/detail/type_vec2.hpp>
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <iomanip>
@@ -83,70 +73,12 @@
 #include <stdexcept>
 #include <vector>
 
-
 int akGameMain();
 
 static void printLogHeader(const akl::Logger& logger);
 static ak::ScopeGuard startup();
 
 static void startGame();
-
-/** Audio
-static akc::RingBuffer<fpSingle> audioChannelLeft(1), audioChannelRight(1);
-static bool started = false;
-
-	aks::backend::init(nullptr, {aks::backend::Format::FPSingle, aks::backend::ChannelMap::Stereo, 48000},
-		[&](void* audioFrames, akSize frameCount, aks::backend::StreamFormat streamFormat) -> akSize {
-			std::array<std::vector<fpSingle>, 2> buffer{std::vector<fpSingle>(frameCount, 0.f), std::vector<fpSingle>(frameCount, 0.f)};
-			akSize leftRead  =  audioChannelLeft.read(buffer[0].data(), frameCount);
-			akSize rightRead = audioChannelRight.read(buffer[1].data(), frameCount);
-			if (leftRead != rightRead) throw std::logic_error("Inconsistent audio channel read.");
-
-			if (leftRead < frameCount) akl::Logger("").warn("Req: ", frameCount, " Recv: ", leftRead);
-
-			for(akSize i = 0; i < leftRead; i++) {
-				static_cast<fpSingle*>(audioFrames)[i*2 + 0] = akm::clamp(buffer[0][i], -1, 1);
-				static_cast<fpSingle*>(audioFrames)[i*2 + 1] = akm::clamp(buffer[1][i], -1, 1);
-			}
-
-			return leftRead;
-		}
-	);
-
-	audioChannelLeft  = akc::RingBuffer<fpSingle>(aks::backend::getDeviceInfo()->streamFormat.sampleRate * 10);
-	audioChannelRight = akc::RingBuffer<fpSingle>(aks::backend::getDeviceInfo()->streamFormat.sampleRate * 10);
-
-	aks::backend::startDevice();
-
-	// static auto trainSound = aks::decode(akfs::CFile("data/test.flac").readAll(), true);
-	// static auto volTrainSoundLeft = aks::FilterVolume(trainSound.at(aks::Channel::Left), 1.f);
-	// static auto volTrainSoundRight = aks::FilterVolume(trainSound.at(aks::Channel::Right), 1.f);
-	// leftMixer.addSource(volTrainSoundLeft);
-	// rightMixer.addSource(volTrainSoundRight);
-
-	sineWave = aks::generateSineWave(100, 1.f);
-	leftVolume  = aks::FilterVolume(sineWave, 1/16.f);
-	rightVolume = aks::FilterVolume(sineWave, 1/16.f);
-	leftMixer.addSource(leftVolume);
-	rightMixer.addSource(rightVolume);
-
-	static akSize cFrame = 0;
-	akSize expectedFrames = (time + delta*2.f) * aks::backend::getDeviceInfo()->streamFormat.sampleRate;
-	if (cFrame < expectedFrames) {
-
-		akSize framesToBuffer = (expectedFrames - cFrame);
-		akSize writtenFrames = std::numeric_limits<akSize>::max();
-
-		std::array<std::vector<fpSingle>, 2> buffer{std::vector<fpSingle>(framesToBuffer, 0.f), std::vector<fpSingle>(framesToBuffer, 0.f)};
-		writtenFrames = std::min(writtenFrames,  leftMixer.sample(buffer[0].data(), cFrame, buffer[0].size()));
-		writtenFrames = std::min(writtenFrames, rightMixer.sample(buffer[1].data(), cFrame, buffer[1].size()));
-
-		 audioChannelLeft.write(buffer[0].data(), framesToBuffer);
-		audioChannelRight.write(buffer[1].data(), framesToBuffer);
-
-		cFrame += writtenFrames;
-	}
-**/
 
 int akGameMain() {
 	constexpr akl::Logger log(AK_STRING_VIEW("Main"));
@@ -166,7 +98,7 @@ int akGameMain() {
 	akr::gl::init();
 
 
-	akas::convertDirectory(akfs::Path("./srcdata/"));
+	aka::convertDirectory(akfs::Path("./srcdata/"));
 
 	startGame();
 
@@ -174,10 +106,6 @@ int akGameMain() {
 
 	return 0;
 }
-
-static aks::SamplerBuffer sineWave;
-static aks::FilterVolume leftVolume, rightVolume;
-static aks::MixerBasic leftMixer, rightMixer;
 
 struct MaterialUBO final {
 	akm::Vec4 baseColour;
@@ -198,7 +126,7 @@ struct MaterialUBO final {
 static void startGame() {
 	// constexpr ak::log::Logger log(AK_STRING_VIEW("Main"));
 
-	akas::AssetRegistry assetRegistry(akfs::Path("data/"));
+	aka::AssetRegistry assetRegistry(akfs::Path("data/"));
 	ake::SceneManager sceneManager;
 	auto& scene = sceneManager.getScene(sceneManager.newScene("World"));
 	auto& ecs = scene.entities();
@@ -218,12 +146,12 @@ static void startGame() {
 	akr::gl::setActiveTexUnit(0);
 	akr::gl::bindTexture(0, *skyboxTexture);
 	{
-		auto pX = akas::loadImageAndTransform("data/skybox/winter/pX.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
-		auto pY = akas::loadImageAndTransform("data/skybox/winter/pY.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
-		auto pZ = akas::loadImageAndTransform("data/skybox/winter/pZ.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
-		auto nX = akas::loadImageAndTransform("data/skybox/winter/nX.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
-		auto nY = akas::loadImageAndTransform("data/skybox/winter/nY.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
-		auto nZ = akas::loadImageAndTransform("data/skybox/winter/nZ.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, akas::ImageRotation::None, 0, 0, 0, 0, false, false);
+		auto pX = aka::loadImageAndTransform("data/skybox/winter/pX.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, aka::ImageRotation::None, 0, 0, 0, 0, false, false);
+		auto pY = aka::loadImageAndTransform("data/skybox/winter/pY.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, aka::ImageRotation::None, 0, 0, 0, 0, false, false);
+		auto pZ = aka::loadImageAndTransform("data/skybox/winter/pZ.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, aka::ImageRotation::None, 0, 0, 0, 0, false, false);
+		auto nX = aka::loadImageAndTransform("data/skybox/winter/nX.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, aka::ImageRotation::None, 0, 0, 0, 0, false, false);
+		auto nY = aka::loadImageAndTransform("data/skybox/winter/nY.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, aka::ImageRotation::None, 0, 0, 0, 0, false, false);
+		auto nZ = aka::loadImageAndTransform("data/skybox/winter/nZ.jpg", akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte_sRGB, aka::ImageRotation::None, 0, 0, 0, 0, false, false);
 
 		if ((pX->width() != pY->width()) || (pY->width() != pZ->width()) || (pZ->width() != nX->width()) || (nX->width() != nY->width()) || (nY->width() != nZ->width()) ||
 			(pX->height() != pY->height()) || (pY->height() != pZ->height()) || (pZ->height() != nX->height()) || (nX->height() != nY->height()) || (nY->height() != nZ->height())) {
@@ -260,17 +188,17 @@ static void startGame() {
 	// //  Model Data  // //
 	// ////////////////// //
 
-	akas::Mesh humanMeshData = [&]{
+	aka::Mesh humanMeshData = [&]{
 		auto rawData = akd::fromMsgPackFile("data/human/meshes/BaseMesh.akmesh", true);
-		return akd::deserialize<akas::Mesh>(rawData);
+		return akd::deserialize<aka::Mesh>(rawData);
 	}();
 
-	akas::Material humanMaterialData = [&]{
+	aka::Material humanMaterialData = [&]{
 		auto rawData = akd::fromJsonFile(assetRegistry.tryGetAssetInfoBySUID(humanMeshData.primitives[0].materialAssetID)->second.clearExtension());
-		return akd::deserialize<akas::Material>(rawData);
+		return akd::deserialize<aka::Material>(rawData);
 	}();
 
-	akas::Image humanTextureData = *akas::loadImageAndTransform(assetRegistry.tryGetAssetInfoBySUID(humanMaterialData.baseTexture->imgAssetID)->second.clearExtension(), akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte, akas::ImageRotation::None, 0, 0, 0, 0, false, true);
+	aka::Image humanTextureData = *aka::loadImageAndTransform(assetRegistry.tryGetAssetInfoBySUID(humanMaterialData.baseTexture->imgAssetID)->second.clearExtension(), akr::gl::TexFormat::RGBA, akr::gl::TexStorage::Byte, aka::ImageRotation::None, 0, 0, 0, 0, false, true);
 
 	// //////////////////// //
 	// //  Model Upload  // //
@@ -279,18 +207,18 @@ static void startGame() {
 	akr::gl::VertexArray humanMeshVAO;
 	humanMeshVAO.enableVAttribs({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, true);
 
-	akr::gl::Buffer vertexSurfaceDataBuffer(humanMeshData.primitives[0].surfaceData.data(), humanMeshData.primitives[0].surfaceData.size()*sizeof(akas::VertexSurfaceData));
+	akr::gl::Buffer vertexSurfaceDataBuffer(humanMeshData.primitives[0].surfaceData.data(), humanMeshData.primitives[0].surfaceData.size()*sizeof(aka::VertexSurfaceData));
 	humanMeshVAO.setVAttribFormats({0, 1, 2, 3}, 3, akr::gl::DataType::Single, false, 0);
-	humanMeshVAO.bindVertexBuffer(0, vertexSurfaceDataBuffer, sizeof(akas::VertexSurfaceData), offsetof(akas::VertexSurfaceData, position));
-	humanMeshVAO.bindVertexBuffer(1, vertexSurfaceDataBuffer, sizeof(akas::VertexSurfaceData), offsetof(akas::VertexSurfaceData, tangent));
-	humanMeshVAO.bindVertexBuffer(2, vertexSurfaceDataBuffer, sizeof(akas::VertexSurfaceData), offsetof(akas::VertexSurfaceData, bitangent));
-	humanMeshVAO.bindVertexBuffer(3, vertexSurfaceDataBuffer, sizeof(akas::VertexSurfaceData), offsetof(akas::VertexSurfaceData, normal));
+	humanMeshVAO.bindVertexBuffer(0, vertexSurfaceDataBuffer, sizeof(aka::VertexSurfaceData), offsetof(aka::VertexSurfaceData, position));
+	humanMeshVAO.bindVertexBuffer(1, vertexSurfaceDataBuffer, sizeof(aka::VertexSurfaceData), offsetof(aka::VertexSurfaceData, tangent));
+	humanMeshVAO.bindVertexBuffer(2, vertexSurfaceDataBuffer, sizeof(aka::VertexSurfaceData), offsetof(aka::VertexSurfaceData, bitangent));
+	humanMeshVAO.bindVertexBuffer(3, vertexSurfaceDataBuffer, sizeof(aka::VertexSurfaceData), offsetof(aka::VertexSurfaceData, normal));
 
-	akr::gl::Buffer skinningDataBuffer(humanMeshData.primitives[0].skinningData.data(), humanMeshData.primitives[0].skinningData.size()*sizeof(akas::VertexWeightData));
+	akr::gl::Buffer skinningDataBuffer(humanMeshData.primitives[0].skinningData.data(), humanMeshData.primitives[0].skinningData.size()*sizeof(aka::VertexWeightData));
 	humanMeshVAO.setVAttribFormat(4, 4, akr::gl::DataType::UInt32, false, 0);
 	humanMeshVAO.setVAttribFormat(5, 4, akr::gl::DataType::Single, false, 0);
-	humanMeshVAO.bindVertexBuffer(4, skinningDataBuffer, sizeof(akas::VertexSurfaceData), offsetof(akas::VertexWeightData, bones));
-	humanMeshVAO.bindVertexBuffer(5, skinningDataBuffer, sizeof(akas::VertexSurfaceData), offsetof(akas::VertexWeightData, weights));
+	humanMeshVAO.bindVertexBuffer(4, skinningDataBuffer, sizeof(aka::VertexSurfaceData), offsetof(aka::VertexWeightData, bones));
+	humanMeshVAO.bindVertexBuffer(5, skinningDataBuffer, sizeof(aka::VertexSurfaceData), offsetof(aka::VertexWeightData, weights));
 
 	std::vector<akm::Vec2> texCoordData;
 	akSize texCoordCount = std::max(std::max(humanMeshData.primitives[0].texCoordData[0].size(), humanMeshData.primitives[0].texCoordData[1].size()), std::max(humanMeshData.primitives[0].texCoordData[2].size(), humanMeshData.primitives[0].texCoordData[3].size()));
