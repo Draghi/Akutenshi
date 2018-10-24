@@ -73,8 +73,6 @@
 #include <stdexcept>
 #include <vector>
 
-int akGameMain();
-
 static void printLogHeader(const akl::Logger& logger);
 static ak::ScopeGuard startup();
 

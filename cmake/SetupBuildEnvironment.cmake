@@ -1,7 +1,6 @@
 ###################
 # Akutenshi Setup #
 ###################
-
 # Setup Internal Variables
 set(AK_OUTPUT_ROOT "${CMAKE_SOURCE_DIR}/dist" CACHE string "The root directory of where the built project will be deployed")
 set(AK_OUTPUT_BIN  "${AK_OUTPUT_ROOT}/bin")
@@ -36,7 +35,6 @@ endif()
 ###############
 # CMake Setup #
 ###############
-
 # Setup CMake variables
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${AK_OUTPUT_BIN}")
@@ -55,7 +53,6 @@ set(CMAKE_INSTALL_PREFIX "install/" CACHE INTERNAL "${AK_OUTPUT_ROOT}" FORCE)
 ###############
 # Build Setup #
 ###############
- 
 # Setup Sugar
 set(SUGAR_ROOT "${CMAKE_SOURCE_DIR}/cmake/sugar/")
 include("${SUGAR_ROOT}/cmake/Sugar")
@@ -69,7 +66,6 @@ set(SUGAR_STATUS_DEBUG OFF CACHE INTERNAL "" FORCE)
 ###############
 # Build GLFW  #
 ###############
-
 set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE INTERNAL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE INTERNAL "" FORCE)
@@ -85,30 +81,42 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/cmake/glfw")
 ##############
 # Build GL3  #
 ##############
-
 add_subdirectory("${CMAKE_SOURCE_DIR}/cmake/GL4")
 
 ################
 # Build Brotli #
 ################
-
 set(BROTLI_BUNDLED_MODE ON CACHE INTERNAL "" FORCE)
 # set(ENABLE_SANITIZER "undefined")
 add_subdirectory("${CMAKE_SOURCE_DIR}/cmake/brotli")
 
-#################
-# Library Paths #
-#################
-
-set(BACKWARD_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/backward-cpp")
-set(BROTLI_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/brotli/c/include")
-set(GLM_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/glm")
-set(GLFW_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/glfw/include")
-set(GL4_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/GL4/inc")
-set(MSGPACK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/msgpack-c/include")
+##########################
+# External Library Paths #
+##########################
+set(BACKWARD_INCLUDE_DIR  "${CMAKE_SOURCE_DIR}/cmake/backward-cpp")
+set(BROTLI_INCLUDE_DIR    "${CMAKE_SOURCE_DIR}/cmake/brotli/c/include")
+set(GLM_INCLUDE_DIR       "${CMAKE_SOURCE_DIR}/cmake/glm")
+set(GLFW_INCLUDE_DIR      "${CMAKE_SOURCE_DIR}/cmake/glfw/include")
+set(GL4_INCLUDE_DIR       "${CMAKE_SOURCE_DIR}/cmake/GL4/inc")
+set(MSGPACK_INCLUDE_DIR   "${CMAKE_SOURCE_DIR}/cmake/msgpack-c/include")
 set(RAPIDJSON_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/rapidjson/include")
-set(STB_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/stb")
-set(MINI_AL_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/cmake/mini_al")
+set(STB_INCLUDE_DIR       "${CMAKE_SOURCE_DIR}/cmake/stb")
+set(MINI_AL_INCLUDE_DIR   "${CMAKE_SOURCE_DIR}/cmake/mini_al")
 
+##########################
+# Internal Library Paths #
+##########################
+set(AK_ASSET_INCLUDE_DIR  "${CMAKE_SOURCE_DIR}/source/akasset/inc")
+set(AK_COMMON_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/source/akcommon/inc")
+set(AK_ENGINE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/source/akengine/inc")
+set(AK_GAME_INCLUDE_DIR   "${CMAKE_SOURCE_DIR}/source/akgame/inc")
+set(AK_INPUT_INCLUDE_DIR  "${CMAKE_SOURCE_DIR}/source/akinput/inc")
+set(AK_MAIN_INCLUDE_DIR   "${CMAKE_SOURCE_DIR}/source/akmain/inc")
+set(AK_MATH_INCLUDE_DIR   "${CMAKE_SOURCE_DIR}/source/akmath/inc")
+set(AK_RENDER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/source/akrender/inc")
+set(AK_SOUND_INCLUDE_DIR  "${CMAKE_SOURCE_DIR}/source/aksound/inc")
 
-
+##########
+# Finish #
+##########
+set(AK_BUILD_ENV_SETUP 1)

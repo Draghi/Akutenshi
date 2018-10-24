@@ -10,4 +10,7 @@ include_guard(GLOBAL)
 # # Source Files # #
 # ################ #
 
-# sugar_files(AK_MATH_SOURCE )
+sugar_files(AK_MAIN_SOURCE 
+	main.cpp 
+	imp.cpp
+)
