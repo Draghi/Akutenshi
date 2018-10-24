@@ -107,12 +107,10 @@ set(MINI_AL_INCLUDE_DIR   "${CMAKE_SOURCE_DIR}/cmake/mini_al")
 # Internal Library Paths #
 ##########################
 set(AK_ASSET_INCLUDE_DIR  "${CMAKE_SOURCE_DIR}/source/akasset/inc")
-set(AK_COMMON_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/source/akcommon/inc")
 set(AK_ENGINE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/source/akengine/inc")
 set(AK_GAME_INCLUDE_DIR   "${CMAKE_SOURCE_DIR}/source/akgame/inc")
 set(AK_INPUT_INCLUDE_DIR  "${CMAKE_SOURCE_DIR}/source/akinput/inc")
 set(AK_MAIN_INCLUDE_DIR   "${CMAKE_SOURCE_DIR}/source/akmain/inc")
-set(AK_MATH_INCLUDE_DIR   "${CMAKE_SOURCE_DIR}/source/akmath/inc")
 set(AK_RENDER_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/source/akrender/inc")
 set(AK_SOUND_INCLUDE_DIR  "${CMAKE_SOURCE_DIR}/source/aksound/inc")
 

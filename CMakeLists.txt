@@ -4,8 +4,6 @@ if(NOT DEFINED AK_BUILD_ENV_SETUP)
 	include("cmake/SetupBuildEnvironment.cmake")
 endif()
 
-add_subdirectory("${CMAKE_SOURCE_DIR}/source/akcommon")
-add_subdirectory("${CMAKE_SOURCE_DIR}/source/akmath")
 add_subdirectory("${CMAKE_SOURCE_DIR}/source/akengine")
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/source/akasset")

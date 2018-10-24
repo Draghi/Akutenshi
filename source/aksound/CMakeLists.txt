@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.2) 
-project(aksound VERSION 1.0.0.0)
 
 if(NOT DEFINED AK_BUILD_ENV_SETUP)
 	include("cmake/SetupBuildEnvironment.cmake")
 endif()
 
+project(aksound VERSION 1.0.0.0)
 sugar_include("src")
 add_library(aksound STATIC ${AK_SOUND_SOURCE})
 
@@ -21,10 +21,7 @@ target_compile_options(aksound PRIVATE ${AK_BUILD_CXX_COMPILER_FLAGS})
 target_include_directories(aksound PUBLIC  inc)
 target_include_directories(aksound PRIVATE src)
 
-target_include_directories(aksound SYSTEM PUBLIC ${AK_COMMON_INCLUDE_DIR})
 target_include_directories(aksound SYSTEM PUBLIC ${AK_ENGINE_INCLUDE_DIR})
-
-target_link_libraries(aksound akcommon)
 target_link_libraries(aksound akengine)
 
 # ##################### #
