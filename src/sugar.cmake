@@ -4,14 +4,14 @@ include_guard(GLOBAL)
 # # Include Dirs # #
 # ################ #
 
-sugar_include(AkAsset)
-sugar_include(AkCommon)
-sugar_include(AkEngine)
-sugar_include(AkGame)
-sugar_include(AkInput)
-sugar_include(AkMath)
-sugar_include(AkRender)
-sugar_include(AkSound)
+sugar_include(akasset)
+sugar_include(akcommon)
+sugar_include(akengine)
+sugar_include(akgame)
+sugar_include(akinput)
+sugar_include(akmath)
+sugar_include(akrender)
+sugar_include(aksound)
 
 # ################ #
 # # Source Files # #

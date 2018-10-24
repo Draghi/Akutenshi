@@ -40,8 +40,8 @@ target_include_directories(akutenshi SYSTEM PUBLIC ${MINI_AL_INCLUDE_DIR})
 # ################### #
 # # Compile Options # #
 # ################### #
-target_compile_options(akutenshi PUBLIC ${AK_BUILD_CXX_WARNING_FLAGS})
-target_compile_options(akutenshi PUBLIC ${AK_BUILD_CXX_COMPILER_FLAGS})
+target_compile_options(akutenshi PRIVATE ${AK_BUILD_CXX_WARNING_FLAGS})
+target_compile_options(akutenshi PRIVATE ${AK_BUILD_CXX_COMPILER_FLAGS})
 target_compile_definitions(akutenshi PUBLIC -DGLM_FORCE_RADIANS=1 -DGLM_ENABLE_EXPERIMENTAL=1 -DGLM_FORCE_LEFT_HANDED=1 -DGLM_FORCE_SIZE_FUNC=1 -DGLM_FORCE_INLINE=1)
 set_target_properties(akutenshi PROPERTIES CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON CXX_STANDARD 17)
 

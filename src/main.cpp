@@ -1,6 +1,6 @@
-#include <AkCommon/PrimitiveTypes.hpp>
-#include <AkCommon/String.hpp>
-#include <AkEngine/Log.hpp>
+#include <akcommon/PrimitiveTypes.hpp>
+#include <akcommon/String.hpp>
+#include <akengine/debug/Log.hpp>
 #include <bits/exception.h>
 #include <process.h>
 #include <stdlib.h>
