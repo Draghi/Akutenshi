@@ -15,5 +15,3 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/source/aksound")
 add_subdirectory("${CMAKE_SOURCE_DIR}/source/akgame")
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/source/akmain")
-
-add_custom_target(graphviz ALL "${CMAKE_COMMAND}" "--graphviz=foo" .WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")

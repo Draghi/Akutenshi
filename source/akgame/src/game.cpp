@@ -315,7 +315,7 @@ static void startGame() {
 		for(akSize i = 0; i < 10; i++) {
 			for(akSize j = 0; j < 10; j++) {
 				depthPrepassShader.setUniform(4, (akm::scale({-50, -50, -50}) * akm::translate({i*.33f, 0, j*.33f})));
-				depthPrepassShader.setUniform(5, akm::inverse(akm::scale({-50, -50, -50}) * akm::translate({i*.33f, 0, j*.33f})));
+				depthPrepassShader.setUniform(5, akm::inverse(akm::scale({-50, 50, -50}) * akm::translate({i*.33f, 0, j*.33f})));
 
 				akr::gl::drawIndexed(akr::gl::DrawType::Triangles, akr::gl::IDataType::UInt16, humanMeshData.primitives[0].indexData.size()*3, 0);
 			}
