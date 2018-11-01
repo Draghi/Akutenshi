@@ -117,7 +117,7 @@ static std::array<std::vector<akm::Vec2>, 4> extractTextureData(const Asset& ass
 static std::vector<akm::Vec4> extractColourData(const Asset& asset, const Primitive& primitive) {
 	if (primitive.colourIDs.size() > 0) {
 		if (primitive.colourIDs.size() > 1) akl::Logger("GLTF").warn("Multiple colour sets not supported.");
-		if (asset.accessors[primitive.colourIDs[0]].type == AccessorType::Vec3) return aku::convert_to<std::vector<akm::Vec4>>(extractAccessorData<akm::Vec3>(asset, primitive.colourIDs[0]), [](const auto& colourRGB){ return akm::Vec4{colourRGB.r, colourRGB.g, colourRGB.b, 1.0f};});
+		if (asset.accessors[primitive.colourIDs[0]].type == AccessorType::Vec3) return akc::convert_to<std::vector<akm::Vec4>>(extractAccessorData<akm::Vec3>(asset, primitive.colourIDs[0]), [](const auto& colourRGB){ return akm::Vec4{colourRGB.r, colourRGB.g, colourRGB.b, 1.0f};});
 		else return extractAccessorData<akm::Vec4>(asset, primitive.colourIDs[0]);
 	}
 	return std::vector<akm::Vec4>();

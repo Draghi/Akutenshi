@@ -99,14 +99,14 @@ namespace akd {
 
 			std::string toDebugString() const {
 				if (isNull()) return "<null>";
-				if (isObj())  return aku::buildString("<str:", getObj().size(), ">");
-				if (isArr())  return aku::buildString("<str:", getArr().size(), ">");
-				if (isBin())  return aku::buildString("<str:", getBin().size(), ">");
-				if (isStr())  return aku::buildString("<str:", getStr(), ">");
-				if (isSInt()) return aku::buildString("<sint:",getSInt(),">");
-				if (isUInt()) return aku::buildString("<uint:",getUInt(),">");
-				if (isDec())  return aku::buildString("<dec:", getDec(), ">");
-				if (isBool()) return aku::buildString("<bool:",getBool(),">");
+				if (isObj())  return akc::buildString("<str:", getObj().size(), ">");
+				if (isArr())  return akc::buildString("<str:", getArr().size(), ">");
+				if (isBin())  return akc::buildString("<str:", getBin().size(), ">");
+				if (isStr())  return akc::buildString("<str:", getStr(), ">");
+				if (isSInt()) return akc::buildString("<sint:",getSInt(),">");
+				if (isUInt()) return akc::buildString("<uint:",getUInt(),">");
+				if (isDec())  return akc::buildString("<dec:", getDec(), ">");
+				if (isBool()) return akc::buildString("<bool:",getBool(),">");
 				return "<error>";
 			}
 
@@ -331,7 +331,7 @@ namespace akd {
 
 			template<typename type_t> type_t get() const {
 				auto result = tryGet<type_t>();
-				throw std::logic_error(aku::buildString("Failed to get value from PValue containing ", toDebugString()));
+				throw std::logic_error(akc::buildString("Failed to get value from PValue containing ", toDebugString()));
 				return *result;
 			}
 
@@ -406,7 +406,7 @@ namespace akd {
 
 			template<typename type_t> type_t as() const {
 				auto result = tryAs<type_t>();
-				if (!result) throw std::logic_error(aku::buildString("Failed to convert value from PValue containing ", toDebugString()));
+				if (!result) throw std::logic_error(akc::buildString("Failed to convert value from PValue containing ", toDebugString()));
 				return *result;
 			}
 

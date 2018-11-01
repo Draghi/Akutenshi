@@ -22,43 +22,43 @@
 #include <string>
 #include <vector>
 
-namespace akw {
+namespace akr {
+	namespace win {
+		struct VideoMode {
+			WindowCoord resolution;
+			int refreshRate;
 
-	struct VideoMode {
-		WindowCoord resolution;
-		int refreshRate;
+			static VideoMode DefaultVideoMode() { return {{800, 600}, 0}; }
 
-		static VideoMode DefaultVideoMode() { return {{800, 600}, 0}; }
+			bool operator==(const VideoMode& other) const { return resolution == other.resolution; }
+		};
 
-		bool operator==(const VideoMode& other) const { return resolution == other.resolution; }
-	};
+		struct Monitor {
+			void* handle;
 
-	struct Monitor {
-		void* handle;
+			std::string name;
+			WindowCoord position;
+			RealCoord realSizeMM;
 
-		std::string name;
-		WindowCoord position;
-		RealCoord realSizeMM;
+			VideoMode prefVideoMode;
+			std::vector<VideoMode> videoModes;
 
-		VideoMode prefVideoMode;
-		std::vector<VideoMode> videoModes;
+			static Monitor NullMonitor() { return {nullptr, "NullMonitor", {0, 0}, {0, 0}, VideoMode::DefaultVideoMode(), {VideoMode::DefaultVideoMode()}}; }
 
-		static Monitor NullMonitor() { return {nullptr, "NullMonitor", {0, 0}, {0, 0}, VideoMode::DefaultVideoMode(), {VideoMode::DefaultVideoMode()}}; }
+			bool operator==(const Monitor& other) const { return handle == other.handle; }
+			bool operator!=(const Monitor& other) const { return handle != other.handle; }
+		};
 
-		bool operator==(const Monitor& other) const { return handle == other.handle; }
-		bool operator!=(const Monitor& other) const { return handle != other.handle; }
-	};
+		std::vector<Monitor> monitors();
 
-	std::vector<Monitor> monitors();
+		std::vector<Monitor> getMonitorsAt(WindowCoord pos, WindowCoord size = {0,0});
+		std::vector<Monitor> getAllWindowMonitors();
 
-	std::vector<Monitor> getMonitorsAt(WindowCoord pos, WindowCoord size = {0,0});
-	std::vector<Monitor> getAllWindowMonitors();
+		Monitor primaryMonitor();
+		Monitor currentMonitor();
 
-	Monitor primaryMonitor();
-	Monitor currentMonitor();
-
-	void setGamma(const Monitor* monitor, fpSingle gamma);
-
+		void setGamma(const Monitor* monitor, fpSingle gamma);
+	}
 }
 
 #endif

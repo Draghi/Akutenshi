@@ -73,7 +73,7 @@ using akSSize =  int32;
 // Util
 //
 
-namespace ak {
+namespace akc {
 	template<typename type_t> std::string getPrimitiveName();
 
 	template<> inline std::string getPrimitiveName<uint8>() { return "uint8"; }

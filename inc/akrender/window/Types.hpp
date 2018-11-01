@@ -19,39 +19,40 @@
 
 #include <akmath/Vector.hpp>
 
-namespace akw {
+namespace akr {
+	namespace win {
 
-	using RealCoord  = akm::Vec2;
-	using WindowCoord = akm::Vec2;
-	using FrameCoord  = akm::Vec2;
+		using RealCoord  = akm::Vec2;
+		using WindowCoord = akm::Vec2;
+		using FrameCoord  = akm::Vec2;
 
-/*	struct RealCoord {
-		int x;
-		int y;
+	/*	struct RealCoord {
+			int x;
+			int y;
 
-		bool operator==(const RealCoord& other) const { return x == other.x && y == other.y; }
-	};
+			bool operator==(const RealCoord& other) const { return x == other.x && y == other.y; }
+		};
 
-	struct WindowCoord {
-		int x;
-		int y;
+		struct WindowCoord {
+			int x;
+			int y;
 
-		bool operator==(const WindowCoord& other) const { return x == other.x && y == other.y; }
-	};
+			bool operator==(const WindowCoord& other) const { return x == other.x && y == other.y; }
+		};
 
-	struct FrameCoord {
-		int x;
-		int y;
+		struct FrameCoord {
+			int x;
+			int y;
 
-		bool operator==(const FrameCoord& other) const { return x == other.x && y == other.y; }
-	};*/
+			bool operator==(const FrameCoord& other) const { return x == other.x && y == other.y; }
+		};*/
 
-	enum class CursorMode {
-		Captured,
-		Hidden,
-		Normal
-	};
-
+		enum class CursorMode {
+			Captured,
+			Hidden,
+			Normal
+		};
+	}
 }
 
 #endif

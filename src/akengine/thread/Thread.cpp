@@ -45,9 +45,9 @@ Thread::~Thread() {
 	if (!join()) waitFor();
 }
 
-ak::ScopeGuard Thread::performThreadStartup() {
+akc::ScopeGuard Thread::performThreadStartup() {
 	currentThreadPtr() = this;
-	return ak::ScopeGuard([this] {
+	return akc::ScopeGuard([this] {
 		m_runLock = false;
 		m_closeRequested = false;
 		delete &current();

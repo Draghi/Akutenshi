@@ -75,7 +75,7 @@ class VFSMounts final {
 			if (vfsPoint.back() != '/') vfsPoint += '/';
 
 			auto iter = m_vfsToSys.find(vfsPoint);
-			if (iter == m_vfsToSys.end()) throw std::logic_error(aku::buildString("Unable to resolve vfsMountPoint: ", vfsPoint));
+			if (iter == m_vfsToSys.end()) throw std::logic_error(akc::buildString("Unable to resolve vfsMountPoint: ", vfsPoint));
 			makeDir(iter->second);
 			return iter->second;
 		}
@@ -156,7 +156,7 @@ bool akfs::iterateDirectory(const akfs::Path& path, const std::function<bool(con
 
 	auto dir = ::opendir(sysPath.c_str());
 	if (!dir) return true;
-	auto dirGuard = ak::ScopeGuard([&]{::closedir(dir);});
+	auto dirGuard = akc::ScopeGuard([&]{::closedir(dir);});
 
 	struct dirent* entry = nullptr;
 	while((entry = ::readdir(dir))) {

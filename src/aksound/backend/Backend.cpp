@@ -54,7 +54,7 @@ bool aks::backend::init(const DeviceIdentifier& deviceID, StreamFormat streamFor
 
 bool aks::backend::init(const std::vector<Backend>& backends, const DeviceIdentifier& deviceID, StreamFormat streamFormat, const std::function<upload_callback_f>& callback) {
 	if (malIsInit.exchange(true)) return false;
-	ak::ScopeGuard resetInitFlag([&]{malIsInit = false;});
+	akc::ScopeGuard resetInitFlag([&]{malIsInit = false;});
 
 	if (!initContext(&malContext, backends)) return false;
 	if (!initDevice(&malContext, &malDevice, deviceID, streamFormat, callback)) { mal_context_uninit(&malContext); return false; }
@@ -112,7 +112,7 @@ static std::vector<DeviceCapabilities> getAvailableDevicesForContext(mal_context
 		result.push_back(DeviceCapabilities{
 			DeviceIdentifier(new internal::DeviceIdentifier{device.id}),
 			std::string(device.name),
-			aku::convert_to_if<std::vector<Format>>(device.formats, device.formats+device.formatCount, internal::fromMalFormat),
+			akc::convert_to_if<std::vector<Format>>(device.formats, device.formats+device.formatCount, internal::fromMalFormat),
 			{device.minChannels, device.maxChannels},
 			{device.minSampleRate, device.maxSampleRate}
 		});

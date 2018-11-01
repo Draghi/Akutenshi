@@ -20,7 +20,7 @@
 #include <akcommon/PrimitiveTypes.hpp>
 #include <ctime>
 
-namespace aku {
+namespace akc {
 	struct Timestamp {
 		std::tm ctime;
 		uint32 milliseconds;

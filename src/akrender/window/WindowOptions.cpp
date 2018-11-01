@@ -21,7 +21,7 @@
 #include <algorithm>
 #include <vector>
 
-using namespace akw;
+using namespace akr::win;
 
 static Monitor findMonitorByName(const std::vector<Monitor>& allMonitors, const std::string& name) {
 	auto iter = std::find_if(allMonitors.begin(), allMonitors.end(), [&](const Monitor& monitor){ return monitor.name == name; });
@@ -34,7 +34,7 @@ static Monitor findTargetMonitor(const std::string& name, WindowCoord pos) {
 	auto monitorByName = findMonitorByName(monitors(), name);
 	if (monitorByName != Monitor::NullMonitor()) return monitorByName;
 
-	auto monitorsAt = akw::getMonitorsAt(pos, {0,0});
+	auto monitorsAt = akr::win::getMonitorsAt(pos, {0,0});
 	if (monitorsAt.size() == 1) {
 		if (monitorsAt.front() != Monitor::NullMonitor()) return monitorsAt.front();
 		return primaryMonitor();
@@ -45,7 +45,7 @@ static Monitor findTargetMonitor(const std::string& name, WindowCoord pos) {
 	return primaryMonitor();
 }
 
-bool akd::deserialize(akw::WindowOptions& dst, const akd::PValue& root) {
+bool akd::deserialize(akr::win::WindowOptions& dst, const akd::PValue& root) {
 	WindowCoord pos = {root["position"]["x"].as<int>(), root["position"]["y"].as<int>()};
 	WindowCoord winSize = {root["videoMode"]["resolution"]["x"].as<int>(), root["videoMode"]["resolution"]["y"].as<int>()};
 	VideoMode videoMode = {winSize, root["videoMode"]["refreshRate"].as<int>()};
@@ -90,7 +90,7 @@ bool akd::deserialize(akw::WindowOptions& dst, const akd::PValue& root) {
 	return true;
 }
 
-void akd::serialize(akd::PValue& root, const akw::WindowOptions& val) {
+void akd::serialize(akd::PValue& root, const akr::win::WindowOptions& val) {
 	root["position"]["x"].set<fpSingle>(val.position().x);
 	root["position"]["y"].set<fpSingle>(val.position().y);
 
@@ -133,5 +133,5 @@ void akd::serialize(akd::PValue& root, const akw::WindowOptions& val) {
 }
 
 static akev::SubscriberID windowSInitRegenerateConfigHook = ake::regenerateConfigDispatch().subscribe([](ake::RegenerateConfigEvent& event){
-	akd::serialize(event.data()["window"], akw::WindowOptions());
+	akd::serialize(event.data()["window"], akr::win::WindowOptions());
 });

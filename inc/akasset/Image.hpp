@@ -75,7 +75,7 @@ namespace aka {
 			}
 	};
 
-	inline std::pair<void*, ak::ScopeGuard> loadImageDataFromFile(const akfs::Path& path, akr::gl::TexFormat format, akr::gl::TexStorage storage, int& w, int& h) {
+	inline std::pair<void*, akc::ScopeGuard> loadImageDataFromFile(const akfs::Path& path, akr::gl::TexFormat format, akr::gl::TexStorage storage, int& w, int& h) {
 		akfs::CFile imageFile(path); if (!imageFile) return {};
 		std::vector<uint8> fileData; if (!imageFile.readAll(fileData)) return {};
 
@@ -85,12 +85,12 @@ namespace aka {
 			case akr::gl::TexStorage::Byte: [[fallthrough]];
 			case akr::gl::TexStorage::Byte_sRGB: {
 				uint8* imageData  = stbi_load_from_memory(fileData.data(), fileData.size(), &w, &h, nullptr, static_cast<int>(format));
-				return std::make_pair<void*, ak::ScopeGuard>(imageData, ak::ScopeGuard([=](){if (imageData) stbi_image_free(imageData);}));
+				return std::make_pair<void*, akc::ScopeGuard>(imageData, akc::ScopeGuard([=](){if (imageData) stbi_image_free(imageData);}));
 			} break;
 
 			case akr::gl::TexStorage::Short: {
 				uint16* imageData  = stbi_load_16_from_memory(fileData.data(), fileData.size(), &w, &h, nullptr, static_cast<int>(format));
-				return std::make_pair<void*, ak::ScopeGuard>(imageData, ak::ScopeGuard([=](){if (imageData) stbi_image_free(imageData);}));
+				return std::make_pair<void*, akc::ScopeGuard>(imageData, akc::ScopeGuard([=](){if (imageData) stbi_image_free(imageData);}));
 			} break;
 
 			case akr::gl::TexStorage::Half: {
@@ -99,7 +99,7 @@ namespace aka {
 
 			case akr::gl::TexStorage::Single: {
 				fpSingle* imageData  = stbi_loadf_from_memory(fileData.data(), fileData.size(), &w, &h, nullptr, static_cast<int>(format));
-				return std::make_pair<void*, ak::ScopeGuard>(imageData, ak::ScopeGuard([=](){if (imageData) stbi_image_free(imageData);}));
+				return std::make_pair<void*, akc::ScopeGuard>(imageData, akc::ScopeGuard([=](){if (imageData) stbi_image_free(imageData);}));
 			} break;
 		}
 	}

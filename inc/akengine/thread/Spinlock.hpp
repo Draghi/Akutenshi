@@ -38,14 +38,14 @@ namespace akt {
 		public:
 			Spinlock() : m_lock(false), m_lastAcquiredThread(std::this_thread::get_id()) {}
 
-			ak::ScopeGuard tryLock() const {
-				if (m_lock.exchange(true, LOCK_MEMORY_ORDER)) return ak::ScopeGuard();
+			akc::ScopeGuard tryLock() const {
+				if (m_lock.exchange(true, LOCK_MEMORY_ORDER)) return akc::ScopeGuard();
 				m_lastAcquiredThread = std::this_thread::get_id();
 				return [&](){unlock();};
 			}
 
-			ak::ScopeGuard lock() const {
-				ak::ScopeGuard result;
+			akc::ScopeGuard lock() const {
+				akc::ScopeGuard result;
 				while((result = tryLock()).empty()) std::this_thread::yield();
 				return result;
 			}

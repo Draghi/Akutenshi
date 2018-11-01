@@ -13,5 +13,4 @@ sugar_include(window)
 
 sugar_files(AK_RENDER_SOURCE 
 	DebugDraw.cpp 
-	SceneRendererDefault.cpp 
 )

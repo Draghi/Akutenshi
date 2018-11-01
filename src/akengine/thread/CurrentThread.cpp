@@ -20,7 +20,7 @@
 #include <string>
 #include <thread>
 
-using namespace ak;
+using namespace akc;
 using namespace akt;
 
 CurrentThread::CurrentThread(akt::Thread* thread, std::thread::id id) : m_thread(thread), m_id(id) {}

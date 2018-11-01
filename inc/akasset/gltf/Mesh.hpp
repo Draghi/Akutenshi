@@ -60,7 +60,7 @@ namespace aka {
 			auto collectMultiAttrib = [](const std::string& name, const akd::PValue& attribs) {
 				std::vector<gltfID> result;
 				for(uint i = 0; true; i++) {
-					auto property = aku::buildString(name, i);
+					auto property = akc::buildString(name, i);
 					if (!attribs.exists(property)) break;
 					result.push_back(attribs.at(property).as<gltfID>());
 				}

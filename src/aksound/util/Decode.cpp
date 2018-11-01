@@ -40,7 +40,7 @@ static std::unordered_map<Channel, aks::SamplerBuffer> decode(const std::vector<
 	// Decode
 	mal_uint64 frameCount;
 	void* bufferData = nullptr;
-	auto bufferDataGuard = ak::ScopeGuard([&]{if (bufferData != nullptr) mal_free(bufferData); });
+	auto bufferDataGuard = akc::ScopeGuard([&]{if (bufferData != nullptr) mal_free(bufferData); });
 	if (mal_decode_memory(data.data(), data.size(), &cfg, &frameCount, &bufferData) != MAL_SUCCESS) {
 		return std::unordered_map<Channel, aks::SamplerBuffer>();
 	}

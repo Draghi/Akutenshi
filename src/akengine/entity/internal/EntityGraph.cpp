@@ -119,7 +119,7 @@ bool EntityGraph::setParent(EntityID entityID, EntityID newParent) {
 
 	// Change parent
 	auto& parentEntry = m_graphStorage.at(childEntry.parent);
-	parentEntry.children.erase(aku::find(parentEntry.children, entityID));
+	parentEntry.children.erase(akc::find(parentEntry.children, entityID));
 	childEntry.parent = newParent;
 	if (newParent) m_graphStorage.at(newParent).children.insert(entityID);
 	else m_graphRoot.insert(entityID);

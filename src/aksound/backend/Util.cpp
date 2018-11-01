@@ -39,8 +39,8 @@ akSize aks::backend::resampleStream(void* samplesOut, akSize frameCountOut, Stre
 		}
 	}
 
-	auto malChannelOut = aku::convert_to<std::vector<mal_channel>>(aks::backend::channelLayoutOf(streamFormatOut.channelMap), [](const auto& v) { return static_cast<mal_channel>(v); });
-	auto malChannelIn  = aku::convert_to<std::vector<mal_channel>>(aks::backend::channelLayoutOf( streamFormatIn.channelMap), [](const auto& v) { return static_cast<mal_channel>(v); });
+	auto malChannelOut = akc::convert_to<std::vector<mal_channel>>(aks::backend::channelLayoutOf(streamFormatOut.channelMap), [](const auto& v) { return static_cast<mal_channel>(v); });
+	auto malChannelIn  = akc::convert_to<std::vector<mal_channel>>(aks::backend::channelLayoutOf( streamFormatIn.channelMap), [](const auto& v) { return static_cast<mal_channel>(v); });
 
 	return mal_convert_frames_ex_lim(
 		samplesOut, aks::backend::internal::toMalFormat(streamFormatOut.format), malChannelOut.size(), streamFormatOut.sampleRate, malChannelOut.data(), frameCountOut,

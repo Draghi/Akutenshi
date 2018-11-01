@@ -21,7 +21,7 @@
 #include <akcommon/Timer.hpp>
 #include <deque>
 
-namespace aku {
+namespace akc {
 
 	class FPSCounter final {
 		private:

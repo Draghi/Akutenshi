@@ -21,7 +21,7 @@
 #include <chrono>
 #include <ratio>
 
-namespace aku {
+namespace akc {
 	class Timer final {
 		private:
 			using nano_t  = std::nano;

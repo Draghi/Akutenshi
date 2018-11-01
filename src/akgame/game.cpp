@@ -41,16 +41,16 @@
 
 void akg::startup(const akl::Logger& log) {
 	log.info("Starting window system."); {
-		akw::init();
+		akr::win::init();
 
 		if (ake::config().exists("window")) {
-			if (!akw::open(akd::deserialize<akw::WindowOptions>(ake::config()["window"]))) throw std::runtime_error("Failed to open window");
+			if (!akr::win::open(akd::deserialize<akr::win::WindowOptions>(ake::config()["window"]))) throw std::runtime_error("Failed to open window");
 		} else {
-			auto defaultWindowOptions = akw::WindowOptions().glVSync(akw::VSync::FULL);
-			if (!akw::open(defaultWindowOptions)) throw std::runtime_error("Failed to open window");
+			auto defaultWindowOptions = akr::win::WindowOptions().glVSync(akr::win::VSync::FULL);
+			if (!akr::win::open(defaultWindowOptions)) throw std::runtime_error("Failed to open window");
 		}
 
-		akw::setCursorMode(akw::CursorMode::Captured);
+		akr::win::setCursorMode(akr::win::CursorMode::Captured);
 	}
 
 	log.info("Starting OpenGL system."); {
@@ -64,7 +64,7 @@ void akg::startup(const akl::Logger& log) {
 
 void akg::cleanup(const akl::Logger& log) {
 	log.info("Cleaning up window system."); {
-		akw::shutdown();
+		akr::win::shutdown();
 	}
 }
 
@@ -80,16 +80,16 @@ void akg::runGame() {
 	fpSingle updateDelta = 1.f/ake::config()["engine"]["ticksPerSecond"].asOrDef<fpSingle>(60.f);
 	//fpSingle renderDelta = 1.f/static_cast<fpSingle>(akw::currentMonitor().prefVideoMode.refreshRate);
 
-	while(!akw::closeRequested()) {
-		static aku::FPSCounter fps(60), tps(60);
-		static aku::Timer loopTimer;
+	while(!akr::win::closeRequested()) {
+		static akc::FPSCounter fps(60), tps(60);
+		static akc::Timer loopTimer;
 
 		while(updateAccum >= updateDelta) {
-			aku::Timer updateTimer;
+			akc::Timer updateTimer;
 
-			akw::pollEvents();
-			akw::mouse().update();
-			akw::keyboard().update();
+			akr::win::pollEvents();
+			akr::win::mouse().update();
+			akr::win::keyboard().update();
 
 			sceneManager.update(updateDelta);
 
@@ -102,7 +102,7 @@ void akg::runGame() {
 
 		std::stringstream sstream;
 		sstream << fps.avgTicksPerSecond() << "fps | " << tps.avgTicksPerSecond() << "tps";
-		akw::setTitle(sstream.str());
+		akr::win::setTitle(sstream.str());
 
 		updateAccum += loopTimer.mark().secsf();
 		loopTimer.reset();
@@ -114,16 +114,16 @@ static void setupGame(ake::Scene& scene) {
 	scene.renderEvent().subscribe([&](ake::SceneRenderEvent& renderEventData) {
 		akr::gl::setClearColour(0.2f, 0.2f, 0.2f);
 		akr::gl::clear();
-		akw::swapBuffer();
+		akr::win::swapBuffer();
 	});
 
 	scene.updateEvent().subscribe([&](ake::SceneUpdateEvent& updateEventData){
-		if (akw::mouse().wasReleased(akin::Button::Left)) akw::setCursorMode(akw::CursorMode::Captured);
-		if (akw::keyboard().wasReleased(akin::Key::LALT)) akw::setCursorMode(akw::CursorMode::Normal);
+		if (akr::win::mouse().wasReleased(akin::Button::Left)) akr::win::setCursorMode(akr::win::CursorMode::Captured);
+		if (akr::win::keyboard().wasReleased(akin::Key::LALT)) akr::win::setCursorMode(akr::win::CursorMode::Normal);
 
-		akw::keyboard().update();
-		akw::mouse().update();
-		akw::pollEvents();
+		akr::win::keyboard().update();
+		akr::win::mouse().update();
+		akr::win::pollEvents();
 	});
 
 }

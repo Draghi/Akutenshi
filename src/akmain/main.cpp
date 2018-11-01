@@ -10,7 +10,7 @@
 #include <sstream>
 #include <stdexcept>
 
-static ak::ScopeGuard bootstrapEngine(const akl::Logger& log, bool redirectLogToFile);
+static akc::ScopeGuard bootstrapEngine(const akl::Logger& log, bool redirectLogToFile);
 
 int main(int /*argc*/, char* /*argv*/[]) {
 	akmain::setupDebugHandling();
@@ -27,8 +27,8 @@ static void cleanupEngine();
 static void startupConfig();
 static void printLogHeader(const akl::Logger& log);
 
-static ak::ScopeGuard bootstrapEngine(const akl::Logger& log, bool redirectLogToFile) {
-	auto cleanup = ak::ScopeGuard(cleanupEngine);
+static akc::ScopeGuard bootstrapEngine(const akl::Logger& log, bool redirectLogToFile) {
+	auto cleanup = akc::ScopeGuard(cleanupEngine);
 
 	/* Setup Thread Name */ {
 		akt::current().setName("Main");
@@ -97,7 +97,7 @@ static void startupConfig() {
 
 
 static void printLogHeader(const akl::Logger& log) {
-	auto utc = aku::utcTimestamp();
+	auto utc = akc::utcTimestamp();
 	std::stringstream dateStream; dateStream << std::put_time(&utc.ctime, "%Y-%m-%d");
 	std::stringstream timeStream; timeStream << std::put_time(&utc.ctime, "%H:%M:%S") << "." << std::setw(3) << std::setfill('0') << utc.milliseconds;
 	log.raw(R"(+-----------------------------------------------------------------------------+)", '\n',

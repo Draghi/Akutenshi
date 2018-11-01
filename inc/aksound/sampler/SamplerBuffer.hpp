@@ -34,7 +34,7 @@ namespace aks {
 			SamplerBuffer() : m_buffer(), m_sampleCount(0), m_loops(false) {}
 			SamplerBuffer(fpSingle* src, akSize sampleCount, bool loops) : m_buffer(), m_sampleCount(sampleCount), m_loops(loops) {
 				m_buffer.resize(sampleCount);
-				aku::memcpy(m_buffer.data(), src, sampleCount);
+				akc::memcpy(m_buffer.data(), src, sampleCount);
 			}
 
 			SamplerBuffer(const SamplerBuffer&) = default;
@@ -46,14 +46,14 @@ namespace aks {
 				akSize copiedSamples = 0;
 
 				if (!m_loops && (start < 0)) {
-					aku::memset(out, 0.f, std::abs(start));
+					akc::memset(out, 0.f, std::abs(start));
 					copiedSamples += std::abs(start);
 				} else while(start < 0) start += m_sampleCount;
 
 				do {
 					akSize curFrameStart = (start + copiedSamples) % m_sampleCount;
 					akSize framesToCopy = (curFrameStart + (count - copiedSamples)) >= m_sampleCount ? (m_sampleCount - curFrameStart) : count - copiedSamples;
-					aku::memcpy(out + copiedSamples, m_buffer.data() + curFrameStart, framesToCopy);
+					akc::memcpy(out + copiedSamples, m_buffer.data() + curFrameStart, framesToCopy);
 					copiedSamples += framesToCopy;
 				} while(m_loops && (copiedSamples < count));
 				return copiedSamples;

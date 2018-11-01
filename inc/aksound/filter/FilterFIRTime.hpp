@@ -40,7 +40,7 @@ namespace aks {
 				std::vector<fpSingle> buffer;
 				buffer.resize(count + m_kernal.size(), 0.f);
 				m_sampler->sample(buffer.data(), start - m_kernal.size()/2, buffer.size());
-				aku::memset(out, 0.f, count);
+				akc::memset(out, 0.f, count);
 				for(akSize i = 0; i < count; i++) {
 					for(akSize j = 0; j < m_kernal.size(); j++) {
 						out[i] += buffer[i + j] * m_kernal[j];

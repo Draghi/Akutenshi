@@ -107,7 +107,7 @@ namespace akl {
 		void printMessage(Level logLevel, const std::string& str);
 
 		template<typename... vargs_t> void build(Level level, const std::string_view& logName, const vargs_t&... vargs) {
-			auto utc = aku::utcTimestamp();
+			auto utc = akc::utcTimestamp();
 
 			std::stringstream sstream;
 			sstream << "[" << std::put_time(&utc.ctime, "%H:%M:%S");
@@ -115,7 +115,7 @@ namespace akl {
 			sstream  << "][" << akt::current().name() << "][" << logName << "][" << Logger::LevelTags[static_cast<uint8>(level)] << "]";
 
 			std::stringstream vargStream;
-			aku::buildString(vargStream, vargs...);
+			akc::buildString(vargStream, vargs...);
 
 			if (vargStream.str().front() != '[') sstream << " ";
 
@@ -140,7 +140,7 @@ namespace akl {
 	template<typename... vargs_t> void Logger::info( const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::Info))  internal::build(Level::Info,  m_name, vargs...); }
 	template<typename... vargs_t> void Logger::debug(const vargs_t&... vargs) const { if (isFilterLevelEnabled(Level::Debug)) internal::build(Level::Debug, m_name, vargs...); }
 
-	template<typename... vargs_t> void Logger::raw(const vargs_t&... vargs) const { if (!isFilterLevelEnabled(Level::Raw)) return; internal::printMessage(Level::Raw, aku::buildString(vargs...)); }
+	template<typename... vargs_t> void Logger::raw(const vargs_t&... vargs) const { if (!isFilterLevelEnabled(Level::Raw)) return; internal::printMessage(Level::Raw, akc::buildString(vargs...)); }
 }
 
 #endif

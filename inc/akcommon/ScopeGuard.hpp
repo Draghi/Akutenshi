@@ -21,7 +21,7 @@
 #include <functional>
 #include <utility>
 
-namespace ak {
+namespace akc {
 	/**
 	 * A ScopeGuard that executes an arbitrary function.
 	 * Supports releasing and move semantics.

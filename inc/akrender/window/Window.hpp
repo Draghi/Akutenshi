@@ -17,76 +17,68 @@
 #ifndef AK_RENDER_WINDOW_WINDOW_HPP_
 #define AK_RENDER_WINDOW_WINDOW_HPP_
 
-#include <akrender/window/Types.hpp>
+#include <akinput/keyboard/Keyboard.hpp>
+#include <akinput/mouse/Mouse.hpp>
+#include <akrender/window/WindowOptions.hpp>
 #include <string>
 
-namespace akw {
-	struct Monitor;
-	class WindowOptions;
-}
+namespace akr {
+	namespace win {
+		void init();
+		void shutdown();
 
-namespace akin {
-	class Keyboard;
-	class Mouse;
-}
+		bool open(const WindowOptions& options);
+		bool close();
 
-namespace akw {
+		void pollEvents();
+		bool swapBuffer();
 
-	void init();
-	void shutdown();
+		std::string title();
 
-	bool open(const WindowOptions& options);
-	bool close();
+		WindowCoord position();
 
-	void pollEvents();
-	bool swapBuffer();
+		WindowCoord size();
+		WindowCoord sizeMin();
+		WindowCoord sizeMax();
+		WindowCoord aspectConstraint();
 
-	std::string title();
+		FrameCoord frameSize();
+		int refreshRate();
 
-	WindowCoord position();
+		bool closeRequested();
 
-	WindowCoord size();
-	WindowCoord sizeMin();
-	WindowCoord sizeMax();
-	WindowCoord aspectConstraint();
+		bool focused();
+		bool minimised();
+		bool fullscreen();
+		bool visible();
 
-	FrameCoord frameSize();
-	int refreshRate();
+		bool alwaysOnTop();
+		bool decorated();
+		bool resizable();
 
-	bool closeRequested();
+		void setTitle(const std::string& title);
 
-	bool focused();
-	bool minimised();
-	bool fullscreen();
-	bool visible();
+		void setPosition(WindowCoord nPos);
 
-	bool alwaysOnTop();
-	bool decorated();
-	bool resizable();
+		void setSize(WindowCoord size);
+		void setSizeLimit(WindowCoord minSize, WindowCoord maxSize);
+		void setAspectConstraint(WindowCoord aspectSize);
 
-	void setTitle(const std::string& title);
+		void setCloseFlag(bool state);
 
-	void setPosition(WindowCoord nPos);
+		void restore();
+		void minimise();
+		void maximise();
 
-	void setSize(WindowCoord size);
-	void setSizeLimit(WindowCoord minSize, WindowCoord maxSize);
-	void setAspectConstraint(WindowCoord aspectSize);
+		void setFullscreen(Monitor targetMonitor, WindowCoord pos, WindowCoord size, int frameRate);
+		void setVisibility(bool state);
 
-	void setCloseFlag(bool state);
+		void setCursorMode(CursorMode mode);
+		CursorMode cursorMode();
 
-	void restore();
-	void minimise();
-	void maximise();
-
-	void setFullscreen(Monitor targetMonitor, WindowCoord pos, WindowCoord size, int frameRate);
-	void setVisibility(bool state);
-
-	void setCursorMode(CursorMode mode);
-	CursorMode cursorMode();
-
-	akin::Mouse& mouse();
-	akin::Keyboard& keyboard();
-
+		akin::Mouse& mouse();
+		akin::Keyboard& keyboard();
+	}
 }
 
 #endif

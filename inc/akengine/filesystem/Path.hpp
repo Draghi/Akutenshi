@@ -36,7 +36,7 @@ namespace akfs {
 			std::vector<std::string> tokenize(const std::string& path) {
 				std::vector<std::string> result;
 				result.reserve(std::count(path.begin(), path.end(), '/'));
-				aku::split(path, {{"/"}}, [&](const std::string& delim, const std::string& substr){ if (substr.size() > 0) result.push_back(substr + delim); });
+				akc::split(path, {{"/"}}, [&](const std::string& delim, const std::string& substr){ if (substr.size() > 0) result.push_back(substr + delim); });
 				return result;
 			}
 

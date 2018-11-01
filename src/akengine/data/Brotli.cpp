@@ -27,7 +27,7 @@ using namespace akd;
 
 std::vector<uint8> akd::compressBrotli(const std::vector<uint8>& inData, uint8 compressionLevel) {
 	BrotliEncoderState* state = BrotliEncoderCreateInstance(nullptr, nullptr, nullptr);
-	auto destroyBrotliInstance = ak::ScopeGuard([&]{BrotliEncoderDestroyInstance(state);});
+	auto destroyBrotliInstance = akc::ScopeGuard([&]{BrotliEncoderDestroyInstance(state);});
 	BrotliEncoderSetParameter(state, BROTLI_PARAM_QUALITY, std::min<uint8>(compressionLevel, BROTLI_MAX_QUALITY));
 	BrotliEncoderSetParameter(state, BROTLI_PARAM_LGWIN,   BROTLI_MAX_WINDOW_BITS);
 	BrotliEncoderSetParameter(state, BROTLI_PARAM_LGBLOCK, BROTLI_MAX_INPUT_BLOCK_BITS);
@@ -52,7 +52,7 @@ std::vector<uint8> akd::compressBrotli(const std::vector<uint8>& inData, uint8 c
 
 std::vector<uint8> akd::decompressBrotli(const std::vector<uint8>& inData) {
 	BrotliDecoderState* state = BrotliDecoderCreateInstance(nullptr, nullptr, nullptr);
-	auto destroyBrotliInstance = ak::ScopeGuard([&]{BrotliDecoderDestroyInstance(state);});
+	auto destroyBrotliInstance = akc::ScopeGuard([&]{BrotliDecoderDestroyInstance(state);});
 
 	constexpr size_t bufferGrow = 4096;
 	std::vector<uint8> buffer;

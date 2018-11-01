@@ -25,7 +25,7 @@
 
 #define AK_STRING_VIEW(str) ::std::string_view(str, sizeof(str) - 1)
 
-namespace aku {
+namespace akc {
 
 	template<akSize literalLength> constexpr akSize clen(const char(&)[literalLength]) { return literalLength - 1; }
 

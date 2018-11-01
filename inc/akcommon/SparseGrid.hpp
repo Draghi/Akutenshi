@@ -21,7 +21,6 @@
 #include <akcommon/SlotMap.hpp>
 #include <akcommon/UnorderedVector.hpp>
 #include <akmath/Scalar.hpp>
-#include <akmath/Types.hpp>
 #include <akmath/Vector.hpp>
 #include <algorithm>
 #include <climits>

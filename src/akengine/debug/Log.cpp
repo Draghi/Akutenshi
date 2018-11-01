@@ -94,7 +94,7 @@ void akl::processMessageQueue() {
 bool akl::enableFileOutput() {
 	auto fileLock = logFileLock.lock();
 
-	auto utc = aku::utcTimestamp();
+	auto utc = akc::utcTimestamp();
 	std::stringstream filename;
 	filename << "data/logs/log_" << std::put_time(&utc.ctime, "%Y%m%d_%H%M%S") << ".txt";
 

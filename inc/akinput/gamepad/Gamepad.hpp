@@ -38,8 +38,8 @@ namespace akin {
 
 	struct AxisMoveEventData {
 		Analog axis;
-		ak::math::DVec2 degree;
-		ak::math::DVec2 delta;
+		akc::math::DVec2 degree;
+		akc::math::DVec2 delta;
 		Gamepad& sender;
 	};
 	AK_DEFINE_EVENT(AxisMoveEvent, const AxisMoveEventData, true);
@@ -51,8 +51,8 @@ namespace akin {
 			Gamepad() = default;
 			virtual ~Gamepad() = default;
 
-			virtual const ak::event::DispatcherProxy<GPButtonEvent>& buttonEvent() = 0;
-			virtual const ak::event::DispatcherProxy<AxisMoveEvent>& analogEvent() = 0;
+			virtual const akc::event::DispatcherProxy<GPButtonEvent>& buttonEvent() = 0;
+			virtual const akc::event::DispatcherProxy<AxisMoveEvent>& analogEvent() = 0;
 
 			virtual bool isUp(GPButton buttonVal) const { return !isDown(buttonVal); }
 			virtual bool isDown(GPButton buttonVal) const = 0;
@@ -60,8 +60,8 @@ namespace akin {
 			virtual bool wasPressed(GPButton buttonVal) const = 0;
 			virtual bool wasReleased(GPButton buttonVal) const = 0;
 
-			virtual ak::math::DVec2 degree(Analog axisVal) const = 0;
-			virtual ak::math::DVec2 deltaDegree(Analog axisVal) const = 0;
+			virtual akc::math::DVec2 degree(Analog axisVal) const = 0;
+			virtual akc::math::DVec2 deltaDegree(Analog axisVal) const = 0;
 
 			virtual void update() = 0;
 	};

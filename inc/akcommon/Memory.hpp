@@ -23,7 +23,7 @@
 #include <memory>
 #include <type_traits>
 
-namespace aku {
+namespace akc {
 
 	template<typename type_t, typename type2_t, typename... vargs_t> std::unique_ptr<type_t> make_unique(vargs_t&&... vargs) {
 		return std::unique_ptr<type_t>(new type2_t(std::forward<vargs_t>(vargs)...));
@@ -56,7 +56,7 @@ namespace aku {
 			dstOffset %= dstSize;
 			srcOffset %= srcSize;
 
-			akSize copied = aku::memcpy(dst + dstOffset, src + srcOffset, std::min(count - written, std::min(dstSize - dstOffset, srcSize - srcOffset)));
+			akSize copied = akc::memcpy(dst + dstOffset, src + srcOffset, std::min(count - written, std::min(dstSize - dstOffset, srcSize - srcOffset)));
 
 			dstOffset += copied;
 			srcOffset += copied;

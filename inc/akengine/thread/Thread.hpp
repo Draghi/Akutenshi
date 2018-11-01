@@ -47,7 +47,7 @@ namespace akt {
 			akt::DoubleBuffer<std::function<void()>> m_scheduledCallbacks;
 			akt::Spinlock m_updateLock;
 
-			ak::ScopeGuard performThreadStartup();
+			akc::ScopeGuard performThreadStartup();
 
 		public:
 			Thread();

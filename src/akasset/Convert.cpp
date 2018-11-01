@@ -70,7 +70,7 @@ static const std::map<std::string, callback_t*> proccessFunctions{{
 
 void aka::convertDirectory(const akfs::Path& dir) {
 
-	aku::Timer convertTimer;
+	akc::Timer convertTimer;
 
 	akSize fileCount = 0;
 

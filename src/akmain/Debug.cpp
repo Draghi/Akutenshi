@@ -44,7 +44,7 @@ void akmain::setupDebugHandling() {
 
 		std::string rawName = typeid(e).name();
 		std::string whatString = e.what();
-		whatString = aku::buildString("'. Message: ", whatString.empty() ? "<Empty>" : "\n", whatString);
+		whatString = akc::buildString("'. Message: ", whatString.empty() ? "<Empty>" : "\n", whatString);
 
 #		ifdef __GNUC__
 			int status = 0;

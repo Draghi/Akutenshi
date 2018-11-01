@@ -19,7 +19,7 @@
 
 #include <algorithm>
 
-namespace aku {
+namespace akc {
 
 	template<auto container_v> struct IteratorOf {
 		using iterator = typename decltype(container_v)::iterator;

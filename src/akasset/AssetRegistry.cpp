@@ -37,7 +37,7 @@ bool AssetRegistry::proccessFile(const akfs::Path& path) {
 	auto id = m_assetInfo.insert(std::make_pair(*assetInfo, path)).first;
 
 	if (!m_assetBySUID.emplace(assetInfo->identifier, id).second) {
-		throw std::runtime_error(aku::buildString("Asset SUID conflict for: ", path.str()));
+		throw std::runtime_error(akc::buildString("Asset SUID conflict for: ", path.str()));
 	}
 
 	if (!assetInfo->source.empty() && !(m_assetBySource.emplace(assetInfo->source, id).second || m_supressWarnings)) {
@@ -45,7 +45,7 @@ bool AssetRegistry::proccessFile(const akfs::Path& path) {
 	}
 
 	if (!m_assetByDestination.emplace(path, id).second) {
-		throw std::runtime_error(aku::buildString("Asset destination conflict for: ", path.str()));
+		throw std::runtime_error(akc::buildString("Asset destination conflict for: ", path.str()));
 	}
 
 	return true;

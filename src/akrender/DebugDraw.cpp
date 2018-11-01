@@ -40,7 +40,7 @@ static ShaderProgram& shader() {
 			"	gl_Position = uMatTransform * vec4(vPosition, 1);"
 			"}"
 		);
-		if (!vertStage.compile()) throw std::runtime_error(aku::buildString("Failed to build vertex shader. Error Log:\n", vertStage.compileLog()));
+		if (!vertStage.compile()) throw std::runtime_error(akc::buildString("Failed to build vertex shader. Error Log:\n", vertStage.compileLog()));
 
 		ShaderStage fragStage(StageType::Fragment);
 		fragStage.attach(
@@ -52,12 +52,12 @@ static ShaderProgram& shader() {
 			"	fragColour = fColour*uColour;"
 			"}"
 		);
-		if (!fragStage.compile()) throw std::runtime_error(aku::buildString("Failed to build fragment shader. Error Log:\n", fragStage.compileLog()));
+		if (!fragStage.compile()) throw std::runtime_error(akc::buildString("Failed to build fragment shader. Error Log:\n", fragStage.compileLog()));
 
 		ShaderProgram prog;
 		prog.attach(vertStage);
 		prog.attach(fragStage);
-		if (!prog.link()) throw std::runtime_error(aku::buildString("Failed to link shader program. Error Log:\n", prog.linkLog()));
+		if (!prog.link()) throw std::runtime_error(akc::buildString("Failed to link shader program. Error Log:\n", prog.linkLog()));
 		return prog;
 	}();
 	return progShader;

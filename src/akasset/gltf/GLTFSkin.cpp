@@ -84,7 +84,7 @@ aka::Skin aka::gltf::processGLTFSkin(const Asset& asset, const Skin& skin, gltfI
 	for(const auto& jointID : jointSet) {
 		jointHierarchy.push_back({
 			asset.nodes[jointID].name,
-			aku::convert_to_if<std::vector<uint32>>(asset.nodes[jointID].childrenIDs, [&](const auto& childID){
+			akc::convert_to_if<std::vector<uint32>>(asset.nodes[jointID].childrenIDs, [&](const auto& childID){
 				auto jointIter = jointIndexMap.find(childID);
 				return jointIter == jointIndexMap.end() ? std::optional<uint32>() : std::optional<uint32>(jointIter->second);
 			}),

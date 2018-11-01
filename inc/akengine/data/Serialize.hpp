@@ -35,7 +35,7 @@ namespace akd {
 	namespace internal {
 		// Break circular dependency
 		void logError(const std::string& name, const std::string& message);
-		template<typename... vargs_t> void logError(const std::string& name, const vargs_t&... vargs) { logError(name, aku::buildString(vargs...));  }
+		template<typename... vargs_t> void logError(const std::string& name, const vargs_t&... vargs) { logError(name, akc::buildString(vargs...));  }
 	}
 }
 

@@ -55,7 +55,7 @@ namespace ake {
 					auto nameID = m_entityNameID.at(entityID);
 					auto& name = m_nameStorage.at(nameID);
 					auto& nameEntry = m_lookupEntitiesByName.at(name);
-					nameEntry.second.erase(aku::find(nameEntry.second, entityID));
+					nameEntry.second.erase(akc::find(nameEntry.second, entityID));
 					if (nameEntry.second.empty()) {
 						m_lookupEntitiesByName.erase(name);
 						m_nameStorage.erase(nameID);

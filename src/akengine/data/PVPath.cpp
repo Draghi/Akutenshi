@@ -29,7 +29,7 @@ PVPath akd::parseObjectDotNotation(const std::string& path) {
 	PVPath result;
 
 	bool parsingIndex = false;
-	aku::split(path, {".", "["}, [&](const std::string& delimStr, const std::string& str) {
+	akc::split(path, {".", "["}, [&](const std::string& delimStr, const std::string& str) {
 
 		if (parsingIndex) {
 			if (str.empty()) {

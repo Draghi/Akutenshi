@@ -65,7 +65,7 @@ namespace aks {
 			}
 
 			akSize sample(fpSingle* out, akSSize start, akSize count) const override {
-				aku::memset(out, 0.f, count);
+				akc::memset(out, 0.f, count);
 				akSize maxSampleCount = 0;
 				std::vector<fpSingle> buffer(count, 0);
 				for(const auto& entry : m_sources) {

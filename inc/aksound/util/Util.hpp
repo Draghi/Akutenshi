@@ -29,7 +29,7 @@ namespace aks {
 	inline aks::SamplerBuffer generateWindowedSinc(fpSingle frequency, akSize sampleRate) {
 		const fpSingle freqStep = (2*akm::PI*frequency)/sampleRate;
 
-		akSize count = aku::nearestPowerOfTwo(static_cast<akSize>(akm::ceil(4/(frequency/sampleRate))*400));
+		akSize count = akc::nearestPowerOfTwo(static_cast<akSize>(akm::ceil(4/(frequency/sampleRate))*400));
 
 		std::vector<fpSingle> result;
 		result.resize(count, 0);

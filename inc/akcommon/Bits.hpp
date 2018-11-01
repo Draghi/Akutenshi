@@ -21,12 +21,12 @@
 #include <akcommon/Traits.hpp>
 #include <climits>
 
-namespace aku {
+namespace akc {
 	template<typename type_t> inline constexpr type_t bitmask(akSize count) {
 		return static_cast<type_t>(-(count != 0)) & (static_cast<type_t>(-1) >> ((sizeof(type_t) * CHAR_BIT) - count));
 	}
 
-	template<typename type_t> inline constexpr bool hasBitFlag(type_t val, const typename aku::traits::Identity<type_t>::type& flag) {
+	template<typename type_t> inline constexpr bool hasBitFlag(type_t val, const typename akc::traits::Identity<type_t>::type& flag) {
 		return (val & flag) == flag;
 	}
 

@@ -73,7 +73,7 @@ static aka::ConversionInfo getAssetInfo(akd::PValue& cfg, const aka::ConversionH
 
 bool aka::gltf::convertGLTFFile(aka::ConversionHelper& convertHelper, const akfs::Path& cfgPath, akd::PValue& cfg) {
 	akd::CMW4096Engine32d randomGenerator(akd::CMW4096Engine32d::default_seed ^ std::rand() ^ std::time(nullptr));
-	aku::Timer proccessTimer, stepTimer;
+	akc::Timer proccessTimer, stepTimer;
 
 	bool addedConversion = false;
 

@@ -19,7 +19,7 @@
 
 #include <akcommon/PrimitiveTypes.hpp>
 
-namespace aku {
+namespace akc {
 	namespace traits {
 
 		/**

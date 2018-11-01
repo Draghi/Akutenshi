@@ -185,7 +185,7 @@
 		} \
 	}
 
-#define AK_INTERNAL_ENUM_TO_STR_1( enumName, x)      case enumName::x: return AK_STRING_VIEW(#x); default: throw ::std::logic_error(aku::buildString("Unhandled enum in auto generated enum converter: ", static_cast<int64>(val)));
+#define AK_INTERNAL_ENUM_TO_STR_1( enumName, x)      case enumName::x: return AK_STRING_VIEW(#x); default: throw ::std::logic_error(akc::buildString("Unhandled enum in auto generated enum converter: ", static_cast<int64>(val)));
 #define AK_INTERNAL_ENUM_TO_STR_2( enumName, x, ...) case enumName::x: return AK_STRING_VIEW(#x); AK_INTERNAL_ENUM_TO_STR_1( enumName, __VA_ARGS__)
 #define AK_INTERNAL_ENUM_TO_STR_3( enumName, x, ...) case enumName::x: return AK_STRING_VIEW(#x); AK_INTERNAL_ENUM_TO_STR_2( enumName, __VA_ARGS__)
 #define AK_INTERNAL_ENUM_TO_STR_4( enumName, x, ...) case enumName::x: return AK_STRING_VIEW(#x); AK_INTERNAL_ENUM_TO_STR_3( enumName, __VA_ARGS__)
@@ -285,7 +285,7 @@
 #define AK_INTERNAL_ENUM_TO_STR_98(enumName, x, ...) case enumName::x: return AK_STRING_VIEW(#x); AK_INTERNAL_ENUM_TO_STR_97(enumName, __VA_ARGS__)
 #define AK_INTERNAL_ENUM_TO_STR_99(enumName, x, ...) case enumName::x: return AK_STRING_VIEW(#x); AK_INTERNAL_ENUM_TO_STR_98(enumName, __VA_ARGS__)
 
-#define AK_INTERNAL_ENUM_TO_ENUM_1( enumName, x     ) if(val == #x) return enumName::x; throw ::std::logic_error(aku::buildString("Unhandled enum in auto generated enum converter: ", val));
+#define AK_INTERNAL_ENUM_TO_ENUM_1( enumName, x     ) if(val == #x) return enumName::x; throw ::std::logic_error(akc::buildString("Unhandled enum in auto generated enum converter: ", val));
 #define AK_INTERNAL_ENUM_TO_ENUM_2( enumName, x, ...) if(val == #x) return enumName::x; AK_INTERNAL_ENUM_TO_ENUM_1( enumName, __VA_ARGS__)
 #define AK_INTERNAL_ENUM_TO_ENUM_3( enumName, x, ...) if(val == #x) return enumName::x; AK_INTERNAL_ENUM_TO_ENUM_2( enumName, __VA_ARGS__)
 #define AK_INTERNAL_ENUM_TO_ENUM_4( enumName, x, ...) if(val == #x) return enumName::x; AK_INTERNAL_ENUM_TO_ENUM_3( enumName, __VA_ARGS__)
