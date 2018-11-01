@@ -21,6 +21,7 @@
 #include <functional>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #define AK_STRING_VIEW(str) ::std::string_view(str, sizeof(str) - 1)

@@ -32,8 +32,8 @@
 namespace akc {
 
 	template<akSize l> struct SlotID_t final {
-		using storage_type = typename akc::traits::IntegerMinBytes<l>::type;
-		using value_type   = typename akc::traits::IntegerMinBytes<l*2>::type;
+		using storage_type = typename akc::traits::IntegerForBytes<l>::type;
+		using value_type   = typename akc::traits::IntegerForBytes<l*2>::type;
 
 		storage_type index;
 		storage_type generation;
