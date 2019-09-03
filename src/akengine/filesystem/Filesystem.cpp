@@ -14,25 +14,37 @@
  * limitations under the License.
  **/
 
-#include <akcommon/PrimitiveTypes.hpp>
+#include <akasset/Animation.hpp>
+#include <akasset/Asset.hpp>
+#include <akasset/Convert.hpp>
+#include <akasset/Image.hpp>
+#include <akasset/Material.hpp>
+#include <akasset/Mesh.hpp>
+#include <akasset/ShaderProgram.hpp>
+#include <akasset/Skin.hpp>
+#include <akasset/Texture.hpp>
 #include <akcommon/ScopeGuard.hpp>
 #include <akcommon/String.hpp>
 #include <akengine/data/PValue.hpp>
 #include <akengine/data/Serialize.hpp>
-#include <akengine/entity/Config.hpp>
+#include <akengine/data/SUID.hpp>
+#include <akengine/debug/Log.hpp>
+#include <akengine/Config.hpp>
 #include <akengine/event/Dispatcher.hpp>
-#include <akengine/event/Event.hpp>
 #include <akengine/filesystem/CFile.hpp>
 #include <akengine/filesystem/Filesystem.hpp>
-#include <akengine/filesystem/Path.hpp>
+#include <akmath/Matrix.hpp>
+#include <akmath/Quaternion.hpp>
+#include <akmath/Vector.hpp>
+#include <akrender/gl/Textures.hpp>
+#include <akrender/gl/Types.hpp>
+#include <akrender/window/WindowOptions.hpp>
 #include <dirent.h>
 #include <io.h>
 #include <sys/stat.h>
-#include <functional>
+#include <cstdio>
 #include <memory>
-#include <optional>
 #include <stdexcept>
-#include <string>
 #include <unordered_map>
 #include <utility>
 

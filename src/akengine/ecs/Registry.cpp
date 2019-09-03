@@ -22,32 +22,7 @@ using namespace akecs;
 
 namespace akecs {
 
-	class ComponentType {
-		public:
-			ComponentType() = default;
-			virtual ~ComponentType() = default;
-	};
 
-	class TestComponent1 : public ComponentType {
-		public:
-			static constexpr std::string_view COMPONENT_TYPE_NAME = AK_STRING_VIEW("TestComponent1");
-			static constexpr ComponentTypeUID COMPONENT_TYPE_UID = akd::hash32FNV1A<char>(COMPONENT_TYPE_NAME.data(), COMPONENT_TYPE_NAME.size());
-	};
-
-	class TestComponent2 : public ComponentType {
-		public:
-			static constexpr std::string_view COMPONENT_TYPE_NAME = AK_STRING_VIEW("TestComponent2");
-			static constexpr ComponentTypeUID COMPONENT_TYPE_UID = akd::hash32FNV1A<char>(COMPONENT_TYPE_NAME.data(), COMPONENT_TYPE_NAME.size());
-
-	};
-
-	class TestComponent3 : public ComponentType {
-		public:
-			static constexpr std::string_view COMPONENT_TYPE_NAME = AK_STRING_VIEW("TestComponent3");
-			static constexpr ComponentTypeUID COMPONENT_TYPE_UID = akd::hash32FNV1A<char>(COMPONENT_TYPE_NAME.data(), COMPONENT_TYPE_NAME.size());
-	};
 
 }
-
-static akecs::Registry<TestComponent1, TestComponent2, TestComponent3> registryTest;
 

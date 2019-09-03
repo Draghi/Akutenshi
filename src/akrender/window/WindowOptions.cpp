@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-#include <akengine/entity/Config.hpp>
+#include <akengine/Config.hpp>
 #include <akengine/event/Dispatcher.hpp>
 #include <akengine/event/Event.hpp>
 #include <akrender/window/WindowOptions.hpp>

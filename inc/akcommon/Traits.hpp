@@ -18,6 +18,7 @@
 #define AK_COMMON_TRAITS_HPP_
 
 #include <akcommon/PrimitiveTypes.hpp>
+#include <type_traits>
 
 namespace akc {
 	namespace traits {
@@ -30,14 +31,17 @@ namespace akc {
 			using type = type_t;
 		};
 
+		template<typename type_t> struct NeverTrue : std::false_type {};
+
 		/**
 		 * Finds the index in a parameter pack of the first type-match.
 		 * @note find_t The type to find \
 		 *      vargs_t The types to index
 		 */
 		template<typename...> struct VargIndexer;
+		template<typename find_t> struct VargIndexer<find_t> { static_assert(NeverTrue<find_t>(), "Type not found in type list."); };
 		template<typename find_t, typename... vargs_t> struct VargIndexer<find_t, find_t, vargs_t...> : std::integral_constant<akSize, 0> {};
-		template<typename find_t, typename mismatch_t, typename... vargs_t> struct VargIndexer<find_t, mismatch_t, vargs_t...> : std::integral_constant<akSize, 1 + VargIndexer<find_t, vargs_t...>::value> {};
+		template<typename find_t, typename mismatch_t, typename... vargs_t> struct VargIndexer<find_t, mismatch_t, vargs_t...> : std::integral_constant<akSize, 1 + VargIndexer<find_t, vargs_t...>()> {};
 
 		/**
 		 * Calculates the number of bytes, in an unsigned type, required to store a value.
@@ -76,9 +80,9 @@ namespace akc {
 		template<typename type_t, type_t v1, type_t v2, type_t... vargs_v> struct IsUniqueValue<type_t, v1, v2, vargs_v...> : std::integral_constant<bool, IsUniqueValue<type_t, v1, v2>::value && IsUniqueValue<type_t, v2, vargs_v...>::value> {};
 
 		template<typename type_t, type_t...> struct IsUniqueList;
+		template<typename type_t, type_t v1> struct IsUniqueList<type_t, v1> : std::true_type {};
 		template<typename type_t, type_t v1, type_t v2> struct IsUniqueList<type_t, v1, v2> : IsUniqueValue<type_t, v1, v2> {};
 		template<typename type_t, type_t v1, type_t v2, type_t... vargs_v> struct IsUniqueList<type_t, v1, v2, vargs_v...> : std::integral_constant<bool, IsUniqueValue<type_t, v1, v2, vargs_v...>::value && IsUniqueList<type_t, v2, vargs_v...>::value> {};
-
 	}
 }
 

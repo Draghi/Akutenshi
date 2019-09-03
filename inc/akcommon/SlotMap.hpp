@@ -31,73 +31,78 @@
 
 namespace akc {
 
-	template<akSize l> struct SlotID_t final {
-		using storage_type = typename akc::traits::IntegerForBytes<l>::type;
-		using value_type   = typename akc::traits::IntegerForBytes<l*2>::type;
+	struct SlotID final {
+		using value_type = uint32;
+		using generation_type = uint16;
 
-		storage_type index;
-		storage_type generation;
+		struct index_type {
+			uint8 low, mid, high;
+			index_type(uint32 val) : low(val & 0xFF), mid((val >> 8) & 0xFF), high((val >> 16) & 0xFF) {}
+			index_type(const index_type& val) = default;
 
-		SlotID_t() : index(0), generation(0) {}
-		SlotID_t(storage_type indexVal, storage_type generationVal) : index(indexVal), generation(generationVal) {}
-		SlotID_t(const SlotID_t& other) = default;
-		SlotID_t(SlotID_t&& other) = default;
+			index_type& operator=(uint32 val) { low = (val & 0xFF); mid = ((val >> 8) & 0xFF); high = ((val >> 16) & 0xFF); return *this; }
+			index_type& operator=(const index_type& val) = default;
 
-		value_type value() const { return (static_cast<value_type>(index) << (sizeof(storage_type)*CHAR_BIT)) | generation; }
+			uint32 value() const { return low | (mid << 8) | (high << 16); }
+		};
+
+		index_type index;
+		generation_type generation;
+
+		SlotID() : index(0), generation(0) {}
+		SlotID(index_type indexVal, generation_type generationVal) : index(indexVal), generation(generationVal) {}
+		SlotID(const SlotID& other) = default;
+		SlotID(SlotID&& other) = default;
+
+		value_type value() const { return (index.value() << (sizeof(generation_type)*CHAR_BIT)) | generation; }
 		bool isValid() const { return generation != 0; }
 
-		bool operator<(const SlotID_t& other)  const { return value() <  other.value(); }
-		bool operator>(const SlotID_t& other)  const { return value() >  other.value(); }
-		bool operator==(const SlotID_t& other) const { return value() == other.value(); }
+		bool operator<(const SlotID& other)  const { return value() <  other.value(); }
+		bool operator>(const SlotID& other)  const { return value() >  other.value(); }
+		bool operator==(const SlotID& other) const { return value() == other.value(); }
 
-		bool operator<=(const SlotID_t& other) const { return value() <= other.value(); }
-		bool operator>=(const SlotID_t& other) const { return value() >= other.value(); }
-		bool operator!=(const SlotID_t& other) const { return value() != other.value(); }
+		bool operator<=(const SlotID& other) const { return value() <= other.value(); }
+		bool operator>=(const SlotID& other) const { return value() >= other.value(); }
+		bool operator!=(const SlotID& other) const { return value() != other.value(); }
 
-		SlotID_t& operator=(const SlotID_t& other) = default;
-		SlotID_t& operator=(SlotID_t&& other) = default;
+		SlotID& operator=(const SlotID& other) = default;
+		SlotID& operator=(SlotID&& other) = default;
 
 		operator bool() const { return isValid(); }
 	};
-	using SlotID = SlotID_t<4>;
 
-	template<akSize l, typename type_t> class SlotMap_t final {
+	template<typename type_t> class SlotMap final {
 		public:
-			using slot_type = SlotID_t<l>;
+			using slot_type = SlotID;
 			using index_type = typename slot_type::value_type;
 
 			using value_type = type_t;
-			template<typename value_t> using container_type = akc::UnorderedVector<value_t>;
-			using iterator = typename container_type<type_t>::iterator;
-			using const_iterator = typename container_type<type_t>::const_iterator;
-			using reverse_iterator = typename container_type<type_t>::reverse_iterator;
-			using const_reverse_iterator = typename container_type<type_t>::const_reverse_iterator;
+			using container_type = akc::UnorderedVector<type_t>;
+			using iterator = typename container_type::iterator;
+			using const_iterator = typename container_type::const_iterator;
+			using reverse_iterator = typename container_type::reverse_iterator;
+			using const_reverse_iterator = typename container_type::const_reverse_iterator;
 
 		private:
 			std::vector<slot_type> m_indicies;
-			container_type<type_t> m_data;
+			container_type m_data;
 			std::vector<index_type> m_freeList;
 			std::vector<index_type> m_indexLookup;
 
 			void removeEntry(index_type indexID) {
 
-				auto dataID = m_indicies[indexID].index;
+				auto dataID = m_indicies[indexID].index.value();
 				if (dataID + 1 == m_data.size()) {
-					// Invalidate Index
-					if (++(m_indicies[indexID].generation) == 0) akl::Logger("SlotMap").warn("generation overflow.");
+					if (++(m_indicies[indexID].generation) == 0) akl::Logger("SlotMap").warn("generation overflow."); // Invalidate Index
 					m_data.pop_back();             // Remove Data
 					m_indexLookup.pop_back();      // Update Lookup
 					m_freeList.push_back(indexID); // Free Index
 					return;
 				}
 
-
-				// Invalidate Index
-				if (++(m_indicies[indexID].generation) == 0) akl::Logger("SlotMap").warn("generation overflow.");
-
-
+				if (++(m_indicies[indexID].generation) == 0) akl::Logger("SlotMap").warn("generation overflow."); // Invalidate Index
 				m_data.erase(dataID); // Remove Data
-				auto endIndexID = m_indexLookup.back(); m_indexLookup.pop_back();
+				auto endIndexID = m_indexLookup.back(); m_indexLookup.pop_back(); // Get index for last value.
 				m_indicies[endIndexID].index = dataID; // Update Index
 				m_indexLookup[dataID] = endIndexID;    // Update Lookup
 				m_freeList.push_back(indexID);         // Free Index
@@ -108,7 +113,7 @@ namespace akc {
 			// // Insert Element // //
 			// //////////////////// //
 
-			std::pair<slot_type, iterator> insert(const type_t& val) {
+			slot_type insert(const type_t& val) {
 				m_data.insert(val);
 				if (m_freeList.empty()) {
 					m_indicies.push_back(slot_type(m_data.size() - 1, 1));
@@ -118,10 +123,10 @@ namespace akc {
 					m_indicies[freeId].index = m_data.size() - 1;
 					m_indexLookup.push_back(freeId);
 				}
-				return {slotIDFor(std::prev(m_data.end())), std::prev(m_data.end())};
+				return slotIDFor(std::prev(m_data.end()));
 			}
 
-			std::pair<slot_type, iterator> insert(type_t&& val) {
+			slot_type insert(type_t&& val) {
 				m_data.insert(std::move(val));
 				if (m_freeList.empty()) {
 					m_indicies.push_back(slot_type(m_data.size() - 1, 1));
@@ -131,7 +136,7 @@ namespace akc {
 					m_indicies[freeId].index = m_data.size() - 1;
 					m_indexLookup.push_back(freeId);
 				}
-				return {slotIDFor(std::prev(m_data.end())), std::prev(m_data.end())};
+				return slotIDFor(std::prev(m_data.end()));
 			}
 
 			// ///////////////////// //
@@ -140,7 +145,7 @@ namespace akc {
 
 			bool erase(slot_type id) {
 				if (!exists(id)) return false;
-				removeEntry(id.index);
+				removeEntry(id.index.value());
 				return true;
 			}
 
@@ -188,7 +193,7 @@ namespace akc {
 			// // Query // //
 			// /////////// //
 
-			bool exists(slot_type id) const { return (id.index < m_indicies.size()) && (m_indicies[id.index].generation == id.generation); }
+			bool exists(slot_type id) const { return (id.index.value() < m_indicies.size()) && (m_indicies[id.index.value()].generation == id.generation); }
 
 			iterator find(slot_type id) {
 				if (!exists(id)) return m_data.end();
@@ -210,8 +215,8 @@ namespace akc {
 			}
 
 			slot_type slotIDFor(const iterator& iter) const {
-				if (iter == const_cast<container_type<type_t>&>(m_data).end()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
-				return slotIDFor(std::distance(const_cast<container_type<type_t>&>(m_data).begin(), iter));
+				if (iter == const_cast<container_type&>(m_data).end()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
+				return slotIDFor(std::distance(const_cast<container_type&>(m_data).begin(), iter));
 			}
 
 			slot_type slotIDFor(const const_iterator& iter) const {
@@ -220,8 +225,8 @@ namespace akc {
 			}
 
 			slot_type slotIDFor(const reverse_iterator& iter) const {
-				if (iter == const_cast<container_type<type_t>&>(m_data).rend()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
-				return slotIDFor(std::distance(const_cast<container_type<type_t>&>(m_data).rbegin(), iter));
+				if (iter == const_cast<container_type&>(m_data).rend()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
+				return slotIDFor(std::distance(const_cast<container_type&>(m_data).rbegin(), iter));
 			}
 
 			slot_type slotIDFor(const const_reverse_iterator& iter) const {
@@ -234,8 +239,8 @@ namespace akc {
 			// /////////// //
 
 			index_type entryIDFor(const iterator& iter) const {
-				if (iter == const_cast<container_type<type_t>&>(m_data).end()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
-				return m_indicies[std::distance(const_cast<container_type<type_t>&>(m_data).begin(), iter)].index;
+				if (iter == const_cast<container_type&>(m_data).end()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
+				return m_indicies[std::distance(const_cast<container_type&>(m_data).begin(), iter)].index;
 			}
 
 			index_type entryIDFor(const const_iterator& iter) const {
@@ -244,8 +249,8 @@ namespace akc {
 			}
 
 			index_type entryIDFor(const reverse_iterator& iter) const {
-				if (iter == const_cast<container_type<type_t>&>(m_data).rend()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
-				return m_indicies[std::distance(const_cast<container_type<type_t>&>(m_data).rbegin(), iter)].index;
+				if (iter == const_cast<container_type&>(m_data).rend()) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
+				return m_indicies[std::distance(const_cast<container_type&>(m_data).rbegin(), iter)].index;
 			}
 
 			index_type entryIDFor(const const_reverse_iterator& iter) const {
@@ -280,12 +285,12 @@ namespace akc {
 
 			type_t& at(slot_type id) {
 				if (!exists(id)) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
-				return m_data[m_indicies[id.index].index];
+				return m_data[m_indicies[id.index.value()].index.value()];
 			}
 
 			const type_t& at(slot_type id) const {
 				if (!exists(id)) throw std::out_of_range("SlotMap: Attempted to index out of bounds.");
-				return m_data[m_indicies[id.index].index];
+				return m_data[m_indicies[id.index.value()].index.value()];
 			}
 
 			type_t& operator[](slot_type id) { return at(id); }
@@ -312,8 +317,14 @@ namespace akc {
 			// // Properties // //
 			// //////////////// //
 
-			const container_type<type_t>& dataContainer() const { return m_data; }
-			container_type<type_t> copyData() const { return m_data; }
+			const container_type& dataContainer() const { return m_data; }
+			container_type copyData() const { return m_data; }
+
+			void reserve(akSize count) {
+				   m_indicies.reserve(count - m_freeList.size());
+				       m_data.reserve(count - m_freeList.size());
+				m_indexLookup.reserve(count - m_freeList.size());
+			}
 
 			void shrink_to_fit() {
 				m_indicies.shrink_to_fit();
@@ -327,13 +338,11 @@ namespace akc {
 			size_t capacity() const { return m_data.capacity(); }
 	};
 
-	template<typename type_t> using SlotMap = SlotMap_t<4, type_t>;
-
 }
 
 namespace std {
-	template<akSize l> struct hash<akc::SlotID_t<l>> {
-		size_t operator()(const akc::SlotID_t<l>& id) const { return id.value(); }
+	template<> struct hash<akc::SlotID> {
+		size_t operator()(const akc::SlotID& id) const { return id.value(); }
 	};
 }
 

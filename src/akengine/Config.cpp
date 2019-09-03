@@ -16,7 +16,7 @@
 
 #include <akengine/data/Json.hpp>
 #include <akengine/data/PValue.hpp>
-#include <akengine/entity/Config.hpp>
+#include <akengine/Config.hpp>
 #include <akengine/event/Dispatcher.hpp>
 #include <akengine/filesystem/CFile.hpp>
 #include <akengine/filesystem/Filesystem.hpp>

@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.2) 
 
+set(CMAKE_CXX_FLAGS "-O3")
+
 include("${CMAKE_SOURCE_DIR}/cmake/SetupBuildEnvironment.cmake")
 
 project(akutenshi VERSION 1.0.0.0)

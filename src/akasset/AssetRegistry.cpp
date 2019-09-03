@@ -34,7 +34,7 @@ bool AssetRegistry::proccessFile(const akfs::Path& path) {
 		return true;
 	}
 
-	auto id = m_assetInfo.insert(std::make_pair(*assetInfo, path)).first;
+	auto id = m_assetInfo.insert(std::make_pair(*assetInfo, path));
 
 	if (!m_assetBySUID.emplace(assetInfo->identifier, id).second) {
 		throw std::runtime_error(akc::buildString("Asset SUID conflict for: ", path.str()));

@@ -53,7 +53,9 @@ namespace akev {
 
 			~Dispatcher() {}
 
-			template<typename func_t> SubscriberID subscribe(const func_t& func) { return m_callbacks.insert(callback_t(func)).first; }
+			template<typename func_t> SubscriberID subscribe(const func_t& func) {
+				return m_callbacks.insert(callback_t(func));
+			}
 
 			void unsubscribe(SubscriberID subscriber) {
 				if (m_sendCounter) m_freelist.push_back(subscriber);

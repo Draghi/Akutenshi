@@ -2,7 +2,7 @@
 #include <akcommon/String.hpp>
 #include <akcommon/Time.hpp>
 #include <akengine/debug/Log.hpp>
-#include <akengine/entity/Config.hpp>
+#include <akengine/Config.hpp>
 #include <akengine/thread/CurrentThread.hpp>
 #include <akgame/game.hpp>
 #include <akmain/Debug.hpp>

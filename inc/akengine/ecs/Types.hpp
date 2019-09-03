@@ -1,12 +1,12 @@
 /**
  * Copyright 2018 Michael J. Baker
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,35 +14,34 @@
  * limitations under the License.
  **/
 
-#ifndef AK_ENGINE_SCENEMANAGERPROXY_HPP_
-#define AK_ENGINE_SCENEMANAGERPROXY_HPP_
+#ifndef AKENGINE_ECS_TYPES_HPP_
+#define AKENGINE_ECS_TYPES_HPP_
 
+#include <akcommon/PrimitiveTypes.hpp>
 #include <akcommon/SlotMap.hpp>
-#include <string>
+#include <stdexcept>
 
-namespace ake {
+namespace akecs {
 
-	using SceneID = akc::SlotID;
+	using  ComponentTypeID = uint32;
+	using ComponentTypeUID = uint32;
 
-	class Scene;
-	class SceneManager;
+	using  EntityID = akc::SlotID;
 
-	class SceneManagerProxy final {
-		private:
-			SceneManager& m_manager;
+	class BaseRegistry;
+	template<typename... components_t> class Registry;
+
+	class Entity;
+	class EntityRef;
+
+	class Component;
+	class ComponentRef;
+
+	class ComponentConstraintViolation : public std::logic_error {
 		public:
-			SceneManagerProxy(SceneManager& manager);
-
-			SceneID newScene(const std::string& name);
-
-			Scene& getScene(SceneID sceneID);
-			const Scene& getScene(SceneID sceneID) const;
-
-			bool destroyScene(SceneID sceneID);
+			using std::logic_error::logic_error;
 	};
 
 }
 
-#include <akengine/scene/SceneManager.hpp>
-
-#endif /* AK_ENGINE_SCENEMANAGERPROXY_HPP_ */
+#endif /* AKENGINE_ECS_TYPES_HPP_ */

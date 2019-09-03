@@ -110,7 +110,7 @@ namespace aka {
 			}
 
 			void registerImage(ConversionInfo info, const akfs::Path& path, const std::optional<akfs::Path>& source) {
-				auto id = m_images.insert({info, path}).first;
+				auto id = m_images.insert({info, path});
 				if (!m_assetsByDestination.emplace(info.destination, std::make_pair(AssetType::Image, id)).second)  throw std::logic_error("Destination conflict for: " + info.destination.str());
 				if (!m_assetsByIdentifier.emplace( info.identifier,  std::make_pair(AssetType::Image, id)).second)  throw std::logic_error("Identifier conflict for: "  + info.destination.str());
 				if (source) {
@@ -119,7 +119,7 @@ namespace aka {
 			}
 
 			void registerShaderStage(ConversionInfo info, const akfs::Path& path, const std::optional<akfs::Path>& source) {
-				auto id = m_shaderStages.insert({info, path}).first;
+				auto id = m_shaderStages.insert({info, path});
 				if (!m_assetsByDestination.emplace(info.destination, std::make_pair(AssetType::ShaderStage, id)).second)  throw std::logic_error("Destination conflict for: " + info.destination.str());
 				if (!m_assetsByIdentifier.emplace( info.identifier,  std::make_pair(AssetType::ShaderStage, id)).second)  throw std::logic_error("Identifier conflict for: "  + info.destination.str());
 				if (source) {
@@ -128,7 +128,7 @@ namespace aka {
 			}
 
 			void registerShaderProgram(ConversionInfo info, const aka::ShaderProgram& shaderProgram, const std::optional<akfs::Path>& source) {
-				auto id = m_shaderPrograms.insert({info, shaderProgram}).first;
+				auto id = m_shaderPrograms.insert({info, shaderProgram});
 				if (!m_assetsByDestination.emplace(info.destination, std::make_pair(AssetType::ShaderStage, id)).second)  throw std::logic_error("Destination conflict for: " + info.destination.str());
 				if (!m_assetsByIdentifier.emplace( info.identifier,  std::make_pair(AssetType::ShaderStage, id)).second)  throw std::logic_error("Identifier conflict for: "  + info.destination.str());
 				if (source) {
@@ -137,7 +137,7 @@ namespace aka {
 			}
 
 			void registerMesh(ConversionInfo info, const aka::Mesh& mesh, const std::optional<akfs::Path>& source) {
-				auto id = m_meshes.insert({info, mesh}).first;
+				auto id = m_meshes.insert({info, mesh});
 				if (!m_assetsByDestination.emplace(info.destination,  std::make_pair(AssetType::Mesh, id)).second)  throw std::logic_error("Path conflict for: "       + info.destination.str());
 				if (!m_assetsByIdentifier.emplace( info.identifier,   std::make_pair(AssetType::Mesh, id)).second)  throw std::logic_error("Identifier conflict for: " + info.destination.str());
 				if (source) {
@@ -146,7 +146,7 @@ namespace aka {
 			}
 
 			void registerAnimation(ConversionInfo info, const aka::Animation& mesh, const std::optional<akfs::Path>& source) {
-				auto id = m_animations.insert({info, mesh}).first;
+				auto id = m_animations.insert({info, mesh});
 				if (!m_assetsByDestination.emplace(info.destination,  std::make_pair(AssetType::Animation, id)).second)  throw std::logic_error("Path conflict for: "       + info.destination.str());
 				if (!m_assetsByIdentifier.emplace( info.identifier,   std::make_pair(AssetType::Animation, id)).second)  throw std::logic_error("Identifier conflict for: " + info.destination.str());
 				if (source) {
@@ -155,7 +155,7 @@ namespace aka {
 			}
 
 			void registerMaterial(ConversionInfo info, const aka::Material& material, const std::optional<akfs::Path>& source) {
-				auto id = m_materials.insert({info, material}).first;
+				auto id = m_materials.insert({info, material});
 				if (!m_assetsByDestination.emplace(info.destination, std::make_pair(AssetType::Material, id)).second)  throw std::logic_error("Path conflict for: "       + info.destination.str());
 				if (!m_assetsByIdentifier.emplace( info.identifier,  std::make_pair(AssetType::Material, id)).second)  throw std::logic_error("Identifier conflict for: " + info.destination.str());
 				if (source) {
@@ -164,7 +164,7 @@ namespace aka {
 			}
 
 			void registerTexture(ConversionInfo info, const aka::Texture& texture, const std::optional<akfs::Path>& source) {
-				auto id = m_textures.insert({info, texture}).first;
+				auto id = m_textures.insert({info, texture});
 				if (!m_assetsByDestination.emplace(info.destination, std::make_pair(AssetType::Texture, id)).second)  throw std::logic_error("Path conflict for: "       + info.destination.str());
 				if (!m_assetsByIdentifier.emplace( info.identifier,  std::make_pair(AssetType::Texture, id)).second)  throw std::logic_error("Identifier conflict for: " + info.destination.str());
 				if (source) {
@@ -173,7 +173,7 @@ namespace aka {
 			}
 
 			void registerSound(ConversionInfo info, const akfs::Path& sound, const std::optional<akfs::Path>& source) {
-				auto id = m_sounds.insert({info, sound}).first;
+				auto id = m_sounds.insert({info, sound});
 				if (!m_assetsByDestination.emplace(info.destination, std::make_pair(AssetType::Sound, id)).second)  throw std::logic_error("Path conflict for: "       + info.destination.str());
 				if (!m_assetsByIdentifier.emplace( info.identifier,  std::make_pair(AssetType::Sound, id)).second)  throw std::logic_error("Identifier conflict for: " + info.destination.str());
 				if (source) {

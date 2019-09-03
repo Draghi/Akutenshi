@@ -15,28 +15,25 @@
  **/
 
 #include <akasset/Convert.hpp>
-#include <akcommon/FPSCounter.hpp>
 #include <akcommon/PrimitiveTypes.hpp>
+#include <akcommon/String.hpp>
 #include <akcommon/Timer.hpp>
+#include <akengine/Config.hpp>
+#include <akengine/data/Hash.hpp>
 #include <akengine/data/PValue.hpp>
 #include <akengine/data/Serialize.hpp>
 #include <akengine/debug/Log.hpp>
-#include <akengine/entity/Config.hpp>
+#include <akengine/ecs/Component.hpp>
+#include <akengine/ecs/Entity.hpp>
+#include <akengine/ecs/Registry.hpp>
+#include <akengine/ecs/Types.hpp>
 #include <akengine/event/Dispatcher.hpp>
 #include <akengine/filesystem/Path.hpp>
-#include <akengine/scene/Scene.hpp>
-#include <akengine/scene/SceneManager.hpp>
 #include <akgame/game.hpp>
-#include <akinput/keyboard/Keyboard.hpp>
-#include <akinput/keyboard/Keys.hpp>
-#include <akinput/mouse/Buttons.hpp>
-#include <akinput/mouse/Mouse.hpp>
-#include <akmath/Scalar.hpp>
 #include <akrender/gl/Draw.hpp>
 #include <akrender/window/Types.hpp>
 #include <akrender/window/Window.hpp>
 #include <akrender/window/WindowOptions.hpp>
-#include <sstream>
 #include <stdexcept>
 
 void akg::startup(const akl::Logger& log) {
@@ -68,10 +65,69 @@ void akg::cleanup(const akl::Logger& log) {
 	}
 }
 
-static void setupGame(ake::Scene& scene);
+static void setupGame(/*ake::Scene& scene*/);
+
+class TestComponent1 : public akecs::Component {
+	public:
+		static constexpr std::string_view COMPONENT_NAME = AK_STRING_VIEW("TestComponent1");
+		static constexpr akecs::ComponentTypeUID COMPONENT_UID = akd::hash32FNV1A<char>(COMPONENT_NAME.data(), COMPONENT_NAME.size());
+
+		TestComponent1(akecs::BaseRegistry&, akecs::EntityRef) {}
+		virtual ~TestComponent1() = default;
+
+		TestComponent1(const TestComponent1&) {}
+		TestComponent1& operator=(const TestComponent1&) { return *this; }
+};
+
+class TestComponent2 : public akecs::Component {
+	public:
+		static constexpr std::string_view COMPONENT_NAME = AK_STRING_VIEW("TestComponent2");
+		static constexpr akecs::ComponentTypeUID COMPONENT_UID = akd::hash32FNV1A<char>(COMPONENT_NAME.data(), COMPONENT_NAME.size());
+
+		TestComponent2(akecs::BaseRegistry&, akecs::EntityRef) {}
+
+
+};
+
+class TestComponent3 : public akecs::Component {
+	public:
+		static constexpr std::string_view COMPONENT_NAME = AK_STRING_VIEW("TestComponent3");
+		static constexpr akecs::ComponentTypeUID COMPONENT_UID = akd::hash32FNV1A<char>(COMPONENT_NAME.data(), COMPONENT_NAME.size());
+};
 
 void akg::runGame() {
-	ake::SceneManager sceneManager;
+	akl::Logger("Info").info(sizeof(akecs::Registry<TestComponent1>));
+	akl::Logger("Info").info(sizeof(akecs::Registry<TestComponent1, TestComponent2>));
+	akl::Logger("Info").info(sizeof(akecs::Registry<TestComponent1, TestComponent2, TestComponent3>));
+
+
+	akc::Timer timer;
+
+	akSize totalMS = 0;
+	for(akSize j = 0; j < 100; j++) {
+		akecs::Registry<TestComponent1, TestComponent2> a;
+		a.reserveEntities(10000000);
+		for(akSize i = 0; i < 10000000; i++) a.create();
+		akSize timeMS = timer.markAndReset().msecs();
+		totalMS += timeMS;
+		akl::Logger("ecs").info("Time taken to create 10,000,000: ", timeMS, "ms");
+	}
+
+	akl::Logger("ecs").info("Average time taken to create 10,000,000: ", totalMS/100, "ms");
+
+	// for(akSize i = 0; i < 10000000; i++) a.destroy(entities[i]);
+	// akl::Logger("ecs").info("Time taken to destroy 10,000,000: ", timer.markAndReset().msecs(), "ms");
+
+	/*for(akSize i = 0; i < 1000000; i++) {
+		auto entity = a.create();
+		if (!a.   attach<TestComponent1>(entity)) akl::Logger("Info").info(   "attach 1 fail");
+		if (!a.component<TestComponent1>(entity)) akl::Logger("Info").info("component 1 fail");
+		if (!a.   detach<TestComponent1>(entity)) akl::Logger("Info").info(   "detach 1 fail");
+		a.destroy(entity);
+	}*/
+
+
+/*	ake::SceneManager sceneManager;
 	auto& scene = sceneManager.getScene(sceneManager.newScene("World"));
 
 	setupGame(scene);
@@ -106,12 +162,12 @@ void akg::runGame() {
 
 		updateAccum += loopTimer.mark().secsf();
 		loopTimer.reset();
-	}
+	}*/
 }
 
-static void setupGame(ake::Scene& scene) {
+static void setupGame(/*ake::Scene& scene*/) {
 
-	scene.renderEvent().subscribe([&](ake::SceneRenderEvent& renderEventData) {
+/*	scene.renderEvent().subscribe([&](ake::SceneRenderEvent& renderEventData) {
 		akr::gl::setClearColour(0.2f, 0.2f, 0.2f);
 		akr::gl::clear();
 		akr::win::swapBuffer();
@@ -124,7 +180,7 @@ static void setupGame(ake::Scene& scene) {
 		akr::win::keyboard().update();
 		akr::win::mouse().update();
 		akr::win::pollEvents();
-	});
+	});*/
 
 }
 
